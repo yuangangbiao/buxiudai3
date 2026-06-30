@@ -42,7 +42,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt
+          pip install --timeout=300 -r requirements.txt
+          pip install pytest-timeout
 
       - name: Run flake8 lint
         run: |
