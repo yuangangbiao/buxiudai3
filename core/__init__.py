@@ -26,7 +26,7 @@ from .event_bus import (
 __all__ = [
     # 异常
     'BusinessException',
-    'ValidationException', 
+    'ValidationException',
     'NotFoundException',
     'DuplicateException',
     'PermissionException',
