@@ -1,0 +1,43 @@
+# -*- coding: utf-8 -*-
+"""
+测试依赖 - 修复 P0-5
+"""
+# Web 自动化
+playwright>=1.40.0
+
+# pytest 生态
+pytest>=8.0.0
+pytest-playwright>=0.5.0
+pytest-xdist>=3.5.0        # 并发
+pytest-html>=4.1.0          # HTML 报告
+pytest-cov>=4.1.0           # 覆盖率
+pytest-mock>=3.12.0         # Mock 工具
+pytest-timeout>=2.3.0       # 超时控制
+pytest-rerunfailures>=14.0  # 失败重试
+pytest-metadata>=3.0.0      # 元数据
+
+# HTTP
+requests>=2.31.0
+urllib3>=2.0.0
+
+# 数据库
+pymysql>=1.1.0
+SQLAlchemy>=2.0.0
+redis>=5.0.0
+
+# 配置
+python-dotenv>=1.0.0
+PyYAML>=6.0.0
+
+# 数据处理
+pandas>=2.0.0
+openpyxl>=3.1.0
+
+# 报告与可观测性
+allure-pytest>=2.13.0
+allure-python-commons>=2.13.0
+pytest-metadata>=3.0.0
+
+# 工具
+freezegun>=1.4.0
+Faker>=24.0.0

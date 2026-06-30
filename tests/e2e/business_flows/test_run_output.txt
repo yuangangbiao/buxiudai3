@@ -1,0 +1,1227 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.14.3, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\python.exe
+cachedir: .pytest_cache
+metadata: {'Python': '3.14.3', 'Platform': 'Windows-11-10.0.22631-SP0', 'Packages': {'pytest': '9.0.3', 'pluggy': '1.6.0'}, 'Plugins': {'anyio': '4.12.1', 'cov': '7.1.0', 'html': '4.2.0', 'metadata': '3.1.1', 'mock': '3.15.1'}, 'CI': 'true'}
+rootdir: D:\yuan\不锈钢网带跟单3.0
+configfile: pytest.ini (WARNING: ignoring pytest config in pyproject.toml!)
+plugins: anyio-4.12.1, cov-7.1.0, html-4.2.0, metadata-3.1.1, mock-3.15.1
+collecting ... collected 38 items
+
+tests/e2e/business_flows/test_bf_01_main_chain.py::TestMainChainStep01Publish::test_publish_workorder SKIPPED [  2%]
+tests/e2e/business_flows/test_bf_01_main_chain.py::TestMainChainStep02Schedule::test_advance_to_schedule SKIPPED [  5%]
+tests/e2e/business_flows/test_bf_01_main_chain.py::TestMainChainStep03Material::test_material_ready SKIPPED [  7%]
+tests/e2e/business_flows/test_bf_01_main_chain.py::TestMainChainStep04Production::test_start_production SKIPPED [ 10%]
+tests/e2e/business_flows/test_bf_01_main_chain.py::TestMainChainStep05QC::test_qc_submit SKIPPED [ 13%]
+tests/e2e/business_flows/test_bf_01_main_chain.py::TestMainChainStep06Warehouse::test_warehousing SKIPPED [ 15%]
+tests/e2e/business_flows/test_bf_01_main_chain.py::TestMainChainStep07Complete::test_complete_order SKIPPED [ 18%]
+tests/e2e/business_flows/test_bf_01_main_chain.py::TestMainChainStep08Ship::test_ship_order SKIPPED [ 21%]
+tests/e2e/business_flows/test_bf_01_main_chain.py::TestMainChainStep08Ship::test_cannot_modify_after_ship SKIPPED [ 23%]
+tests/e2e/business_flows/test_bf_02_mobile_report.py::TestMobileReportAPI::test_api_scan_report_endpoint_available SKIPPED [ 26%]
+tests/e2e/business_flows/test_bf_02_mobile_report.py::TestMobileReportAPI::test_api_scan_report_invalid_order SKIPPED [ 28%]
+tests/e2e/business_flows/test_bf_02_mobile_report.py::TestMobileReportAPI::test_api_scan_report_quantity_over_limit SKIPPED [ 31%]
+tests/e2e/business_flows/test_bf_02_mobile_report.py::TestMobileReportUI::test_mobile_qr_scan_ui ERROR [ 34%]
+tests/e2e/business_flows/test_bf_02_mobile_report.py::TestMobileReportUI::test_mobile_task_list ERROR [ 36%]
+tests/e2e/business_flows/test_bf_02_mobile_report.py::TestMobileReportUI::test_mobile_home_page ERROR [ 39%]
+tests/e2e/business_flows/test_bf_03_dispatch_regress.py::TestDispatchDistribute::test_distribute_endpoint_available SKIPPED [ 42%]
+tests/e2e/business_flows/test_bf_03_dispatch_regress.py::TestDispatchCacheInvalidation::test_cache_invalidation_mechanism FAILED [ 44%]
+tests/e2e/business_flows/test_bf_03_dispatch_regress.py::TestDispatchStatusMachine::test_state_transition_whitelist[published-scheduled-True] SKIPPED [ 47%]
+tests/e2e/business_flows/test_bf_03_dispatch_regress.py::TestDispatchStatusMachine::test_state_transition_whitelist[scheduled-material_ready-True] SKIPPED [ 50%]
+tests/e2e/business_flows/test_bf_03_dispatch_regress.py::TestDispatchStatusMachine::test_state_transition_whitelist[material_ready-published-False] SKIPPED [ 52%]
+tests/e2e/business_flows/test_bf_03_dispatch_regress.py::TestDispatchStatusMachine::test_state_transition_whitelist[completed-in_production-False] SKIPPED [ 55%]
+tests/e2e/business_flows/test_bf_03_dispatch_regress.py::TestDispatchStatusMachine::test_state_transition_whitelist[shipped-completed-False] SKIPPED [ 57%]
+tests/e2e/business_flows/test_bf_03_dispatch_regress.py::TestDispatchHealthCheck::test_dispatch_service_alive SKIPPED [ 60%]
+tests/e2e/business_flows/test_bf_03_dispatch_regress.py::TestDispatchHealthCheck::test_dispatch_orders_list SKIPPED [ 63%]
+tests/e2e/business_flows/test_bf_03_dispatch_regress.py::TestDispatchMetrics::test_metrics_endpoint SKIPPED [ 65%]
+tests/e2e/business_flows/test_bf_04_cross_service.py::TestCrossServiceOrderSync::test_5001_create_to_5003_sync 
+-------------------------------- live log call --------------------------------
+2026-06-26 21:37:41 [   ERROR] 请求失败 POST http://localhost:5001/api/orders: requests.sessions.Session.request() got multiple values for keyword argument 'timeout'
+SKIPPED (5001 创建订单失败: requests.sessions.Session.request() got multiple
+values for keyword argument 'timeout')                                   [ 68%]
+tests/e2e/business_flows/test_bf_04_cross_service.py::TestCrossServiceDispatchToMobile::test_5003_dispatch_visible_on_5008 
+-------------------------------- live log call --------------------------------
+2026-06-26 21:37:41 [   ERROR] 请求失败 GET http://localhost:5008/api/mobile/tasks: requests.sessions.Session.request() got multiple values for keyword argument 'timeout'
+SKIPPED (5008 任务列表查询失败: requests.sessions.Session.request() got multiple
+values for keyword argument 'timeout')                                   [ 71%]
+tests/e2e/business_flows/test_bf_04_cross_service.py::TestCrossServiceReportBack::test_5008_report_updates_5001 
+-------------------------------- live log call --------------------------------
+2026-06-26 21:37:41 [   ERROR] 请求失败 POST http://localhost:5008/api/mobile/report: requests.sessions.Session.request() got multiple values for keyword argument 'timeout'
+SKIPPED (报工 API 调用失败: requests.sessions.Session.request() got multiple
+values for keyword argument 'timeout')                                   [ 73%]
+tests/e2e/business_flows/test_bf_04_cross_service.py::TestCrossServiceHealthCheck::test_all_services_responsive 
+-------------------------------- live log call --------------------------------
+2026-06-26 21:37:41 [   ERROR] 请求失败 GET http://localhost:5001/api/health: requests.sessions.Session.request() got multiple values for keyword argument 'timeout'
+2026-06-26 21:37:41 [   ERROR] 请求失败 GET http://localhost:5003/api/health: requests.sessions.Session.request() got multiple values for keyword argument 'timeout'
+2026-06-26 21:37:41 [   ERROR] 请求失败 GET http://localhost:5008/api/health: requests.sessions.Session.request() got multiple values for keyword argument 'timeout'
+FAILED                                                                   [ 76%]
+tests/e2e/business_flows/test_bf_05_db_watchdog.py::TestDBWatchdogOrder::test_watchdog_assert_order_status_method ERROR [ 78%]
+tests/e2e/business_flows/test_bf_05_db_watchdog.py::TestDBWatchdogProcess::test_watchdog_assert_process_steps_count ERROR [ 81%]
+tests/e2e/business_flows/test_bf_05_db_watchdog.py::TestDBWatchdogProcess::test_watchdog_assert_process_step_state ERROR [ 84%]
+tests/e2e/business_flows/test_bf_05_db_watchdog.py::TestDBWatchdogMaterial::test_watchdog_material_records ERROR [ 86%]
+tests/e2e/business_flows/test_bf_05_db_watchdog.py::TestDBWatchdogQC::test_watchdog_qc_records ERROR [ 89%]
+tests/e2e/business_flows/test_bf_05_db_watchdog.py::TestDBWatchdogInventory::test_watchdog_inventory_delta ERROR [ 92%]
+tests/e2e/business_flows/test_bf_05_db_watchdog.py::TestDBWatchdogConnection::test_mysql_connection SKIPPEDssword: NO)")) [ 94%]
+tests/e2e/business_flows/test_bf_05_db_watchdog.py::TestDBWatchdogConnection::test_redis_connection SKIPPEDssword: NO)")) [ 97%]
+tests/e2e/business_flows/test_bf_05_db_watchdog.py::TestDBWatchdogConnection::test_mysql_query_orders_count SKIPPEDword: NO)")) [100%]
+
+=================================== ERRORS ====================================
+_________ ERROR at setup of TestMobileReportUI.test_mobile_qr_scan_ui _________
+file D:\yuan\不锈钢网带跟单3.0\tests\e2e\business_flows\test_bf_02_mobile_report.py, line 81
+      def test_mobile_qr_scan_ui(self, mobile_page):
+E       fixture 'mobile_page' not found
+>       available fixtures: admin_page, anyio_backend, anyio_backend_name, anyio_backend_options, auth_client, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, class_mocker, cov, cursor, dao, db_fixture, db_session, dispatcher_session, doctest_namespace, e2e_client, e2e_dispatcher_client, e2e_mobile_client, extra, extras, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, fresh_pool_module, include_metadata_in_junit_xml, isolated_data, login_as, main_chain_session, metadata, metrics_module, mobile_session, mock_conn, mock_db, mock_deps, mock_get_conn, mock_log_ui, mock_pymysql, mock_requests, mock_retry_connections, mock_storage, mocker, module_mocker, monkeypatch, mysql_available, mysql_conn, no_cover, operator_page, package_mocker, pub, publisher_module, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, redis_connected, screenshot_on_failure, session_mocker, setup_app, setup_test_environment, source, sqlite_with_data, subtests, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, wait_for_services
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\yuan\不锈钢网带跟单3.0\tests\e2e\business_flows\test_bf_02_mobile_report.py:81
+_________ ERROR at setup of TestMobileReportUI.test_mobile_task_list __________
+file D:\yuan\不锈钢网带跟单3.0\tests\e2e\business_flows\test_bf_02_mobile_report.py, line 95
+      def test_mobile_task_list(self, mobile_page):
+E       fixture 'mobile_page' not found
+>       available fixtures: admin_page, anyio_backend, anyio_backend_name, anyio_backend_options, auth_client, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, class_mocker, cov, cursor, dao, db_fixture, db_session, dispatcher_session, doctest_namespace, e2e_client, e2e_dispatcher_client, e2e_mobile_client, extra, extras, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, fresh_pool_module, include_metadata_in_junit_xml, isolated_data, login_as, main_chain_session, metadata, metrics_module, mobile_session, mock_conn, mock_db, mock_deps, mock_get_conn, mock_log_ui, mock_pymysql, mock_requests, mock_retry_connections, mock_storage, mocker, module_mocker, monkeypatch, mysql_available, mysql_conn, no_cover, operator_page, package_mocker, pub, publisher_module, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, redis_connected, screenshot_on_failure, session_mocker, setup_app, setup_test_environment, source, sqlite_with_data, subtests, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, wait_for_services
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\yuan\不锈钢网带跟单3.0\tests\e2e\business_flows\test_bf_02_mobile_report.py:95
+_________ ERROR at setup of TestMobileReportUI.test_mobile_home_page __________
+file D:\yuan\不锈钢网带跟单3.0\tests\e2e\business_flows\test_bf_02_mobile_report.py, line 105
+      def test_mobile_home_page(self, mobile_page):
+E       fixture 'mobile_page' not found
+>       available fixtures: admin_page, anyio_backend, anyio_backend_name, anyio_backend_options, auth_client, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, class_mocker, cov, cursor, dao, db_fixture, db_session, dispatcher_session, doctest_namespace, e2e_client, e2e_dispatcher_client, e2e_mobile_client, extra, extras, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, fresh_pool_module, include_metadata_in_junit_xml, isolated_data, login_as, main_chain_session, metadata, metrics_module, mobile_session, mock_conn, mock_db, mock_deps, mock_get_conn, mock_log_ui, mock_pymysql, mock_requests, mock_retry_connections, mock_storage, mocker, module_mocker, monkeypatch, mysql_available, mysql_conn, no_cover, operator_page, package_mocker, pub, publisher_module, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, redis_connected, screenshot_on_failure, session_mocker, setup_app, setup_test_environment, source, sqlite_with_data, subtests, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, wait_for_services
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\yuan\不锈钢网带跟单3.0\tests\e2e\business_flows\test_bf_02_mobile_report.py:105
+_ ERROR at setup of TestDBWatchdogOrder.test_watchdog_assert_order_status_method _
+tests\e2e\business_flows\test_bf_05_db_watchdog.py:16: in watchdog
+    wd = DBWatchdog()
+         ^^^^^^^^^^^^
+tests\e2e\business_flows\_helpers.py:43: in __init__
+    self.mysql = mysql_conn or get_mysql_connection()
+                               ^^^^^^^^^^^^^^^^^^^^^^
+        mysql_conn = None
+        redis_conn = None
+        self       = <tests.e2e.business_flows._helpers.DBWatchdog object at 0x00000286DADFB110>
+tests\e2e\business_flows\_helpers.py:17: in get_mysql_connection
+    return pymysql.connect(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:372: in __init__
+    self.connect()
+        auth_plugin_map = None
+        autocommit = False
+        binary_prefix = False
+        bind_address = None
+        charset    = 'utf8mb4'
+        client_flag = 3842573
+        collation  = None
+        compress   = None
+        connect_timeout = 10
+        conv       = {0: <class 'decimal.Decimal'>,
+ 1: <class 'int'>,
+ 2: <class 'int'>,
+ 3: <class 'int'>,
+ 4: <class 'float'>,
+ 5: <class 'float'>,
+ 7: <function convert_datetime at 0x00000286DA49B5E0>,
+ 8: <class 'int'>,
+ 9: <class 'int'>,
+ 10: <function convert_date at 0x00000286DA49B7F0>,
+ 11: <function convert_timedelta at 0x00000286DA49B690>,
+ 12: <function convert_datetime at 0x00000286DA49B5E0>,
+ 13: <class 'int'>,
+ 15: <function through at 0x00000286DA49B8A0>,
+ 16: <function through at 0x00000286DA49B8A0>,
+ 246: <class 'decimal.Decimal'>,
+ 249: <function through at 0x00000286DA49B8A0>,
+ 250: <function through at 0x00000286DA49B8A0>,
+ 251: <function through at 0x00000286DA49B8A0>,
+ 252: <function through at 0x00000286DA49B8A0>,
+ 253: <function through at 0x00000286DA49B8A0>,
+ 254: <function through at 0x00000286DA49B8A0>,
+ <class 'time.struct_time'>: <function escape_struct_time at 0x00000286DA49B3D0>,
+ <class 'decimal.Decimal'>: <function Decimal2Literal at 0x00000286DA49B480>,
+ <class 'datetime.time'>: <function escape_time at 0x00000286DA49B1C0>,
+ <class 'datetime.datetime'>: <function escape_datetime at 0x00000286DA49B270>,
+ <class 'datetime.date'>: <function escape_date at 0x00000286DA49B320>,
+ <class 'datetime.timedelta'>: <function escape_timedelta at 0x00000286DA49B110>,
+ <class 'bool'>: <function escape_bool at 0x00000286DA49AB90>,
+ <class 'bytes'>: <function escape_bytes at 0x00000286DA49AF00>,
+ <class 'dict'>: <function escape_dict at 0x00000286DA49A980>,
+ <class 'float'>: <function escape_float at 0x00000286DA49ACF0>,
+ <class 'list'>: <function escape_sequence at 0x00000286DA49AA30>,
+ <class 'int'>: <function escape_int at 0x00000286DA49AC40>,
+ <class 'NoneType'>: <function escape_None at 0x00000286DA49B060>,
+ <class 'set'>: <function escape_sequence at 0x00000286DA49AA30>,
+ <class 'frozenset'>: <function escape_sequence at 0x00000286DA49AA30>,
+ <class 'tuple'>: <function escape_sequence at 0x00000286DA49AA30>,
+ <class 'str'>: <function escape_str at 0x00000286DA49AFB0>}
+        cursorclass = <class 'pymysql.cursors.DictCursor'>
+        database   = 'steel_belt'
+        db         = None
+        defer_connect = False
+        host       = 'localhost'
+        init_command = None
+        local_infile = False
+        max_allowed_packet = 16777216
+        named_pipe = None
+        passwd     = None
+        password   = ''
+        port       = 3306
+        program_name = None
+        read_default_file = None
+        read_default_group = None
+        read_timeout = None
+        self       = <pymysql.connections.Connection object at 0x00000286DAF4D2B0>
+        server_public_key = None
+        sql_mode   = None
+        ssl        = None
+        ssl_ca     = None
+        ssl_cert   = None
+        ssl_disabled = None
+        ssl_key    = None
+        ssl_key_password = None
+        ssl_verify_cert = None
+        ssl_verify_identity = None
+        unix_socket = None
+        use_unicode = True
+        user       = 'root'
+        write_timeout = None
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:702: in connect
+    self._request_authentication()
+        kwargs     = {}
+        self       = <pymysql.connections.Connection object at 0x00000286DAF4D2B0>
+        sock       = <socket.socket [closed] fd=-1, family=2, type=1, proto=0>
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:1014: in _request_authentication
+    auth_packet = self._process_auth(plugin_name, auth_packet)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        _do_ssl    = True
+        auth_packet = <pymysql.protocol.MysqlPacket object at 0x00000286DAE527A0>
+        authresp   = b''
+        charset_id = 45
+        client_flags = 3844621
+        connect_attrs = b'\x0c_client_name\x07pymysql\x0f_client_version\x051.2.0\x04_pid\x0534656'
+        data       = (b'\r\xaa:\x00\xff\xff\xff\x00-\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+ b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00root\x00\x00steel_belt'
+ b'\x00caching_sha2_password\x006\x0c_client_name\x07pymysql\x0f_client_versio'
+ b'n\x051.2.0\x04_pid\x0534656')
+        data_init  = (b'\r\xaa:\x00\xff\xff\xff\x00-\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+ b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+        k          = b'_pid'
+        plugin_name = b'mysql_native_password'
+        self       = <pymysql.connections.Connection object at 0x00000286DAF4D2B0>
+        v          = b'34656'
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:1105: in _process_auth
+    pkt = self._read_packet()
+          ^^^^^^^^^^^^^^^^^^^
+        auth_packet = <pymysql.protocol.MysqlPacket object at 0x00000286DAE527A0>
+        data       = b''
+        handler    = None
+        plugin_name = b'mysql_native_password'
+        self       = <pymysql.connections.Connection object at 0x00000286DAF4D2B0>
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:803: in _read_packet
+    packet.raise_for_error()
+        btrh       = 0
+        btrl       = 71
+        buff       = bytearray(b"\xff\x15\x04#28000Access denied for user 'root'@'localhost' (usin"
+          b'g password: NO)')
+        bytes_to_read = 71
+        packet     = <pymysql.protocol.MysqlPacket object at 0x00000286DAE52710>
+        packet_header = b'G\x00\x00\x05'
+        packet_number = 5
+        packet_type = <class 'pymysql.protocol.MysqlPacket'>
+        recv_data  = (b"\xff\x15\x04#28000Access denied for user 'root'@'localhost' (using passwo"
+ b'rd: NO)')
+        self       = <pymysql.connections.Connection object at 0x00000286DAF4D2B0>
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\protocol.py:219: in raise_for_error
+    err.raise_mysql_exception(self._data)
+        errno      = 1045
+        self       = <pymysql.protocol.MysqlPacket object at 0x00000286DAE52710>
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\err.py:154: in raise_mysql_exception
+    raise errorclass(errno, errval, sqlstate=sqlstate)
+E   pymysql.err.OperationalError: (1045, "Access denied for user 'root'@'localhost' (using password: NO)")
+        data       = (b"\xff\x15\x04#28000Access denied for user 'root'@'localhost' (using passwo"
+ b'rd: NO)')
+        errno      = 1045
+        errorclass = <class 'pymysql.err.OperationalError'>
+        errval     = "Access denied for user 'root'@'localhost' (using password: NO)"
+        sqlstate   = '28000'
+_ ERROR at setup of TestDBWatchdogProcess.test_watchdog_assert_process_steps_count _
+tests\e2e\business_flows\test_bf_05_db_watchdog.py:16: in watchdog
+    wd = DBWatchdog()
+         ^^^^^^^^^^^^
+tests\e2e\business_flows\_helpers.py:43: in __init__
+    self.mysql = mysql_conn or get_mysql_connection()
+                               ^^^^^^^^^^^^^^^^^^^^^^
+        mysql_conn = None
+        redis_conn = None
+        self       = <tests.e2e.business_flows._helpers.DBWatchdog object at 0x00000286DADFBB10>
+tests\e2e\business_flows\_helpers.py:17: in get_mysql_connection
+    return pymysql.connect(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:372: in __init__
+    self.connect()
+        auth_plugin_map = None
+        autocommit = False
+        binary_prefix = False
+        bind_address = None
+        charset    = 'utf8mb4'
+        client_flag = 3842573
+        collation  = None
+        compress   = None
+        connect_timeout = 10
+        conv       = {0: <class 'decimal.Decimal'>,
+ 1: <class 'int'>,
+ 2: <class 'int'>,
+ 3: <class 'int'>,
+ 4: <class 'float'>,
+ 5: <class 'float'>,
+ 7: <function convert_datetime at 0x00000286DA49B5E0>,
+ 8: <class 'int'>,
+ 9: <class 'int'>,
+ 10: <function convert_date at 0x00000286DA49B7F0>,
+ 11: <function convert_timedelta at 0x00000286DA49B690>,
+ 12: <function convert_datetime at 0x00000286DA49B5E0>,
+ 13: <class 'int'>,
+ 15: <function through at 0x00000286DA49B8A0>,
+ 16: <function through at 0x00000286DA49B8A0>,
+ 246: <class 'decimal.Decimal'>,
+ 249: <function through at 0x00000286DA49B8A0>,
+ 250: <function through at 0x00000286DA49B8A0>,
+ 251: <function through at 0x00000286DA49B8A0>,
+ 252: <function through at 0x00000286DA49B8A0>,
+ 253: <function through at 0x00000286DA49B8A0>,
+ 254: <function through at 0x00000286DA49B8A0>,
+ <class 'time.struct_time'>: <function escape_struct_time at 0x00000286DA49B3D0>,
+ <class 'decimal.Decimal'>: <function Decimal2Literal at 0x00000286DA49B480>,
+ <class 'datetime.time'>: <function escape_time at 0x00000286DA49B1C0>,
+ <class 'datetime.datetime'>: <function escape_datetime at 0x00000286DA49B270>,
+ <class 'datetime.date'>: <function escape_date at 0x00000286DA49B320>,
+ <class 'datetime.timedelta'>: <function escape_timedelta at 0x00000286DA49B110>,
+ <class 'bool'>: <function escape_bool at 0x00000286DA49AB90>,
+ <class 'bytes'>: <function escape_bytes at 0x00000286DA49AF00>,
+ <class 'dict'>: <function escape_dict at 0x00000286DA49A980>,
+ <class 'float'>: <function escape_float at 0x00000286DA49ACF0>,
+ <class 'list'>: <function escape_sequence at 0x00000286DA49AA30>,
+ <class 'int'>: <function escape_int at 0x00000286DA49AC40>,
+ <class 'NoneType'>: <function escape_None at 0x00000286DA49B060>,
+ <class 'set'>: <function escape_sequence at 0x00000286DA49AA30>,
+ <class 'frozenset'>: <function escape_sequence at 0x00000286DA49AA30>,
+ <class 'tuple'>: <function escape_sequence at 0x00000286DA49AA30>,
+ <class 'str'>: <function escape_str at 0x00000286DA49AFB0>}
+        cursorclass = <class 'pymysql.cursors.DictCursor'>
+        database   = 'steel_belt'
+        db         = None
+        defer_connect = False
+        host       = 'localhost'
+        init_command = None
+        local_infile = False
+        max_allowed_packet = 16777216
+        named_pipe = None
+        passwd     = None
+        password   = ''
+        port       = 3306
+        program_name = None
+        read_default_file = None
+        read_default_group = None
+        read_timeout = None
+        self       = <pymysql.connections.Connection object at 0x00000286DAF4D6A0>
+        server_public_key = None
+        sql_mode   = None
+        ssl        = None
+        ssl_ca     = None
+        ssl_cert   = None
+        ssl_disabled = None
+        ssl_key    = None
+        ssl_key_password = None
+        ssl_verify_cert = None
+        ssl_verify_identity = None
+        unix_socket = None
+        use_unicode = True
+        user       = 'root'
+        write_timeout = None
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:702: in connect
+    self._request_authentication()
+        kwargs     = {}
+        self       = <pymysql.connections.Connection object at 0x00000286DAF4D6A0>
+        sock       = <socket.socket [closed] fd=-1, family=2, type=1, proto=0>
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:1014: in _request_authentication
+    auth_packet = self._process_auth(plugin_name, auth_packet)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        _do_ssl    = True
+        auth_packet = <pymysql.protocol.MysqlPacket object at 0x00000286DAE52FE0>
+        authresp   = b''
+        charset_id = 45
+        client_flags = 3844621
+        connect_attrs = b'\x0c_client_name\x07pymysql\x0f_client_version\x051.2.0\x04_pid\x0534656'
+        data       = (b'\r\xaa:\x00\xff\xff\xff\x00-\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+ b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00root\x00\x00steel_belt'
+ b'\x00caching_sha2_password\x006\x0c_client_name\x07pymysql\x0f_client_versio'
+ b'n\x051.2.0\x04_pid\x0534656')
+        data_init  = (b'\r\xaa:\x00\xff\xff\xff\x00-\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+ b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+        k          = b'_pid'
+        plugin_name = b'mysql_native_password'
+        self       = <pymysql.connections.Connection object at 0x00000286DAF4D6A0>
+        v          = b'34656'
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:1105: in _process_auth
+    pkt = self._read_packet()
+          ^^^^^^^^^^^^^^^^^^^
+        auth_packet = <pymysql.protocol.MysqlPacket object at 0x00000286DAE52FE0>
+        data       = b''
+        handler    = None
+        plugin_name = b'mysql_native_password'
+        self       = <pymysql.connections.Connection object at 0x00000286DAF4D6A0>
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:803: in _read_packet
+    packet.raise_for_error()
+        btrh       = 0
+        btrl       = 71
+        buff       = bytearray(b"\xff\x15\x04#28000Access denied for user 'root'@'localhost' (usin"
+          b'g password: NO)')
+        bytes_to_read = 71
+        packet     = <pymysql.protocol.MysqlPacket object at 0x00000286DAE53700>
+        packet_header = b'G\x00\x00\x05'
+        packet_number = 5
+        packet_type = <class 'pymysql.protocol.MysqlPacket'>
+        recv_data  = (b"\xff\x15\x04#28000Access denied for user 'root'@'localhost' (using passwo"
+ b'rd: NO)')
+        self       = <pymysql.connections.Connection object at 0x00000286DAF4D6A0>
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\protocol.py:219: in raise_for_error
+    err.raise_mysql_exception(self._data)
+        errno      = 1045
+        self       = <pymysql.protocol.MysqlPacket object at 0x00000286DAE53700>
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\err.py:154: in raise_mysql_exception
+    raise errorclass(errno, errval, sqlstate=sqlstate)
+E   pymysql.err.OperationalError: (1045, "Access denied for user 'root'@'localhost' (using password: NO)")
+        data       = (b"\xff\x15\x04#28000Access denied for user 'root'@'localhost' (using passwo"
+ b'rd: NO)')
+        errno      = 1045
+        errorclass = <class 'pymysql.err.OperationalError'>
+        errval     = "Access denied for user 'root'@'localhost' (using password: NO)"
+        sqlstate   = '28000'
+_ ERROR at setup of TestDBWatchdogProcess.test_watchdog_assert_process_step_state _
+tests\e2e\business_flows\test_bf_05_db_watchdog.py:16: in watchdog
+    wd = DBWatchdog()
+         ^^^^^^^^^^^^
+tests\e2e\business_flows\_helpers.py:43: in __init__
+    self.mysql = mysql_conn or get_mysql_connection()
+                               ^^^^^^^^^^^^^^^^^^^^^^
+        mysql_conn = None
+        redis_conn = None
+        self       = <tests.e2e.business_flows._helpers.DBWatchdog object at 0x00000286DACB1CD0>
+tests\e2e\business_flows\_helpers.py:17: in get_mysql_connection
+    return pymysql.connect(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:372: in __init__
+    self.connect()
+        auth_plugin_map = None
+        autocommit = False
+        binary_prefix = False
+        bind_address = None
+        charset    = 'utf8mb4'
+        client_flag = 3842573
+        collation  = None
+        compress   = None
+        connect_timeout = 10
+        conv       = {0: <class 'decimal.Decimal'>,
+ 1: <class 'int'>,
+ 2: <class 'int'>,
+ 3: <class 'int'>,
+ 4: <class 'float'>,
+ 5: <class 'float'>,
+ 7: <function convert_datetime at 0x00000286DA49B5E0>,
+ 8: <class 'int'>,
+ 9: <class 'int'>,
+ 10: <function convert_date at 0x00000286DA49B7F0>,
+ 11: <function convert_timedelta at 0x00000286DA49B690>,
+ 12: <function convert_datetime at 0x00000286DA49B5E0>,
+ 13: <class 'int'>,
+ 15: <function through at 0x00000286DA49B8A0>,
+ 16: <function through at 0x00000286DA49B8A0>,
+ 246: <class 'decimal.Decimal'>,
+ 249: <function through at 0x00000286DA49B8A0>,
+ 250: <function through at 0x00000286DA49B8A0>,
+ 251: <function through at 0x00000286DA49B8A0>,
+ 252: <function through at 0x00000286DA49B8A0>,
+ 253: <function through at 0x00000286DA49B8A0>,
+ 254: <function through at 0x00000286DA49B8A0>,
+ <class 'time.struct_time'>: <function escape_struct_time at 0x00000286DA49B3D0>,
+ <class 'decimal.Decimal'>: <function Decimal2Literal at 0x00000286DA49B480>,
+ <class 'datetime.time'>: <function escape_time at 0x00000286DA49B1C0>,
+ <class 'datetime.datetime'>: <function escape_datetime at 0x00000286DA49B270>,
+ <class 'datetime.date'>: <function escape_date at 0x00000286DA49B320>,
+ <class 'datetime.timedelta'>: <function escape_timedelta at 0x00000286DA49B110>,
+ <class 'bool'>: <function escape_bool at 0x00000286DA49AB90>,
+ <class 'bytes'>: <function escape_bytes at 0x00000286DA49AF00>,
+ <class 'dict'>: <function escape_dict at 0x00000286DA49A980>,
+ <class 'float'>: <function escape_float at 0x00000286DA49ACF0>,
+ <class 'list'>: <function escape_sequence at 0x00000286DA49AA30>,
+ <class 'int'>: <function escape_int at 0x00000286DA49AC40>,
+ <class 'NoneType'>: <function escape_None at 0x00000286DA49B060>,
+ <class 'set'>: <function escape_sequence at 0x00000286DA49AA30>,
+ <class 'frozenset'>: <function escape_sequence at 0x00000286DA49AA30>,
+ <class 'tuple'>: <function escape_sequence at 0x00000286DA49AA30>,
+ <class 'str'>: <function escape_str at 0x00000286DA49AFB0>}
+        cursorclass = <class 'pymysql.cursors.DictCursor'>
+        database   = 'steel_belt'
+        db         = None
+        defer_connect = False
+        host       = 'localhost'
+        init_command = None
+        local_infile = False
+        max_allowed_packet = 16777216
+        named_pipe = None
+        passwd     = None
+        password   = ''
+        port       = 3306
+        program_name = None
+        read_default_file = None
+        read_default_group = None
+        read_timeout = None
+        self       = <pymysql.connections.Connection object at 0x00000286DAF4D940>
+        server_public_key = None
+        sql_mode   = None
+        ssl        = None
+        ssl_ca     = None
+        ssl_cert   = None
+        ssl_disabled = None
+        ssl_key    = None
+        ssl_key_password = None
+        ssl_verify_cert = None
+        ssl_verify_identity = None
+        unix_socket = None
+        use_unicode = True
+        user       = 'root'
+        write_timeout = None
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:702: in connect
+    self._request_authentication()
+        kwargs     = {}
+        self       = <pymysql.connections.Connection object at 0x00000286DAF4D940>
+        sock       = <socket.socket [closed] fd=-1, family=2, type=1, proto=0>
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:1014: in _request_authentication
+    auth_packet = self._process_auth(plugin_name, auth_packet)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        _do_ssl    = True
+        auth_packet = <pymysql.protocol.MysqlPacket object at 0x00000286DAE53580>
+        authresp   = b''
+        charset_id = 45
+        client_flags = 3844621
+        connect_attrs = b'\x0c_client_name\x07pymysql\x0f_client_version\x051.2.0\x04_pid\x0534656'
+        data       = (b'\r\xaa:\x00\xff\xff\xff\x00-\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+ b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00root\x00\x00steel_belt'
+ b'\x00caching_sha2_password\x006\x0c_client_name\x07pymysql\x0f_client_versio'
+ b'n\x051.2.0\x04_pid\x0534656')
+        data_init  = (b'\r\xaa:\x00\xff\xff\xff\x00-\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+ b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+        k          = b'_pid'
+        plugin_name = b'mysql_native_password'
+        self       = <pymysql.connections.Connection object at 0x00000286DAF4D940>
+        v          = b'34656'
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:1105: in _process_auth
+    pkt = self._read_packet()
+          ^^^^^^^^^^^^^^^^^^^
+        auth_packet = <pymysql.protocol.MysqlPacket object at 0x00000286DAE53580>
+        data       = b''
+        handler    = None
+        plugin_name = b'mysql_native_password'
+        self       = <pymysql.connections.Connection object at 0x00000286DAF4D940>
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:803: in _read_packet
+    packet.raise_for_error()
+        btrh       = 0
+        btrl       = 71
+        buff       = bytearray(b"\xff\x15\x04#28000Access denied for user 'root'@'localhost' (usin"
+          b'g password: NO)')
+        bytes_to_read = 71
+        packet     = <pymysql.protocol.MysqlPacket object at 0x00000286DAE535E0>
+        packet_header = b'G\x00\x00\x05'
+        packet_number = 5
+        packet_type = <class 'pymysql.protocol.MysqlPacket'>
+        recv_data  = (b"\xff\x15\x04#28000Access denied for user 'root'@'localhost' (using passwo"
+ b'rd: NO)')
+        self       = <pymysql.connections.Connection object at 0x00000286DAF4D940>
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\protocol.py:219: in raise_for_error
+    err.raise_mysql_exception(self._data)
+        errno      = 1045
+        self       = <pymysql.protocol.MysqlPacket object at 0x00000286DAE535E0>
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\err.py:154: in raise_mysql_exception
+    raise errorclass(errno, errval, sqlstate=sqlstate)
+E   pymysql.err.OperationalError: (1045, "Access denied for user 'root'@'localhost' (using password: NO)")
+        data       = (b"\xff\x15\x04#28000Access denied for user 'root'@'localhost' (using passwo"
+ b'rd: NO)')
+        errno      = 1045
+        errorclass = <class 'pymysql.err.OperationalError'>
+        errval     = "Access denied for user 'root'@'localhost' (using password: NO)"
+        sqlstate   = '28000'
+___ ERROR at setup of TestDBWatchdogMaterial.test_watchdog_material_records ___
+tests\e2e\business_flows\test_bf_05_db_watchdog.py:16: in watchdog
+    wd = DBWatchdog()
+         ^^^^^^^^^^^^
+tests\e2e\business_flows\_helpers.py:43: in __init__
+    self.mysql = mysql_conn or get_mysql_connection()
+                               ^^^^^^^^^^^^^^^^^^^^^^
+        mysql_conn = None
+        redis_conn = None
+        self       = <tests.e2e.business_flows._helpers.DBWatchdog object at 0x00000286DAA2BCE0>
+tests\e2e\business_flows\_helpers.py:17: in get_mysql_connection
+    return pymysql.connect(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:372: in __init__
+    self.connect()
+        auth_plugin_map = None
+        autocommit = False
+        binary_prefix = False
+        bind_address = None
+        charset    = 'utf8mb4'
+        client_flag = 3842573
+        collation  = None
+        compress   = None
+        connect_timeout = 10
+        conv       = {0: <class 'decimal.Decimal'>,
+ 1: <class 'int'>,
+ 2: <class 'int'>,
+ 3: <class 'int'>,
+ 4: <class 'float'>,
+ 5: <class 'float'>,
+ 7: <function convert_datetime at 0x00000286DA49B5E0>,
+ 8: <class 'int'>,
+ 9: <class 'int'>,
+ 10: <function convert_date at 0x00000286DA49B7F0>,
+ 11: <function convert_timedelta at 0x00000286DA49B690>,
+ 12: <function convert_datetime at 0x00000286DA49B5E0>,
+ 13: <class 'int'>,
+ 15: <function through at 0x00000286DA49B8A0>,
+ 16: <function through at 0x00000286DA49B8A0>,
+ 246: <class 'decimal.Decimal'>,
+ 249: <function through at 0x00000286DA49B8A0>,
+ 250: <function through at 0x00000286DA49B8A0>,
+ 251: <function through at 0x00000286DA49B8A0>,
+ 252: <function through at 0x00000286DA49B8A0>,
+ 253: <function through at 0x00000286DA49B8A0>,
+ 254: <function through at 0x00000286DA49B8A0>,
+ <class 'time.struct_time'>: <function escape_struct_time at 0x00000286DA49B3D0>,
+ <class 'decimal.Decimal'>: <function Decimal2Literal at 0x00000286DA49B480>,
+ <class 'datetime.time'>: <function escape_time at 0x00000286DA49B1C0>,
+ <class 'datetime.datetime'>: <function escape_datetime at 0x00000286DA49B270>,
+ <class 'datetime.date'>: <function escape_date at 0x00000286DA49B320>,
+ <class 'datetime.timedelta'>: <function escape_timedelta at 0x00000286DA49B110>,
+ <class 'bool'>: <function escape_bool at 0x00000286DA49AB90>,
+ <class 'bytes'>: <function escape_bytes at 0x00000286DA49AF00>,
+ <class 'dict'>: <function escape_dict at 0x00000286DA49A980>,
+ <class 'float'>: <function escape_float at 0x00000286DA49ACF0>,
+ <class 'list'>: <function escape_sequence at 0x00000286DA49AA30>,
+ <class 'int'>: <function escape_int at 0x00000286DA49AC40>,
+ <class 'NoneType'>: <function escape_None at 0x00000286DA49B060>,
+ <class 'set'>: <function escape_sequence at 0x00000286DA49AA30>,
+ <class 'frozenset'>: <function escape_sequence at 0x00000286DA49AA30>,
+ <class 'tuple'>: <function escape_sequence at 0x00000286DA49AA30>,
+ <class 'str'>: <function escape_str at 0x00000286DA49AFB0>}
+        cursorclass = <class 'pymysql.cursors.DictCursor'>
+        database   = 'steel_belt'
+        db         = None
+        defer_connect = False
+        host       = 'localhost'
+        init_command = None
+        local_infile = False
+        max_allowed_packet = 16777216
+        named_pipe = None
+        passwd     = None
+        password   = ''
+        port       = 3306
+        program_name = None
+        read_default_file = None
+        read_default_group = None
+        read_timeout = None
+        self       = <pymysql.connections.Connection object at 0x00000286DACCFA10>
+        server_public_key = None
+        sql_mode   = None
+        ssl        = None
+        ssl_ca     = None
+        ssl_cert   = None
+        ssl_disabled = None
+        ssl_key    = None
+        ssl_key_password = None
+        ssl_verify_cert = None
+        ssl_verify_identity = None
+        unix_socket = None
+        use_unicode = True
+        user       = 'root'
+        write_timeout = None
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:702: in connect
+    self._request_authentication()
+        kwargs     = {}
+        self       = <pymysql.connections.Connection object at 0x00000286DACCFA10>
+        sock       = <socket.socket [closed] fd=-1, family=2, type=1, proto=0>
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:1014: in _request_authentication
+    auth_packet = self._process_auth(plugin_name, auth_packet)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        _do_ssl    = True
+        auth_packet = <pymysql.protocol.MysqlPacket object at 0x00000286DAE51750>
+        authresp   = b''
+        charset_id = 45
+        client_flags = 3844621
+        connect_attrs = b'\x0c_client_name\x07pymysql\x0f_client_version\x051.2.0\x04_pid\x0534656'
+        data       = (b'\r\xaa:\x00\xff\xff\xff\x00-\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+ b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00root\x00\x00steel_belt'
+ b'\x00caching_sha2_password\x006\x0c_client_name\x07pymysql\x0f_client_versio'
+ b'n\x051.2.0\x04_pid\x0534656')
+        data_init  = (b'\r\xaa:\x00\xff\xff\xff\x00-\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+ b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+        k          = b'_pid'
+        plugin_name = b'mysql_native_password'
+        self       = <pymysql.connections.Connection object at 0x00000286DACCFA10>
+        v          = b'34656'
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:1105: in _process_auth
+    pkt = self._read_packet()
+          ^^^^^^^^^^^^^^^^^^^
+        auth_packet = <pymysql.protocol.MysqlPacket object at 0x00000286DAE51750>
+        data       = b''
+        handler    = None
+        plugin_name = b'mysql_native_password'
+        self       = <pymysql.connections.Connection object at 0x00000286DACCFA10>
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:803: in _read_packet
+    packet.raise_for_error()
+        btrh       = 0
+        btrl       = 71
+        buff       = bytearray(b"\xff\x15\x04#28000Access denied for user 'root'@'localhost' (usin"
+          b'g password: NO)')
+        bytes_to_read = 71
+        packet     = <pymysql.protocol.MysqlPacket object at 0x00000286DAE53250>
+        packet_header = b'G\x00\x00\x05'
+        packet_number = 5
+        packet_type = <class 'pymysql.protocol.MysqlPacket'>
+        recv_data  = (b"\xff\x15\x04#28000Access denied for user 'root'@'localhost' (using passwo"
+ b'rd: NO)')
+        self       = <pymysql.connections.Connection object at 0x00000286DACCFA10>
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\protocol.py:219: in raise_for_error
+    err.raise_mysql_exception(self._data)
+        errno      = 1045
+        self       = <pymysql.protocol.MysqlPacket object at 0x00000286DAE53250>
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\err.py:154: in raise_mysql_exception
+    raise errorclass(errno, errval, sqlstate=sqlstate)
+E   pymysql.err.OperationalError: (1045, "Access denied for user 'root'@'localhost' (using password: NO)")
+        data       = (b"\xff\x15\x04#28000Access denied for user 'root'@'localhost' (using passwo"
+ b'rd: NO)')
+        errno      = 1045
+        errorclass = <class 'pymysql.err.OperationalError'>
+        errval     = "Access denied for user 'root'@'localhost' (using password: NO)"
+        sqlstate   = '28000'
+_________ ERROR at setup of TestDBWatchdogQC.test_watchdog_qc_records _________
+tests\e2e\business_flows\test_bf_05_db_watchdog.py:16: in watchdog
+    wd = DBWatchdog()
+         ^^^^^^^^^^^^
+tests\e2e\business_flows\_helpers.py:43: in __init__
+    self.mysql = mysql_conn or get_mysql_connection()
+                               ^^^^^^^^^^^^^^^^^^^^^^
+        mysql_conn = None
+        redis_conn = None
+        self       = <tests.e2e.business_flows._helpers.DBWatchdog object at 0x00000286DAD06E70>
+tests\e2e\business_flows\_helpers.py:17: in get_mysql_connection
+    return pymysql.connect(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:372: in __init__
+    self.connect()
+        auth_plugin_map = None
+        autocommit = False
+        binary_prefix = False
+        bind_address = None
+        charset    = 'utf8mb4'
+        client_flag = 3842573
+        collation  = None
+        compress   = None
+        connect_timeout = 10
+        conv       = {0: <class 'decimal.Decimal'>,
+ 1: <class 'int'>,
+ 2: <class 'int'>,
+ 3: <class 'int'>,
+ 4: <class 'float'>,
+ 5: <class 'float'>,
+ 7: <function convert_datetime at 0x00000286DA49B5E0>,
+ 8: <class 'int'>,
+ 9: <class 'int'>,
+ 10: <function convert_date at 0x00000286DA49B7F0>,
+ 11: <function convert_timedelta at 0x00000286DA49B690>,
+ 12: <function convert_datetime at 0x00000286DA49B5E0>,
+ 13: <class 'int'>,
+ 15: <function through at 0x00000286DA49B8A0>,
+ 16: <function through at 0x00000286DA49B8A0>,
+ 246: <class 'decimal.Decimal'>,
+ 249: <function through at 0x00000286DA49B8A0>,
+ 250: <function through at 0x00000286DA49B8A0>,
+ 251: <function through at 0x00000286DA49B8A0>,
+ 252: <function through at 0x00000286DA49B8A0>,
+ 253: <function through at 0x00000286DA49B8A0>,
+ 254: <function through at 0x00000286DA49B8A0>,
+ <class 'time.struct_time'>: <function escape_struct_time at 0x00000286DA49B3D0>,
+ <class 'decimal.Decimal'>: <function Decimal2Literal at 0x00000286DA49B480>,
+ <class 'datetime.time'>: <function escape_time at 0x00000286DA49B1C0>,
+ <class 'datetime.datetime'>: <function escape_datetime at 0x00000286DA49B270>,
+ <class 'datetime.date'>: <function escape_date at 0x00000286DA49B320>,
+ <class 'datetime.timedelta'>: <function escape_timedelta at 0x00000286DA49B110>,
+ <class 'bool'>: <function escape_bool at 0x00000286DA49AB90>,
+ <class 'bytes'>: <function escape_bytes at 0x00000286DA49AF00>,
+ <class 'dict'>: <function escape_dict at 0x00000286DA49A980>,
+ <class 'float'>: <function escape_float at 0x00000286DA49ACF0>,
+ <class 'list'>: <function escape_sequence at 0x00000286DA49AA30>,
+ <class 'int'>: <function escape_int at 0x00000286DA49AC40>,
+ <class 'NoneType'>: <function escape_None at 0x00000286DA49B060>,
+ <class 'set'>: <function escape_sequence at 0x00000286DA49AA30>,
+ <class 'frozenset'>: <function escape_sequence at 0x00000286DA49AA30>,
+ <class 'tuple'>: <function escape_sequence at 0x00000286DA49AA30>,
+ <class 'str'>: <function escape_str at 0x00000286DA49AFB0>}
+        cursorclass = <class 'pymysql.cursors.DictCursor'>
+        database   = 'steel_belt'
+        db         = None
+        defer_connect = False
+        host       = 'localhost'
+        init_command = None
+        local_infile = False
+        max_allowed_packet = 16777216
+        named_pipe = None
+        passwd     = None
+        password   = ''
+        port       = 3306
+        program_name = None
+        read_default_file = None
+        read_default_group = None
+        read_timeout = None
+        self       = <pymysql.connections.Connection object at 0x00000286DACCF4D0>
+        server_public_key = None
+        sql_mode   = None
+        ssl        = None
+        ssl_ca     = None
+        ssl_cert   = None
+        ssl_disabled = None
+        ssl_key    = None
+        ssl_key_password = None
+        ssl_verify_cert = None
+        ssl_verify_identity = None
+        unix_socket = None
+        use_unicode = True
+        user       = 'root'
+        write_timeout = None
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:702: in connect
+    self._request_authentication()
+        kwargs     = {}
+        self       = <pymysql.connections.Connection object at 0x00000286DACCF4D0>
+        sock       = <socket.socket [closed] fd=-1, family=2, type=1, proto=0>
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:1014: in _request_authentication
+    auth_packet = self._process_auth(plugin_name, auth_packet)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        _do_ssl    = True
+        auth_packet = <pymysql.protocol.MysqlPacket object at 0x00000286DAE52800>
+        authresp   = b''
+        charset_id = 45
+        client_flags = 3844621
+        connect_attrs = b'\x0c_client_name\x07pymysql\x0f_client_version\x051.2.0\x04_pid\x0534656'
+        data       = (b'\r\xaa:\x00\xff\xff\xff\x00-\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+ b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00root\x00\x00steel_belt'
+ b'\x00caching_sha2_password\x006\x0c_client_name\x07pymysql\x0f_client_versio'
+ b'n\x051.2.0\x04_pid\x0534656')
+        data_init  = (b'\r\xaa:\x00\xff\xff\xff\x00-\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+ b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+        k          = b'_pid'
+        plugin_name = b'mysql_native_password'
+        self       = <pymysql.connections.Connection object at 0x00000286DACCF4D0>
+        v          = b'34656'
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:1105: in _process_auth
+    pkt = self._read_packet()
+          ^^^^^^^^^^^^^^^^^^^
+        auth_packet = <pymysql.protocol.MysqlPacket object at 0x00000286DAE52800>
+        data       = b''
+        handler    = None
+        plugin_name = b'mysql_native_password'
+        self       = <pymysql.connections.Connection object at 0x00000286DACCF4D0>
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:803: in _read_packet
+    packet.raise_for_error()
+        btrh       = 0
+        btrl       = 71
+        buff       = bytearray(b"\xff\x15\x04#28000Access denied for user 'root'@'localhost' (usin"
+          b'g password: NO)')
+        bytes_to_read = 71
+        packet     = <pymysql.protocol.MysqlPacket object at 0x00000286DAE52D70>
+        packet_header = b'G\x00\x00\x05'
+        packet_number = 5
+        packet_type = <class 'pymysql.protocol.MysqlPacket'>
+        recv_data  = (b"\xff\x15\x04#28000Access denied for user 'root'@'localhost' (using passwo"
+ b'rd: NO)')
+        self       = <pymysql.connections.Connection object at 0x00000286DACCF4D0>
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\protocol.py:219: in raise_for_error
+    err.raise_mysql_exception(self._data)
+        errno      = 1045
+        self       = <pymysql.protocol.MysqlPacket object at 0x00000286DAE52D70>
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\err.py:154: in raise_mysql_exception
+    raise errorclass(errno, errval, sqlstate=sqlstate)
+E   pymysql.err.OperationalError: (1045, "Access denied for user 'root'@'localhost' (using password: NO)")
+        data       = (b"\xff\x15\x04#28000Access denied for user 'root'@'localhost' (using passwo"
+ b'rd: NO)')
+        errno      = 1045
+        errorclass = <class 'pymysql.err.OperationalError'>
+        errval     = "Access denied for user 'root'@'localhost' (using password: NO)"
+        sqlstate   = '28000'
+___ ERROR at setup of TestDBWatchdogInventory.test_watchdog_inventory_delta ___
+tests\e2e\business_flows\test_bf_05_db_watchdog.py:16: in watchdog
+    wd = DBWatchdog()
+         ^^^^^^^^^^^^
+tests\e2e\business_flows\_helpers.py:43: in __init__
+    self.mysql = mysql_conn or get_mysql_connection()
+                               ^^^^^^^^^^^^^^^^^^^^^^
+        mysql_conn = None
+        redis_conn = None
+        self       = <tests.e2e.business_flows._helpers.DBWatchdog object at 0x00000286DAD1F570>
+tests\e2e\business_flows\_helpers.py:17: in get_mysql_connection
+    return pymysql.connect(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:372: in __init__
+    self.connect()
+        auth_plugin_map = None
+        autocommit = False
+        binary_prefix = False
+        bind_address = None
+        charset    = 'utf8mb4'
+        client_flag = 3842573
+        collation  = None
+        compress   = None
+        connect_timeout = 10
+        conv       = {0: <class 'decimal.Decimal'>,
+ 1: <class 'int'>,
+ 2: <class 'int'>,
+ 3: <class 'int'>,
+ 4: <class 'float'>,
+ 5: <class 'float'>,
+ 7: <function convert_datetime at 0x00000286DA49B5E0>,
+ 8: <class 'int'>,
+ 9: <class 'int'>,
+ 10: <function convert_date at 0x00000286DA49B7F0>,
+ 11: <function convert_timedelta at 0x00000286DA49B690>,
+ 12: <function convert_datetime at 0x00000286DA49B5E0>,
+ 13: <class 'int'>,
+ 15: <function through at 0x00000286DA49B8A0>,
+ 16: <function through at 0x00000286DA49B8A0>,
+ 246: <class 'decimal.Decimal'>,
+ 249: <function through at 0x00000286DA49B8A0>,
+ 250: <function through at 0x00000286DA49B8A0>,
+ 251: <function through at 0x00000286DA49B8A0>,
+ 252: <function through at 0x00000286DA49B8A0>,
+ 253: <function through at 0x00000286DA49B8A0>,
+ 254: <function through at 0x00000286DA49B8A0>,
+ <class 'time.struct_time'>: <function escape_struct_time at 0x00000286DA49B3D0>,
+ <class 'decimal.Decimal'>: <function Decimal2Literal at 0x00000286DA49B480>,
+ <class 'datetime.time'>: <function escape_time at 0x00000286DA49B1C0>,
+ <class 'datetime.datetime'>: <function escape_datetime at 0x00000286DA49B270>,
+ <class 'datetime.date'>: <function escape_date at 0x00000286DA49B320>,
+ <class 'datetime.timedelta'>: <function escape_timedelta at 0x00000286DA49B110>,
+ <class 'bool'>: <function escape_bool at 0x00000286DA49AB90>,
+ <class 'bytes'>: <function escape_bytes at 0x00000286DA49AF00>,
+ <class 'dict'>: <function escape_dict at 0x00000286DA49A980>,
+ <class 'float'>: <function escape_float at 0x00000286DA49ACF0>,
+ <class 'list'>: <function escape_sequence at 0x00000286DA49AA30>,
+ <class 'int'>: <function escape_int at 0x00000286DA49AC40>,
+ <class 'NoneType'>: <function escape_None at 0x00000286DA49B060>,
+ <class 'set'>: <function escape_sequence at 0x00000286DA49AA30>,
+ <class 'frozenset'>: <function escape_sequence at 0x00000286DA49AA30>,
+ <class 'tuple'>: <function escape_sequence at 0x00000286DA49AA30>,
+ <class 'str'>: <function escape_str at 0x00000286DA49AFB0>}
+        cursorclass = <class 'pymysql.cursors.DictCursor'>
+        database   = 'steel_belt'
+        db         = None
+        defer_connect = False
+        host       = 'localhost'
+        init_command = None
+        local_infile = False
+        max_allowed_packet = 16777216
+        named_pipe = None
+        passwd     = None
+        password   = ''
+        port       = 3306
+        program_name = None
+        read_default_file = None
+        read_default_group = None
+        read_timeout = None
+        self       = <pymysql.connections.Connection object at 0x00000286DACCFA10>
+        server_public_key = None
+        sql_mode   = None
+        ssl        = None
+        ssl_ca     = None
+        ssl_cert   = None
+        ssl_disabled = None
+        ssl_key    = None
+        ssl_key_password = None
+        ssl_verify_cert = None
+        ssl_verify_identity = None
+        unix_socket = None
+        use_unicode = True
+        user       = 'root'
+        write_timeout = None
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:702: in connect
+    self._request_authentication()
+        kwargs     = {}
+        self       = <pymysql.connections.Connection object at 0x00000286DACCFA10>
+        sock       = <socket.socket [closed] fd=-1, family=2, type=1, proto=0>
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:1014: in _request_authentication
+    auth_packet = self._process_auth(plugin_name, auth_packet)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        _do_ssl    = True
+        auth_packet = <pymysql.protocol.MysqlPacket object at 0x00000286DAE533D0>
+        authresp   = b''
+        charset_id = 45
+        client_flags = 3844621
+        connect_attrs = b'\x0c_client_name\x07pymysql\x0f_client_version\x051.2.0\x04_pid\x0534656'
+        data       = (b'\r\xaa:\x00\xff\xff\xff\x00-\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+ b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00root\x00\x00steel_belt'
+ b'\x00caching_sha2_password\x006\x0c_client_name\x07pymysql\x0f_client_versio'
+ b'n\x051.2.0\x04_pid\x0534656')
+        data_init  = (b'\r\xaa:\x00\xff\xff\xff\x00-\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+ b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+        k          = b'_pid'
+        plugin_name = b'mysql_native_password'
+        self       = <pymysql.connections.Connection object at 0x00000286DACCFA10>
+        v          = b'34656'
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:1105: in _process_auth
+    pkt = self._read_packet()
+          ^^^^^^^^^^^^^^^^^^^
+        auth_packet = <pymysql.protocol.MysqlPacket object at 0x00000286DAE533D0>
+        data       = b''
+        handler    = None
+        plugin_name = b'mysql_native_password'
+        self       = <pymysql.connections.Connection object at 0x00000286DACCFA10>
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:803: in _read_packet
+    packet.raise_for_error()
+        btrh       = 0
+        btrl       = 71
+        buff       = bytearray(b"\xff\x15\x04#28000Access denied for user 'root'@'localhost' (usin"
+          b'g password: NO)')
+        bytes_to_read = 71
+        packet     = <pymysql.protocol.MysqlPacket object at 0x00000286DAE533A0>
+        packet_header = b'G\x00\x00\x05'
+        packet_number = 5
+        packet_type = <class 'pymysql.protocol.MysqlPacket'>
+        recv_data  = (b"\xff\x15\x04#28000Access denied for user 'root'@'localhost' (using passwo"
+ b'rd: NO)')
+        self       = <pymysql.connections.Connection object at 0x00000286DACCFA10>
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\protocol.py:219: in raise_for_error
+    err.raise_mysql_exception(self._data)
+        errno      = 1045
+        self       = <pymysql.protocol.MysqlPacket object at 0x00000286DAE533A0>
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\err.py:154: in raise_mysql_exception
+    raise errorclass(errno, errval, sqlstate=sqlstate)
+E   pymysql.err.OperationalError: (1045, "Access denied for user 'root'@'localhost' (using password: NO)")
+        data       = (b"\xff\x15\x04#28000Access denied for user 'root'@'localhost' (using passwo"
+ b'rd: NO)')
+        errno      = 1045
+        errorclass = <class 'pymysql.err.OperationalError'>
+        errval     = "Access denied for user 'root'@'localhost' (using password: NO)"
+        sqlstate   = '28000'
+================================== FAILURES ===================================
+_______ TestDispatchCacheInvalidation.test_cache_invalidation_mechanism _______
+tests\e2e\business_flows\test_bf_03_dispatch_regress.py:40: in test_cache_invalidation_mechanism
+    watchdog = DBWatchdog()
+               ^^^^^^^^^^^^
+        self       = <e2e.business_flows.test_bf_03_dispatch_regress.TestDispatchCacheInvalidation object at 0x00000286DA725590>
+tests\e2e\business_flows\_helpers.py:43: in __init__
+    self.mysql = mysql_conn or get_mysql_connection()
+                               ^^^^^^^^^^^^^^^^^^^^^^
+        mysql_conn = None
+        redis_conn = None
+        self       = <tests.e2e.business_flows._helpers.DBWatchdog object at 0x00000286DACCF770>
+tests\e2e\business_flows\_helpers.py:17: in get_mysql_connection
+    return pymysql.connect(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:372: in __init__
+    self.connect()
+        auth_plugin_map = None
+        autocommit = False
+        binary_prefix = False
+        bind_address = None
+        charset    = 'utf8mb4'
+        client_flag = 3842573
+        collation  = None
+        compress   = None
+        connect_timeout = 10
+        conv       = {0: <class 'decimal.Decimal'>,
+ 1: <class 'int'>,
+ 2: <class 'int'>,
+ 3: <class 'int'>,
+ 4: <class 'float'>,
+ 5: <class 'float'>,
+ 7: <function convert_datetime at 0x00000286DA49B5E0>,
+ 8: <class 'int'>,
+ 9: <class 'int'>,
+ 10: <function convert_date at 0x00000286DA49B7F0>,
+ 11: <function convert_timedelta at 0x00000286DA49B690>,
+ 12: <function convert_datetime at 0x00000286DA49B5E0>,
+ 13: <class 'int'>,
+ 15: <function through at 0x00000286DA49B8A0>,
+ 16: <function through at 0x00000286DA49B8A0>,
+ 246: <class 'decimal.Decimal'>,
+ 249: <function through at 0x00000286DA49B8A0>,
+ 250: <function through at 0x00000286DA49B8A0>,
+ 251: <function through at 0x00000286DA49B8A0>,
+ 252: <function through at 0x00000286DA49B8A0>,
+ 253: <function through at 0x00000286DA49B8A0>,
+ 254: <function through at 0x00000286DA49B8A0>,
+ <class 'time.struct_time'>: <function escape_struct_time at 0x00000286DA49B3D0>,
+ <class 'decimal.Decimal'>: <function Decimal2Literal at 0x00000286DA49B480>,
+ <class 'datetime.time'>: <function escape_time at 0x00000286DA49B1C0>,
+ <class 'datetime.datetime'>: <function escape_datetime at 0x00000286DA49B270>,
+ <class 'datetime.date'>: <function escape_date at 0x00000286DA49B320>,
+ <class 'datetime.timedelta'>: <function escape_timedelta at 0x00000286DA49B110>,
+ <class 'bool'>: <function escape_bool at 0x00000286DA49AB90>,
+ <class 'bytes'>: <function escape_bytes at 0x00000286DA49AF00>,
+ <class 'dict'>: <function escape_dict at 0x00000286DA49A980>,
+ <class 'float'>: <function escape_float at 0x00000286DA49ACF0>,
+ <class 'list'>: <function escape_sequence at 0x00000286DA49AA30>,
+ <class 'int'>: <function escape_int at 0x00000286DA49AC40>,
+ <class 'NoneType'>: <function escape_None at 0x00000286DA49B060>,
+ <class 'set'>: <function escape_sequence at 0x00000286DA49AA30>,
+ <class 'frozenset'>: <function escape_sequence at 0x00000286DA49AA30>,
+ <class 'tuple'>: <function escape_sequence at 0x00000286DA49AA30>,
+ <class 'str'>: <function escape_str at 0x00000286DA49AFB0>}
+        cursorclass = <class 'pymysql.cursors.DictCursor'>
+        database   = 'steel_belt'
+        db         = None
+        defer_connect = False
+        host       = 'localhost'
+        init_command = None
+        local_infile = False
+        max_allowed_packet = 16777216
+        named_pipe = None
+        passwd     = None
+        password   = ''
+        port       = 3306
+        program_name = None
+        read_default_file = None
+        read_default_group = None
+        read_timeout = None
+        self       = <pymysql.connections.Connection object at 0x00000286DACCF8C0>
+        server_public_key = None
+        sql_mode   = None
+        ssl        = None
+        ssl_ca     = None
+        ssl_cert   = None
+        ssl_disabled = None
+        ssl_key    = None
+        ssl_key_password = None
+        ssl_verify_cert = None
+        ssl_verify_identity = None
+        unix_socket = None
+        use_unicode = True
+        user       = 'root'
+        write_timeout = None
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:702: in connect
+    self._request_authentication()
+        kwargs     = {}
+        self       = <pymysql.connections.Connection object at 0x00000286DACCF8C0>
+        sock       = <socket.socket [closed] fd=-1, family=2, type=1, proto=0>
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:1014: in _request_authentication
+    auth_packet = self._process_auth(plugin_name, auth_packet)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        _do_ssl    = True
+        auth_packet = <pymysql.protocol.MysqlPacket object at 0x00000286DADED330>
+        authresp   = b''
+        charset_id = 45
+        client_flags = 3844621
+        connect_attrs = b'\x0c_client_name\x07pymysql\x0f_client_version\x051.2.0\x04_pid\x0534656'
+        data       = (b'\r\xaa:\x00\xff\xff\xff\x00-\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+ b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00root\x00\x00steel_belt'
+ b'\x00caching_sha2_password\x006\x0c_client_name\x07pymysql\x0f_client_versio'
+ b'n\x051.2.0\x04_pid\x0534656')
+        data_init  = (b'\r\xaa:\x00\xff\xff\xff\x00-\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+ b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+        k          = b'_pid'
+        plugin_name = b'mysql_native_password'
+        self       = <pymysql.connections.Connection object at 0x00000286DACCF8C0>
+        v          = b'34656'
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:1105: in _process_auth
+    pkt = self._read_packet()
+          ^^^^^^^^^^^^^^^^^^^
+        auth_packet = <pymysql.protocol.MysqlPacket object at 0x00000286DADED330>
+        data       = b''
+        handler    = None
+        plugin_name = b'mysql_native_password'
+        self       = <pymysql.connections.Connection object at 0x00000286DACCF8C0>
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\connections.py:803: in _read_packet
+    packet.raise_for_error()
+        btrh       = 0
+        btrl       = 71
+        buff       = bytearray(b"\xff\x15\x04#28000Access denied for user 'root'@'localhost' (usin"
+          b'g password: NO)')
+        bytes_to_read = 71
+        packet     = <pymysql.protocol.MysqlPacket object at 0x00000286DADED2A0>
+        packet_header = b'G\x00\x00\x05'
+        packet_number = 5
+        packet_type = <class 'pymysql.protocol.MysqlPacket'>
+        recv_data  = (b"\xff\x15\x04#28000Access denied for user 'root'@'localhost' (using passwo"
+ b'rd: NO)')
+        self       = <pymysql.connections.Connection object at 0x00000286DACCF8C0>
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\protocol.py:219: in raise_for_error
+    err.raise_mysql_exception(self._data)
+        errno      = 1045
+        self       = <pymysql.protocol.MysqlPacket object at 0x00000286DADED2A0>
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pymysql\err.py:154: in raise_mysql_exception
+    raise errorclass(errno, errval, sqlstate=sqlstate)
+E   pymysql.err.OperationalError: (1045, "Access denied for user 'root'@'localhost' (using password: NO)")
+        data       = (b"\xff\x15\x04#28000Access denied for user 'root'@'localhost' (using passwo"
+ b'rd: NO)')
+        errno      = 1045
+        errorclass = <class 'pymysql.err.OperationalError'>
+        errval     = "Access denied for user 'root'@'localhost' (using password: NO)"
+        sqlstate   = '28000'
+__________ TestCrossServiceHealthCheck.test_all_services_responsive ___________
+tests\e2e\business_flows\test_bf_04_cross_service.py:128: in test_all_services_responsive
+    assert results.get('5003 调度', False), '5003 调度中心不可用，跨端点测试无法进行'
+E   AssertionError: 5003 调度中心不可用，跨端点测试无法进行
+E   assert False
+E    +  where False = <built-in method get of dict object at 0x00000286DAE399C0>('5003 \u8c03\u5ea6', False)
+E    +    where <built-in method get of dict object at 0x00000286DAE399C0> = {'5001 Web': False, '5003 \u8c03\u5ea6': False, '5008 \u79fb\u52a8': False}.get
+        client     = <tests.core.api_client.APIClient object at 0x00000286DAE47450>
+        e2e_client = <tests.core.api_client.APIClient object at 0x00000286DAE4D7B0>
+        e2e_dispatcher_client = <tests.core.api_client.APIClient object at 0x00000286DAE4D8C0>
+        e2e_mobile_client = <tests.core.api_client.APIClient object at 0x00000286DAE47450>
+        name       = '5008 移动'
+        path       = '/api/health'
+        results    = {'5001 Web': False, '5003 调度': False, '5008 移动': False}
+        self       = <e2e.business_flows.test_bf_04_cross_service.TestCrossServiceHealthCheck object at 0x00000286DA726210>
+        services   = [('5001 Web',
+  <tests.core.api_client.APIClient object at 0x00000286DAE4D7B0>,
+  '/api/health'),
+ ('5003 调度',
+  <tests.core.api_client.APIClient object at 0x00000286DAE4D8C0>,
+  '/api/health'),
+ ('5008 移动',
+  <tests.core.api_client.APIClient object at 0x00000286DAE47450>,
+  '/api/health')]
+---------------------------- Captured stdout call -----------------------------
+[跨端点] 5001 Web 健康检查异常: requests.sessions.Session.request() got multiple values for keyword argument 'timeout'
+[跨端点] 5003 调度 健康检查异常: requests.sessions.Session.request() got multiple values for keyword argument 'timeout'
+[跨端点] 5008 移动 健康检查异常: requests.sessions.Session.request() got multiple values for keyword argument 'timeout'
+------------------------------ Captured log call ------------------------------
+ERROR    tests.core.api_client:api_client.py:93 请求失败 GET http://localhost:5001/api/health: requests.sessions.Session.request() got multiple values for keyword argument 'timeout'
+ERROR    tests.core.api_client:api_client.py:93 请求失败 GET http://localhost:5003/api/health: requests.sessions.Session.request() got multiple values for keyword argument 'timeout'
+ERROR    tests.core.api_client:api_client.py:93 请求失败 GET http://localhost:5008/api/health: requests.sessions.Session.request() got multiple values for keyword argument 'timeout'
+=========================== short test summary info ===========================
+SKIPPED [1] tests\e2e\business_flows\test_bf_01_main_chain.py:20: 5002 移动端 服务未启动，跳过 E2E 测试
+SKIPPED [1] tests\e2e\business_flows\test_bf_01_main_chain.py:55: 5002 移动端 服务未启动，跳过 E2E 测试
+SKIPPED [1] tests\e2e\business_flows\test_bf_01_main_chain.py:94: 5002 移动端 服务未启动，跳过 E2E 测试
+SKIPPED [1] tests\e2e\business_flows\test_bf_01_main_chain.py:131: 5002 移动端 服务未启动，跳过 E2E 测试
+SKIPPED [1] tests\e2e\business_flows\test_bf_01_main_chain.py:178: 5002 移动端 服务未启动，跳过 E2E 测试
+SKIPPED [1] tests\e2e\business_flows\test_bf_01_main_chain.py:240: 5002 移动端 服务未启动，跳过 E2E 测试
+SKIPPED [1] tests\e2e\business_flows\test_bf_01_main_chain.py:277: 5002 移动端 服务未启动，跳过 E2E 测试
+SKIPPED [1] tests\e2e\business_flows\test_bf_01_main_chain.py:307: 5002 移动端 服务未启动，跳过 E2E 测试
+SKIPPED [1] tests\e2e\business_flows\test_bf_01_main_chain.py:337: 5002 移动端 服务未启动，跳过 E2E 测试
+SKIPPED [1] tests\e2e\business_flows\test_bf_02_mobile_report.py:23: 5002 移动端 服务未启动，跳过 E2E 测试
+SKIPPED [1] tests\e2e\business_flows\test_bf_02_mobile_report.py:41: 5002 移动端 服务未启动，跳过 E2E 测试
+SKIPPED [1] tests\e2e\business_flows\test_bf_02_mobile_report.py:59: 5002 移动端 服务未启动，跳过 E2E 测试
+SKIPPED [1] tests\e2e\business_flows\test_bf_03_dispatch_regress.py:21: 5002 移动端 服务未启动，跳过 E2E 测试
+SKIPPED [5] tests\e2e\business_flows\test_bf_03_dispatch_regress.py:58: 5002 移动端 服务未启动，跳过 E2E 测试
+SKIPPED [1] tests\e2e\business_flows\test_bf_03_dispatch_regress.py:92: 5002 移动端 服务未启动，跳过 E2E 测试
+SKIPPED [1] tests\e2e\business_flows\test_bf_03_dispatch_regress.py:103: 5002 移动端 服务未启动，跳过 E2E 测试
+SKIPPED [1] tests\e2e\business_flows\test_bf_03_dispatch_regress.py:120: 5002 移动端 服务未启动，跳过 E2E 测试
+SKIPPED [1] tests\e2e\business_flows\test_bf_04_cross_service.py:36: 5001 创建订单失败: requests.sessions.Session.request() got multiple values for keyword argument 'timeout'
+SKIPPED [1] tests\e2e\business_flows\test_bf_04_cross_service.py:76: 5008 任务列表查询失败: requests.sessions.Session.request() got multiple values for keyword argument 'timeout'
+SKIPPED [1] tests\e2e\business_flows\test_bf_04_cross_service.py:101: 报工 API 调用失败: requests.sessions.Session.request() got multiple values for keyword argument 'timeout'
+SKIPPED [1] tests\e2e\business_flows\test_bf_05_db_watchdog.py:184: MySQL 不可用: (1045, "Access denied for user 'root'@'localhost' (using password: NO)")
+SKIPPED [1] tests\e2e\business_flows\test_bf_05_db_watchdog.py:194: Redis 不可用: (1045, "Access denied for user 'root'@'localhost' (using password: NO)")
+SKIPPED [1] tests\e2e\business_flows\test_bf_05_db_watchdog.py:206: 订单表查询失败: (1045, "Access denied for user 'root'@'localhost' (using password: NO)")
+ERROR tests/e2e/business_flows/test_bf_02_mobile_report.py::TestMobileReportUI::test_mobile_qr_scan_ui
+ERROR tests/e2e/business_flows/test_bf_02_mobile_report.py::TestMobileReportUI::test_mobile_task_list
+ERROR tests/e2e/business_flows/test_bf_02_mobile_report.py::TestMobileReportUI::test_mobile_home_page
+ERROR tests/e2e/business_flows/test_bf_05_db_watchdog.py::TestDBWatchdogOrder::test_watchdog_assert_order_status_method - pymysql.err.OperationalError: (1045, "Access denied for user 'root'@'localhost' (using password: NO)")
+ERROR tests/e2e/business_flows/test_bf_05_db_watchdog.py::TestDBWatchdogProcess::test_watchdog_assert_process_steps_count - pymysql.err.OperationalError: (1045, "Access denied for user 'root'@'localhost' (using password: NO)")
+ERROR tests/e2e/business_flows/test_bf_05_db_watchdog.py::TestDBWatchdogProcess::test_watchdog_assert_process_step_state - pymysql.err.OperationalError: (1045, "Access denied for user 'root'@'localhost' (using password: NO)")
+ERROR tests/e2e/business_flows/test_bf_05_db_watchdog.py::TestDBWatchdogMaterial::test_watchdog_material_records - pymysql.err.OperationalError: (1045, "Access denied for user 'root'@'localhost' (using password: NO)")
+ERROR tests/e2e/business_flows/test_bf_05_db_watchdog.py::TestDBWatchdogQC::test_watchdog_qc_records - pymysql.err.OperationalError: (1045, "Access denied for user 'root'@'localhost' (using password: NO)")
+ERROR tests/e2e/business_flows/test_bf_05_db_watchdog.py::TestDBWatchdogInventory::test_watchdog_inventory_delta - pymysql.err.OperationalError: (1045, "Access denied for user 'root'@'localhost' (using password: NO)")
+FAILED tests/e2e/business_flows/test_bf_03_dispatch_regress.py::TestDispatchCacheInvalidation::test_cache_invalidation_mechanism - pymysql.err.OperationalError: (1045, "Access denied for user 'root'@'localhost' (using password: NO)")
+FAILED tests/e2e/business_flows/test_bf_04_cross_service.py::TestCrossServiceHealthCheck::test_all_services_responsive - AssertionError: 5003 调度中心不可用，跨端点测试无法进行
+assert False
+ +  where False = <built-in method get of dict object at 0x00000286DAE399C0>('5003 \u8c03\u5ea6', False)
+ +    where <built-in method get of dict object at 0x00000286DAE399C0> = {'5001 Web': False, '5003 \u8c03\u5ea6': False, '5008 \u79fb\u52a8': False}.get
+============= 2 failed, 27 skipped, 9 errors in 201.36s (0:03:21) =============
