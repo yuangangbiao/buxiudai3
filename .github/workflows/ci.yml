@@ -42,7 +42,15 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install --timeout=300 -r requirements-ci.txt
+          pip install --timeout=300 -r requirements-ci.txt 2>&1 | tee pip_install.log || true
+
+      - name: Upload pip install log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pip-install-log
+          path: pip_install.log
+          retention-days: 1
 
       - name: Run flake8 lint
         run: |
