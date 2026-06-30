@@ -43,7 +43,10 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libffi-dev libssl-dev
+          sudo apt-get install -y libffi-dev libssl-dev build-essential
+
+      - name: Install Rust (for cryptography)
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Install dependencies
         run: |
