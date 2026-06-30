@@ -21,7 +21,7 @@ MATERIALS = [
     "碳钢镀锌",
     "铝合金",
     "铜合金",
-    "钛合金"
+    "钛合金",
 ]
 
 MATERIAL_DENSITIES = {
@@ -100,17 +100,11 @@ PRODUCT_TYPES = [
     "马蹄形网带",
     "冷冻网带",
     "冷冻螺旋网",
-    "其他"
+    "其他",
 ]
 
 # ========== 表面处理选项 ==========
-SURFACE_TREATMENTS = [
-    "光亮退火",
-    "抛光",
-    "钝化",
-    "喷砂",
-    "无处理"
-]
+SURFACE_TREATMENTS = ["光亮退火", "抛光", "钝化", "喷砂", "无处理"]
 
 # ========== 订单状态（带颜色） ==========
 ORDER_STATUS = {
@@ -124,7 +118,7 @@ ORDER_STATUS = {
     "已完成": "#4CAF50",
     "待发货": "#9C27B0",
     "已发货": "#9C27B0",
-    "已取消": "#F44336"
+    "已取消": "#F44336",
 }
 
 # ========== 生产工序（17个工序） ==========
@@ -175,13 +169,14 @@ PROCESS_CODES = {
 def get_process_code(process_name: str) -> str:
     """获取工序编码。预定义工序用P01-P16，自定义工序用注册编码，其他用PX-hash4动态生成"""
     if not process_name:
-        return ''
+        return ""
     import hashlib
+
     name = process_name.strip()
     code = PROCESS_CODES.get(name) or _custom_process_codes.get(name)
     if code:
         return code
-    return 'PX' + hashlib.md5(name.encode()).hexdigest()[:4].upper()
+    return "PX" + hashlib.md5(name.encode()).hexdigest()[:4].upper()
 
 
 # ========== 后期工序注册系统 ==========
@@ -199,10 +194,7 @@ _display_seq_cache_loaded = False
 
 
 def register_process(
-    process_name: str,
-    process_code: str = '',
-    display_seq: int = None,
-    category: str = 'process'
+    process_name: str, process_code: str = "", display_seq: int = None, category: str = "process"
 ) -> str:
     """
     注册一个新的工序（含5层防御 + 持久化）。
@@ -222,7 +214,7 @@ def register_process(
     global _next_custom_seq, _next_display_seq
 
     if not process_name or not process_name.strip():
-        raise ValueError('process_name 不能为空')
+        raise ValueError("process_name 不能为空")
 
     # T5-1 参数清洗：仅 strip (B0 修: 去掉 .lower() 归一化, 与下游查询不匹配)
     name = process_name.strip()
@@ -236,18 +228,19 @@ def register_process(
     if process_code and process_code.strip():
         code = process_code.strip()
     else:
-        code = f'P{_next_custom_seq:02d}'
+        code = f"P{_next_custom_seq:02d}"
         _next_custom_seq += 1
 
     # T5-3 格式校验：编码格式正则 ^[PMQXpmqx][0-9A-Za-z]{1,8}$
     import re
-    if not re.match(r'^[PMQXpmqx][0-9A-Za-z]{1,8}$', code):
-        raise ValueError('工序编码格式不合法，需符合 P/M/Q/X 开头 + 字母数字，长度 2-9 位')
+
+    if not re.match(r"^[PMQXpmqx][0-9A-Za-z]{1,8}$", code):
+        raise ValueError("工序编码格式不合法，需符合 P/M/Q/X 开头 + 字母数字，长度 2-9 位")
 
     # T5-4 第二层：检查 code 是否已被其他 name 占用
     reverse_map = {v: k for k, v in _custom_process_codes.items()}
     if code in reverse_map and reverse_map[code] != name:
-        raise ValueError(f'该编码 {code} 已被其他工序占用')
+        raise ValueError(f"该编码 {code} 已被其他工序占用")
 
     # 分配显示序号
     if display_seq is not None:
@@ -267,8 +260,7 @@ def register_process(
     # B0 修: 刷新跨模块 SSOT _PROCESS_CODE_TO_TYPE (R12 原始 bug #2)
     # 工序类型映射: 编码首字母决定 → process_report (P) / material_request (M)
     # / quality_task (Q) / outsource_task (X)
-    type_map = {'P': 'process_report', 'M': 'material_request',
-                'Q': 'quality_task', 'X': 'outsource_task'}
+    type_map = {"P": "process_report", "M": "material_request", "Q": "quality_task", "X": "outsource_task"}
     _PROCESS_CODE_TO_TYPE[code] = type_map.get(code[0], category)
 
     # T5-2 + T5-5: DB 持久化（幂等 + 静默降级）
@@ -285,31 +277,37 @@ def _persist_process_to_db(name: str, code: str, category: str) -> None:
     """
     import logging as _log
     import pymysql
+
     _logger = _log.getLogger(__name__)
     try:
         try:
             from core._db_pools import get_steel_belt_connection
+
             conn = get_steel_belt_connection(autocommit=False)
         except Exception:
             import os as _os
+
             conn = pymysql.connect(
-                host='localhost', user='root',
-                password=_os.getenv('MYSQL_PASSWORD', ''),
-                database='steel_belt', charset='utf8mb4',
-                connect_timeout=5)
+                host="localhost",
+                user="root",
+                password=_os.getenv("MYSQL_PASSWORD", ""),
+                database="steel_belt",
+                charset="utf8mb4",
+                connect_timeout=5,
+            )
         try:
             cursor = conn.cursor()
             cursor.execute(
-                "INSERT INTO process_code_registry (name, process_code, category) "
-                "VALUES (%s, %s, %s)",
-                (name, code, category))
+                "INSERT INTO process_code_registry (name, process_code, category) " "VALUES (%s, %s, %s)",
+                (name, code, category),
+            )
             conn.commit()
             cursor.close()
         except Exception as ie:
             conn.close()
             raise ie
     except Exception as e:
-        _logger.debug('[register_process] DB持久化降级（仅写内存）: %s', e)
+        _logger.debug("[register_process] DB持久化降级（仅写内存）: %s", e)
 
 
 def unregister_process(process_name: str) -> bool:
@@ -353,30 +351,34 @@ def _unpersist_process_from_db(name: str) -> None:
     """
     import logging as _log
     import pymysql
+
     _logger = _log.getLogger(__name__)
     try:
         try:
             from core._db_pools import get_steel_belt_connection
+
             conn = get_steel_belt_connection(autocommit=False)
         except Exception:
             import os as _os
+
             conn = pymysql.connect(
-                host='localhost', user='root',
-                password=_os.getenv('MYSQL_PASSWORD', ''),
-                database='steel_belt', charset='utf8mb4',
-                connect_timeout=5)
+                host="localhost",
+                user="root",
+                password=_os.getenv("MYSQL_PASSWORD", ""),
+                database="steel_belt",
+                charset="utf8mb4",
+                connect_timeout=5,
+            )
         try:
             cursor = conn.cursor()
-            cursor.execute(
-                "DELETE FROM process_code_registry WHERE name=%s",
-                (name,))
+            cursor.execute("DELETE FROM process_code_registry WHERE name=%s", (name,))
             conn.commit()
             cursor.close()
         except Exception as ie:
             conn.close()
             raise ie
     except Exception as e:
-        _logger.debug('[unregister_process] DB删除降级: %s', e)
+        _logger.debug("[unregister_process] DB删除降级: %s", e)
 
 
 def _get_standard_seq(name: str) -> int:
@@ -390,7 +392,7 @@ def _get_standard_seq(name: str) -> int:
 
 def get_process_seq(name: str) -> int:
     """获取单个工序的显示序号。优先用显式指定值，否则用标准工序的默认位置"""
-    n = name.strip() if name else ''
+    n = name.strip() if name else ""
     # 显式指定的序号（自定义工序 or 被移动过的标准工序）
     if n in _custom_process_seqs:
         return _custom_process_seqs[n]
@@ -421,7 +423,7 @@ def get_all_process_codes() -> dict:
 
 def is_registered(process_name: str) -> bool:
     """检查工序是否已注册"""
-    name = process_name.strip() if process_name else ''
+    name = process_name.strip() if process_name else ""
     return name in PROCESS_CODES or name in _custom_process_codes
 
 
@@ -452,7 +454,7 @@ def reorder_processes(order: list) -> bool:
     return True
 
 
-def move_process(process_name: str, direction: str = 'up') -> int:
+def move_process(process_name: str, direction: str = "up") -> int:
     """
     移动工序在显示列表中的位置（标准工序也支持）。
     direction: 'up'/'down'/'top'/'bottom'
@@ -474,13 +476,13 @@ def move_process(process_name: str, direction: str = 'up') -> int:
     old_idx = ordered.index(name)
     new_idx = old_idx
 
-    if direction == 'up' and old_idx > 0:
+    if direction == "up" and old_idx > 0:
         new_idx = old_idx - 1
-    elif direction == 'down' and old_idx < len(ordered) - 1:
+    elif direction == "down" and old_idx < len(ordered) - 1:
         new_idx = old_idx + 1
-    elif direction == 'top':
+    elif direction == "top":
         new_idx = 0
-    elif direction == 'bottom':
+    elif direction == "bottom":
         new_idx = len(ordered) - 1
 
     if new_idx == old_idx:
@@ -509,9 +511,12 @@ def load_custom_processes_from_db(mysql_conn=None):
         修复: 表 DROP 后返 0 + WARNING, 内存数据由 _custom_process_codes 维护
     """
     import logging
+
     logger = logging.getLogger(__name__)
-    logger.warning('[F16 T16.6] process_names 表已 F6 P9 DROP, load_custom_processes_from_db 返 0 '
-                   '(内存 PROCESS_CODES 仍可用, 自定义工序走 register_process() 运行时注册)')
+    logger.warning(
+        "[F16 T16.6] process_names 表已 F6 P9 DROP, load_custom_processes_from_db 返 0 "
+        "(内存 PROCESS_CODES 仍可用, 自定义工序走 register_process() 运行时注册)"
+    )
     return 0
 
     # 保留原逻辑 (F6 P9 之前可达) — 已不可达, 仅留作历史参考
@@ -519,25 +524,28 @@ def load_custom_processes_from_db(mysql_conn=None):
         try:
             from core.db import get_direct_connection
             import os as _os
+
             mysql_conn = get_direct_connection(
-                host=_os.getenv('MYSQL_HOST', 'localhost'),
-                port=int(_os.getenv('MYSQL_PORT', '3306')),
-                user=_os.getenv('MYSQL_USER', 'root'),
-                password=_os.getenv('MYSQL_PASSWORD', ''),
-                database=_os.getenv('MYSQL_DATABASE', 'steel_belt'),
-                charset='utf8mb4'
+                host=_os.getenv("MYSQL_HOST", "localhost"),
+                port=int(_os.getenv("MYSQL_PORT", "3306")),
+                user=_os.getenv("MYSQL_USER", "root"),
+                password=_os.getenv("MYSQL_PASSWORD", ""),
+                database=_os.getenv("MYSQL_DATABASE", "steel_belt"),
+                charset="utf8mb4",
             )
         except Exception:
             return 0
 
     try:
         cur = mysql_conn.cursor()
-        cur.execute("SELECT process_name, process_code, display_seq, is_active FROM process_names WHERE is_active=1 ORDER BY display_seq")
+        cur.execute(
+            "SELECT process_name, process_code, display_seq, is_active FROM process_names WHERE is_active=1 ORDER BY display_seq"
+        )
         loaded = 0
         for row in cur.fetchall():
-            name = row['process_name']
-            code = row['process_code']
-            seq = row.get('display_seq')
+            name = row["process_name"]
+            code = row["process_code"]
+            seq = row.get("display_seq")
             if name not in PROCESS_CODES and name not in _custom_process_codes:
                 register_process(name, code)
             if seq is not None:
@@ -557,9 +565,12 @@ def save_display_order_to_db(mysql_conn=None) -> int:
         修复: 表 DROP 后返 0 + WARNING, 内存数据 (_custom_process_seqs) 仍可用
     """
     import logging
+
     logger = logging.getLogger(__name__)
-    logger.warning('[F16 T16.6] process_names 表已 F6 P9 DROP, save_display_order_to_db 返 0 '
-                   '(内存 _custom_process_seqs 仍可用, display_seq 重启不持久化)')
+    logger.warning(
+        "[F16 T16.6] process_names 表已 F6 P9 DROP, save_display_order_to_db 返 0 "
+        "(内存 _custom_process_seqs 仍可用, display_seq 重启不持久化)"
+    )
     return 0
 
     # 保留原逻辑 (F6 P9 之前可达) — 已不可达, 仅留作历史参考
@@ -567,19 +578,22 @@ def save_display_order_to_db(mysql_conn=None) -> int:
         try:
             import pymysql
             import os as _os
+
             try:
                 from core._db_pools import get_steel_belt_connection
+
                 mysql_conn = get_steel_belt_connection(autocommit=True)
             except Exception:
                 import os as _os
+
                 mysql_conn = pymysql.connect(
-                    host=_os.getenv('MYSQL_HOST', 'localhost'),
-                    port=int(_os.getenv('MYSQL_PORT', '3306')),
-                    user=_os.getenv('MYSQL_USER', 'root'),
-                    password=_os.getenv('MYSQL_PASSWORD', ''),
-                    database=_os.getenv('MYSQL_DATABASE', 'steel_belt'),
-                    charset='utf8mb4',
-                    autocommit=True
+                    host=_os.getenv("MYSQL_HOST", "localhost"),
+                    port=int(_os.getenv("MYSQL_PORT", "3306")),
+                    user=_os.getenv("MYSQL_USER", "root"),
+                    password=_os.getenv("MYSQL_PASSWORD", ""),
+                    database=_os.getenv("MYSQL_DATABASE", "steel_belt"),
+                    charset="utf8mb4",
+                    autocommit=True,
                 )
         except Exception:
             return 0
@@ -589,17 +603,14 @@ def save_display_order_to_db(mysql_conn=None) -> int:
         updated = 0
         for name in get_all_processes(sort=False):
             seq = get_process_seq(name)
-            cur.execute(
-                "UPDATE process_names SET display_seq=%s WHERE process_name=%s",
-                (seq, name)
-            )
+            cur.execute("UPDATE process_names SET display_seq=%s WHERE process_name=%s", (seq, name))
             if cur.rowcount == 0:
                 # 自定义工序可能不在 process_names 表中 → 插入
                 code = get_process_code(name)
                 cur.execute(
                     "INSERT INTO process_names (process_name, process_code, process_seq, display_seq)"
                     " VALUES (%s,%s,%s,%s) ON DUPLICATE KEY UPDATE display_seq=%s",
-                    (name, code, seq, seq, seq)
+                    (name, code, seq, seq, seq),
                 )
             updated += max(cur.rowcount, 1)
         return updated
@@ -643,9 +654,12 @@ def get_display_seq_map(mysql_conn=None, force_refresh: bool = False) -> dict:
     # [F16 T16.6 修复] F6 P9 DROP 后, MySQL 持久化已废弃, 返空 dict + WARNING
     # 内存 _custom_process_seqs 保留作 fallback (get_process_seq() 仍可查)
     import logging
+
     logger = logging.getLogger(__name__)
-    logger.warning('[F16 T16.6] process_names 表已 F6 P9 DROP, get_display_seq_map 返空 dict '
-                   '(内存 _custom_process_seqs 兜底, display_seq 重启不持久化)')
+    logger.warning(
+        "[F16 T16.6] process_names 表已 F6 P9 DROP, get_display_seq_map 返空 dict "
+        "(内存 _custom_process_seqs 兜底, display_seq 重启不持久化)"
+    )
     _display_seq_cache = {}
     _display_seq_cache_loaded = True  # 标记已加载 (避免反复重试)
     return _display_seq_cache
@@ -655,18 +669,21 @@ def get_display_seq_map(mysql_conn=None, force_refresh: bool = False) -> dict:
         try:
             import pymysql
             import os as _os
+
             try:
                 from core._db_pools import get_steel_belt_connection
+
                 mysql_conn = get_steel_belt_connection(autocommit=False)
             except Exception:
                 import os as _os
+
                 mysql_conn = pymysql.connect(
-                    host=_os.getenv('MYSQL_HOST', 'localhost'),
-                    port=int(_os.getenv('MYSQL_PORT', '3306')),
-                    user=_os.getenv('MYSQL_USER', 'root'),
-                    password=_os.getenv('MYSQL_PASSWORD', ''),
-                    database=_os.getenv('MYSQL_DATABASE', 'steel_belt'),
-                    charset='utf8mb4'
+                    host=_os.getenv("MYSQL_HOST", "localhost"),
+                    port=int(_os.getenv("MYSQL_PORT", "3306")),
+                    user=_os.getenv("MYSQL_USER", "root"),
+                    password=_os.getenv("MYSQL_PASSWORD", ""),
+                    database=_os.getenv("MYSQL_DATABASE", "steel_belt"),
+                    charset="utf8mb4",
                 )
         except Exception:
             return {}
@@ -701,88 +718,47 @@ def sort_processes_by_display(process_names: list, seq_map: dict = None) -> list
     if not seq_map:
         return sorted(process_names)
     return sorted(process_names, key=lambda n: seq_map.get(n, 99))
+
+
 INSPECTION_TYPES = ["首检", "巡检", "终检"]
 INSPECTION_RESULTS = ["合格", "不合格", "待复检"]
 
 INSPECTION_ITEMS_BY_CATEGORY = {
     "原材料准备": {
         "材质核对": ["材质报告核查", "规格核对", "数量核对"],
-        "外观检查": ["表面质量", "锈蚀检查", "变形检查"]
+        "外观检查": ["表面质量", "锈蚀检查", "变形检查"],
     },
-    "焊接眼镜网": {
-        "焊点检查": ["焊点质量", "焊接强度"],
-        "外观检查": ["网面平整度", "形状核对"]
-    },
-    "激光切板": {
-        "尺寸检查": ["切割尺寸", "切口质量"],
-        "外观检查": ["毛刺检查", "平面度"]
-    },
-    "链板冲压孔": {
-        "尺寸检查": ["孔径测量", "孔距测量"],
-        "外观检查": ["冲压质量", "毛刺检查"]
-    },
-    "链板冲压成型": {
-        "尺寸检查": ["成型尺寸", "弧度检查"],
-        "外观检查": ["表面质量", "裂纹检查"]
-    },
-    "编制左旋": {
-        "编织检查": ["编织密度", "纬线张力", "经线张力"],
-        "外观检查": ["网孔尺寸", "平整度"]
-    },
-    "编制右旋": {
-        "编织检查": ["编织密度", "纬线张力", "经线张力"],
-        "外观检查": ["网孔尺寸", "平整度"]
-    },
-    "穿曲轴": {
-        "装配检查": ["配合度", "间隙测量"],
-        "外观检查": ["位置核对", "牢固度"]
-    },
-    "输送带组装穿杆": {
-        "装配检查": ["穿杆位置", "间距测量"],
-        "外观检查": ["整齐度", "牢固度"]
-    },
-    "安装链条": {
-        "装配检查": ["链条张紧度", "平行度"],
-        "外观检查": ["运行检查", "噪音检查"]
-    },
-    "安装裙边": {
-        "装配检查": ["裙边位置", "固定检查"],
-        "外观检查": ["贴合度", "平整度"]
-    },
-    "整形校直": {
-        "尺寸检查": ["校直度", "直线度"],
-        "外观检查": ["表面质量", "变形检查"]
-    },
-    "焊接输送带": {
-        "焊点检查": ["焊接质量", "牢固度"],
-        "外观检查": ["接头平整", "网面变形"]
-    },
-    "表面处理": {
-        "处理检查": ["镀层厚度", "涂层均匀"],
-        "外观检查": ["表面光洁度", "颜色一致性"]
-    },
-    "质量检验": {
-        "全面检查": ["尺寸核对", "外观检查", "性能测试"],
-        "报告输出": ["检验记录", "合格判定"]
-    },
-    "包装入库": {
-        "包装检查": ["包装完整性", "标识清晰"],
-        "入库核对": ["数量核对", "存放位置"]
-    }
+    "焊接眼镜网": {"焊点检查": ["焊点质量", "焊接强度"], "外观检查": ["网面平整度", "形状核对"]},
+    "激光切板": {"尺寸检查": ["切割尺寸", "切口质量"], "外观检查": ["毛刺检查", "平面度"]},
+    "链板冲压孔": {"尺寸检查": ["孔径测量", "孔距测量"], "外观检查": ["冲压质量", "毛刺检查"]},
+    "链板冲压成型": {"尺寸检查": ["成型尺寸", "弧度检查"], "外观检查": ["表面质量", "裂纹检查"]},
+    "编制左旋": {"编织检查": ["编织密度", "纬线张力", "经线张力"], "外观检查": ["网孔尺寸", "平整度"]},
+    "编制右旋": {"编织检查": ["编织密度", "纬线张力", "经线张力"], "外观检查": ["网孔尺寸", "平整度"]},
+    "穿曲轴": {"装配检查": ["配合度", "间隙测量"], "外观检查": ["位置核对", "牢固度"]},
+    "输送带组装穿杆": {"装配检查": ["穿杆位置", "间距测量"], "外观检查": ["整齐度", "牢固度"]},
+    "安装链条": {"装配检查": ["链条张紧度", "平行度"], "外观检查": ["运行检查", "噪音检查"]},
+    "安装裙边": {"装配检查": ["裙边位置", "固定检查"], "外观检查": ["贴合度", "平整度"]},
+    "整形校直": {"尺寸检查": ["校直度", "直线度"], "外观检查": ["表面质量", "变形检查"]},
+    "焊接输送带": {"焊点检查": ["焊接质量", "牢固度"], "外观检查": ["接头平整", "网面变形"]},
+    "表面处理": {"处理检查": ["镀层厚度", "涂层均匀"], "外观检查": ["表面光洁度", "颜色一致性"]},
+    "质量检验": {"全面检查": ["尺寸核对", "外观检查", "性能测试"], "报告输出": ["检验记录", "合格判定"]},
+    "包装入库": {"包装检查": ["包装完整性", "标识清晰"], "入库核对": ["数量核对", "存放位置"]},
 }
 
 # ========== 单位选项 ==========
 UNITS = ["米", "平方米", "卷", "条", "个", "套", "批"]
 
+
 # ========== 业务阈值配置 ==========
 class BusinessConfig:
     """业务阈值配置（从环境变量读取）"""
-    STOCK_WARNING_THRESHOLD = int(os.getenv('STOCK_WARNING_THRESHOLD', '50'))
-    STOCK_CRITICAL_THRESHOLD = int(os.getenv('STOCK_CRITICAL_THRESHOLD', '10'))
-    ORDER_EXPIRY_DAYS = int(os.getenv('ORDER_EXPIRY_DAYS', '30'))
-    ORDER_ARCHIVE_DAYS = int(os.getenv('ORDER_ARCHIVE_DAYS', '365'))
-    DEFAULT_PAGE_SIZE = int(os.getenv('DEFAULT_PAGE_SIZE', '50'))
-    MAX_PAGE_SIZE = int(os.getenv('MAX_PAGE_SIZE', '200'))
-    QUERY_TIMEOUT = int(os.getenv('QUERY_TIMEOUT', '60'))
-    COMMAND_TIMEOUT = int(os.getenv('COMMAND_TIMEOUT', '300'))
-    MOBILE_API_URL = os.getenv('MOBILE_API_URL', '')
+
+    STOCK_WARNING_THRESHOLD = int(os.getenv("STOCK_WARNING_THRESHOLD", "50"))
+    STOCK_CRITICAL_THRESHOLD = int(os.getenv("STOCK_CRITICAL_THRESHOLD", "10"))
+    ORDER_EXPIRY_DAYS = int(os.getenv("ORDER_EXPIRY_DAYS", "30"))
+    ORDER_ARCHIVE_DAYS = int(os.getenv("ORDER_ARCHIVE_DAYS", "365"))
+    DEFAULT_PAGE_SIZE = int(os.getenv("DEFAULT_PAGE_SIZE", "50"))
+    MAX_PAGE_SIZE = int(os.getenv("MAX_PAGE_SIZE", "200"))
+    QUERY_TIMEOUT = int(os.getenv("QUERY_TIMEOUT", "60"))
+    COMMAND_TIMEOUT = int(os.getenv("COMMAND_TIMEOUT", "300"))
+    MOBILE_API_URL = os.getenv("MOBILE_API_URL", "")

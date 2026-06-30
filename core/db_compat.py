@@ -3,6 +3,7 @@
 之前：独立管理 PooledDB 多数据库连接池（功能与 _db_pools 重复）
 现在：简单 shim，路由到 _db_pools
 """
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -17,15 +18,17 @@ def get_conn(**cfg):
     Returns:
         pymysql.connections.Connection: 来自 _db_pools 的连接
     """
-    db = cfg.get('database', '')
+    db = cfg.get("database", "")
     try:
         from core._db_pools import get_container_connection, get_steel_belt_connection
-        if db == 'steel_belt':
+
+        if db == "steel_belt":
             return get_steel_belt_connection(autocommit=True)
         else:
             return get_container_connection(autocommit=True)
     except Exception:
-        logger.warning('[db_compat] _db_pools 不可用，回退直连')
+        logger.warning("[db_compat] _db_pools 不可用，回退直连")
         import pymysql
         from core.config import CONTAINER_MYSQL_CFG
+
         return pymysql.connect(**(cfg or CONTAINER_MYSQL_CFG))
