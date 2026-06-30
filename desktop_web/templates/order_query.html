@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>订单查询 - 不锈钢网带跟单系统</title>
+<link rel="stylesheet" href="/static/css/shared.css">
+<style>
+  .oq-toolbar { background: #fff; padding: 14px 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; border-bottom: 1px solid #f0f0f0; }
+  .oq-field { display: flex; flex-direction: column; gap: 4px; }
+  .oq-label { font-size: 11px; color: #888; }
+  .oq-bar { background: #fff; padding: 10px 24px; display: flex; gap: 8px; align-items: center; border-bottom: 1px solid #f0f0f0; }
+  .oq-actions { margin-left: auto; display: flex; gap: 8px; }
+  .oq-empty { text-align: center; padding: 60px; color: #95a5a6; }
+</style>
+</head>
+<body>
+<div id="appNav"></div>
+<script src="/static/js/shared.js"></script>
+<script>renderNav('order_query', '🔍 订单查询');</script>
+
+<div id="msgBox" class="msg-box"></div>
+
+<div class="oq-toolbar">
+  <div class="oq-field">
+    <span class="oq-label">关键词</span>
+    <input class="form-input" id="kw" placeholder="订单号/客户/产品">
+  </div>
+  <div class="oq-field">
+    <span class="oq-label">状态</span>
+    <select class="form-input" id="status">
+      <option value="">全部</option>
+      <option value="PENDING">待确认</option>
+      <option value="CONFIRMED">已确认</option>
+      <option value="PRODUCTION">生产中</option>
+      <option value="QC">质检中</option>
+      <option value="FINISHED">已完成</option>
+      <option value="SHIPPED">已发货</option>
+    </select>
+  </div>
+  <div class="oq-field">
+    <span class="oq-label">客户分组</span>
+    <input class="form-input" id="group" placeholder="客户分组">
+  </div>
+  <div class="oq-field">
+    <span class="oq-label">产品类型</span>
+    <input class="form-input" id="prod" placeholder="产品类型">
+  </div>
+  <div class="oq-field">
+    <span class="oq-label">交期从</span>
+    <input class="form-input" type="date" id="dateFrom">
+  </div>
+  <div class="oq-field">
+    <span class="oq-label">交期到</span>
+    <input class="form-input" type="date" id="dateTo">
+  </div>
+  <div class="oq-field">
+    <span class="oq-label">数量≥</span>
+    <input class="form-input" type="number" id="qtyMin" placeholder="最小数量">
+  </div>
+  <div class="oq-field">
+    <span class="oq-label">数量≤</span>
+    <input class="form-input" type="number" id="qtyMax" placeholder="最大数量">
+  </div>
+</div>
+
+<div class="oq-bar">
+  <button class="btn btn-primary" onclick="doQuery()">🔍 高级查询</button>
+  <button class="btn btn-secondary" onclick="resetQuery()">🔄 重置</button>
+  <div class="oq-actions">
+    <button class="btn btn-success" onclick="exportResults()">📤 导出Excel</button>
+    <button class="btn btn-outline" onclick="logout()">退出</button>
+  </div>
+</div>
+
+<div class="summary" id="summary">请输入查询条件后点击「高级查询」</div>
+
+<div class="table-wrap">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>订单号</th>
+        <th>客户</th>
+        <th>产品</th>
+        <th>数量</th>
+        <th>完成</th>
+        <th>状态</th>
+        <th>交期</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody id="resultTbody">
+      <tr><td colspan="8" class="oq-empty">📋 等待查询...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="pagination" id="pagination" style="display:none;">
+  <span class="pagination-info" id="paginationInfo"></span>
+  <div class="pagination-controls" id="paginationControls"></div>
+</div>
+
+<script>
+let gResults = [];
+let gPage = 1;
+const gPageSize = 20;
+
+function apiFetch(url, opts = {}) {
+  opts.headers = { ...opts.headers, 'X-Dispatch-Token': getToken() || '' };
+  return fetch(url, opts);
+}
+
+async function doQuery() {
+  const params = new URLSearchParams();
+  const kw = document.getElementById('kw').value.trim();
+  const status = document.getElementById('status').value;
+  const group = document.getElementById('group').value.trim();
+  const prod = document.getElementById('prod').value.trim();
+  const df = document.getElementById('dateFrom').value;
+  const dt = document.getElementById('dateTo').value;
+  const qmin = document.getElementById('qtyMin').value;
+  const qmax = document.getElementById('qtyMax').value;
+  if (kw) params.append('keyword', kw);
+  if (status) params.append('status', status);
+  if (group) params.append('customer_group', group);
+  if (prod) params.append('product_type', prod);
+  if (df) params.append('date_from', df);
+  if (dt) params.append('date_to', dt);
+  if (qmin) params.append('qty_min', qmin);
+  if (qmax) params.append('qty_max', qmax);
+  params.append('page', gPage);
+  params.append('page_size', gPageSize);
+  document.getElementById('summary').textContent = '查询中...';
+  try {
+    const r = await apiFetch('/api/orders/query?' + params.toString());
+    const data = await r.json();
+    if (data.code !== 0) { showMsg(data.message || '查询失败', 'error'); return; }
+    const d = data.data || {};
+    gResults = d.items || d.orders || (Array.isArray(d) ? d : []);
+    renderResults(d);
+  } catch (e) {
+    document.getElementById('summary').textContent = '查询失败: ' + e.message;
+  }
+}
+
+function renderResults(data) {
+  const items = gResults;
+  document.getElementById('summary').textContent = `共 ${data.total || items.length} 条结果`;
+  const tbody = document.getElementById('resultTbody');
+  if (!items.length) { tbody.innerHTML = '<tr><td colspan="8" class="oq-empty">无匹配结果</td></tr>'; document.getElementById('pagination').style.display='none'; return; }
+  tbody.innerHTML = items.map(o => `
+    <tr>
+      <td>${o.order_no || '-'}</td>
+      <td>${o.customer_name || '-'}</td>
+      <td>${o.product_name || o.product_type || '-'}</td>
+      <td class="num">${o.quantity || 0}</td>
+      <td class="num">${o.completed_qty || 0}</td>
+      <td><span class="status-tag status-${o.order_status || 'PENDING'}">${o.order_status || '-'}</span></td>
+      <td>${o.delivery_date ? o.delivery_date.substring(0,10) : '-'}</td>
+      <td>
+        <button class="btn btn-primary btn-sm" onclick="location.href='/orders/new?edit=${o.id}'">✏️</button>
+        <button class="btn btn-warning btn-sm" onclick="printOrder(${o.id},'${(o.order_no||'').replace(/'/g,'')}')">🖨️</button>
+      </td>
+    </tr>
+  `).join('');
+  if (data.pages && data.pages > 1) {
+    document.getElementById('pagination').style.display='flex';
+    const controls = document.getElementById('paginationControls');
+    controls.innerHTML = '';
+    for (let p = 1; p <= data.pages; p++) {
+      const btn = document.createElement('button');
+      btn.textContent = p;
+      btn.className = (p === gPage ? 'active' : '');
+      btn.onclick = () => { gPage = p; doQuery(); };
+      controls.appendChild(btn);
+    }
+    document.getElementById('paginationInfo').textContent = `第 ${gPage}/${data.pages} 页 · 每页 ${gPageSize} 条 · 共 ${data.total} 条`;
+  } else {
+    document.getElementById('pagination').style.display='none';
+  }
+}
+
+function resetQuery() {
+  document.querySelectorAll('.oq-toolbar input').forEach(i => i.value = '');
+  document.getElementById('status').value = '';
+  document.getElementById('summary').textContent = '已重置';
+  document.getElementById('resultTbody').innerHTML = '<tr><td colspan="8" class="oq-empty">📋 等待查询...</td></tr>';
+}
+
+function exportResults() {
+  if (!gResults.length) { showMsg('无数据可导出', 'warning'); return; }
+  const kw = encodeURIComponent(document.getElementById('kw').value.trim());
+  const st = encodeURIComponent(document.getElementById('status').value);
+  const grp = encodeURIComponent(document.getElementById('group').value.trim());
+  const df = encodeURIComponent(document.getElementById('dateFrom').value);
+  const dt = encodeURIComponent(document.getElementById('dateTo').value);
+  const qmin = encodeURIComponent(document.getElementById('qtyMin').value);
+  const qmax = encodeURIComponent(document.getElementById('qtyMax').value);
+  const params = new URLSearchParams();
+  if (kw) params.append('keyword', kw);
+  if (st) params.append('status', st);
+  if (grp) params.append('customer_group', grp);
+  if (df) params.append('date_from', df);
+  if (dt) params.append('date_to', dt);
+  if (qmin) params.append('qty_min', qmin);
+  if (qmax) params.append('qty_max', qmax);
+  window.location.href = '/api/orders/export?' + params.toString();
+}
+
+async function printOrder(id, no) {
+  try {
+    const r = await apiFetch(`/api/orders/${id}/print`);
+    const data = await r.json();
+    if (data.code !== 0) { alert(data.message || '加载失败'); return; }
+    const o = (data.data || {}).order || {};
+    const w = window.open('', '_blank');
+    w.document.write(`<html><head><title>订单打印 - ${o.order_no || no}</title><style>
+      body { font-family: 'Microsoft YaHei', sans-serif; padding: 40px; }
+      h1 { text-align: center; font-size: 18px; }
+      .meta { text-align: center; color: #666; font-size: 13px; margin-bottom: 20px; }
+      table { width: 100%; border-collapse: collapse; font-size: 13px; }
+      td { padding: 8px; border: 1px solid #ddd; }
+      .lbl { background: #f5f5f5; font-weight: 500; width: 120px; }
+      .sign { margin-top: 40px; }
+      @media print { .no-print { display: none; } }
+    </style></head><body>
+      <h1>不锈钢网带跟单系统 - 订单</h1>
+      <div class="meta">订单号: ${o.order_no || no} | 打印时间: ${new Date().toLocaleString()}</div>
+      <table>
+        <tr><td class="lbl">客户</td><td>${o.customer_name || '-'}</td><td class="lbl">电话</td><td>${o.customer_phone || '-'}</td></tr>
+        <tr><td class="lbl">产品</td><td>${o.product_type || o.product_name || '-'}</td><td class="lbl">规格</td><td>${o.specification || o.spec || '-'}</td></tr>
+        <tr><td class="lbl">数量</td><td>${o.quantity || 0} ${o.unit || ''}</td><td class="lbl">交期</td><td>${o.delivery_date ? o.delivery_date.substring(0,10) : '-'}</td></tr>
+        <tr><td class="lbl">备注</td><td colspan="3">${o.remark || '-'}</td></tr>
+      </table>
+      <div class="sign">客户签字: __________________  日期: __________________</div>
+      <div class="no-print" style="margin-top:30px;text-align:center;">
+        <button onclick="window.print()" style="padding:8px 20px;">打印</button>
+        <button onclick="window.close()" style="padding:8px 20px;">关闭</button>
+      </div>
+    </body></html>`);
+    w.document.close();
+  } catch (e) { alert('打印失败: ' + e.message); }
+}
+
+function showMsg(msg, type='info') {
+  const box = document.getElementById('msgBox');
+  box.textContent = msg;
+  box.className = 'msg-box msg-' + type;
+  box.style.display = 'block';
+  if (box._t) clearTimeout(box._t);
+  box._t = setTimeout(() => { box.style.display = 'none'; }, 4000);
+}
+function logout() { clearToken(); window.location.href = '/login'; }
+
+showUser();
+if (!getToken()) { window.location.href = '/login'; }
+else { doQuery(); }
+</script>
+</body>
+</html>

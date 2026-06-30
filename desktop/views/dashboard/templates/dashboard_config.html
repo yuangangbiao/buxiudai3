@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大屏服务器配置</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+        .header {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .card h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .form-group label {
+            font-size: 14px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        .form-group input {
+            padding: 12px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #9c27b0;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .form-group .hint {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: #9c27b0;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #7b1fa2;
+            transform: translateY(-2px);
+        }
+        .btn-success {
+            background: #4caf50;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #388e3c;
+        }
+        .btn-outline {
+            background: transparent;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            padding: 14px 24px;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+            transform: translateX(120%);
+            transition: transform 0.4s ease;
+        }
+        .toast.show { transform: translateX(0); }
+        .toast.success { background: #4caf50; }
+        .toast.error { background: #f44336; }
+        .toast.info { background: #2196f3; }
+        .info-box {
+            background: rgba(33, 150, 243, 0.2);
+            border: 1px solid rgba(33, 150, 243, 0.3);
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .info-box .title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #64b5f6;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+        .status-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        .status-item .value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #9c27b0;
+        }
+        .status-item .label {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 4px;
+        }
+        .test-result {
+            margin-top: 12px;
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            display: none;
+        }
+        .test-result.success {
+            display: block;
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            color: #81c784;
+        }
+        .test-result.error {
+            display: block;
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid rgba(244, 67, 54, 0.3);
+            color: #ef5350;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>⚙️ 大屏服务器配置</h1>
+        <div>
+            <a href="/" style="color: white; text-decoration: none; margin-right: 20px;">📊 返回大屏</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h2>📊 API 数据源配置</h2>
+            <div class="info-box">
+                <div class="title">配置说明</div>
+                配置大屏从哪个API获取数据。默认从本地移动报工API获取生产数据。
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>API 基础地址</label>
+                    <input type="text" id="apiBaseUrl" value="http://localhost:5000" placeholder="例如: http://localhost:5000">
+                    <span class="hint">生产数据API的基础URL</span>
+                </div>
+                <div class="form-group">
+                    <label>API 密钥</label>
+                    <input type="password" id="apiKey" value="" placeholder="留空使用默认密钥">
+                    <span class="hint">API访问密钥（可选）</span>
+                </div>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="saveApiConfig()">💾 保存配置</button>
+                <button class="btn btn-outline" onclick="testApiConnection()">🔍 测试连接</button>
+            </div>
+            <div id="apiTestResult" class="test-result"></div>
+        </div>
+
+        <div class="card">
+            <h2>🎨 显示设置</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>刷新间隔（秒）</label>
+                    <input type="number" id="refreshInterval" value="30" min="5" max="300" placeholder="30">
+                    <span class="hint">数据自动刷新间隔（5-300秒）</span>
+                </div>
+                <div class="form-group">
+                    <label>主题风格</label>
+                    <select id="theme" style="padding: 12px 16px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; background: rgba(255,255,255,0.05); color: white; font-size: 14px;">
+                        <option value="dark">深蓝经典</option>
+                        <option value="light">浅色清新</option>
+                        <option value="gradient">渐变多彩</option>
+                    </select>
+                    <span class="hint">大屏显示主题风格</span>
+                </div>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="saveDisplayConfig()">💾 保存显示设置</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📈 统计信息</h2>
+            <div class="status-grid">
+                <div class="status-item">
+                    <div class="value" id="statOrders">-</div>
+                    <div class="label">总工单数</div>
+                </div>
+                <div class="status-item">
+                    <div class="value" id="statMonthly">-</div>
+                    <div class="label">本月新增</div>
+                </div>
+                <div class="status-item">
+                    <div class="value" id="statCompleted">-</div>
+                    <div class="label">已完成</div>
+                </div>
+                <div class="status-item">
+                    <div class="value" id="statInProgress">-</div>
+                    <div class="label">进行中</div>
+                </div>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-success" onclick="refreshStats()">🔄 刷新统计</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🔧 系统信息</h2>
+            <div class="info-box">
+                <div class="title">当前配置</div>
+                <div id="currentConfig">
+                    正在加载...
+                </div>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-outline" onclick="loadCurrentConfig()">🔍 查看当前配置</button>
+                <button class="btn btn-outline" onclick="exportConfig()">📥 导出配置</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        const API_BASE = '/api';
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            setTimeout(() => {
+                toast.className = 'toast';
+            }, 3000);
+        }
+
+        async function saveApiConfig() {
+            const apiBaseUrl = document.getElementById('apiBaseUrl').value;
+            const apiKey = document.getElementById('apiKey').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/save_config`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'api',
+                        apiBaseUrl,
+                        apiKey
+                    })
+                });
+                const result = await response.json();
+                if (result.code === 0) {
+                    showToast('API配置已保存', 'success');
+                } else {
+                    showToast('保存失败: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showToast('保存失败: ' + error.message, 'error');
+            }
+        }
+
+        async function testApiConnection() {
+            const apiBaseUrl = document.getElementById('apiBaseUrl').value;
+            const testResult = document.getElementById('apiTestResult');
+
+            try {
+                const response = await fetch(`${apiBaseUrl}/health`);
+                if (response.ok) {
+                    testResult.className = 'test-result success';
+                    testResult.textContent = '✅ 连接成功！API服务正常运行。';
+                } else {
+                    testResult.className = 'test-result error';
+                    testResult.textContent = '❌ 连接失败：HTTP ' + response.status;
+                }
+            } catch (error) {
+                testResult.className = 'test-result error';
+                testResult.textContent = '❌ 连接失败：' + error.message;
+            }
+        }
+
+        async function saveDisplayConfig() {
+            const refreshInterval = document.getElementById('refreshInterval').value;
+            const theme = document.getElementById('theme').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/save_config`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'display',
+                        refreshInterval: parseInt(refreshInterval),
+                        theme
+                    })
+                });
+                const result = await response.json();
+                if (result.code === 0) {
+                    showToast('显示设置已保存', 'success');
+                } else {
+                    showToast('保存失败: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showToast('保存失败: ' + error.message, 'error');
+            }
+        }
+
+        async function refreshStats() {
+            try {
+                const response = await fetch(`${API_BASE}/dashboard_data`);
+                const result = await response.json();
+                if (result.code === 0) {
+                    document.getElementById('statOrders').textContent = result.data.totalOrders || 0;
+                    document.getElementById('statMonthly').textContent = result.data.monthlyNew || 0;
+                    document.getElementById('statCompleted').textContent = result.data.completedOrders || 0;
+                    document.getElementById('statInProgress').textContent = result.data.inProgressOrders || 0;
+                    showToast('统计已刷新', 'success');
+                }
+            } catch (error) {
+                showToast('刷新失败: ' + error.message, 'error');
+            }
+        }
+
+        async function loadCurrentConfig() {
+            document.getElementById('currentConfig').innerHTML = `
+                <p>API基础地址: ${localStorage.getItem('apiBaseUrl') || 'http://localhost:5000'}</p>
+                <p>刷新间隔: ${localStorage.getItem('refreshInterval') || '30'} 秒</p>
+                <p>主题风格: ${localStorage.getItem('theme') || 'dark'}</p>
+                <p>最后更新: ${localStorage.getItem('configUpdated') || '未知'}</p>
+            `;
+        }
+
+        function exportConfig() {
+            const config = {
+                apiBaseUrl: document.getElementById('apiBaseUrl').value,
+                apiKey: document.getElementById('apiKey').value,
+                refreshInterval: document.getElementById('refreshInterval').value,
+                theme: document.getElementById('theme').value,
+                exportedAt: new Date().toISOString()
+            };
+
+            const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'dashboard_config.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('配置已导出', 'success');
+        }
+
+        // 页面加载时获取当前统计
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCurrentConfig();
+            refreshStats();
+        });
+    </script>
+</body>
+</html>

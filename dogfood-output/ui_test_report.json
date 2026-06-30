@@ -1,0 +1,166 @@
+{
+  "timestamp": "2026-06-24T09:20:58.893Z",
+  "summary": {
+    "total": 31,
+    "passed": 31,
+    "failed": 0,
+    "passRate": "100.0%"
+  },
+  "tests": [
+    {
+      "name": "5001_登录页",
+      "status": "PASS",
+      "screenshot": "5001_____1782292656559.png"
+    },
+    {
+      "name": "5001_订单列表",
+      "status": "PASS",
+      "screenshot": "5001______1782292662738.png"
+    },
+    {
+      "name": "5001_订单排产",
+      "status": "PASS",
+      "screenshot": "5001______1782292668870.png"
+    },
+    {
+      "name": "5001_生产看板",
+      "status": "PASS",
+      "screenshot": "5001______1782292674177.png"
+    },
+    {
+      "name": "5002_容器中心",
+      "status": "PASS",
+      "screenshot": "5002______1782292682067.png"
+    },
+    {
+      "name": "5002_库存仪表盘",
+      "status": "PASS",
+      "screenshot": "5002_______1782292706449.png"
+    },
+    {
+      "name": "5002_入库管理",
+      "status": "PASS",
+      "screenshot": "5002______1782292711269.png"
+    },
+    {
+      "name": "5002_出库管理",
+      "status": "PASS",
+      "screenshot": "5002______1782292715324.png"
+    },
+    {
+      "name": "5002_质检列表",
+      "status": "PASS",
+      "screenshot": "5002______1782292719117.png"
+    },
+    {
+      "name": "5002_外协列表",
+      "status": "PASS",
+      "screenshot": "5002______1782292723302.png"
+    },
+    {
+      "name": "5002_物料列表",
+      "status": "PASS",
+      "screenshot": "5002______1782292727203.png"
+    },
+    {
+      "name": "5003_调度中心",
+      "status": "PASS",
+      "screenshot": "5003______1782292733157.png"
+    },
+    {
+      "name": "5003_调度管理",
+      "status": "PASS",
+      "screenshot": "5003______1782292755323.png"
+    },
+    {
+      "name": "5003_工序管理",
+      "status": "PASS",
+      "screenshot": "5003______1782292758992.png"
+    },
+    {
+      "name": "5003_任务管理",
+      "status": "PASS",
+      "screenshot": "5003______1782292762969.png"
+    },
+    {
+      "name": "5003_流程管理",
+      "status": "PASS",
+      "screenshot": "5003______1782292767411.png"
+    },
+    {
+      "name": "5003_报表统计",
+      "status": "PASS",
+      "screenshot": "5003______1782292771798.png"
+    },
+    {
+      "name": "5003_企业架构",
+      "status": "PASS",
+      "screenshot": "5003______1782292775583.png"
+    },
+    {
+      "name": "5003_系统监控",
+      "status": "PASS",
+      "screenshot": "5003______1782292779258.png"
+    },
+    {
+      "name": "5008_登录页",
+      "status": "PASS",
+      "screenshot": "5008_____1782292783798.png"
+    },
+    {
+      "name": "5008_首页",
+      "status": "PASS",
+      "screenshot": "5008____1782292790484.png"
+    },
+    {
+      "name": "5008_工序任务",
+      "status": "PASS",
+      "screenshot": "5008______1782292796906.png"
+    },
+    {
+      "name": "5008_扫码报工",
+      "status": "PASS",
+      "screenshot": "5008______1782292803345.png"
+    },
+    {
+      "name": "5008_考勤",
+      "status": "PASS",
+      "screenshot": "5008____1782292809866.png"
+    },
+    {
+      "name": "5008_质检",
+      "status": "PASS",
+      "screenshot": "5008____1782292816437.png"
+    },
+    {
+      "name": "5008_物料",
+      "status": "PASS",
+      "screenshot": "5008____1782292822882.png"
+    },
+    {
+      "name": "5008_外协",
+      "status": "PASS",
+      "screenshot": "5008____1782292829795.png"
+    },
+    {
+      "name": "5001_健康检查",
+      "status": "PASS",
+      "screenshot": "5001______1782292835085.png"
+    },
+    {
+      "name": "5002_健康检查",
+      "status": "PASS",
+      "screenshot": "5002______1782292841483.png"
+    },
+    {
+      "name": "5003_健康检查",
+      "status": "PASS",
+      "screenshot": "5003______1782292847709.png"
+    },
+    {
+      "name": "5008_健康检查",
+      "status": "PASS",
+      "screenshot": "5008______1782292855494.png"
+    }
+  ]
+}

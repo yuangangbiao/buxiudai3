@@ -1,0 +1,12 @@
+# -*- coding: utf-8 -*-
+# stainless.pth — Python 模块搜索路径配置
+# 将此文件复制到 Python 的 site-packages 目录中，
+# 或将 stainless.pth 所在目录添加到 PYTHONPATH 环境变量，
+# 可自动将项目根目录加入 sys.path，替代各文件中的 sys.path.insert 调用。
+#
+# 安装方式：
+#   1. 手动复制: copy stainless.pth %USERPROFILE%\.conda\envs\<env>\Lib\site-packages\
+#   2. 或设置环境变量: set PYTHONPATH=D:\yuan\不锈钢网带跟单3.0
+#
+# 验证方式: py -3 -c "import sys; print([p for p in sys.path if 'stainless' in p or '不锈钢' in p])"
+D:\yuan\不锈钢网带跟单3.0

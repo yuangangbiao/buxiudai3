@@ -1,0 +1,192 @@
+[
+  {
+    "name": "5001_首页",
+    "url": "http://localhost:5001",
+    "checks": [
+      {
+        "desc": "包含\"订单\"文字",
+        "pass": false
+      },
+      {
+        "desc": "包含\"生产\"文字",
+        "pass": false
+      },
+      {
+        "desc": "存在交互元素",
+        "pass": true
+      }
+    ],
+    "passed": 1,
+    "failed": 2,
+    "title": "登录 - 不锈钢网带跟单系统",
+    "screenshot": "verify_5001____1782292941050.png"
+  },
+  {
+    "name": "5001_订单",
+    "url": "http://localhost:5001/orders",
+    "checks": [
+      {
+        "desc": "包含\"订单\"文字",
+        "pass": false
+      },
+      {
+        "desc": "包含\"客户\"文字",
+        "pass": false
+      },
+      {
+        "desc": "存在表格",
+        "pass": false
+      }
+    ],
+    "passed": 0,
+    "failed": 3,
+    "title": "登录 - 不锈钢网带跟单系统",
+    "screenshot": "verify_5001____1782292948403.png"
+  },
+  {
+    "name": "5002_容器",
+    "url": "http://localhost:5002/container",
+    "checks": [
+      {
+        "desc": "包含\"容器\"文字",
+        "pass": true
+      },
+      {
+        "desc": "包含\"container\"文字",
+        "pass": true
+      },
+      {
+        "desc": "存在按钮",
+        "pass": true
+      }
+    ],
+    "passed": 3,
+    "failed": 0,
+    "title": "容器中心 · 综合管理",
+    "screenshot": "verify_5002____1782292957099.png"
+  },
+  {
+    "name": "5002_库存",
+    "url": "http://localhost:5002/inventory/dashboard",
+    "checks": [
+      {
+        "desc": "包含\"库存\"文字",
+        "pass": true
+      },
+      {
+        "desc": "包含\"inventory\"文字",
+        "pass": true
+      },
+      {
+        "desc": "存在数据展示",
+        "pass": true
+      }
+    ],
+    "passed": 3,
+    "failed": 0,
+    "title": "首页概览 — 宁津晨圣",
+    "screenshot": "verify_5002____1782292980524.png"
+  },
+  {
+    "name": "5002_质检",
+    "url": "http://localhost:5002/quality",
+    "checks": [
+      {
+        "desc": "包含\"质量\"文字",
+        "pass": false
+      },
+      {
+        "desc": "包含\"质检\"文字",
+        "pass": false
+      }
+    ],
+    "passed": 0,
+    "failed": 2,
+    "title": "",
+    "screenshot": "verify_5002____1782292985339.png"
+  },
+  {
+    "name": "5003_首页",
+    "url": "http://localhost:5003",
+    "checks": [
+      {
+        "desc": "包含\"调度\"文字",
+        "pass": true
+      },
+      {
+        "desc": "包含\"dispatch\"文字",
+        "pass": true
+      },
+      {
+        "desc": "存在导航",
+        "pass": false
+      }
+    ],
+    "passed": 2,
+    "failed": 1,
+    "title": "容器中心 · 综合管理",
+    "screenshot": "verify_5003____1782292992374.png"
+  },
+  {
+    "name": "5003_工序",
+    "url": "http://localhost:5003/process",
+    "checks": [
+      {
+        "desc": "包含\"工序\"文字",
+        "pass": false
+      },
+      {
+        "desc": "包含\"process\"文字",
+        "pass": false
+      }
+    ],
+    "passed": 0,
+    "failed": 2,
+    "title": "",
+    "screenshot": "verify_5003____1782293013595.png"
+  },
+  {
+    "name": "5008_登录",
+    "url": "http://localhost:5008",
+    "checks": [
+      {
+        "desc": "包含\"登录\"文字",
+        "pass": true
+      },
+      {
+        "desc": "包含\"login\"文字",
+        "pass": true
+      },
+      {
+        "desc": "存在输入框",
+        "pass": true
+      },
+      {
+        "desc": "存在按钮",
+        "pass": true
+      }
+    ],
+    "passed": 4,
+    "failed": 1,
+    "title": "晨圣报工系统测试版",
+    "error": "page.screenshot: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n"
+  },
+  {
+    "name": "5008_任务",
+    "url": "http://localhost:5008/#/tasks",
+    "checks": [
+      {
+        "desc": "包含\"任务\"文字",
+        "pass": true
+      },
+      {
+        "desc": "包含\"task\"文字",
+        "pass": true
+      }
+    ],
+    "passed": 2,
+    "failed": 0,
+    "title": "晨圣报工系统测试版",
+    "screenshot": "verify_5008____1782293054386.png"
+  }
+]

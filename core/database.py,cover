@@ -1,0 +1,170 @@
+  # -*- coding: utf-8 -*-
+> """
+> 统一数据库连接管理模块
+> 所有数据库操作必须通过此模块，禁止直接创建连接
+> """
+  
+> import logging
+> import os
+> from contextlib import contextmanager
+> from typing import Optional, List, Dict, Tuple
+  
+> import pymysql
+> import sqlite3
+> from pymysql.cursors import DictCursor
+  
+> from core.config import BASE_DIR, DATA_DIR, get_sqlite_path, is_sqlite
+  
+> from utils.auto_schema import SafeCursor
+  
+- logger = logging.getLogger(__name__)
+  
+  
+> class DatabaseManager:
+>     """数据库管理器（单例模式）"""
+  
+>     _instance: Optional['DatabaseManager'] = None
+  
+>     def __new__(cls):
+>         if cls._instance is None:
+>             cls._instance = super().__new__(cls)
+>             cls._instance._initialized = False
+>         return cls._instance
+  
+>     def __init__(self):
+>         if self._initialized:
+>             return
+>         self._initialized = True
+>         self._sqlite_conn: Optional[sqlite3.Connection] = None
+  
+>     def _get_mysql_connection(self):
+>         """获取MySQL连接"""
+>         try:
+>             conn = pymysql.connect(
+>                 host=os.getenv('MYSQL_HOST', 'localhost'),
+>                 port=int(os.getenv('MYSQL_PORT', '3306')),
+>                 user=os.getenv('MYSQL_USER', 'root'),
+>                 password=os.getenv('MYSQL_PASSWORD', ''),
+>                 database=os.getenv('MYSQL_DATABASE', 'steel_belt'),
+>                 charset=os.getenv('MYSQL_CHARSET', 'utf8mb4'),
+>                 cursorclass=DictCursor,
+>                 connect_timeout=int(os.getenv('CONNECTION_TIMEOUT', '30'))
+>             )
+>             logger.info(f"MySQL连接成功: {os.getenv('MYSQL_HOST')}:{os.getenv('MYSQL_PORT')}")
+>             return conn
+>         except Exception as e:
+-             logger.error(f"MySQL连接失败: {e}")
+>             raise
+  
+>     def _get_sqlite_connection(self):
+>         """获取SQLite连接"""
+>         if self._sqlite_conn is None:
+>             try:
+>                 db_path = get_sqlite_path()
+                  # 确保目录存在
+>                 db_dir = os.path.dirname(db_path)
+>                 if db_dir and not os.path.exists(db_dir):
+>                     os.makedirs(db_dir, exist_ok=True)
+  
+>                 self._sqlite_conn = sqlite3.connect(
+>                     db_path,
+>                     check_same_thread=False
+>                 )
+>                 self._sqlite_conn.row_factory = sqlite3.Row
+>                 logger.info(f"SQLite连接成功: {db_path}")
+>             except Exception as e:
+-                 logger.error(f"SQLite连接失败: {e}")
+>                 raise
+>         return self._sqlite_conn
+  
+>     def get_connection(self):
+>         """获取数据库连接"""
+>         if is_sqlite():
+>             return self._get_sqlite_connection()
+>         return self._get_mysql_connection()
+  
+>     @contextmanager
+>     def get_cursor(self, commit: bool = True):
+>         """
+>         获取数据库游标的上下文管理器
+  
+>         使用方式:
+>             with db.get_cursor() as cursor:
+>                 cursor.execute("SELECT ...")
+>                 result = cursor.fetchall()
+>         """
+>         conn = self.get_connection()
+>         cursor = None
+>         try:
+>             cursor = conn.cursor()
+>             yield cursor
+>             if commit:
+>                 conn.commit()
+>         except Exception as e:
+>             conn.rollback()
+-             logger.error(f"数据库操作失败: {e}")
+>             raise
+>         finally:
+>             if cursor:
+>                 cursor.close()
+>             if not is_sqlite():
+>                 conn.close()
+  
+>     def execute_query(self, sql: str, params: tuple = None) -> List[Dict]:
+>         """执行查询并返回结果"""
+>         with self.get_cursor(commit=False) as cursor:
+>             cursor.execute(sql, params or ())
+>             return cursor.fetchall()
+  
+>     def execute_update(self, sql: str, params: tuple = None) -> int:
+>         """执行更新操作并返回影响行数"""
+>         with self.get_cursor() as cursor:
+>             cursor.execute(sql, params or ())
+>             return cursor.rowcount
+  
+>     def execute_insert(self, sql: str, params: tuple = None) -> int:
+>         """执行插入操作并返回自增ID"""
+>         with self.get_cursor() as cursor:
+>             cursor.execute(sql, params or ())
+>             return cursor.lastrowid
+  
+>     def close(self):
+>         """关闭所有连接"""
+>         if self._sqlite_conn:
+>             self._sqlite_conn.close()
+>             self._sqlite_conn = None
+  
+  
+  # 全局数据库管理器实例
+> db = DatabaseManager()
+  
+  
+> @contextmanager
+> def get_db_cursor():
+>     """
+>     数据库操作的统一入口（自动集成 SafeCursor，支持自动建表）
+  
+>     使用方式:
+>         with get_db_cursor() as (cursor, conn):
+>             cursor.execute("SELECT ...")
+>             conn.commit()
+  
+>     cursor 已被 SafeCursor 包装，INSERT/UPDATE 时自动检测表结构，
+>     若表或字段不存在则自动创建。
+>     """
+>     conn = db.get_connection()
+>     cursor = None
+>     try:
+>         cursor = conn.cursor()
+>         safe_cursor = SafeCursor(cursor, conn)
+>         yield safe_cursor, conn
+>         conn.commit()
+>     except Exception as e:
+>         conn.rollback()
+-         logger.error(f"数据库操作失败: {e}")
+>         raise
+>     finally:
+>         if cursor:
+>             cursor.close()
+>         if not is_sqlite():
+>             conn.close()

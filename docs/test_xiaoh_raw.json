@@ -1,0 +1,455 @@
+{
+  "tag": "0623135735DE51",
+  "time": "2026-06-23T13:57:36.216550",
+  "stats": {
+    "login": {
+      "pass": 3,
+      "fail": 0,
+      "cases": [
+        [
+          "登录返回 200",
+          "PASS",
+          "status=200"
+        ],
+        [
+          "返回 CSRF Token",
+          "PASS",
+          "token=43bba40b..."
+        ],
+        [
+          "生成 5003 兼容 token",
+          "PASS",
+          "token=MTU65rWL6K+V..."
+        ]
+      ]
+    },
+    "material": {
+      "pass": 13,
+      "fail": 1,
+      "cases": [
+        [
+          "获取到 5001 直查 order_id",
+          "PASS",
+          "order_id=90010101"
+        ],
+        [
+          "5003 物料列表 API 响应",
+          "PASS",
+          "status=200"
+        ],
+        [
+          "5003 物料列表 code=0",
+          "PASS",
+          ""
+        ],
+        [
+          "创建物料-返回 200",
+          "PASS",
+          "status=200"
+        ],
+        [
+          "创建物料-code=0",
+          "PASS",
+          "物料添加成功"
+        ],
+        [
+          "创建物料-返回 ID",
+          "PASS",
+          "id=200"
+        ],
+        [
+          "重复创建物料-被拒绝(400)",
+          "PASS",
+          "status=400 msg=物料「小贺测试物料_0623135735DE51」已存在，请勿重复添加"
+        ],
+        [
+          "更新物料-返回 200",
+          "PASS",
+          "status=200"
+        ],
+        [
+          "更新物料-code=0",
+          "PASS",
+          "物料已更新"
+        ],
+        [
+          "物料状态字段可读取",
+          "FAIL",
+          "status=None"
+        ],
+        [
+          "删除物料-返回 200",
+          "PASS",
+          "status=200"
+        ],
+        [
+          "删除物料-code=0",
+          "PASS",
+          "物料已删除"
+        ],
+        [
+          "删除后物料不再可见",
+          "PASS",
+          "count=0"
+        ],
+        [
+          "删除不存在物料-合理响应",
+          "PASS",
+          "status=404"
+        ]
+      ]
+    },
+    "process": {
+      "pass": 14,
+      "fail": 5,
+      "cases": [
+        [
+          "获取 production_id",
+          "PASS",
+          "prod_id=63"
+        ],
+        [
+          "工序列表 API(已知 SQL bug: Unknown column po.customer_name)",
+          "FAIL",
+          "status=500 msg=(1054, \"Unknown column 'po.customer_name' in 'field list'\")"
+        ],
+        [
+          "添加工序-200",
+          "FAIL",
+          "status=500"
+        ],
+        [
+          "添加工序-code=0",
+          "FAIL",
+          "(1364, \"Field 'order_id' doesn't have a default value\")"
+        ],
+        [
+          "添加工序-返回 ID",
+          "FAIL",
+          "id=None"
+        ],
+        [
+          "工序开始(待开始→生产中)",
+          "PASS",
+          "status=200 msg=工序已开始"
+        ],
+        [
+          "工序报工-200",
+          "PASS",
+          "status=200"
+        ],
+        [
+          "工序报工-code=0",
+          "PASS",
+          "累计：5.0/50"
+        ],
+        [
+          "报工后累计完成=5",
+          "PASS",
+          {
+            "completed_qty": 5.0,
+            "qualified_qty": 4.0,
+            "status": "生产中"
+          }
+        ],
+        [
+          "报工后状态=生产中",
+          "PASS",
+          {
+            "completed_qty": 5.0,
+            "qualified_qty": 4.0,
+            "status": "生产中"
+          }
+        ],
+        [
+          "二次报工-累加",
+          "PASS",
+          "status=200"
+        ],
+        [
+          "二次报工后累计=8",
+          "PASS",
+          {
+            "completed_qty": 8.0,
+            "qualified_qty": 7.0,
+            "status": "生产中"
+          }
+        ],
+        [
+          "超量报工-自动完成",
+          "PASS",
+          "status=200"
+        ],
+        [
+          "超量报工-状态变已完成",
+          "PASS",
+          {
+            "completed_qty": 108.0,
+            "qualified_qty": 107.0,
+            "status": "已完成"
+          }
+        ],
+        [
+          "工序完成-200",
+          "PASS",
+          "status=200 msg=工序已完成"
+        ],
+        [
+          "工序重置-200",
+          "PASS",
+          "status=200"
+        ],
+        [
+          "状态机-二次start应拒绝(400)",
+          "PASS",
+          "status=400 msg=工序状态无法变更为开始"
+        ],
+        [
+          "报工后完成数未超计划(10<=计划数)",
+          "FAIL",
+          "completed=118.0"
+        ],
+        [
+          "删除工序-200",
+          "PASS",
+          "status=200"
+        ]
+      ]
+    },
+    "quality": {
+      "pass": 13,
+      "fail": 0,
+      "cases": [
+        [
+          "质检统计 API",
+          "PASS",
+          "status=200"
+        ],
+        [
+          "质检统计-字段完整",
+          "PASS",
+          {
+            "failed": "0",
+            "pass_rate": "85.7%",
+            "passed": "30",
+            "pending": "3",
+            "total": 35
+          }
+        ],
+        [
+          "质检 admin-list API",
+          "PASS",
+          "status=200 msg="
+        ],
+        [
+          "可质检订单 API",
+          "PASS",
+          "status=200"
+        ],
+        [
+          "可质检订单-非空",
+          "PASS",
+          "count=15"
+        ],
+        [
+          "创建质检记录-200",
+          "PASS",
+          "status=200"
+        ],
+        [
+          "创建质检记录-code=0",
+          "PASS",
+          "质检记录创建成功"
+        ],
+        [
+          "创建质检-返回 ID",
+          "PASS",
+          "id=108"
+        ],
+        [
+          "更新质检-200",
+          "PASS",
+          "status=200"
+        ],
+        [
+          "质检判定-合格-200",
+          "PASS",
+          "status=200"
+        ],
+        [
+          "读取单条质检",
+          "PASS",
+          "status=200"
+        ],
+        [
+          "删除质检-200",
+          "PASS",
+          "status=200"
+        ],
+        [
+          "删除不存在质检-合理响应",
+          "PASS",
+          "status=404"
+        ]
+      ]
+    },
+    "shipment": {
+      "pass": 5,
+      "fail": 1,
+      "cases": [
+        [
+          "物流公司列表 API",
+          "PASS",
+          "status=200"
+        ],
+        [
+          "获取测试物流公司",
+          "PASS",
+          "count=19"
+        ],
+        [
+          "发货列表 API",
+          "PASS",
+          "status=200"
+        ],
+        [
+          "添加物流公司-200",
+          "PASS",
+          "status=200"
+        ],
+        [
+          "添加物流公司-code=0",
+          "PASS",
+          "添加成功"
+        ],
+        [
+          "创建发货单(已知 BUG: random 未 import)",
+          "FAIL",
+          "status=500 msg=name 'random' is not defined"
+        ]
+      ]
+    }
+  },
+  "results": [
+    "\n══ 阶段0: 登录 ══",
+    "  [PASS]  登录返回 200",
+    "  [PASS]  返回 CSRF Token",
+    "  [PASS]  生成 5003 兼容 token",
+    "\n══ 阶段1: 物料模块 CRUD ══",
+    "         5001 直查 order_id=90010101",
+    "  [PASS]  获取到 5001 直查 order_id",
+    "  [PASS]  5003 物料列表 API 响应",
+    "  [PASS]  5003 物料列表 code=0",
+    "  [PASS]  创建物料-返回 200",
+    "  [PASS]  创建物料-code=0",
+    "  [PASS]  创建物料-返回 ID",
+    "  [PASS]  重复创建物料-被拒绝(400)",
+    "  [PASS]  更新物料-返回 200",
+    "  [PASS]  更新物料-code=0",
+    "         物料状态字段: None",
+    "  [FAIL]  物料状态字段可读取",
+    "         详情: status=None",
+    "  [PASS]  删除物料-返回 200",
+    "  [PASS]  删除物料-code=0",
+    "  [PASS]  删除后物料不再可见",
+    "  [PASS]  删除不存在物料-合理响应",
+    "\n══ 阶段2: 工序模块 CRUD + 状态机 ══",
+    "         5001 直查 production_id=63 existing_proc=528",
+    "  [PASS]  获取 production_id",
+    "  [FAIL]  工序列表 API(已知 SQL bug: Unknown column po.customer_name)",
+    "         详情: status=500 msg=(1054, \"Unknown column 'po.customer_name' in 'field list'\")",
+    "  [FAIL]  添加工序-200",
+    "         详情: status=500",
+    "  [FAIL]  添加工序-code=0",
+    "         详情: (1364, \"Field 'order_id' doesn't have a default value\")",
+    "  [FAIL]  添加工序-返回 ID",
+    "         详情: id=None",
+    "         [WARN] 添加工序失败, 改用已存在工序 ID=528 测状态机",
+    "  [PASS]  工序开始(待开始→生产中)",
+    "  [PASS]  工序报工-200",
+    "  [PASS]  工序报工-code=0",
+    "  [PASS]  报工后累计完成=5",
+    "  [PASS]  报工后状态=生产中",
+    "  [PASS]  二次报工-累加",
+    "  [PASS]  二次报工后累计=8",
+    "  [PASS]  超量报工-自动完成",
+    "  [PASS]  超量报工-状态变已完成",
+    "  [PASS]  工序完成-200",
+    "  [PASS]  工序重置-200",
+    "  [PASS]  状态机-二次start应拒绝(400)",
+    "  [FAIL]  报工后完成数未超计划(10<=计划数)",
+    "         详情: completed=118.0",
+    "  [PASS]  删除工序-200",
+    "\n══ 阶段3: 质检模块 ══",
+    "  [PASS]  质检统计 API",
+    "         统计: total=35 pass=30 fail=0 pending=3 rate=85.7%",
+    "  [PASS]  质检统计-字段完整",
+    "  [PASS]  质检 admin-list API",
+    "  [PASS]  可质检订单 API",
+    "  [PASS]  可质检订单-非空",
+    "  [PASS]  创建质检记录-200",
+    "  [PASS]  创建质检记录-code=0",
+    "  [PASS]  创建质检-返回 ID",
+    "  [PASS]  更新质检-200",
+    "  [PASS]  质检判定-合格-200",
+    "  [PASS]  读取单条质检",
+    "  [PASS]  删除质检-200",
+    "  [PASS]  删除不存在质检-合理响应",
+    "\n══ 阶段4: 发货模块 ══",
+    "  [PASS]  物流公司列表 API",
+    "  [PASS]  获取测试物流公司",
+    "  [PASS]  发货列表 API",
+    "  [PASS]  添加物流公司-200",
+    "  [PASS]  添加物流公司-code=0",
+    "  [FAIL]  创建发货单(已知 BUG: random 未 import)",
+    "         详情: status=500 msg=name 'random' is not defined",
+    "         [BUG] 发货创建失败: name 'random' is not defined",
+    "         [FATAL] 手动插发货也失败: (1054, \"Unknown column 'order_no' in 'field list'\")",
+    "\n╔═══════════════════════════════════════════════════╗\n║    测试结果汇总                                  ║\n╠═══════════════════════════════════════════════════╣\n║    ✅ 通过: 48                                ║\n║    ❌ 失败: 7                                ║\n║    通过率: 87.3%                              ║\n╚═══════════════════════════════════════════════════╝\n\n物料: 13/14 PASS\n工序: 14/19 PASS\n质检: 13/13 PASS\n发货: 5/6 PASS\n",
+    "\n══ 失败用例详情 ══",
+    "  [material] 物料状态字段可读取: status=None",
+    "  [process] 工序列表 API(已知 SQL bug: Unknown column po.customer_name): status=500 msg=(1054, \"Unknown column 'po.customer_name' in 'field list'\")",
+    "  [process] 添加工序-200: status=500",
+    "  [process] 添加工序-code=0: (1364, \"Field 'order_id' doesn't have a default value\")",
+    "  [process] 添加工序-返回 ID: id=None",
+    "  [process] 报工后完成数未超计划(10<=计划数): completed=118.0",
+    "  [shipment] 创建发货单(已知 BUG: random 未 import): status=500 msg=name 'random' is not defined"
+  ],
+  "fail_details": [
+    [
+      "material",
+      "物料状态字段可读取",
+      "status=None"
+    ],
+    [
+      "process",
+      "工序列表 API(已知 SQL bug: Unknown column po.customer_name)",
+      "status=500 msg=(1054, \"Unknown column 'po.customer_name' in 'field list'\")"
+    ],
+    [
+      "process",
+      "添加工序-200",
+      "status=500"
+    ],
+    [
+      "process",
+      "添加工序-code=0",
+      "(1364, \"Field 'order_id' doesn't have a default value\")"
+    ],
+    [
+      "process",
+      "添加工序-返回 ID",
+      "id=None"
+    ],
+    [
+      "process",
+      "报工后完成数未超计划(10<=计划数)",
+      "completed=118.0"
+    ],
+    [
+      "shipment",
+      "创建发货单(已知 BUG: random 未 import)",
+      "status=500 msg=name 'random' is not defined"
+    ]
+  ]
+}

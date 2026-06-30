@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> 宁津晨圣输送机械有限公司 · 生产监控大屏</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js?v=202604191130"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts/map/js/china.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; overflow: hidden; }
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: #0f1923;
+            color: #fff;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 滚动信息条 */
+        .marquee-bar {
+            background: linear-gradient(90deg, #1a1a2e, #16213e, #1a1a2e);
+            border-bottom: 1px solid #00d4ff44;
+            padding: 8px 0;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .marquee-content {
+            display: inline-block;
+            white-space: nowrap;
+            animation: marquee 30s linear infinite;
+            font-size: 14px;
+            color: #00d4ff;
+        }
+        .marquee-content span {
+            margin: 0 30px;
+        }
+        .marquee-content .highlight {
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+        .marquee-content .success {
+            color: #51cf66;
+            font-weight: bold;
+        }
+        .marquee-content .warn {
+            color: #ffd43b;
+            font-weight: bold;
+        }
+        @keyframes marquee {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        /* 顶部标题栏 */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 25px;
+            background: linear-gradient(90deg, #1a2a4a, #0f1923, #1a2a4a);
+            border-bottom: 2px solid #00d4ff;
+            flex-shrink: 0;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .company-logo {
+            height: 60px;
+            width: auto;
+        }
+        .header-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00d4ff;
+        }
+        .header-info { text-align: right; }
+        .header-time { font-size: 26px; font-weight: bold; }
+        .header-date { font-size: 13px; color: #888; }
+
+        /* 统计卡片行 */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 15px;
+            padding: 15px 20px;
+            flex-shrink: 0;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #1e2d3d, #152030);
+            border-radius: 10px;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-left: 4px solid;
+        }
+        .stat-card.blue { border-color: #00d4ff; }
+        .stat-card.orange { border-color: #ff9500; }
+        .stat-card.green { border-color: #00c853; }
+        .stat-card.red { border-color: #ff3d00; }
+        .stat-icon { font-size: 32px; }
+        .stat-value { font-size: 30px; font-weight: bold; }
+        .stat-label { font-size: 13px; color: #888; margin-top: 2px; }
+        .stat-card.blue .stat-value { color: #00d4ff; }
+        .stat-card.orange .stat-value { color: #ff9500; }
+        .stat-card.green .stat-value { color: #00c853; }
+        .stat-card.red .stat-value { color: #ff3d00; }
+
+        /* 主内容区 */
+        .content {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 280px 1fr 280px;
+            gap: 12px;
+            padding: 0 15px 12px;
+            min-height: 0;
+        }
+
+        /* 面板 */
+        .panel {
+            background: linear-gradient(135deg, #1e2d3d, #152030);
+            border-radius: 10px;
+            padding: 12px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        .panel-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #00d4ff;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(0, 212, 255, 0.3);
+            flex-shrink: 0;
+        }
+        .panel-title::before {
+            content: '';
+            display: inline-block;
+            width: 3px;
+            height: 14px;
+            background: #00d4ff;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+
+        /* 左侧列 */
+        .left-col { display: flex; flex-direction: column; gap: 12px; }
+
+        /* 中间列 */
+        .center-col { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+
+        /* 右侧列 */
+        .right-col { display: flex; flex-direction: column; gap: 12px; }
+
+        /* 图表 */
+        .chart-wrap { flex: 1; min-height: 0; position: relative; }
+        .chart-wrap canvas { position: absolute; top: 0; left: 0; width: 100% !important; height: 100% !important; }
+
+        /* 表格 */
+        .table-scroll { flex: 1; overflow-y: auto; min-height: 0; }
+        .table-scroll::-webkit-scrollbar { width: 5px; }
+        .table-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        .table-scroll::-webkit-scrollbar-thumb { background: #00d4ff; border-radius: 3px; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .data-table th {
+            background: rgba(0, 212, 255, 0.1);
+            color: #00d4ff;
+            padding: 8px 6px;
+            text-align: left;
+            position: sticky;
+            top: 0;
+        }
+        .data-table td { padding: 7px 6px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .data-table tr:hover td { background: rgba(0, 212, 255, 0.05); }
+
+        /* 状态徽章 */
+        .status-badge {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+        }
+        .status-待确认 { background: #9E9E9E; }
+        .status-已确认 { background: #2196F3; }
+        .status-已排产 { background: #03A9F4; }
+        .status-生产中 { background: #ff9500; }
+        .status-质检中 { background: #ff5722; }
+        .status-待发货 { background: #00c853; }
+        .status-已发货 { background: #9C27B0; }
+        .status-已完成 { background: #607D8B; }
+
+        /* 预警 */
+        .alert-scroll { flex: 1; overflow-y: auto; min-height: 0; }
+        .alert-item {
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            border-left: 3px solid;
+        }
+        .alert-item.critical { background: rgba(255,61,0,0.15); border-color: #ff3d00; }
+        .alert-item.warning { background: rgba(255,149,0,0.15); border-color: #ff9500; }
+        .alert-item.info { background: rgba(0,212,255,0.1); border-color: #00d4ff; }
+        .alert-title { font-size: 13px; font-weight: bold; }
+        .alert-desc { font-size: 11px; color: #888; margin-top: 4px; }
+
+        /* 发货 */
+        .ship-scroll { flex: 1; overflow-y: auto; min-height: 0; }
+        .ship-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 6px;
+            margin-bottom: 6px;
+        }
+        .ship-no { font-size: 12px; font-weight: bold; color: #00d4ff; }
+        .ship-customer { font-size: 11px; color: #888; }
+        .ship-qty { font-size: 16px; font-weight: bold; color: #00c853; }
+
+        /* 今日柱状图 */
+        .bar-chart { flex: 1; min-height: 0; }
+
+        /* 空状态 */
+        .empty { text-align: center; padding: 20px; color: #555; font-size: 12px; }
+
+        /* 底部 */
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 20px;
+            background: #0a1015;
+            font-size: 11px;
+            color: #666;
+            flex-shrink: 0;
+        }
+        .refresh-dot {
+            width: 6px;
+            height: 6px;
+            background: #00c853;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        .count-up { transition: all 0.5s; }
+    </style>
+</head>
+<body>
+    <!-- 滚动信息条 -->
+    <div class="marquee-bar">
+        <div class="marquee-content" id="marqueeContent">
+            <span>📢 欢迎使用生产监控大屏</span>
+        </div>
+    </div>
+
+    <!-- 顶部 -->
+    <header class="header">
+        <div class="header-left">
+            <div id="companyLogo" class="company-logo" style="font-size:24px;font-weight:bold;color:#4FC3F7;">晨</div>
+            <div class="header-title">宁津晨圣输送机械有限公司</div>
+        </div>
+        <div class="header-info">
+            <div class="header-time" id="clock">--:--:--</div>
+            <div class="header-date" id="date">----年--月--日</div>
+        </div>
+    </header>
+
+    <!-- 统计卡片 -->
+    <div class="stats-row">
+        <div class="stat-card blue">
+            <div class="stat-icon">📋</div>
+            <div>
+                <div class="stat-value count-up" id="totalOrders">0</div>
+                <div class="stat-label">总订单数</div>
+            </div>
+        </div>
+        <div class="stat-card orange">
+            <div class="stat-icon">⚙️</div>
+            <div>
+                <div class="stat-value count-up" id="producingOrders">0</div>
+                <div class="stat-label">生产中</div>
+            </div>
+        </div>
+        <div class="stat-card green">
+            <div class="stat-icon">📦</div>
+            <div>
+                <div class="stat-value count-up" id="readyToShip">0</div>
+                <div class="stat-label">待发货</div>
+            </div>
+        </div>
+        <div class="stat-card red">
+            <div class="stat-icon">🚨</div>
+            <div>
+                <div class="stat-value count-up" id="overdueOrders">0</div>
+                <div class="stat-label">逾期预警</div>
+            </div>
+        </div>
+        <div class="stat-card blue">
+            <div class="stat-icon">📈</div>
+            <div>
+                <div class="stat-value count-up" id="monthlyNew">0</div>
+                <div class="stat-label">本月新增</div>
+            </div>
+        </div>
+        <div class="stat-card green">
+            <div class="stat-icon">✅</div>
+            <div>
+                <div class="stat-value count-up" id="completionRate">0</div>
+                <div class="stat-label">完成率</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主内容 -->
+    <div class="content">
+        <!-- 左侧 -->
+        <div class="left-col">
+            <div class="panel" style="display:flex;flex-direction:column;flex:1;">
+                <div class="panel-title">📍 订单分布</div>
+                <div id="chinaMap" style="flex:1;min-height:0;"></div>
+            </div>
+            <div class="panel" style="flex:1;">
+                <div class="panel-title">🚨 预警中心</div>
+                <div class="alert-scroll" id="alertList">
+                    <div class="empty">暂无预警 ✅</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 中间 -->
+        <div class="center-col panel">
+            <div class="panel-title">📋 订单信息</div>
+            <div class="table-scroll">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>订单号</th>
+                            <th>客户</th>
+                            <th>产品</th>
+                            <th>数量</th>
+                            <th>状态</th>
+                            <th>交期</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orderTable">
+                        <tr><td colspan="6" class="empty">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 右侧 -->
+        <div class="right-col">
+            <div class="panel">
+                <div class="panel-title">🚚 近期发货</div>
+                <div class="ship-scroll" id="shipmentList">
+                    <div class="empty">暂无发货记录</div>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-title">📈 今日概览</div>
+                <div class="bar-chart">
+                    <canvas id="todayChart"></canvas>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-title">📦 物料缺料情况</div>
+                <div class="table-scroll" id="shortageTable">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>工单号</th>
+                                <th>物料</th>
+                                <th>缺料量</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shortageList">
+                            <tr><td colspan="3" class="empty">加载中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部 -->
+    <footer class="footer">
+        <div><span class="refresh-dot"></span>数据自动刷新中 (30秒)</div>
+        <div id="lastUpdate">最后更新: ----</div>
+        <div id="dataSource" style="color:#888;">数据源: 检测中...</div>
+        <div>F11全屏 | ESC退出 | <a href="/v1" style="color:#00d4ff;text-decoration:none;font-weight:bold;">方案1</a> | <a href="/v2" style="color:#a55eea;text-decoration:none;">方案2</a> | <a href="/v3" style="color:#00c853;text-decoration:none;">方案3</a></div>
+    </footer>
+
+    <script>
+        let todayChart = null, provinceChart = null;
+        const API = '/api/dashboard_data';
+        const PROVINCE_API = '/api/province_distribution';
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').textContent = now.toLocaleTimeString('zh-CN', { hour12: false });
+            const w = ['日','一','二','三','四','五','六'];
+            document.getElementById('date').textContent = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} 星期${w[now.getDay()]}`;
+        }
+
+        function animateValue(el, end) {
+            const start = parseInt(el.textContent) || 0;
+            const dur = 500, st = performance.now();
+            function up(t) {
+                const p = Math.min((t - st) / dur, 1);
+                el.textContent = Math.round(start + (end - start) * (1 - Math.pow(1-p, 3)));
+                if (p < 1) requestAnimationFrame(up);
+            }
+            requestAnimationFrame(up);
+        }
+
+        async function fetchData() {
+            try {
+                const r = await fetch(API);
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                const d = await r.json();
+                updateDashboard(d);
+                document.getElementById('lastUpdate').textContent = '最后更新: ' + new Date().toLocaleTimeString('zh-CN', { hour12: false });
+                document.getElementById('dataSource').innerHTML = '<span style="color:#00c853">● 真实数据</span>';
+            } catch (e) {
+                console.error('API Error:', e);
+                // 不加载模拟数据，只显示错误信息
+                document.getElementById('dataSource').innerHTML = '<span style="color:#dc3545">● 数据加载失败</span>';
+                // 显示空数据
+                updateDashboard({ 
+                    totalOrders: 0, 
+                    producingOrders: 0, 
+                    readyToShip: 0, 
+                    overdueOrders: 0, 
+                    monthlyNew: 0, 
+                    completionRate: 0, 
+                    orderList: [], 
+                    alerts: [], 
+                    recentShipments: [], 
+                    shortageList: [] 
+                });
+            }
+        }
+
+        function updateDashboard(d) {
+            animateValue(document.getElementById('totalOrders'), d.totalOrders || 0);
+            animateValue(document.getElementById('producingOrders'), d.producingOrders || 0);
+            animateValue(document.getElementById('readyToShip'), d.readyToShip || 0);
+            animateValue(document.getElementById('overdueOrders'), d.overdueOrders || 0);
+            animateValue(document.getElementById('monthlyNew'), d.monthlyNew || 0);
+            animateValue(document.getElementById('completionRate'), d.completionRate || 0);
+            updateOrderTable(d.orderList || []);
+            updateAlerts(d.alerts || []);
+            updateShipments(d.recentShipments || []);
+            updateShortageList(d.shortageList || []);
+            updateChinaMap();
+            updateBarChart(d);
+            updateMarquee(d);
+        }
+
+        // 滚动信息更新
+        function updateMarquee(d) {
+            const items = [];
+            const now = new Date().toLocaleTimeString('zh-CN', {hour12: false});
+
+            // 总订单统计
+            items.push(`📋 <span class="success">总订单: ${d.totalOrders || 0} 单</span>`);
+
+            // 生产中
+            if (d.producingOrders > 0) {
+                items.push(`⚙️ <span class="warn">生产中: ${d.producingOrders} 单</span>`);
+            }
+
+            // 待发货
+            if (d.readyToShip > 0) {
+                items.push(`📦 <span class="warn">待发货: ${d.readyToShip} 单</span>`);
+            }
+
+            // 逾期
+            if (d.overdueOrders > 0) {
+                items.push(`🚨 <span class="highlight">逾期: ${d.overdueOrders} 单</span>`);
+            } else {
+                items.push(`✅ 无逾期订单`);
+            }
+
+            // 最近发货
+            if (d.recentShipments && d.recentShipments.length > 0) {
+                const last = d.recentShipments[0];
+                items.push(`🚚 最新发货: ${last.order_no} / ${last.logistics_company}`);
+            }
+
+            // 最近生产
+            if (d.productionList && d.productionList.length > 0) {
+                const p = d.productionList[0];
+                items.push(`🏭 进行中: ${p.order_no} / ${p.product_type} / ${p.quantity}${p.unit}`);
+            }
+
+            items.push(`⏰ ${now}`);
+
+            document.getElementById('marqueeContent').innerHTML =
+                '<span>' + items.join('</span><span>') + '</span>';
+        }
+
+        function updateOrderTable(list) {
+            const tb = document.getElementById('orderTable');
+            if (!list.length) { tb.innerHTML = '<tr><td colspan="6" class="empty">暂无数据</td></tr>'; return; }
+            tb.innerHTML = list.slice(0, 15).map(i => `
+                <tr>
+                    <td>${i.order_no || '-'}</td>
+                    <td>${i.customer_name || '-'}</td>
+                    <td>${i.product_type || '-'}</td>
+                    <td>${i.quantity || 0}${i.unit || ''}</td>
+                    <td><span class="status-badge status-${i.status || '待确认'}">${i.status || '未知'}</span></td>
+                    <td>${i.delivery_date || '-'}</td>
+                </tr>
+            `).join('');
+        }
+
+        // ─── 中国地图 ────────────────────────────────────────────
+        function initChinaMap() {
+            const el = document.getElementById('chinaMap');
+            if (!el) return;
+            if (!window.echarts) return;
+            provinceChart = echarts.init(el, null, { renderer: 'canvas' });
+            window.addEventListener('resize', () => provinceChart && provinceChart.resize());
+        }
+
+        async function updateChinaMap() {
+            if (!provinceChart) initChinaMap();
+            if (!provinceChart) return;
+            try {
+                const r = await fetch(PROVINCE_API);
+                const json = await r.json();
+                const dist = json.success ? json.data : {};
+
+                // 取最大值，用于归一化颜色
+                const maxVal = Math.max(...Object.values(dist), 1);
+
+                const option = {
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: p => p.name + '<br/>订单: ' + (dist[p.name] || 0) + ' 单',
+                        backgroundColor: 'rgba(15, 25, 35, 0.9)',
+                        borderColor: '#00d4ff',
+                        borderWidth: 1,
+                        textStyle: { color: '#fff', fontSize: 12 }
+                    },
+                    visualMap: {
+                        left: 'left',
+                        bottom: '5%',
+                        min: 0,
+                        max: maxVal,
+                        inRange: {
+                            color: ['#1a3a5c', '#2196F3', '#00d4ff', '#4FC3F7']
+                        },
+                        text: ['高', '低'],
+                        textStyle: { color: '#00d4ff', fontSize: 10, fontWeight: 'bold' },
+                        calculable: true,
+                        borderColor: '#00d4ff',
+                        borderWidth: 1,
+                        itemWidth: 12,
+                        itemHeight: 60
+                    },
+                    series: [{
+                        name: '订单数',
+                        type: 'map',
+                        map: 'china',
+                        roam: true,
+                        zoom: 1.2,
+                        center: [105, 35],
+                        label: {
+                            show: false,
+                            color: '#fff',
+                            fontSize: 10
+                        },
+                        emphasis: {
+                            label: {
+                                show: true,
+                                color: '#fff',
+                                fontSize: 12,
+                                fontWeight: 'bold'
+                            },
+                            itemStyle: {
+                                areaColor: '#00d4ff',
+                                shadowBlur: 15,
+                                shadowColor: 'rgba(0, 212, 255, 0.5)'
+                            }
+                        },
+                        itemStyle: {
+                            areaColor: '#1a3a5c',
+                            borderColor: '#2196F3',
+                            borderWidth: 0.8,
+                            shadowBlur: 3,
+                            shadowColor: 'rgba(0, 212, 255, 0.2)'
+                        },
+                        emphasis: {
+                            label: {
+                                show: true,
+                                color: '#fff',
+                                fontSize: 12,
+                                fontWeight: 'bold'
+                            },
+                            itemStyle: {
+                                areaColor: '#00d4ff',
+                                shadowBlur: 15,
+                                shadowColor: 'rgba(0, 212, 255, 0.5)'
+                            }
+                        },
+                        data: Object.keys(dist).filter(k => dist[k] > 0).map(k => ({
+                            name: k, 
+                            value: dist[k],
+                            itemStyle: {
+                                areaColor: '#2196F3'
+                            }
+                        }))
+                    }]
+                };
+                provinceChart.setOption(option, true);
+            } catch (e) {
+                console.warn('省份地图加载失败:', e);
+            }
+        }
+
+        function updateBarChart(d) {
+            const ctx = document.getElementById('todayChart').getContext('2d');
+            if (todayChart) todayChart.destroy();
+            todayChart = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: ['生产中','待发货','已发货','逾期'], datasets: [{ data: [d.producingOrders||0, d.readyToShip||0, d.statusDistribution?.['已发货']||0, d.overdueOrders||0], backgroundColor: ['#ff9500','#00c853','#2196F3','#ff3d00'], borderRadius: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888', font: { size: 10 } } }, y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888', font: { size: 10 } }, beginAtZero: true } } }
+            });
+        }
+
+        function updateAlerts(list) {
+            const c = document.getElementById('alertList');
+            if (!list.length) { c.innerHTML = '<div class="empty">暂无预警 ✅</div>'; return; }
+            c.innerHTML = list.map(a => `<div class="alert-item ${a.level||'info'}"><div class="alert-title">${a.title||'预警'}</div><div class="alert-desc">${a.description||''}</div></div>`).join('');
+        }
+
+        function updateShipments(list) {
+            const c = document.getElementById('shipmentList');
+            if (!list.length) { c.innerHTML = '<div class="empty">暂无发货记录</div>'; return; }
+            c.innerHTML = list.slice(0, 6).map(i => `<div class="ship-item"><div><div class="ship-no">📦 ${i.shipment_no||'-'}</div><div class="ship-customer">${i.customer_name||'-'}</div></div><div class="ship-qty">${i.ship_quantity||0}${i.unit||''}</div></div>`).join('');
+        }
+
+        function updateShortageList(list) {
+            const tb = document.getElementById('shortageList');
+            if (!list.length) { tb.innerHTML = '<tr><td colspan="3" class="empty">暂无缺料</td></tr>'; return; }
+            tb.innerHTML = list.map(i => `
+                <tr>
+                    <td>${i.order_no || '-'}</td>
+                    <td>${i.material_name || '-'}</td>
+                    <td>${i.shortage_display || '-'}</td>
+                </tr>
+            `).join('');
+        }
+
+        function loadMockData() {
+            updateDashboard({ 
+                totalOrders:156, 
+                producingOrders:12, 
+                readyToShip:8, 
+                overdueOrders:3, 
+                monthlyNew:25, 
+                completionRate:65, 
+                statusDistribution:{'待确认':12,'已确认':28,'已排产':15,'生产中':45,'质检中':8,'待发货':18,'已发货':25,'已完成':5}, 
+                productionList:[{order_no:'WO2026040101',order_no:'DD202604001',specs:'网孔5mm / 丝径2mm / 宽1000mm / 抛光',product_type:'304不锈钢网带',quantity:500,unit:'米',status:'生产中',delivery_date:'2026-04-25'},{order_no:'WO2026040102',order_no:'DD202604002',specs:'网孔3mm / 丝径1.5mm / 宽800mm',product_type:'316L高温网带',quantity:300,unit:'米',status:'质检中',delivery_date:'2026-04-22'},{order_no:'WO2026040103',order_no:'DD202604003',specs:'网孔8mm / 丝径3mm / 宽1200mm / 镀锌',product_type:'普通不锈钢网带',quantity:800,unit:'米',status:'待发货',delivery_date:'2026-04-20'}], 
+                orderList:[{order_no:'DD202604001',customer_name:'某某电子厂',product_type:'304不锈钢网带',quantity:500,unit:'米',status:'生产中',delivery_date:'2026-04-25'},{order_no:'DD202604002',customer_name:'某某机械厂',product_type:'316L高温网带',quantity:300,unit:'米',status:'质检中',delivery_date:'2026-04-22'},{order_no:'DD202604003',customer_name:'某某食品厂',product_type:'普通不锈钢网带',quantity:800,unit:'米',status:'待发货',delivery_date:'2026-04-20'}],
+                shortageList:[{order_no:'WO2026040101',material_name:'不锈钢丝',shortage_display:'500米'},{order_no:'WO2026040101',material_name:'穿轴',shortage_display:'50根'},{order_no:'WO2026040102',material_name:'链条',shortage_display:'100米'}],
+                alerts:[{level:'critical',title:'🔴 订单逾期',description:'DD202604006 已逾期3天'},{level:'warning',title:'🟠 即将到期',description:'DD202604003 明天到期'},{level:'info',title:'🔵 库存预警',description:'304不锈钢丝库存偏低'}], 
+                recentShipments:[{shipment_no:'FH2026041901',customer_name:'某某电子厂',ship_quantity:200,unit:'米'},{shipment_no:'FH2026041802',customer_name:'某某机械厂',ship_quantity:350,unit:'米'}] 
+            });
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'F11') { e.preventDefault(); document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); }
+            if (e.key === 'Escape' && document.fullscreenElement) document.exitFullscreen();
+        });
+
+        updateClock();
+        setInterval(updateClock, 1000);
+        fetchData();
+        setInterval(fetchData, 600000);
+    </script>
+</body>
+</html>

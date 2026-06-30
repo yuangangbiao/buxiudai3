@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard 大屏 - 不锈钢网带跟单系统</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Microsoft YaHei", sans-serif; background: #f0f2f5; color: #2c3e50; }
+  .main { padding: 16px 24px; max-width: 1400px; margin: 0 auto; }
+  .meta-bar { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; color: #888; font-size: 12px; }
+  .metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px; }
+  .metric-card { background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); position: relative; overflow: hidden; }
+  .metric-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--accent, #667eea); }
+  .metric-label { color: #888; font-size: 13px; margin-bottom: 8px; }
+  .metric-value { font-size: 32px; font-weight: 700; color: #2c3e50; }
+  .metric-sub { color: #aaa; font-size: 12px; margin-top: 4px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .panel { background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .panel-title { font-size: 15px; font-weight: 600; color: #2c3e50; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0; }
+  .status-row { display: flex; align-items: center; padding: 8px 0; }
+  .status-name { width: 80px; color: #555; font-size: 13px; }
+  .status-bar-wrap { flex: 1; height: 18px; background: #f5f5f5; border-radius: 9px; overflow: hidden; margin: 0 12px; }
+  .status-bar-fill { height: 100%; transition: width 0.5s; }
+  .status-count { min-width: 40px; text-align: right; font-weight: 600; color: #2c3e50; }
+  .empty { color: #999; font-size: 13px; text-align: center; padding: 30px 0; }
+  .trend { display: flex; align-items: flex-end; height: 120px; gap: 6px; padding: 0 4px; }
+  .trend-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .trend-bar-wrap { width: 100%; height: 100px; display: flex; flex-direction: column; justify-content: flex-end; gap: 1px; }
+  .trend-bar-pass { background: #4CAF50; }
+  .trend-bar-fail { background: #F44336; }
+  .trend-label { font-size: 11px; color: #888; }
+  .trend-num { font-size: 11px; color: #555; }
+  .urgent-list { list-style: none; }
+  .urgent-item { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid #f5f5f5; }
+  .urgent-item:last-child { border-bottom: none; }
+  .urgent-order { font-weight: 600; color: #2c3e50; min-width: 130px; font-size: 13px; }
+  .urgent-customer { color: #555; flex: 1; font-size: 13px; }
+  .urgent-date { color: #F44336; font-weight: 600; font-size: 13px; }
+  .urgent-status { padding: 2px 8px; border-radius: 10px; font-size: 11px; color: #fff; margin-left: 8px; }
+  .refresh-info { color: #aaa; font-size: 11px; }
+  .error { background: #e74c3c; color: #fff; padding: 10px 16px; border-radius: 4px; margin: 8px 0; font-size: 13px; }
+</style>
+</head>
+<body>
+<div id="appNav"></div>
+<script src="/static/js/shared.js"></script>
+<script>renderNav('dashboard', '📊 Dashboard 大屏');</script>
+
+<div class="main">
+  <div class="meta-bar">
+    <span>📅 数据日期: <span id="metaDate">加载中...</span></span>
+    <span class="refresh-info">每 30 秒自动刷新 · <span id="countdown">30</span>s 后刷新</span>
+  </div>
+
+  <div id="errorBox" class="error" style="display:none"></div>
+
+  <!-- 4 个核心指标 -->
+  <div class="metric-grid">
+    <div class="metric-card" style="--accent: #667eea">
+      <div class="metric-label">📋 订单总数</div>
+      <div class="metric-value" id="m-order-total">-</div>
+      <div class="metric-sub">今日新增 <span id="m-order-today">-</span></div>
+    </div>
+    <div class="metric-card" style="--accent: #FF9800">
+      <div class="metric-label">🏭 生产中</div>
+      <div class="metric-value" id="m-prod-active">-</div>
+      <div class="metric-sub">已派工未完成</div>
+    </div>
+    <div class="metric-card" style="--accent: #4CAF50">
+      <div class="metric-label">✅ 今日质检合格率</div>
+      <div class="metric-value" id="m-quality-rate">-</div>
+      <div class="metric-sub">合格 <span id="m-quality-pass">-</span> / 不合格 <span id="m-quality-fail">-</span></div>
+    </div>
+    <div class="metric-card" style="--accent: #9C27B0">
+      <div class="metric-label">📦 物料备料</div>
+      <div class="metric-value" id="m-mat-orders">-</div>
+      <div class="metric-sub">已有备料记录订单数</div>
+    </div>
+  </div>
+
+  <!-- 2 个状态分布图 -->
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-title">订单状态分布</div>
+      <div id="order-status-list"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">生产状态分布</div>
+      <div id="prod-status-list"></div>
+    </div>
+  </div>
+
+  <!-- 7 日质检趋势 -->
+  <div class="panel" style="margin-bottom: 16px">
+    <div class="panel-title">📈 近 7 日质检趋势</div>
+    <div class="trend" id="quality-trend"></div>
+  </div>
+
+  <!-- 即将到期 Top 5 -->
+  <div class="panel" style="margin-bottom: 24px">
+    <div class="panel-title">⏰ 即将到期订单 (3 天内)</div>
+    <ul class="urgent-list" id="urgent-list"></ul>
+    <div id="urgent-empty" class="empty" style="display:none">✅ 无即将到期订单</div>
+  </div>
+</div>
+
+<script>
+// 来自 shared.js 的通用函数
+function renderStatusList(containerId, items, total) {
+  const html = items.map(item => {
+    const pct = total > 0 ? (item.count / total * 100) : 0;
+    return `<div class="status-row">
+      <div class="status-name">${escapeHtml(item.status)}</div>
+      <div class="status-bar-wrap">
+        <div class="status-bar-fill" style="width:${pct}%; background:${escapeHtml(item.color)}"></div>
+      </div>
+      <div class="status-count">${item.count}</div>
+    </div>`;
+  }).join('');
+  document.getElementById(containerId).innerHTML = html || '<div class="empty">暂无数据</div>';
+}
+
+function renderQualityTrend(weekData) {
+  const max = Math.max(1, ...weekData.map(d => d.total));
+  const html = weekData.map(d => {
+    const passH = (d.pass / max * 100) || 0;
+    const failH = (d.fail / max * 100) || 0;
+    return `<div class="trend-col">
+      <div class="trend-num">${d.total}</div>
+      <div class="trend-bar-wrap">
+        <div class="trend-bar-pass" style="height:${passH}%"></div>
+        <div class="trend-bar-fail" style="height:${failH}%"></div>
+      </div>
+      <div class="trend-label">${escapeHtml(d.date)}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('quality-trend').innerHTML = html || '<div class="empty" style="width:100%">近 7 日无质检数据</div>';
+}
+
+function renderUrgent(urgent) {
+  const list = document.getElementById('urgent-list');
+  const empty = document.getElementById('urgent-empty');
+  if (!urgent || urgent.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  list.innerHTML = urgent.map(u => {
+    const statusColor = ({
+      '待发布': '#00BCD4', '待排产': '#2196F3', '已排产': '#03A9F4',
+      '生产中': '#FF9800', '质检中': '#FF5722', '待发货': '#9C27B0',
+    })[u.status] || '#666';
+    return `<li class="urgent-item">
+      <div class="urgent-order">${escapeHtml(u.order_no)}</div>
+      <div class="urgent-customer">${escapeHtml(u.customer_name || '')} · ${escapeHtml(u.product_name || '')}</div>
+      <div class="urgent-date">📅 ${escapeHtml(u.plan_end || '-')}</div>
+      <span class="urgent-status" style="background:${statusColor}">${escapeHtml(u.status)}</span>
+    </li>`;
+  }).join('');
+}
+
+async function loadDashboard() {
+  try {
+    const r = await apiFetch('/api/dashboard/summary');
+    if (!r) return;  // 401 already handled
+    const data = await r.json();
+    if (data.code !== 0) {
+      showError('errorBox', data.message || '加载失败');
+      return;
+    }
+    const d = data.data;
+
+    // 4 个指标
+    document.getElementById('m-order-total').textContent = d.order.total;
+    document.getElementById('m-order-today').textContent = d.order.today_new;
+    document.getElementById('m-prod-active').textContent = d.production.active;
+    document.getElementById('m-quality-rate').textContent = d.quality.today_pass_rate + '%';
+    document.getElementById('m-quality-pass').textContent = d.quality.today_pass;
+    document.getElementById('m-quality-fail').textContent = d.quality.today_fail;
+    document.getElementById('m-mat-orders').textContent = d.material.orders_with_records;
+    document.getElementById('metaDate').textContent = d.generated_at;
+
+    // 2 个状态分布
+    renderStatusList('order-status-list', d.order.by_status, d.order.total);
+    renderStatusList('prod-status-list', d.production.by_status,
+      d.production.by_status.reduce((s, x) => s + x.count, 0));
+
+    // 7 日趋势
+    renderQualityTrend(d.quality.week_trend);
+
+    // 即将到期
+    renderUrgent(d.order.urgent);
+
+    // 刷新倒计时
+    countdown = 30;
+  } catch (e) {
+    showError('errorBox', '网络错误: ' + e.message);
+  }
+}
+
+let countdown = 30;
+let _autoRefresh = null;
+function tickCountdown() {
+  const el = document.getElementById('countdown');
+  if (el) el.textContent = countdown;
+}
+setInterval(() => {
+  if (countdown > 0) {
+    countdown--;
+    tickCountdown();
+  }
+}, 1000);
+
+// 启动
+showUser();
+if (requireAuth()) {
+  loadDashboard();
+  _autoRefresh = new AutoRefresh(() => { if (getToken()) loadDashboard(); }, 30000, null);
+  _autoRefresh.start();
+}
+</script>
+</body>
+</html>

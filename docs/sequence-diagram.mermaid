@@ -1,0 +1,74 @@
+sequenceDiagram
+    actor 质检员 as 质检员(手机)
+    participant FE as cs_report.html
+    participant API as quality_inspection BP
+    participant DP as data_packages<br/>(container_center)
+    participant QDAO as QualityDAO
+    participant QR as quality_records<br/>(steel_belt)
+    participant DC as dispatch_center
+
+    Note over 质检员,DC: === 流程1: 加载任务列表 ===
+    质检员->>FE: 点击「质检报工」
+    FE->>API: GET /api/tasks?page_route=quality_inspection
+    API->>DP: SELECT * FROM data_packages WHERE data_type='quality_inspection'
+    DP-->>API: [{id, order_no, status, ...}]
+    API-->>FE: {code:0, data:{tasks:[], total:N}}
+    FE->>FE: 渲染任务卡片列表
+
+    Note over 质检员,DC: === 流程2: 查看任务详情 ===
+    质检员->>FE: 点击任务卡片
+    FE->>API: GET /api/quality-inspection/tasks/<pkg_id>
+    API->>DP: SELECT * FROM data_packages WHERE id=pkg_id
+    DP-->>API: {id, content, status, ...}
+    API->>API: QualityRuleDAO.get_rules_by_process(process_name)
+    API->>API: 组装流程时间线+检查项+版本链
+    API-->>FE: {code:0, data:{inspection_items, flow, spec, ...}}
+    FE->>FE: renderQiDetail() 渲染弹窗表单
+
+    Note over 质检员,DC: === 流程3: 逐项判定 ===
+    loop 每个检查项
+        质检员->>FE: 输入实测值
+        FE->>API: POST /api/quality-inspection/evaluate
+        API->>API: _judge(standard, measured, tolerance)
+        API-->>FE: {code:0, data:{is_passed: true/false}}
+        FE->>FE: 绿色✓ / 红色✗
+    end
+
+    Note over 质检员,DC: === 流程4: 提交报告(乐观锁) ===
+    质检员->>FE: 填写缺陷描述+处理方式，点击提交
+    FE->>API: POST /api/quality-inspection/submit
+    API->>DP: SELECT status FROM data_packages WHERE id=pkg_id
+    alt status 已提交/已完成
+        DP-->>API: status='quality_reported'
+        API-->>FE: {code:409, message:"已被提交，请刷新"}
+    else status 可提交
+        API->>QDAO: create_full_v2(order_no, items, ...)
+        QDAO->>QR: INSERT quality_records + quality_record_items
+        QR-->>QDAO: record_id
+        API->>DP: UPDATE data_packages SET status='quality_reported'
+        alt 结果=合格
+            API->>DC: on_quality_record_completed(order_no, process_id, result, inspector)
+            DC-->>API: (True, '流程已推进')
+        end
+        API-->>FE: {code:0, data:{record_id, status:'quality_reported'}}
+    end
+
+    Note over 质检员,DC: === 流程5: 审核 ===
+    actor 主管 as 主管(手机/桌面)
+    主管->>FE: 进入审核页
+    FE->>API: GET /api/quality-inspection/review/pending
+    API->>QR: SELECT * FROM quality_records WHERE review_status='pending'
+    QR-->>API: [{record_id, ...}]
+    API-->>FE: {code:0, data:{records:[]}}
+    主管->>FE: 点击审核
+    alt 批准
+        FE->>API: POST /api/quality-inspection/review {action:'approve'}
+        API->>QR: UPDATE review_status='approved', reviewed_by=...
+    else 拒绝+返工
+        FE->>API: POST /api/quality-inspection/review {action:'reject'}
+        API->>QR: UPDATE review_status='rejected'
+        主管->>FE: 点击创建返工
+        FE->>API: POST /api/quality-inspection/rework
+        API->>DP: INSERT 新 data_package (rework_version+1)
+        API-->>FE: {code:0, data:{new_task_id}}
+    end

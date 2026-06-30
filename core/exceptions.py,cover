@@ -1,0 +1,171 @@
+  # -*- coding: utf-8 -*-
+> """
+> 统一异常定义
+> """
+  
+> from typing import Optional
+  
+  
+> class BusinessException(Exception):
+>     """业务异常基类"""
+      
+>     def __init__(self, code: str, message: str, details: Optional[dict] = None):
+>         self.code = code
+>         self.message = message
+>         self.details = details or {}
+>         super().__init__(self.message)
+      
+-     def __str__(self):
+-         if self.details:
+-             return f"[{self.code}] {self.message} - {self.details}"
+-         return f"[{self.code}] {self.message}"
+      
+>     def to_dict(self) -> dict:
+>         """转换为字典"""
+>         return {
+>             'code': self.code,
+>             'message': self.message,
+>             'details': self.details
+>         }
+  
+  
+> class ValidationException(BusinessException):
+>     """数据校验异常"""
+      
+>     def __init__(self, message: str, field: Optional[str] = None, details: Optional[dict] = None):
+>         self.field = field
+>         super().__init__('VALIDATION_ERROR', message, details)
+      
+-     def __str__(self):
+-         if self.field:
+-             return f"字段 [{self.field}]: {self.message}"
+-         return super().__str__()
+  
+  
+> class NotFoundException(BusinessException):
+>     """资源不存在异常"""
+      
+>     def __init__(self, resource: str, identifier: str, details: Optional[dict] = None):
+>         message = f"{resource} 不存在: {identifier}"
+>         super().__init__('NOT_FOUND', message, details)
+>         self.resource = resource
+>         self.identifier = identifier
+  
+  
+> class DuplicateException(BusinessException):
+>     """重复数据异常"""
+      
+>     def __init__(self, resource: str, identifier: str, details: Optional[dict] = None):
+>         message = f"{resource} 已存在: {identifier}"
+>         super().__init__('DUPLICATE', message, details)
+>         self.resource = resource
+>         self.identifier = identifier
+  
+  
+> class PermissionException(BusinessException):
+>     """权限异常"""
+      
+>     def __init__(self, message: str = "权限不足", details: Optional[dict] = None):
+>         super().__init__('PERMISSION_DENIED', message, details)
+  
+  
+> class StateException(BusinessException):
+>     """状态异常（状态机流转错误）"""
+      
+>     def __init__(self, message: str, current_state: str = None, target_state: str = None, details: Optional[dict] = None):
+>         self.current_state = current_state
+>         self.target_state = target_state
+>         super().__init__('STATE_ERROR', message, details)
+  
+  
+> class DatabaseException(BusinessException):
+>     """数据库操作异常"""
+      
+>     def __init__(self, message: str, sql: str = None, details: Optional[dict] = None):
+>         self.sql = sql
+>         super().__init__('DATABASE_ERROR', message, details)
+  
+  
+> class ConfigException(BusinessException):
+>     """配置异常"""
+      
+>     def __init__(self, message: str, config_key: str = None, details: Optional[dict] = None):
+>         self.config_key = config_key
+>         super().__init__('CONFIG_ERROR', message, details)
+  
+  
+  # 异常处理装饰器
+> import logging
+> from contextlib import contextmanager
+> from functools import wraps
+> from typing import Any, Callable, Optional
+  
+- logger = logging.getLogger(__name__)
+  
+  
+> def safe_cursor_execute(
+>     conn,
+>     sql: str,
+>     params: Optional[tuple] = None,
+>     error_msg: str = "数据库操作失败",
+>     default_return: Any = 0,
+> ) -> Any:
+>     try:
+>         with conn.cursor() as c:
+>             affected = c.execute(sql, params or ())
+>             conn.commit()
+>             return affected
+>     except Exception as e:
+-         logger.error(f"{error_msg}: {e}")
+>         conn.rollback()
+>         return default_return
+  
+  
+> def safe_cursor_insert(
+>     conn,
+>     sql: str,
+>     params: Optional[tuple] = None,
+>     error_msg: str = "数据库插入失败",
+> ) -> Optional[int]:
+>     try:
+>         with conn.cursor() as c:
+>             c.execute(sql, params or ())
+>             conn.commit()
+>             return c.lastrowid
+>     except Exception as e:
+-         logger.error(f"{error_msg}: {e}")
+>         conn.rollback()
+>         return None
+  
+  
+> def handle_exceptions(func):
+>     """通用异常处理装饰器"""
+>     @wraps(func)
+>     def wrapper(*args, **kwargs):
+>         try:
+>             return func(*args, **kwargs)
+>         except BusinessException:
+>             raise  # 业务异常直接抛出
+>         except Exception as e:
+>             raise DatabaseException(
+>                 message=str(e),
+>                 details={'original_error': type(e).__name__}
+>             )
+>     return wrapper
+  
+  
+> def validation_required(*required_fields):
+>     """字段校验装饰器"""
+>     def decorator(func):
+>         @wraps(func)
+>         def wrapper(*args, **kwargs):
+>             data = kwargs.get('data') or (args[1] if len(args) > 1 else {})
+>             missing = [f for f in required_fields if not data.get(f)]
+>             if missing:
+>                 raise ValidationException(
+>                     message=f"缺少必填字段: {', '.join(missing)}",
+>                     field=', '.join(missing)
+>                 )
+>             return func(*args, **kwargs)
+>         return wrapper
+>     return decorator

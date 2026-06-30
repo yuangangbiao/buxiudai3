@@ -1,0 +1,5 @@
+08:53:49 [INFO] [inventory_web.db_utils:36] [TASK-003] 备份目录就绪: D:\yuan\不锈钢网带跟单3.0\mobile_api_ai\inventory_backups
+08:53:49 [INFO] [inventory_api_server:413] [库存] Web蓝图注册完成: 98 条路由
+08:53:49 [INFO] [waitress:449] Serving on http://127.0.0.1:5010
+08:54:13 [WARNING] [inventory_api_server:329] [登录失败] IP=127.0.0.1 第 1/5 次
+08:56:34 [WARNING] [inventory_api_server:329] [登录失败] IP=127.0.0.1 第 2/5 次

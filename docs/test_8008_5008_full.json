@@ -1,0 +1,219 @@
+{
+  "time": "2026-06-23 15:29:43",
+  "total": 35,
+  "passed": 32,
+  "failed": 3,
+  "pass_rate": "91.4%",
+  "results": [
+    {
+      "name": "A1 /api/health",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"service\":\"sync-bridge\",\"status\":\"ok\",\"timestamp\":\"2026-06-23T15:29:39.631701\",\"version\":\"3.0\"}\n"
+    },
+    {
+      "name": "A2 /health 详细",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"catchup_alive\":true,\"catchup_heartbeat\":1782199766.1983144,\"db\":\"connected\",\"service\":\"sync_bridge\",\"status\":\"ok\"}\n"
+    },
+    {
+      "name": "A3 /api/sync/quality-report 触发",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"code\":0,\"message\":\"ok\"}\n"
+    },
+    {
+      "name": "A4 /api/sync/sub-step-report",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"code\":1001,\"message\":\"\\u53c2\\u6570\\u4e0d\\u5b8c\\u6574: order_no, step_name, quantity \\u5fc5\\u586b\"}\n"
+    },
+    {
+      "name": "A5 /api/dlq/list 死信",
+      "status": 404,
+      "ok": true,
+      "detail": "{\"code\":1404,\"message\":\"\\u63a5\\u53e3\\u4e0d\\u5b58\\u5728\"}\n"
+    },
+    {
+      "name": "B1 /api/health",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"code\":1,\"data\":{\"components\":{\"bot\":\"disconnected\",\"db\":\"ok\"},\"service\":\"mobile-api\",\"status\":\"degraded\",\"timestamp\":\"2026-06-23T15:29:39.698158\",\"version\":\"3.0\"},\"message\":\"degraded\"}\n"
+    },
+    {
+      "name": "B2 /api/login                          GET",
+      "status": 405,
+      "ok": true,
+      "detail": "<!doctype html>\n<html lang=en>\n<title>405 Method Not Allowed</title>\n<h1>Method "
+    },
+    {
+      "name": "B2 /api/orders                         GET",
+      "status": 404,
+      "ok": true,
+      "detail": "<!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<"
+    },
+    {
+      "name": "B2 /api/process/list                   GET",
+      "status": 404,
+      "ok": true,
+      "detail": "<!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<"
+    },
+    {
+      "name": "B2 /api/quality/list                   GET",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"code\":0,\"data\":{\"page\":1,\"page_size\":20,\"records\":[{\"attachment_path\":\"\",\"atta"
+    },
+    {
+      "name": "B2 /api/material/list                  GET",
+      "status": 404,
+      "ok": true,
+      "detail": "{\"code\":-1,\"message\":\"\\u7269\\u6599\\u4efb\\u52a1\\u4e0d\\u5b58\\u5728\"}\n"
+    },
+    {
+      "name": "B2 /api/shipment/list                  GET",
+      "status": 404,
+      "ok": true,
+      "detail": "<!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<"
+    },
+    {
+      "name": "B2 /api/operators                      GET",
+      "status": 404,
+      "ok": true,
+      "detail": "<!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<"
+    },
+    {
+      "name": "B2 /api/attendance                     GET",
+      "status": 200,
+      "ok": true,
+      "detail": "[]\n"
+    },
+    {
+      "name": "B2 /api/inventory                      GET",
+      "status": 404,
+      "ok": true,
+      "detail": "<!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<"
+    },
+    {
+      "name": "B2 /api/csrf                           GET",
+      "status": 404,
+      "ok": true,
+      "detail": "<!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<"
+    },
+    {
+      "name": "B3 /api/attendance/check-in 签到",
+      "status": 405,
+      "ok": false,
+      "detail": "<!doctype html>\n<html lang=en>\n<title>405 Method Not Allowed</title>\n<h1>Method Not Allowed</h1>\n<p>The method is not allowed for the requested URL.</p>\n"
+    },
+    {
+      "name": "B4 /api/work-report 报工",
+      "status": 404,
+      "ok": false,
+      "detail": "<!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try agai"
+    },
+    {
+      "name": "C1 5003 /health",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"code\":0,\"service\":\"dispatch-center\",\"threads\":{},\"time\":\"2026-06-23T15:29:39.932998\"}\n"
+    },
+    {
+      "name": "C2 5003 /api/dispatch-center/quality/list",
+      "status": 401,
+      "ok": true,
+      "detail": "{\"code\":401,\"message\":\"\\u672a\\u767b\\u5f55,\\u8bf7\\u5148\\u8c03\\u7528 /api/login\"}\n"
+    },
+    {
+      "name": "C2 5003 /api/dispatch-center/process/list",
+      "status": 401,
+      "ok": true,
+      "detail": "{\"code\":401,\"message\":\"\\u672a\\u767b\\u5f55,\\u8bf7\\u5148\\u8c03\\u7528 /api/login\"}\n"
+    },
+    {
+      "name": "C2 5003 /api/dispatch-center/material/list",
+      "status": 401,
+      "ok": true,
+      "detail": "{\"code\":401,\"message\":\"\\u672a\\u767b\\u5f55,\\u8bf7\\u5148\\u8c03\\u7528 /api/login\"}\n"
+    },
+    {
+      "name": "C2 5003 /api/dispatch-center/orders",
+      "status": 401,
+      "ok": true,
+      "detail": "{\"code\":401,\"message\":\"\\u672a\\u767b\\u5f55,\\u8bf7\\u5148\\u8c03\\u7528 /api/login\"}\n"
+    },
+    {
+      "name": "C2 5003 /api/dispatch-center/operators",
+      "status": 401,
+      "ok": true,
+      "detail": "{\"code\":401,\"message\":\"\\u672a\\u767b\\u5f55,\\u8bf7\\u5148\\u8c03\\u7528 /api/login\"}\n"
+    },
+    {
+      "name": "C3 5001→5003 转发路径",
+      "status": 401,
+      "ok": true,
+      "detail": "{\"code\":401,\"message\":\"\\u672a\\u767b\\u5f55,\\u8bf7\\u5148\\u8c03\\u7528 /api/login\"}\n"
+    },
+    {
+      "name": "D1 5001 /api/orders",
+      "status": 404,
+      "ok": true,
+      "detail": "<!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<"
+    },
+    {
+      "name": "D1 5001 /api/process/admin-list",
+      "status": 500,
+      "ok": false,
+      "detail": "{\"code\":500,\"message\":\"(1054, \\\"Unknown column 'po.customer_name' in 'field list"
+    },
+    {
+      "name": "D1 5001 /api/quality/admin-list",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"code\":0,\"data\":{\"records\":[{\"attachment_path\":\"\",\"attachment_paths\":null,\"cust"
+    },
+    {
+      "name": "D1 5001 /api/material/list",
+      "status": 401,
+      "ok": true,
+      "detail": "{\"code\":401,\"message\":\"\\u672a\\u767b\\u5f55\"}\n"
+    },
+    {
+      "name": "D1 5001 /api/shipment/company/list",
+      "status": 401,
+      "ok": true,
+      "detail": "{\"code\":401,\"message\":\"\\u672a\\u767b\\u5f55\"}\n"
+    },
+    {
+      "name": "D1 5001 /api/operators",
+      "status": 401,
+      "ok": true,
+      "detail": "{\"code\":401,\"message\":\"\\u672a\\u767b\\u5f55,\\u8bf7\\u5148\\u8c03\\u7528 /api/login\"}\n"
+    },
+    {
+      "name": "D1 5001 /api/attendance",
+      "status": 404,
+      "ok": true,
+      "detail": "<!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<"
+    },
+    {
+      "name": "D2 5001 /api/quality/list 走 _call_dispatch",
+      "status": 401,
+      "ok": true,
+      "detail": "{\"code\":401,\"message\":\"\\u672a\\u767b\\u5f55,\\u8bf7\\u5148\\u8c03\\u7528 /api/login\"}\n"
+    },
+    {
+      "name": "E1 5003 工序报工",
+      "status": 401,
+      "ok": true,
+      "detail": "{\"code\":401,\"message\":\"\\u672a\\u767b\\u5f55,\\u8bf7\\u5148\\u8c03\\u7528 /api/login\"}\n"
+    },
+    {
+      "name": "E3 8008 健康 (after sync)",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"catchup_alive\":true,\"catchup_heartbeat\":1782199766.1983144,\"db\":\"connected\",\"service\":\"sync_bridge\",\"status\":\"ok\"}\n"
+    }
+  ]
+}

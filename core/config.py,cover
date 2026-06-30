@@ -1,0 +1,1176 @@
+  # -*- coding: utf-8 -*-
+> """
+> 统一配置管理模块
+> 所有配置必须通过此模块访问，严禁硬编码
+> """
+  
+> import os
+> import sys
+> import warnings
+> from pathlib import Path
+> from typing import Any, Optional
+> from dotenv import load_dotenv
+  
+> _env_loaded = False
+  
+> def load_env() -> bool:
+>     """加载 .env 环境变量文件（仅执行一次）"""
+>     global _env_loaded
+>     if _env_loaded:
+>         return True
+  
+>     env_file = BASE_DIR / '.env'
+>     if env_file.exists():
+>         load_dotenv(env_file)
+>         _env_loaded = True
+>         return True
+!     return False
+  
+  # ========== 路径配置 ==========
+> BASE_DIR = Path(__file__).resolve().parent.parent
+> DATA_DIR = BASE_DIR / "data"
+> CONFIG_DIR = BASE_DIR / "config"
+> LOG_DIR = BASE_DIR / "logs"
+  
+  # 加载 .env（必须在 MYSQL_CFG 等配置之前）
+> load_env()
+  
+> def get_data_path(filename: str) -> str:
+>     """获取数据文件路径"""
+!     return str(DATA_DIR / filename)
+  
+> def get_config_path(filename: str) -> str:
+>     """获取配置文件路径"""
+!     return str(CONFIG_DIR / filename)
+  
+> def ensure_dir(path: str) -> None:
+>     """确保目录存在"""
+>     Path(path).mkdir(parents=True, exist_ok=True)
+  
+  # ========== 环境变量加载 ==========
+> ENV_FILE = BASE_DIR / '.env'
+> if ENV_FILE.exists():
+>     load_dotenv(ENV_FILE)
+! else:
+!     warnings.warn(f'.env file not found at {ENV_FILE}')
+  
+  # ========== 数据库配置 ==========
+> class DatabaseConfig:
+>     """数据库配置"""
+  
+>     @classmethod
+>     def get(cls, key: str, default: str = '') -> str:
+>         """获取环境变量"""
+!         return os.getenv(key, default)
+  
+>     @property
+>     def HOST(self) -> str:
+>         return os.getenv('MYSQL_HOST', 'localhost')
+  
+>     @property
+>     def PORT(self) -> int:
+>         return int(os.getenv('MYSQL_PORT', '3306'))
+  
+>     @property
+>     def USER(self) -> str:
+!         return os.getenv('MYSQL_USER', 'root')
+  
+>     @property
+>     def PASSWORD(self) -> str:
+!         return os.getenv('MYSQL_PASSWORD', '')
+  
+>     @property
+>     def DATABASE(self) -> str:
+!         return os.getenv('MYSQL_DATABASE', 'steel_belt')
+  
+>     @property
+>     def CHARSET(self) -> str:
+!         return os.getenv('MYSQL_CHARSET', 'utf8mb4')
+  
+>     @property
+>     def MAX_CONNECTIONS(self) -> int:
+!         return int(os.getenv('MAX_CONNECTIONS', '10'))
+  
+>     @property
+>     def MIN_CONNECTIONS(self) -> int:
+!         return int(os.getenv('MIN_CONNECTIONS', '2'))
+  
+>     @property
+>     def CONNECTION_TIMEOUT(self) -> int:
+!         return int(os.getenv('CONNECTION_TIMEOUT', '30'))
+  
+>     @property
+>     def USE_SQLITE(self) -> bool:
+!         return os.getenv('USE_SQLITE', 'true').lower() == 'true'
+  
+>     @property
+>     def SQLITE_DB_PATH(self) -> str:
+!         return os.getenv('SQLITE_DB_PATH', str(DATA_DIR / 'steel_belt.db'))
+  
+  # 立即加载环境变量（已在文件顶部通过 load_dotenv 完成）
+  
+  # ========== MySQL 连接配置（模块级变量，供兼容存根使用） ==========
+> MYSQL_HOST = os.getenv('MYSQL_HOST', 'localhost')
+> MYSQL_PORT = int(os.getenv('MYSQL_PORT', 3306))
+> MYSQL_USER = os.getenv('MYSQL_USER', 'root')
+> MYSQL_PASSWORD = os.getenv('MYSQL_PASSWORD', '')
+> MYSQL_DATABASE = os.getenv('MYSQL_DATABASE', 'steel_belt')
+  
+  # ========== 统一路径/URL/超时配置字典 ==========
+> DB_PATHS = {
+      # === JSON 配置（保留）===
+>     'dispatch_center_data': os.getenv('DISPATCH_CENTER_DATA_PATH') or str(BASE_DIR / 'mobile_api_ai' / 'dispatch_center_data.json'),
+>     'enterprise_structure': os.getenv('ENTERPRISE_STRUCTURE_PATH') or str(BASE_DIR / 'mobile_api_ai' / 'data' / 'enterprise_structure.json'),
+>     'cloud_config': os.getenv('CLOUD_CONFIG_PATH') or str(BASE_DIR / 'mobile_api_ai' / 'cloud_config.json'),
+>     'project_operators': os.getenv('PROJECT_OPERATORS_PATH') or str(BASE_DIR / 'operators.json'),
+      # === SQLite 已废弃（保留引用以防其他模块崩溃，但运行时会被拦截）===
+>     'sqlite_data': os.getenv('SQLITE_DATA_PATH') or str(DATA_DIR / 'data.db'),  # DEPRECATED: 全部数据已迁移到 MySQL
+>     'wechat_container': os.getenv('WECHAT_CONTAINER_DB_PATH') or str(BASE_DIR / 'mobile_api_ai' / 'wechat_container.db'),  # DEPRECATED: → container_center MySQL
+>     'container_center': os.getenv('CONTAINER_CENTER_DB_PATH') or str(BASE_DIR / 'mobile_api_ai' / 'container_center.db'),  # DEPRECATED: → container_center MySQL
+>     'container_storage': os.getenv('CONTAINER_STORAGE_DB_PATH') or str(BASE_DIR / 'mobile_api_ai' / 'container_storage.db'),  # DEPRECATED: → container_center MySQL
+>     'chengsheng': os.getenv('CHENGSHENG_DB_PATH') or str(BASE_DIR / 'chengsheng.db'),  # DEPRECATED: → MySQL
+>     'operation_logs': os.getenv('OPERATION_LOGS_DB_PATH') or str(BASE_DIR / 'mobile_api_ai' / 'operation_logs.db'),  # DEPRECATED: → MySQL
+      # === 本地配置（保留）===
+>     'scheduler_configs': os.getenv('SCHEDULER_CONFIGS_PATH') or str(BASE_DIR / 'mobile_api_ai' / 'data' / 'scheduler_configs.db'),
+>     'repair_categories': os.getenv('REPAIR_CATEGORIES_PATH') or str(BASE_DIR / 'repair_categories.json'),
+>     'operators_history': os.getenv('OPERATORS_HISTORY_PATH') or str(BASE_DIR / 'operators_history.json'),
+>     'window_config': os.getenv('WINDOW_CONFIG_PATH') or str(DATA_DIR / 'window_config.json'),
+>     'task_pool': os.getenv('TASK_POOL_DB_PATH') or str(BASE_DIR / 'mobile_api_ai' / 'container' / 'task_pool.db'),
+>     'ssl_cert': os.getenv('SSL_CERT_PATH') or str(BASE_DIR / 'ssl' / 'cert.pem'),
+>     'ssl_key': os.getenv('SSL_KEY_PATH') or str(BASE_DIR / 'ssl' / 'key.pem'),
+>     'face_checkin_db': os.getenv('FACE_CHECKIN_DB_PATH') or str(BASE_DIR / 'mobile_api_ai' / 'data' / 'face_checkin.db'),
+>     'face_checkin_config': os.getenv('FACE_CHECKIN_CONFIG_PATH') or str(BASE_DIR / 'mobile_api_ai' / 'data' / 'config.json'),
+>     'DEPRECATED_wechat_container': os.getenv('WECHAT_CONTAINER_DB_PATH') or str(BASE_DIR / 'mobile_api_ai' / 'wechat_container.db'),  # 已迁移到 MySQL
+>     'DEPRECATED_chengsheng': os.getenv('CHENGSHENG_DB_PATH') or str(BASE_DIR / 'mobile_api_ai' / 'chengsheng.db'),
+>     'DEPRECATED_scheduler_configs': os.getenv('SCHEDULER_CONFIGS_PATH') or '',
+>     'DEPRECATED_dispatch_data': os.getenv('DISPATCH_DATA_PATH') or str(BASE_DIR / 'mobile_api_ai' / 'dispatch_center_data.json'),
+>     'DEPRECATED_enterprise_structure': os.getenv('ENTERPRISE_STRUCTURE_PATH') or str(BASE_DIR / 'mobile_api_ai' / 'data' / 'enterprise_structure.json'),
+> }
+  
+  # 重新导出 DISPATCH_DATA_FILE（兼容旧导入路径）
+> DISPATCH_DATA_FILE = DB_PATHS['DEPRECATED_dispatch_data']
+  
+> DIR_PATHS = {
+>     'data': str(DATA_DIR),
+>     'config': str(CONFIG_DIR),
+>     'logs': str(LOG_DIR),
+>     'templates': str(BASE_DIR / 'mobile_api_ai' / 'templates'),
+>     'static': str(BASE_DIR / 'mobile_api_ai' / 'static'),
+>     'scripts': str(BASE_DIR / 'scripts'),
+>     'tools': str(BASE_DIR / 'scripts' / 'tools'),
+> }
+  
+> SERVICE_URLS = {
+>     'container_center': os.getenv('CONTAINER_CENTER_URL', 'http://127.0.0.1:5002'),
+>     'dispatch_center': os.getenv('DISPATCH_CENTER_URL', 'http://127.0.0.1:5003'),
+>     'sync_bridge': os.getenv('SYNC_BRIDGE_URL', 'http://127.0.0.1:5005'),
+>     'wechat_cloud': os.getenv('WECHAT_CLOUD_HOST', ''),
+>     'cloud_relay': os.getenv('CLOUD_RELAY_URL', ''),
+>     'mobile_api': os.getenv('MOBILE_SERVER_URL', 'http://127.0.0.1:5003'),
+>     'inventory_api': os.getenv('INVENTORY_API_URL', 'http://127.0.0.1:5004'),
+> }
+  
+  # 向后兼容：独立 URL 变量
+> CONTAINER_CENTER_URL = SERVICE_URLS['container_center']
+> DISPATCH_CENTER_URL = SERVICE_URLS['dispatch_center']
+> SYNC_BRIDGE_URL = SERVICE_URLS['sync_bridge']
+> WECHAT_CLOUD_HOST = SERVICE_URLS['wechat_cloud']
+> CLOUD_RELAY_URL = SERVICE_URLS['cloud_relay']
+> MOBILE_SERVER_URL = SERVICE_URLS['mobile_api']
+> INVENTORY_API_URL = SERVICE_URLS['inventory_api']
+  
+> EXTERNAL_URLS = {
+>     'ai_api': os.getenv('AI_API_URL', ''),
+>     'cdndomain': os.getenv('CDN_DOMAIN', ''),
+> }
+  
+> SERVICE_TIMEOUTS = {
+>     'default': int(os.getenv('DEFAULT_TIMEOUT', '30')),
+>     'short': int(os.getenv('SHORT_TIMEOUT', '5')),
+>     'medium': int(os.getenv('MEDIUM_TIMEOUT', '10')),
+>     'long': int(os.getenv('LONG_TIMEOUT', '60')),
+> }
+  
+  # 动态获取配置的函数
+> def get_db_config(key: str, default: str = '') -> str:
+>     """获取数据库配置"""
+!     return os.getenv(key, default)
+  
+> def is_sqlite() -> bool:
+>     """是否使用SQLite"""
+>     return os.getenv('USE_SQLITE', 'true').lower() == 'true'
+  
+> def get_sqlite_path() -> str:
+>     """获取SQLite数据库路径"""
+>     return os.getenv('SQLITE_DB_PATH', str(DATA_DIR / 'steel_belt.db'))
+  
+  # ========== 应用信息 ==========
+> APP_NAME = "不锈钢网带跟单系统"
+> APP_VERSION = "3.0"
+  
+  # ========== 资源目录 ==========
+> RESOURCE_DIR = BASE_DIR / "resources"
+  
+  # ========== 数据库路径 ==========
+> DB_PATH = str(DATA_DIR / 'steel_belt.db')
+  
+  # ========== MySQL配置 ==========
+> MYSQL_CONFIG = {
+>     "host": os.getenv('MYSQL_HOST', 'localhost'),
+>     "port": int(os.getenv('MYSQL_PORT', 3306)),
+>     "database": os.getenv('MYSQL_DATABASE', 'steel_belt'),
+>     "user": os.getenv('MYSQL_USER', ''),
+>     "password": os.getenv('MYSQL_PASSWORD', ''),
+>     "charset": "utf8mb4",
+>     "cursorclass": "dict"
+> }
+  
+  # dispatch_center.py 等使用的 MYSQL_CFG 格式（兼容层）
+> MYSQL_CFG = {
+>     'host': os.getenv('MYSQL_HOST', 'localhost'),
+>     'port': int(os.getenv('MYSQL_PORT', 3306)),
+>     'user': os.getenv('MYSQL_USER', 'root'),
+>     'password': os.getenv('MYSQL_PASSWORD', ''),
+>     'database': os.getenv('MYSQL_DATABASE', 'steel_belt'),
+>     'charset': 'utf8mb4',
+> }
+  
+  # 容器中心专用配置 — 与 MYSQL_CFG 同实例不同库
+> CONTAINER_MYSQL_CFG = {
+>     'host': os.getenv('MYSQL_HOST', 'localhost'),
+>     'port': int(os.getenv('MYSQL_PORT', 3306)),
+>     'user': os.getenv('MYSQL_USER', 'root'),
+>     'password': os.getenv('MYSQL_PASSWORD', ''),
+>     'database': os.getenv('CONTAINER_MYSQL_DATABASE', 'container_center'),
+>     'charset': 'utf8mb4',
+> }
+  
+  # ========== 网络请求超时配置 ==========
+> REQUEST_TIMEOUT = int(os.getenv('REQUEST_TIMEOUT', '30'))
+> SHORT_TIMEOUT = int(os.getenv('SHORT_TIMEOUT', '5'))
+> REQUEST_TIMEOUT_FAST = int(os.getenv('REQUEST_TIMEOUT_FAST', '5'))
+> REQUEST_TIMEOUT_NORMAL = int(os.getenv('REQUEST_TIMEOUT_NORMAL', '10'))
+> REQUEST_TIMEOUT_LONG = int(os.getenv('REQUEST_TIMEOUT_LONG', '30'))
+> REQUEST_TIMEOUT_QUICK = int(os.getenv('REQUEST_TIMEOUT_QUICK', '3'))
+> REQUEST_TIMEOUT_EXTRA = int(os.getenv('REQUEST_TIMEOUT_EXTRA', '30'))
+> DB_CONNECT_TIMEOUT = int(os.getenv('DB_CONNECT_TIMEOUT', '5'))
+> SQLITE_TIMEOUT = int(os.getenv('SQLITE_TIMEOUT', '10'))
+> FLASK_HOST = os.getenv('FLASK_HOST', '0.0.0.0')
+> FLASK_PORT = int(os.getenv('FLASK_PORT', '5008'))
+  
+  # ========== 连接/超时细化配置 ==========
+> SOCKET_CONNECT_TIMEOUT = int(os.getenv('SOCKET_CONNECT_TIMEOUT', '5'))
+> QUEUE_POLL_TIMEOUT = int(os.getenv('QUEUE_POLL_TIMEOUT', '1'))
+> SNAPSHOT_TIMEOUT = int(os.getenv('SNAPSHOT_TIMEOUT', '300'))
+> CB_OPEN_TIMEOUT = int(os.getenv('CB_OPEN_TIMEOUT', '30'))
+> CB_RECOVERY_TIMEOUT = int(os.getenv('CB_RECOVERY_TIMEOUT', '60'))
+> CB_FAILURE_THRESHOLD = int(os.getenv('CB_FAILURE_THRESHOLD', '50'))
+> CB_FAILURE_RATE_THRESHOLD = float(os.getenv('CB_FAILURE_RATE_THRESHOLD', '0.5'))
+> CB_HALF_OPEN_REQUESTS = int(os.getenv('CB_HALF_OPEN_REQUESTS', '3'))
+  
+  # ========== 定时任务/重试/调度配置 ==========
+> EXPIRY_TIMEOUT = int(os.getenv('EXPIRY_TIMEOUT', '180'))
+> RETRY_MIN_INTERVAL = int(os.getenv('RETRY_MIN_INTERVAL', '60'))
+> RETRY_SCHEDULER_INTERVAL = int(os.getenv('RETRY_SCHEDULER_INTERVAL', '60'))
+> EXPIRY_BATCH_LIMIT = int(os.getenv('EXPIRY_BATCH_LIMIT', '20'))
+> EXPIRY_CHECK_INTERVAL = int(os.getenv('EXPIRY_CHECK_INTERVAL', '30'))
+> SCHEDULER_SHUTDOWN_TIMEOUT = int(os.getenv('SCHEDULER_SHUTDOWN_TIMEOUT', '5'))
+> WECHAT_CLOUD_MAX_RETRIES = int(os.getenv('WECHAT_CLOUD_MAX_RETRIES', '3'))
+  
+  # ========== 材质配置 ==========
+> MATERIALS = [
+>     "304不锈钢",
+>     "316不锈钢",
+>     "316L不锈钢",
+>     "310S不锈钢",
+>     "201不锈钢",
+>     "碳钢镀锌",
+>     "铝合金",
+>     "铜合金",
+>     "钛合金"
+> ]
+  
+> MATERIAL_DENSITIES = {
+>     "304不锈钢": 7930,
+>     "316不锈钢": 7980,
+>     "316L不锈钢": 7980,
+>     "310S不锈钢": 7980,
+>     "201不锈钢": 7930,
+>     "碳钢镀锌": 7850,
+>     "铝合金": 2700,
+>     "铜合金": 8500,
+>     "钛合金": 4510,
+> }
+  
+  # ========== 材质参数预设 ==========
+> PRESET_MAT_PARAMS = [
+>     {"key": "曲轴材质", "label": "曲轴材质"},
+>     {"key": "网丝材质", "label": "网丝材质"},
+>     {"key": "穿杆材质", "label": "穿杆材质"},
+>     {"key": "链条材质", "label": "链条材质"},
+>     {"key": "主齿轮材质", "label": "主齿轮材质"},
+>     {"key": "挡板材质", "label": "挡板材质"},
+>     {"key": "辅助轮材质", "label": "辅助轮材质"},
+>     {"key": "加强筋材质", "label": "加强筋材质"},
+>     {"key": "链板材质", "label": "链板材质"},
+> ]
+  
+  # ========== 尺寸参数预设 ==========
+> PRESET_DIM_PARAMS = [
+>     {"key": "总宽", "label": "总宽", "unit": "mm"},
+>     {"key": "净宽", "label": "净宽", "unit": "mm"},
+>     {"key": "网带宽度", "label": "网带宽度", "unit": "mm"},
+>     {"key": "钢丝直径", "label": "钢丝直径", "unit": "mm"},
+>     {"key": "加强链片厚度", "label": "加强链片厚度", "unit": "mm"},
+>     {"key": "链条厚度", "label": "链条厚度", "unit": "mm"},
+>     {"key": "链板板厚", "label": "链板板厚", "unit": "mm"},
+>     {"key": "链板网孔直径", "label": "链板网孔直径", "unit": "mm"},
+>     {"key": "螺距", "label": "螺距", "unit": "mm"},
+>     {"key": "曲轴直径", "label": "曲轴直径", "unit": "mm"},
+>     {"key": "穿杆直径", "label": "穿杆直径", "unit": "mm"},
+>     {"key": "主轴直径", "label": "主轴直径", "unit": "mm"},
+>     {"key": "主齿轮直径", "label": "主齿轮直径", "unit": "mm"},
+>     {"key": "辅助轮直径", "label": "辅助轮直径", "unit": "mm"},
+>     {"key": "加强筋直径", "label": "加强筋直径", "unit": "mm"},
+>     {"key": "网带节距", "label": "网带节距", "unit": "mm"},
+>     {"key": "加强筋间距", "label": "加强筋间距", "unit": "mm"},
+>     {"key": "链条距", "label": "链条距", "unit": "mm"},
+>     {"key": "穿杆距", "label": "穿杆距", "unit": "mm"},
+>     {"key": "中心距", "label": "中心距", "unit": "mm"},
+>     {"key": "加强垫片布置", "label": "加强垫片布置", "unit": "mm"},
+>     {"key": "扣间隙", "label": "扣间隙", "unit": "mm"},
+>     {"key": "网带排数", "label": "网带排数", "unit": "条"},
+>     {"key": "加强筋数量", "label": "加强筋数量", "unit": "条"},
+>     {"key": "主齿轮齿数", "label": "主齿轮齿数", "unit": "齿"},
+>     {"key": "主齿轮数量", "label": "主齿轮数量", "unit": "套"},
+>     {"key": "辅助齿轮齿数", "label": "辅助齿轮齿数", "unit": "齿"},
+>     {"key": "辅助轮数量", "label": "辅助轮数量", "unit": "个"},
+>     {"key": "单段长度", "label": "单段长度", "unit": "m"},
+>     {"key": "网带段数", "label": "网带段数", "unit": "段"},
+>     {"key": "挡板高度", "label": "挡板高度", "unit": "mm"},
+>     {"key": "挡板厚度", "label": "挡板厚度", "unit": "mm"},
+>     {"key": "链板网孔规格", "label": "链板网孔规格", "unit": "mm"},
+> ]
+  
+  # ========== 产品类型 ==========
+> PRODUCT_TYPES = [
+>     "乙字形网带",
+>     "人字形网带",
+>     "平板型网带",
+>     "勾子链网带",
+>     "弹簧网",
+>     "眼镜网带",
+>     "螺旋网带",
+>     "链板式网带",
+>     "链网",
+>     "马蹄形网带",
+>     "冷冻网带",
+>     "冷冻螺旋网",
+>     "其他"
+> ]
+  
+  # ========== 表面处理选项 ==========
+> SURFACE_TREATMENTS = [
+>     "光亮退火",
+>     "抛光",
+>     "钝化",
+>     "喷砂",
+>     "无处理"
+> ]
+  
+  # ========== 订单状态（带颜色） ==========
+> ORDER_STATUS = {
+>     "待确认": "#9E9E9E",
+>     "待排产": "#2196F3",
+>     "待发布": "#00BCD4",
+>     "已发布": "#0097A7",
+>     "已排产": "#03A9F4",
+>     "生产中": "#FF9800",
+>     "质检中": "#FF5722",
+>     "已完成": "#4CAF50",
+>     "待发货": "#9C27B0",
+>     "已发货": "#9C27B0",
+>     "已取消": "#F44336"
+> }
+  
+  # ========== 生产工序（17个工序） ==========
+> PROCESSES = [
+>     "原材料准备",
+>     "焊接眼镜网",
+>     "激光切板",
+>     "链板冲压孔",
+>     "链板冲压成型",
+>     "编制左旋",
+>     "编制右旋",
+>     "穿曲轴",
+>     "输送带组装穿杆",
+>     "安装链条",
+>     "安装裙边",
+>     "整形校直",
+>     "焊接输送带",
+>     "表面处理",
+>     "质量检验",
+>     "包装入库"
+> ]
+  
+> PROCESS_CODES = {
+>     "原材料准备": "P01",
+>     "焊接眼镜网": "P02",
+>     "激光切板": "P03",
+>     "链板冲压孔": "P04",
+>     "链板冲压成型": "P05",
+>     "编制左旋": "P06",
+>     "编制右旋": "P07",
+>     "穿曲轴": "P08",
+>     "输送带组装穿杆": "P09",
+>     "安装链条": "P10",
+>     "安装裙边": "P11",
+>     "整形校直": "P12",
+>     "焊接输送带": "P13",
+>     "表面处理": "P14",
+>     "质量检验": "P15",
+>     "包装入库": "P16",
+>     "备料": "M01",
+>     "质检": "Q01",
+>     "外协": "X01",
+> }
+  
+  
+> def get_process_code(process_name: str) -> str:
+>     """获取工序编码。预定义工序用P01-P16，自定义工序用注册编码，其他用PX-hash4动态生成"""
+>     if not process_name:
+>         return ''
+>     import hashlib
+>     name = process_name.strip()
+>     code = PROCESS_CODES.get(name) or _custom_process_codes.get(name)
+>     if code:
+>         return code
+>     return 'PX' + hashlib.md5(name.encode()).hexdigest()[:4].upper()
+  
+  
+  # ========== 后期工序注册系统 ==========
+  
+  # 自定义工序存储（运行时动态扩展）
+> _custom_processes: list = []
+> _custom_process_codes: dict = {}
+> _custom_process_seqs: dict = {}  # name → display_order
+> _next_custom_seq = 17  # P01-P16 已占用
+> _next_display_seq = 17  # 显示序号从 17 开始
+  
+  # display_seq 缓存（避免频繁查 MySQL）
+> _display_seq_cache: dict = {}
+> _display_seq_cache_loaded = False
+  
+  
+> def register_process(process_name: str, process_code: str = '', display_seq: int = None) -> str:
+>     """
+>     注册一个新的工序。
+>     - process_code: 编码，不提供则自动分配 P17/P18/...
+>     - display_seq:  显示排序，不提供则自动递增（排在标准工序后面）
+>     - 如果名称已存在（标准或自定义），返回已有编码
+>     返回：最终使用的 process_code
+>     """
+>     global _next_custom_seq, _next_display_seq
+  
+>     if not process_name or not process_name.strip():
+>         raise ValueError('process_name 不能为空')
+  
+>     name = process_name.strip()
+  
+      # 检查是否已存在
+>     existing = PROCESS_CODES.get(name) or _custom_process_codes.get(name)
+>     if existing:
+>         return existing
+  
+      # 分配编码
+>     if process_code and process_code.strip():
+>         code = process_code.strip()
+>     else:
+>         code = f'P{_next_custom_seq:02d}'
+>         _next_custom_seq += 1
+  
+      # 分配显示序号
+>     if display_seq is not None:
+>         seq = display_seq
+>     else:
+>         seq = _next_display_seq
+>         _next_display_seq += 1
+  
+>     _custom_processes.append(name)
+>     _custom_process_codes[name] = code
+>     _custom_process_seqs[name] = seq
+  
+>     return code
+  
+  
+> def unregister_process(process_name: str) -> bool:
+>     """
+>     注销一个自定义工序。
+>     标准工序（P01-P16）不允许注销。
+>     """
+>     if not process_name:
+!         return False
+>     name = process_name.strip()
+  
+>     if name in PROCESS_CODES:
+>         return False
+  
+>     if name not in _custom_process_codes:
+>         return False
+  
+>     _custom_processes.remove(name)
+>     del _custom_process_codes[name]
+>     _custom_process_seqs.pop(name, None)
+>     return True
+  
+  
+> def _get_standard_seq(name: str) -> int:
+>     """获取标准工序的默认序号 (1-16)"""
+>     idx = PROCESSES.index(name) + 1 if name in PROCESSES else 999
+>     return idx
+  
+  
+> def get_process_seq(name: str) -> int:
+>     """获取单个工序的显示序号。优先用显式指定值，否则用标准工序的默认位置"""
+>     n = name.strip() if name else ''
+      # 显式指定的序号（自定义工序 or 被移动过的标准工序）
+>     if n in _custom_process_seqs:
+>         return _custom_process_seqs[n]
+>     if n in PROCESSES:
+>         return _get_standard_seq(n)
+>     return 999
+  
+  
+> def get_all_processes(sort: bool = True) -> list:
+>     """
+>     获取所有已注册的工序列表。
+>     sort=True: 按显示序号排列
+>     sort=False: 标准在前，自定义在后
+>     """
+>     if not sort:
+>         return list(PROCESSES) + list(_custom_processes)
+  
+>     all_names = set(PROCESSES) | set(_custom_processes)
+>     return sorted(all_names, key=lambda n: get_process_seq(n))
+  
+  
+> def get_all_process_codes() -> dict:
+>     """获取所有工序编码（标准 + 自定义）"""
+>     result = dict(PROCESS_CODES)
+>     result.update(_custom_process_codes)
+>     return result
+  
+  
+> def is_registered(process_name: str) -> bool:
+>     """检查工序是否已注册"""
+>     name = process_name.strip() if process_name else ''
+>     return name in PROCESS_CODES or name in _custom_process_codes
+  
+  
+> def _ensure_seq(name: str):
+>     """确保工序在 _custom_process_seqs 中有条目（用于首次移动）"""
+>     if name not in _custom_process_seqs:
+>         _custom_process_seqs[name] = get_process_seq(name)
+  
+  
+> def reorder_processes(order: list) -> bool:
+>     """
+>     按传入的名称列表重新排序所有工序。
+>     order 是 get_all_processes() 的子集排列。
+>     不在 order 中的工序排在末尾。
+>     """
+>     seq = 1
+>     for name in order:
+>         n = name.strip()
+>         if is_registered(n):
+>             _custom_process_seqs[n] = seq
+>             seq += 1
+  
+      # 未在 order 中的工序排到最后
+>     for name in get_all_processes(sort=False):
+>         if name.strip() not in [x.strip() for x in order]:
+>             _custom_process_seqs[name] = 999
+  
+>     return True
+  
+  
+> def move_process(process_name: str, direction: str = 'up') -> int:
+>     """
+>     移动工序在显示列表中的位置（标准工序也支持）。
+>     direction: 'up'/'down'/'top'/'bottom'
+>     返回新的序号。
+>     """
+>     name = process_name.strip()
+  
+>     if not is_registered(name):
+>         return -1
+  
+      # 确保有显式序号
+>     _ensure_seq(name)
+  
+>     ordered = get_all_processes(sort=True)
+  
+>     if name not in ordered or len(ordered) < 2:
+!         return get_process_seq(name)
+  
+>     old_idx = ordered.index(name)
+>     new_idx = old_idx
+  
+>     if direction == 'up' and old_idx > 0:
+>         new_idx = old_idx - 1
+>     elif direction == 'down' and old_idx < len(ordered) - 1:
+>         new_idx = old_idx + 1
+>     elif direction == 'top':
+>         new_idx = 0
+>     elif direction == 'bottom':
+>         new_idx = len(ordered) - 1
+  
+>     if new_idx == old_idx:
+!         return get_process_seq(name)
+  
+      # 交换序号：双方都获得显式序号
+>     swap_name = ordered[new_idx]
+>     _ensure_seq(name)
+>     if swap_name not in _custom_process_seqs:
+          # 标准工序首次被移动波及 → 也创建显式序号
+>         if swap_name in PROCESSES:
+>             _custom_process_seqs[swap_name] = _get_standard_seq(swap_name)
+!         else:
+!             _custom_process_seqs[swap_name] = get_process_seq(swap_name)
+  
+>     old_seq = _custom_process_seqs[name]
+>     _custom_process_seqs[name] = _custom_process_seqs[swap_name]
+>     _custom_process_seqs[swap_name] = old_seq
+  
+  
+> def load_custom_processes_from_db(mysql_conn=None):
+>     """
+>     从 MySQL process_names 表加载所有工序的显示排序。
+>     标准工序由 process_seq 初始，自定义工序由 display_seq 指定。
+>     """
+!     if mysql_conn is None:
+!         try:
+!             import pymysql
+!             import os as _os
+!             mysql_conn = pymysql.connect(
+!                 host=_os.getenv('MYSQL_HOST', 'localhost'),
+!                 port=int(_os.getenv('MYSQL_PORT', '3306')),
+!                 user=_os.getenv('MYSQL_USER', 'root'),
+!                 password=_os.getenv('MYSQL_PASSWORD', ''),
+!                 database=_os.getenv('MYSQL_DATABASE', 'steel_belt'),
+!                 charset='utf8mb4',
+!                 cursorclass=pymysql.cursors.DictCursor
+!             )
+!         except Exception:
+!             return 0
+  
+!     try:
+!         cur = mysql_conn.cursor()
+!         cur.execute("SELECT process_name, process_code, display_seq, is_active FROM process_names WHERE is_active=1 ORDER BY display_seq")
+!         loaded = 0
+!         for row in cur.fetchall():
+!             name = row['process_name']
+!             code = row['process_code']
+!             seq = row.get('display_seq')
+!             if name not in PROCESS_CODES and name not in _custom_process_codes:
+!                 register_process(name, code)
+!             if seq is not None:
+!                 _custom_process_seqs[name] = seq
+!                 loaded += 1
+!         return loaded
+!     finally:
+!         if mysql_conn:
+!             mysql_conn.close()
+  
+  
+> def save_display_order_to_db(mysql_conn=None) -> int:
+>     """
+>     将当前内存中的显示排序写回 MySQL process_names.display_seq。
+>     包括标准工序和自定义工序。
+>     返回更新的行数。
+>     """
+!     if mysql_conn is None:
+!         try:
+!             import pymysql
+!             import os as _os
+!             mysql_conn = pymysql.connect(
+!                 host=_os.getenv('MYSQL_HOST', 'localhost'),
+!                 port=int(_os.getenv('MYSQL_PORT', '3306')),
+!                 user=_os.getenv('MYSQL_USER', 'root'),
+!                 password=_os.getenv('MYSQL_PASSWORD', ''),
+!                 database=_os.getenv('MYSQL_DATABASE', 'steel_belt'),
+!                 charset='utf8mb4',
+!                 autocommit=True
+!             )
+!         except Exception:
+!             return 0
+  
+!     try:
+!         cur = mysql_conn.cursor()
+!         updated = 0
+!         for name in get_all_processes(sort=False):
+!             seq = get_process_seq(name)
+!             cur.execute(
+!                 "UPDATE process_names SET display_seq=%s WHERE process_name=%s",
+!                 (seq, name)
+!             )
+!             if cur.rowcount == 0:
+                  # 自定义工序可能不在 process_names 表中 → 插入
+!                 code = get_process_code(name)
+!                 cur.execute(
+!                     "INSERT INTO process_names (process_name, process_code, process_seq, display_seq)"
+!                     " VALUES (%s,%s,%s,%s) ON DUPLICATE KEY UPDATE display_seq=%s",
+!                     (name, code, seq, seq, seq)
+!                 )
+!             updated += max(cur.rowcount, 1)
+!         return updated
+!     finally:
+!         if mysql_conn:
+!             mysql_conn.close()
+  
+  
+> def reset_custom_processes():
+>     """重置所有自定义工序（主要用于测试）"""
+>     global _next_custom_seq, _next_display_seq, _display_seq_cache, _display_seq_cache_loaded
+>     _custom_processes.clear()
+>     _custom_process_codes.clear()
+>     _custom_process_seqs.clear()
+>     _next_custom_seq = 17
+>     _next_display_seq = 17
+>     _display_seq_cache = {}
+>     _display_seq_cache_loaded = False
+  
+  
+> def get_display_seq_map(mysql_conn=None, force_refresh: bool = False) -> dict:
+>     """
+>     从 MySQL process_names 读取所有工序的 display_seq 映射。
+>     首次调用查询 MySQL，后续从缓存读取。
+>     force_refresh=True 时强制刷新。
+>     """
+>     global _display_seq_cache, _display_seq_cache_loaded
+  
+!     if _display_seq_cache_loaded and not force_refresh:
+!         return _display_seq_cache
+  
+!     if mysql_conn is None:
+!         try:
+!             import pymysql
+!             import os as _os
+!             mysql_conn = pymysql.connect(
+!                 host=_os.getenv('MYSQL_HOST', 'localhost'),
+!                 port=int(_os.getenv('MYSQL_PORT', '3306')),
+!                 user=_os.getenv('MYSQL_USER', 'root'),
+!                 password=_os.getenv('MYSQL_PASSWORD', ''),
+!                 database=_os.getenv('MYSQL_DATABASE', 'steel_belt'),
+!                 charset='utf8mb4'
+!             )
+!         except Exception:
+!             return {}
+  
+!     try:
+!         cur = mysql_conn.cursor()
+!         cur.execute("SELECT process_name, COALESCE(display_seq, 99) FROM process_names WHERE is_active=1")
+!         _display_seq_cache = {row[0]: row[1] for row in cur.fetchall()}
+!         _display_seq_cache_loaded = True
+!         return _display_seq_cache
+!     except Exception:
+!         return _display_seq_cache if _display_seq_cache else {}
+!     finally:
+!         if mysql_conn:
+!             mysql_conn.close()
+  
+  
+> def invalidate_display_seq_cache():
+>     """使 display_seq 缓存失效（工序变更后调用）"""
+>     global _display_seq_cache, _display_seq_cache_loaded
+!     _display_seq_cache = {}
+!     _display_seq_cache_loaded = False
+  
+  
+> def sort_processes_by_display(process_names: list, seq_map: dict = None) -> list:
+>     """
+>     按 display_seq 对工序名列表排序。
+>     seq_map 可从 get_display_seq_map() 获取（有缓存），传 None 自动获取。
+>     """
+!     if seq_map is None:
+!         seq_map = get_display_seq_map()
+!     if not seq_map:
+!         return sorted(process_names)
+!     return sorted(process_names, key=lambda n: seq_map.get(n, 99))
+> INSPECTION_TYPES = ["首检", "巡检", "终检"]
+> INSPECTION_RESULTS = ["合格", "不合格", "待复检"]
+  
+> INSPECTION_ITEMS_BY_CATEGORY = {
+>     "原材料准备": {
+>         "材质核对": ["材质报告核查", "规格核对", "数量核对"],
+>         "外观检查": ["表面质量", "锈蚀检查", "变形检查"]
+>     },
+>     "焊接眼镜网": {
+>         "焊点检查": ["焊点质量", "焊接强度"],
+>         "外观检查": ["网面平整度", "形状核对"]
+>     },
+>     "激光切板": {
+>         "尺寸检查": ["切割尺寸", "切口质量"],
+>         "外观检查": ["毛刺检查", "平面度"]
+>     },
+>     "链板冲压孔": {
+>         "尺寸检查": ["孔径测量", "孔距测量"],
+>         "外观检查": ["冲压质量", "毛刺检查"]
+>     },
+>     "链板冲压成型": {
+>         "尺寸检查": ["成型尺寸", "弧度检查"],
+>         "外观检查": ["表面质量", "裂纹检查"]
+>     },
+>     "编制左旋": {
+>         "编织检查": ["编织密度", "纬线张力", "经线张力"],
+>         "外观检查": ["网孔尺寸", "平整度"]
+>     },
+>     "编制右旋": {
+>         "编织检查": ["编织密度", "纬线张力", "经线张力"],
+>         "外观检查": ["网孔尺寸", "平整度"]
+>     },
+>     "穿曲轴": {
+>         "装配检查": ["配合度", "间隙测量"],
+>         "外观检查": ["位置核对", "牢固度"]
+>     },
+>     "输送带组装穿杆": {
+>         "装配检查": ["穿杆位置", "间距测量"],
+>         "外观检查": ["整齐度", "牢固度"]
+>     },
+>     "安装链条": {
+>         "装配检查": ["链条张紧度", "平行度"],
+>         "外观检查": ["运行检查", "噪音检查"]
+>     },
+>     "安装裙边": {
+>         "装配检查": ["裙边位置", "固定检查"],
+>         "外观检查": ["贴合度", "平整度"]
+>     },
+>     "整形校直": {
+>         "尺寸检查": ["校直度", "直线度"],
+>         "外观检查": ["表面质量", "变形检查"]
+>     },
+>     "焊接输送带": {
+>         "焊点检查": ["焊接质量", "牢固度"],
+>         "外观检查": ["接头平整", "网面变形"]
+>     },
+>     "表面处理": {
+>         "处理检查": ["镀层厚度", "涂层均匀"],
+>         "外观检查": ["表面光洁度", "颜色一致性"]
+>     },
+>     "质量检验": {
+>         "全面检查": ["尺寸核对", "外观检查", "性能测试"],
+>         "报告输出": ["检验记录", "合格判定"]
+>     },
+>     "包装入库": {
+>         "包装检查": ["包装完整性", "标识清晰"],
+>         "入库核对": ["数量核对", "存放位置"]
+>     }
+> }
+  
+  # ========== 单位选项 ==========
+> UNITS = ["米", "平方米", "卷", "条", "个", "套", "批"]
+  
+  # ========== 业务阈值配置 ==========
+> class BusinessConfig:
+>     """业务阈值配置（从环境变量读取）"""
+>     STOCK_WARNING_THRESHOLD = int(os.getenv('STOCK_WARNING_THRESHOLD', '50'))
+>     STOCK_CRITICAL_THRESHOLD = int(os.getenv('STOCK_CRITICAL_THRESHOLD', '10'))
+>     ORDER_EXPIRY_DAYS = int(os.getenv('ORDER_EXPIRY_DAYS', '30'))
+>     ORDER_ARCHIVE_DAYS = int(os.getenv('ORDER_ARCHIVE_DAYS', '365'))
+>     DEFAULT_PAGE_SIZE = int(os.getenv('DEFAULT_PAGE_SIZE', '50'))
+>     MAX_PAGE_SIZE = int(os.getenv('MAX_PAGE_SIZE', '200'))
+>     QUERY_TIMEOUT = int(os.getenv('QUERY_TIMEOUT', '60'))
+>     COMMAND_TIMEOUT = int(os.getenv('COMMAND_TIMEOUT', '300'))
+>     MOBILE_API_URL = os.getenv('MOBILE_API_URL', '')
+  
+  # ========== API密钥配置 ==========
+> class ApiKeyConfig:
+>     """API密钥配置（必须从环境变量读取）"""
+>     INVENTORY_API_KEY = os.getenv('INVENTORY_API_KEY', '')
+>     WECHAT_API_KEY = os.getenv('WECHAT_API_KEY', '')
+>     AI_API_KEY = os.getenv('AI_API_KEY', '')
+  
+  # ========== 样式配置 ==========
+> class StyleConfig:
+>     """UI样式配置"""
+>     FONT_FAMILY = os.getenv('FONT_FAMILY', 'Microsoft YaHei')
+>     FONT_SIZE_NORMAL = int(os.getenv('FONT_SIZE_NORMAL', '10'))
+>     FONT_SIZE_TITLE = int(os.getenv('FONT_SIZE_TITLE', '14'))
+>     PRIMARY_COLOR = os.getenv('PRIMARY_COLOR', '#2196F3')
+>     SUCCESS_COLOR = os.getenv('SUCCESS_COLOR', '#4CAF50')
+>     WARNING_COLOR = os.getenv('WARNING_COLOR', '#FF9800')
+>     ERROR_COLOR = os.getenv('ERROR_COLOR', '#F44336')
+  
+  # ========== 字体配置字典 ==========
+> _font_family = StyleConfig.FONT_FAMILY
+> FONTS = {
+>     "title": (_font_family, 20, "bold"),
+>     "large": (_font_family, 14),
+>     "large_bold": (_font_family, 14, "bold"),
+>     "subtitle": (_font_family, 12, "bold"),
+>     "heading": (_font_family, 12, "bold"),
+>     "body": (_font_family, 10),
+>     "normal": (_font_family, 10),
+>     "normal_bold": (_font_family, 10, "bold"),
+>     "small": (_font_family, 9),
+>     "small_bold": (_font_family, 9, "bold"),
+>     "tiny": (_font_family, 8),
+>     "icon_emoji": ("Segoe UI Emoji", 18),
+>     "mono": ("Consolas", 10),
+>     "mono_small": ("Consolas", 8),
+> }
+  
+  # ========== 布局配置（详细） ==========
+> LAYOUT = {
+>     "padding": {
+>         "small": 5,
+>         "medium": 10,
+>         "large": 15,
+>     },
+>     "margin": {
+>         "small": 2,
+>         "medium": 5,
+>         "large": 8,
+>     },
+>     "widths": {
+>         "small": 8,
+>         "medium": 14,
+>         "large": 18,
+>         "extra_large": 22,
+>     },
+>     "heights": {
+>         "small": 2,
+>         "medium": 12,
+>         "large": 14,
+>         "extra_large": 18,
+>     },
+> }
+  
+  # ========== 窗口配置 ==========
+> WINDOW_SIZES = {
+>     "production_select": "1000x450",
+>     "order_detail": "500x400",
+>     "custom_types": "550x480",
+> }
+  
+> WINDOW = {
+>     "title": APP_NAME,
+>     "width": 1200,
+>     "height": 700,
+>     "min_width": 800,
+>     "min_height": 500
+> }
+  
+  # ========== 颜色配置（完整） ==========
+> COLORS = {
+>     "primary": "#1E3A5F",
+>     "primary_light": "#2E5A8F",
+>     "accent": "#4A90D9",
+>     "bg_main": "#F0F2F5",
+>     "bg_card": "#FFFFFF",
+>     "bg_sidebar": "#1E3A5F",
+>     "text_primary": "#1A1A2E",
+>     "text_secondary": "#666666",
+>     "text_white": "#FFFFFF",
+>     "success": "#4CAF50",
+>     "warning": "#FF9800",
+>     "danger": "#F44336",
+>     "info": "#2196F3",
+>     "table_header": "#F5F5F5",
+>     "table_row_odd": "#FFFFFF",
+>     "table_row_even": "#F9F9F9",
+>     "orange": "#E65100",
+>     "light_orange": "#FFF3E0",
+>     "deep_gray": "#333333",
+>     "green_dark": "#2E7D32",
+>     "gray_blue": "#37474F",
+>     "light_gray": "#F5F5F5",
+>     "ultra_light_gray": "#ECEFF1",
+>     "very_light_gray": "#F7F7FA",
+>     "green": "#4CAF50",
+>     "orange_light": "#FF9800",
+>     "red": "#F44336",
+>     "blue": "#2196F3",
+>     "DATA_TYPE_REPORT": os.getenv('COLOR_REPORT', '#4caf50'),
+>     "DATA_TYPE_QUALITY": os.getenv('COLOR_QUALITY', '#2196f3'),
+>     "DATA_TYPE_MATERIAL": os.getenv('COLOR_MATERIAL', '#ff9800'),
+>     "DATA_TYPE_APPROVAL": os.getenv('COLOR_APPROVAL', '#9c27b0'),
+>     "DATA_TYPE_ORDER": os.getenv('COLOR_ORDER', '#00bcd4'),
+>     "DATA_TYPE_PROCESS": os.getenv('COLOR_PROCESS', '#607d8b'),
+>     "DATA_TYPE_REPAIR": os.getenv('COLOR_REPAIR', '#FF6B6B'),
+> }
+  
+  # ========== 库存阈值（直接访问） ==========
+> STOCK_WARNING_THRESHOLD = int(os.getenv('STOCK_WARNING_THRESHOLD', '50'))
+  
+  # ========== 从 mobile_api_ai/config.py 迁移的遗留配置 ==========
+  # 注意：以下配置项来自 module-level config，供兼容层读取。
+  # 新代码应通过本模块已有的 API 获取配置，勿直接引用的定义。
+  
+  # --- JWT ---
+> _jwt_key = os.getenv('JWT_SECRET_KEY')
+> if not _jwt_key:
+!     _env_path = BASE_DIR / '.env'
+!     if _env_path.exists():
+!         for _line in _env_path.read_text(encoding='utf-8').splitlines():
+!             if _line.strip().startswith('JWT_SECRET_KEY='):
+!                 _val = _line.split('=', 1)[1].strip().strip('"').strip("'")
+!                 if _val:
+!                     _jwt_key = _val
+!                     break
+> if not _jwt_key:
+!     import secrets
+!     _jwt_key = secrets.token_hex(32)
+-     logger.warning('JWT_SECRET_KEY 未设置，已自动生成（64字符十六进制密钥）')
+!     _env_path = BASE_DIR / '.env'
+!     _new_line = f'JWT_SECRET_KEY={_jwt_key}'
+!     if _env_path.exists():
+!         _lines = _env_path.read_text(encoding='utf-8').splitlines()
+!         _found = False
+!         for _i, _line in enumerate(_lines):
+!             if _line.strip().startswith('JWT_SECRET_KEY='):
+!                 _lines[_i] = _new_line
+!                 _found = True
+!                 break
+!         if not _found:
+!             _lines.append('')
+!             _lines.append(_new_line)
+!         _env_path.write_text('\n'.join(_lines) + '\n', encoding='utf-8')
+!     else:
+!         _env_path.parent.mkdir(parents=True, exist_ok=True)
+!         _env_path.write_text(_new_line + '\n', encoding='utf-8')
+-     logger.warning('已自动写入 %s', _env_path)
+> JWT_SECRET_KEY = _jwt_key
+> JWT_EXPIRE_HOURS = int(os.getenv('JWT_EXPIRE_HOURS', '24'))
+  
+  # --- 企业微信 ---
+> WECHAT_CORP_ID = os.getenv('WECHAT_CORP_ID', '')
+> WECHAT_AGENT_ID = os.getenv('WECHAT_AGENT_ID', '')
+> WECHAT_SECRET = os.getenv('WECHAT_SECRET', '')
+  
+  # --- 日志 ---
+> LOG_DIR = os.getenv('LOG_DIR', 'logs')
+> LOG_FORMAT = os.getenv('LOG_FORMAT', '%(asctime)s [%(levelname)s] [%(name)s:%(lineno)d] %(message)s')
+> LOG_DATE_FORMAT = os.getenv('LOG_DATE_FORMAT', '%Y-%m-%d %H:%M:%S')
+> LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
+> LOG_RETENTION_DAYS = int(os.getenv('LOG_RETENTION_DAYS', '30'))
+> LOG_MAX_BYTES = int(os.getenv('LOG_MAX_BYTES', str(10 * 1024 * 1024)))
+  
+  # --- 阿里云 ---
+> ALIYUN_API_KEY = os.getenv('ALIYUN_API_KEY', '')
+> ALIYUN_API_SECRET = os.getenv('ALIYUN_API_SECRET', '')
+> ALIYUN_SPEECH_APPKEY = os.getenv('ALIYUN_SPEECH_APPKEY', '')
+> ALIYUN_VISION_APPKEY = os.getenv('ALIYUN_VISION_APPKEY', '')
+> DASHSCOPE_API_KEY = os.getenv('DASHSCOPE_API_KEY', '')
+  
+  # --- 上传 ---
+> UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', 'uploads')
+> MAX_CONTENT_LENGTH = int(os.getenv('MAX_CONTENT_LENGTH', str(16 * 1024 * 1024)))
+  
+  # --- 业务端口 ---
+> WECHAT_BOT_PORT = int(os.getenv('WECHAT_BOT_PORT', '5003'))
+> WECHAT_BOT_HOST = os.getenv('WECHAT_BOT_HOST', '0.0.0.0')
+> CONTAINER_CENTER_PORT = int(os.getenv('CONTAINER_CENTER_PORT', '5002'))
+> HTTP_TEST_PORT = int(os.getenv('HTTP_TEST_PORT', '9999'))
+> DIAGNOSE_PORT = int(os.getenv('DIAGNOSE_PORT', '5003'))
+  
+  # --- 业务阈值 ---
+> MAX_TEXT_LENGTH = int(os.getenv('MAX_TEXT_LENGTH', '2048'))
+> SESSION_TIMEOUT = int(os.getenv('SESSION_TIMEOUT', '300'))
+> DATA_RETENTION_DAYS = int(os.getenv('DATA_RETENTION_DAYS', '90'))
+> CB_SUCCESS_THRESHOLD = int(os.getenv('CB_SUCCESS_THRESHOLD', '3'))
+  
+  # --- Redis ---
+> REDIS_DUMP_PATH = os.getenv('REDIS_DUMP_PATH', '')
+> REDIS_DUMP_PATH_DEFAULT = os.getenv('REDIS_DUMP_PATH_DEFAULT', '')
+  
+  # --- 颜色配置 ---
+> COLOR_REPORT = os.getenv('COLOR_REPORT', '#4caf50')
+> COLOR_QUALITY = os.getenv('COLOR_QUALITY', '#2196f3')
+> COLOR_MATERIAL = os.getenv('COLOR_MATERIAL', '#ff9800')
+> COLOR_APPROVAL = os.getenv('COLOR_APPROVAL', '#9c27b0')
+> COLOR_ORDER = os.getenv('COLOR_ORDER', '#00bcd4')
+> COLOR_PROCESS = os.getenv('COLOR_PROCESS', '#607d8b')
+> COLOR_REPAIR = os.getenv('COLOR_REPAIR', '#FF6B6B')
+  
+  # ========== 工具函数 ==========
+  
+> def get_default_backup_dir():
+>     """获取默认备份目录路径"""
+!     if hasattr(sys, 'frozen') and getattr(sys, 'frozen'):
+!         base_dir = os.path.dirname(sys.executable)
+!     else:
+!         base_dir = str(BASE_DIR)
+!     return os.path.join(base_dir, 'DAT', 'backup')
+  
+  
+> def get_app_dir():
+>     """获取应用程序目录路径"""
+!     if hasattr(sys, 'frozen') and getattr(sys, 'frozen'):
+!         return os.path.dirname(sys.executable)
+!     return str(BASE_DIR)
+  
+  
+> def get_default_redis_dump():
+>     """获取默认Redis dump文件路径"""
+!     redis_dump = os.environ.get('REDIS_DUMP_PATH')
+!     if redis_dump:
+!         return redis_dump
+!     if sys.platform == 'win32':
+!         return None
+!     redis_dump_default = os.environ.get('REDIS_DUMP_PATH_DEFAULT')
+!     if redis_dump_default:
+!         return redis_dump_default
+!     return None
+  
+  # ========== Redis 事件总线配置 ==========
+> REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
+> REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
+> REDIS_DB = int(os.getenv('REDIS_DB', 0))
+  
+  
+> class Config:
+>     """兼容存根类 — 将所有模块级变量暴露为类属性，方便旧代码通过 Config.X 方式访问"""
+>     JWT_SECRET_KEY = JWT_SECRET_KEY
+>     JWT_EXPIRE_HOURS = JWT_EXPIRE_HOURS
+>     WECHAT_CORP_ID = WECHAT_CORP_ID
+>     WECHAT_SECRET = WECHAT_SECRET
+>     LOG_DIR = LOG_DIR
+>     LOG_LEVEL = LOG_LEVEL
+>     LOG_RETENTION_DAYS = LOG_RETENTION_DAYS
+>     LOG_FORMAT = LOG_FORMAT
+>     LOG_DATE_FORMAT = LOG_DATE_FORMAT
+>     LOG_MAX_BYTES = LOG_MAX_BYTES
+>     ALIYUN_API_KEY = ALIYUN_API_KEY
+>     ALIYUN_API_SECRET = ALIYUN_API_SECRET
+>     ALIYUN_SPEECH_APPKEY = ALIYUN_SPEECH_APPKEY
+>     ALIYUN_VISION_APPKEY = ALIYUN_VISION_APPKEY
+>     DASHSCOPE_API_KEY = DASHSCOPE_API_KEY
+>     MYSQL_HOST = MYSQL_HOST
+>     MYSQL_PORT = MYSQL_PORT
+>     MYSQL_USER = MYSQL_USER
+>     MYSQL_PASSWORD = MYSQL_PASSWORD
+>     MYSQL_DATABASE = MYSQL_DATABASE
+>     UPLOAD_FOLDER = UPLOAD_FOLDER
+>     MAX_CONTENT_LENGTH = MAX_CONTENT_LENGTH
+>     WECHAT_BOT_HOST = WECHAT_BOT_HOST
+>     WECHAT_BOT_PORT = WECHAT_BOT_PORT
+>     CONTAINER_CENTER_PORT = CONTAINER_CENTER_PORT
+>     HTTP_TEST_PORT = HTTP_TEST_PORT
+>     DIAGNOSE_PORT = DIAGNOSE_PORT
+>     FLASK_HOST = FLASK_HOST
+>     FLASK_PORT = FLASK_PORT
+>     MAX_TEXT_LENGTH = MAX_TEXT_LENGTH
+>     SESSION_TIMEOUT = SESSION_TIMEOUT
+>     DATA_RETENTION_DAYS = DATA_RETENTION_DAYS
+>     REQUEST_TIMEOUT_FAST = REQUEST_TIMEOUT_FAST
+>     REQUEST_TIMEOUT_NORMAL = REQUEST_TIMEOUT_NORMAL
+>     REQUEST_TIMEOUT_LONG = REQUEST_TIMEOUT_LONG
+>     REQUEST_TIMEOUT_QUICK = REQUEST_TIMEOUT_QUICK
+>     REQUEST_TIMEOUT_EXTRA = REQUEST_TIMEOUT_EXTRA
+>     DB_CONNECT_TIMEOUT = DB_CONNECT_TIMEOUT
+>     SQLITE_TIMEOUT = SQLITE_TIMEOUT
+>     REDIS_PORT = REDIS_PORT
+>     CB_FAILURE_THRESHOLD = CB_FAILURE_THRESHOLD
+>     CB_SUCCESS_THRESHOLD = CB_SUCCESS_THRESHOLD
+>     CB_FAILURE_RATE_THRESHOLD = CB_FAILURE_RATE_THRESHOLD

@@ -1,0 +1,183 @@
+{
+  "time": "2026-06-23 16:20:22",
+  "total": 29,
+  "passed": 29,
+  "failed": 0,
+  "pass_rate": "100.0%",
+  "results": [
+    {
+      "name": "2.1 错误路径 /api/attendance/check-in (应为 405)",
+      "status": 405,
+      "ok": true,
+      "detail": "<!doctype html>\n<html lang=en>\n<title>405 Method Not Allowed</title>\n<h1>Method Not Allowed</h1>\n<p>"
+    },
+    {
+      "name": "2.2 正确路径 /api/attendance action=check-in",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"action\":\"check-in\",\"code\":0,\"message\":\"\\u7b7e\\u5230\\u6210\\u529f\",\"time\":\"16:20\"}\n"
+    },
+    {
+      "name": "2.3 签退 /api/attendance action=check-out",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"action\":\"check-out\",\"code\":0,\"message\":\"\\u7b7e\\u9000\\u6210\\u529f\",\"time\":\"16:20\"}\n"
+    },
+    {
+      "name": "2.4 列出签到 /api/attendance",
+      "status": 200,
+      "ok": true,
+      "detail": "[{\"checkIn\":\"\",\"checkOut\":\"16:20\",\"date\":\"2026-06-23\",\"status\":\"\\u5df2\\u7b7e\\u9000\",\"worker\":\"\\u6d4b\\u8bd5\"}]\n"
+    },
+    {
+      "name": "2.5 查 测试 签到 (URL 编码)",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"checkIn\":\"\",\"checkOut\":\"16:20\",\"date\":\"2026-06-23\",\"status\":\"\\u5df2\\u7b7e\\u9000\"}\n"
+    },
+    {
+      "name": "3.1 语音报工 /api/ai/speech-to-report",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"code\":0,\"data\":{\"message\":\"\\u8bf7\\u786e\\u8ba4\\u62a5\\u5de5\\u4fe1\\u606f\",\"needs_confirmation\":true,\"parsed\":{\"confidence\":0.0,\"process_name\":null,\"quantity\":1,\"raw_text\":\"\\u5de5\\u5355 TEST-5008-178220"
+    },
+    {
+      "name": "3.2 扫码分配 /api/scan/task",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"code\":2001,\"message\":\"\\u672a\\u627e\\u5230\\u5bf9\\u5e94\\u7684\\u4efb\\u52a1\\uff0c\\u8bf7\\u5148\\u5728\\u7cfb\\u7edf\\u4e2d\\u521b\\u5efa\\u4efb\\u52a1\"}\n"
+    },
+    {
+      "name": "3.3 质检报工 /api/quality (旧版)",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"code\":0,\"data\":{\"package_id\":\"DE11DC8C\"},\"message\":\"\\u8d28\\u68c0\\u63d0\\u4ea4\\u6210\\u529f\",\"success\":true}\n"
+    },
+    {
+      "name": "3.4 旧版 /api/work-report (应为 404)",
+      "status": 404,
+      "ok": true,
+      "detail": "<!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<p>The requested URL "
+    },
+    {
+      "name": "4.01 GET /api/auth/info",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"code\":1002,\"message\":\"\\u65e0\\u6548\\u7684Token\"}\n"
+    },
+    {
+      "name": "4.02 GET /api/scan/worker/OP001",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"code\":404,\"message\":\"\\u5de5\\u4eba\\u4e0d\\u5b58\\u5728\"}\n"
+    },
+    {
+      "name": "4.03 GET /api/process/my-tasks",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"code\":400,\"message\":\"\\u7f3a\\u5c11 worker_id \\u53c2\\u6570\"}\n"
+    },
+    {
+      "name": "4.04 GET /api/quality/list",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"code\":0,\"data\":{\"page\":1,\"page_size\":20,\"records\":[{\"attachment_path\":\"\",\"atta"
+    },
+    {
+      "name": "4.05 GET /api/quality/types",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"code\":0,\"data\":{\"results\":[\"\\u5408\\u683c\",\"\\u4e0d\\u5408\\u683c\",\"\\u5f85\\u590d\\u"
+    },
+    {
+      "name": "4.06 GET /api/message/list",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"code\":0,\"data\":{\"messages\":[{\"content\":\"\\u8ba2\\u5355ORD202604001\\u5df2\\u5b8c\\u"
+    },
+    {
+      "name": "4.07 GET /api/message/unread-count",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"code\":0,\"data\":{\"count\":1},\"message\":\"success\"}\n"
+    },
+    {
+      "name": "4.08 GET /api/approval/pending",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"code\":0,\"data\":{\"approvals\":[{\"approver\":\"\\u94b1\\u7ecf\\u7406\",\"id\":1,\"order_no"
+    },
+    {
+      "name": "4.09 GET /api/approval/history",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"code\":0,\"data\":{\"approvals\":[],\"page\":1,\"page_size\":20,\"total\":0},\"message\":\"s"
+    },
+    {
+      "name": "4.10 GET /api/ai/chat/history",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"code\":0,\"data\":{\"history\":[{\"content\":\"ORD202604001\\u5230\\u54ea\\u4e00\\u6b65\\u4"
+    },
+    {
+      "name": "4.11 GET /api/metrics/health",
+      "status": 404,
+      "ok": true,
+      "detail": "<!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<"
+    },
+    {
+      "name": "4.12 GET /api/metrics/stats",
+      "status": 404,
+      "ok": true,
+      "detail": "<!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<"
+    },
+    {
+      "name": "4.13 GET /api/dashboard",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"completedOrders\":0,\"expectedOrders\":[],\"materialShortageOrders\":[{\"materials\":"
+    },
+    {
+      "name": "4.14 GET /api/workers",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"code\":0,\"data\":[{\"createdAt\":\"2026-05-30T17:58:27\",\"name\":\"\\u82d1\\u5c97\\u5f6a\""
+    },
+    {
+      "name": "4.15 GET /api/production-orders",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"code\":0,\"data\":[{\"assignedTo\":\"\\u5f85\\u5206\\u914d\",\"flowType\":\"\",\"isPublic\":fa"
+    },
+    {
+      "name": "4.16 GET /api/sub_step_records",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"code\":0,\"data\":[{\"completedQty\":0.0,\"equipmentName\":\"\",\"orderId\":\"ORD-20260502"
+    },
+    {
+      "name": "4.17 GET /api/schedule/list",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"code\":0,\"data\":[]}\n"
+    },
+    {
+      "name": "4.18 GET /api/schedule/pending",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"code\":0,\"data\":{\"records\":[{\"actual_pause_minutes\":0,\"actual_used_qty\":null,\"b"
+    },
+    {
+      "name": "4.19 GET /api/schedule/health",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"code\":0,\"stats\":{\"confirmed\":0,\"published\":0,\"rejected\":0,\"scheduled\":0,\"total"
+    },
+    {
+      "name": "4.20 GET /api/workorder/",
+      "status": 200,
+      "ok": true,
+      "detail": "{\"code\":0,\"endpoints\":[\"/confirm_schedule\"],\"module\":\"workorder\"}\n"
+    }
+  ]
+}

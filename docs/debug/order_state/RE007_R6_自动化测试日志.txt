@@ -1,0 +1,50 @@
+============================================================
+RE-007 R6 Playwright 重验 v2
+============================================================
+
+[工单] ORD-202604210004
+  📸 00_default.png md5=027639cffb
+  📸 tab_material.png md5=027639cffb
+  📸 tab_process.png md5=58e49f66e1
+  📸 tab_flow.png md5=595628b621
+  📸 tab_quality.png md5=af0b1c28df
+  📸 tab_repair.png md5=35d187870d
+  📸 tab_outsource.png md5=942a19ce63
+
+[工单] ORD-202605020001
+  📸 00_default.png md5=99f7ae0dfe
+  📸 tab_material.png md5=99f7ae0dfe
+  📸 tab_process.png md5=1c40f345c8
+  📸 tab_flow.png md5=5818282dfd
+  📸 tab_quality.png md5=51a9765890
+  📸 tab_repair.png md5=6a917f5321
+  📸 tab_outsource.png md5=cfe7abd7df
+
+[工单] ORD-202604210002
+  📸 00_default.png md5=48531d5f91
+  📸 tab_material.png md5=48531d5f91
+  📸 tab_process.png md5=32aae5bad5
+  📸 tab_flow.png md5=2865654a7c
+  📸 tab_quality.png md5=d0a6156484
+  📸 tab_repair.png md5=267e579af7
+  📸 tab_outsource.png md5=d5b06f6f1d
+
+[工单] ORD-202605010001
+  📸 00_default.png md5=304ad0805f
+  📸 tab_material.png md5=304ad0805f
+  📸 tab_process.png md5=f3353fa07b
+  📸 tab_flow.png md5=87a76640bc
+  📸 tab_quality.png md5=bcedb70f07
+  📸 tab_repair.png md5=05846911a1
+  📸 tab_outsource.png md5=ab72b2b2bc
+
+[Hash 差异检查]
+  ORD-202604210004: default=027639cffb  unique_tabs=6  dupes=[]  non_material_same_as_default=[]
+  ORD-202605020001: default=99f7ae0dfe  unique_tabs=6  dupes=[]  non_material_same_as_default=[]
+  ORD-202604210002: default=48531d5f91  unique_tabs=6  dupes=[]  non_material_same_as_default=[]
+  ORD-202605010001: default=304ad0805f  unique_tabs=6  dupes=[]  non_material_same_as_default=[]
+
+============================================================
+结果: PASS ✓
+截图: C:\Windows\Temp\R6_shots
+============================================================

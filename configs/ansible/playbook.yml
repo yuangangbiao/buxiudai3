@@ -1,0 +1,65 @@
+---
+# Ansible IaC — 不锈钢网带跟单系统部署 playbook
+- name: Deploy SteelBelt 3.0
+  hosts: steelbelt_server
+  become: yes
+  vars:
+    python_version: "3.11"
+    mysql_root_password: "{{ lookup('env', 'MYSQL_ROOT_PASSWORD') }}"
+    app_dir: "/opt/steelbelt"
+
+  tasks:
+    - name: 安装系统依赖
+      apt: name={{ item }} state=present update_cache=yes
+      loop: [python3.11, python3.11-venv, python3.11-dev, mysql-server, nginx, git, redis-server]
+
+    - name: 克隆代码
+      git: repo=https://github.com/user/steelbelt.git dest={{ app_dir }} version=main
+
+    - name: 安装 Python 依赖
+      pip: requirements={{ app_dir }}/requirements.txt virtualenv={{ app_dir }}/venv
+
+    - name: 初始化数据库
+      mysql_db: name=steel_belt state=present
+      mysql_user: name=steel_belt password={{ mysql_root_password }} priv=steel_belt.*:ALL state=present
+
+    - name: 配置 Nginx
+      template: src=nginx.conf.j2 dest=/etc/nginx/sites-available/steelbelt
+      notify: 重启 Nginx
+
+    - name: 初始化 events 表
+      shell: "{{ app_dir }}/venv/bin/python {{ app_dir }}/scripts/migrate_events_init.py"
+      args:
+        chdir: "{{ app_dir }}"
+
+    - name: 部署 systemd 服务文件
+      copy:
+        dest: "/etc/systemd/system/{{ item }}.service"
+        content: |
+          [Unit]
+          Description=SteelBelt {{ item }}
+          After=network.target mysql.service redis.service
+          [Service]
+          Type=simple
+          User=steelbelt
+          WorkingDirectory={{ app_dir }}
+          ExecStart={{ app_dir }}/venv/bin/python {{ app_dir }}/{{ item }}.py
+          Restart=always
+          RestartSec=5
+          [Install]
+          WantedBy=multi-user.target
+      loop:
+        - mobile_api_ai/dispatch_center
+        - mobile_api_ai/inventory_api_server
+        - api_gateway
+
+    - name: 启动全部服务
+      systemd: name={{ item }} state=restarted enabled=yes daemon_reload=yes
+      loop:
+        - mobile_api_ai/dispatch_center
+        - mobile_api_ai/inventory_api_server
+        - api_gateway
+
+  handlers:
+    - name: 重启 Nginx
+      systemd: name=nginx state=restarted

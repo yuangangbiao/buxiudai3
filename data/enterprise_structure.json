@@ -1,0 +1,15 @@
+{
+  "_comment": "企业架构数据 - F6 P9 2026-06-10 替代 MySQL enterprise_structure 表 (已 DROP)",
+  "_schema": {
+    "departments": "list[dict] 部门树, 每项含 id/name/parentid/manager",
+    "users": "list[dict] 企业用户, 每项含 userid/name/department/wechat"
+  },
+  "departments": [
+    {"id": 1, "name": "生产部", "parentid": 0, "manager": ""},
+    {"id": 2, "name": "质检部", "parentid": 0, "manager": ""},
+    {"id": 3, "name": "物料部", "parentid": 0, "manager": ""},
+    {"id": 4, "name": "外协部", "parentid": 0, "manager": ""},
+    {"id": 5, "name": "维修部", "parentid": 0, "manager": ""}
+  ],
+  "users": []
+}

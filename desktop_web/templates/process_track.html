@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>工序追踪 - 不锈钢网带跟单系统</title>
+<link rel="stylesheet" href="/static/css/shared.css">
+<style>
+  .pt-toolbar { background: #fff; padding: 12px 24px; display: flex; gap: 8px; align-items: center; border-bottom: 1px solid #f0f0f0; flex-wrap: wrap; }
+  .pt-toolbar select, .pt-toolbar input { padding: 7px 12px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 13px; min-width: 180px; }
+  .pt-content { padding: 16px 24px; }
+  .pt-card { background: #fff; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 16px; overflow: hidden; }
+  .pt-card-header { padding: 12px 20px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+  .pt-card-title { font-size: 14px; font-weight: 600; color: #2c3e50; }
+  .pt-card-body { padding: 16px 20px; }
+  .pt-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .pt-summary-card { background: #f8f9fa; border-radius: 4px; padding: 10px 14px; }
+  .pt-summary-label { font-size: 11px; color: #888; }
+  .pt-summary-value { font-size: 18px; font-weight: 600; color: #2c3e50; margin-top: 4px; }
+  .gantt-wrap { overflow-x: auto; padding: 16px; background: #fafbfc; border-radius: 4px; }
+  .gantt-svg { display: block; min-width: 800px; }
+  .gantt-row-bg:hover { fill: #f5f6fa; }
+  .gantt-bar-text { font-size: 11px; fill: #fff; font-weight: 500; }
+  .gantt-bar-progress { fill: #27ae60; opacity: 0.85; }
+  .gantt-bar-bg { fill: #e1e4e8; }
+  .gantt-axis { stroke: #dcdfe6; stroke-width: 1; }
+  .gantt-axis-text { font-size: 10px; fill: #888; }
+  .gantt-label { font-size: 12px; fill: #2c3e50; font-weight: 500; }
+  .process-list { width: 100%; border-collapse: collapse; }
+  .process-list th { background: #f8f9fa; padding: 10px 12px; font-size: 12px; text-align: left; color: #555; font-weight: 500; }
+  .process-list td { padding: 10px 12px; border-top: 1px solid #f0f0f0; font-size: 13px; }
+  .process-list tr:hover { background: #fafbfc; }
+  .pt-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .pt-detail-card { background: #fff; padding: 16px; border-radius: 4px; border: 1px solid #f0f0f0; }
+  .pt-detail-title { font-size: 13px; color: #888; margin-bottom: 8px; }
+  .timeline-item { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px dashed #f0f0f0; }
+  .timeline-time { color: #888; font-size: 12px; min-width: 140px; }
+  .timeline-content { flex: 1; }
+  .timeline-action { font-size: 13px; color: #2c3e50; }
+  .timeline-meta { font-size: 11px; color: #aaa; margin-top: 2px; }
+  .pt-empty { text-align: center; padding: 40px; color: #95a5a6; font-size: 14px; }
+  .pt-row { display: flex; align-items: center; padding: 10px 16px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background 0.2s; }
+  .pt-row:hover { background: #fafbfc; }
+  .pt-row.selected { background: #eef2ff; }
+  .pt-row-no { font-weight: 500; min-width: 160px; font-size: 13px; }
+  .pt-row-cust { min-width: 120px; color: #555; font-size: 13px; }
+  .pt-row-prod { color: #888; font-size: 12px; flex: 1; }
+  .pt-row-prog { display: flex; align-items: center; gap: 8px; min-width: 200px; }
+  .pt-row-actions { margin-left: auto; display: flex; gap: 6px; }
+</style>
+</head>
+<body>
+<div id="appNav"></div>
+<script src="/static/js/shared.js"></script>
+<script>renderNav('process_track', '🏭 工序追踪');</script>
+
+<div id="msgBox" class="msg-box"></div>
+
+<div class="pt-toolbar">
+  <span class="filter-label">关键词</span>
+  <input id="kwInput" placeholder="订单号/客户" oninput="debounceLoadList()">
+  <button class="btn btn-primary" onclick="loadList()">🔍 搜索</button>
+  <button class="btn btn-secondary" onclick="loadList()">🔄 刷新</button>
+  <button class="btn btn-outline" onclick="logout()">退出</button>
+  <span id="listSummary" class="text-muted text-small" style="margin-left:auto;"></span>
+</div>
+
+<div class="pt-content">
+  <div class="pt-card">
+    <div class="pt-card-header">
+      <span class="pt-card-title">📋 订单工序汇总</span>
+    </div>
+    <div id="orderList" class="pt-card-body" style="padding:0;">
+      <div class="pt-empty">加载中...</div>
+    </div>
+  </div>
+
+  <div id="detailSection" style="display:none;">
+    <div class="pt-card">
+      <div class="pt-card-header">
+        <span class="pt-card-title">📊 工序甘特图 - <span id="detailOrderNo" class="text-primary"></span></span>
+        <div>
+          <button class="btn btn-outline btn-sm" onclick="loadDetail()">🔄 刷新</button>
+          <button class="btn btn-warning btn-sm" onclick="printWorkCard()">🖨️ 打印工续卡</button>
+        </div>
+      </div>
+      <div class="pt-card-body">
+        <div class="pt-summary">
+          <div class="pt-summary-card">
+            <div class="pt-summary-label">客户</div>
+            <div class="pt-summary-value" id="sumCustomer">-</div>
+          </div>
+          <div class="pt-summary-card">
+            <div class="pt-summary-label">产品类型</div>
+            <div class="pt-summary-value" id="sumProduct">-</div>
+          </div>
+          <div class="pt-summary-card">
+            <div class="pt-summary-label">订单数量</div>
+            <div class="pt-summary-value" id="sumQty">-</div>
+          </div>
+          <div class="pt-summary-card">
+            <div class="pt-summary-label">计划开始</div>
+            <div class="pt-summary-value" id="sumStart" style="font-size:14px;">-</div>
+          </div>
+          <div class="pt-summary-card">
+            <div class="pt-summary-label">计划完成</div>
+            <div class="pt-summary-value" id="sumEnd" style="font-size:14px;">-</div>
+          </div>
+        </div>
+        <div class="gantt-wrap" id="ganttWrap">
+          <div class="pt-empty">暂无甘特图数据</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pt-card">
+      <div class="pt-card-header">
+        <span class="pt-card-title">🔧 工序明细</span>
+      </div>
+      <div class="pt-card-body" style="padding:0;">
+        <table class="process-list" id="processTable">
+          <thead>
+            <tr>
+              <th>序号</th><th>工序名称</th><th>负责人</th>
+              <th>开始</th><th>结束</th><th>计划/完成</th><th>状态</th>
+            </tr>
+          </thead>
+          <tbody id="processTbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="pt-card">
+      <div class="pt-card-header">
+        <span class="pt-card-title">📜 排产历史</span>
+      </div>
+      <div class="pt-card-body">
+        <div id="historyList"><div class="pt-empty">加载中...</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="printModal" onclick="if(event.target===this)closeModal('printModal')">
+  <div class="modal-box" style="max-width:800px;">
+    <div class="modal-title">🖨️ 工续卡预览</div>
+    <div id="printContent" style="padding:20px;background:#fff;border:1px solid #ddd;min-height:400px;"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('printModal')">关闭</button>
+      <button class="btn btn-primary" onclick="window.print()">🖨️ 打印</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let gCurrentOrder = null;
+let gProcesses = [];
+let gStatusData = null;
+
+function debounceLoadList() { clearTimeout(window._t); window._t = setTimeout(loadList, 300); }
+
+function apiFetch(url, opts = {}) {
+  opts.headers = { ...opts.headers, 'X-Dispatch-Token': getToken() || '' };
+  return fetch(url, opts);
+}
+
+async function loadList() {
+  const kw = document.getElementById('kwInput').value.trim();
+  const url = '/api/process/list' + (kw ? '?keyword=' + encodeURIComponent(kw) : '');
+  const el = document.getElementById('orderList');
+  el.innerHTML = '<div class="pt-empty">加载中...</div>';
+  try {
+    const r = await apiFetch(url);
+    const data = await r.json();
+    if (data.code !== 0) { showMsg(data.message || '加载失败', 'error'); return; }
+    let items = data.data || [];
+    if (!Array.isArray(items)) items = [];
+    if (kw) {
+      const k = kw.toLowerCase();
+      items = items.filter(i => (i.order_no || '').toLowerCase().includes(k) || (i.customer_name || '').toLowerCase().includes(k));
+    }
+    document.getElementById('listSummary').textContent = `共 ${items.length} 条`;
+    if (!items.length) { el.innerHTML = '<div class="pt-empty">暂无订单</div>'; return; }
+    el.innerHTML = items.map((item, idx) => {
+      const progress = calcProgress(item);
+      window[`_pt_item_${idx}`] = item;
+      return `
+      <div class="pt-row${gCurrentOrder === item.order_no ? ' selected' : ''}" onclick="selectOrder('${(item.order_no || '').replace(/'/g, '')}', window._pt_item_${idx})">
+        <div class="pt-row-no">📦 ${item.order_no || '-'}</div>
+        <div class="pt-row-cust">${item.customer_name || '-'}</div>
+        <div class="pt-row-prod">${item.product_name || item.product_type || ''}</div>
+        <div class="pt-row-prog">
+          <div class="progress-bar" style="width:120px;height:14px;">
+            <div class="progress-fill" style="width:${progress}%;"></div>
+            <div class="progress-text">${progress}%</div>
+          </div>
+          <span class="text-small text-muted">${item.quantity || 0}件</span>
+        </div>
+        <div class="pt-row-actions">
+          <span class="status-tag ${getStatusClass(item.status)}">${item.status || '-'}</span>
+        </div>
+      </div>
+    `;}).join('');
+  } catch (e) {
+    el.innerHTML = `<div class="pt-empty">加载失败: ${e.message}</div>`;
+  }
+}
+
+function calcProgress(item) {
+  if (item.status === '已完成' || item.status === '已发货') return 100;
+  if (item.status === '已排产' || item.status === '待排产') return 5;
+  if (item.status === '生产中') return 50;
+  if (item.actual_start && !item.actual_end) return 60;
+  if (item.actual_end) return 100;
+  return 30;
+}
+
+function getStatusClass(s) {
+  if (!s) return 'status-PENDING';
+  const map = { '待开始': 'status-PENDING', '进行中': 'status-PRODUCING', '已完成': 'status-FINISHED', '已排产': 'status-CONFIRMED', '生产中': 'status-PRODUCING', '阻塞': 'status-blocked' };
+  return map[s] || 'status-PENDING';
+}
+
+async function selectOrder(orderNo, itemData) {
+  gCurrentOrder = orderNo;
+  if (itemData) gStatusData = itemData;
+  document.querySelectorAll('.pt-row').forEach(r => r.classList.remove('selected'));
+  document.getElementById('detailSection').style.display = 'block';
+  document.getElementById('detailOrderNo').textContent = orderNo;
+  if (gStatusData) {
+    document.getElementById('sumCustomer').textContent = gStatusData.customer_name || '-';
+    document.getElementById('sumProduct').textContent = gStatusData.product_name || gStatusData.product_type || '-';
+    document.getElementById('sumQty').textContent = gStatusData.quantity || gStatusData.order_quantity || '-';
+  }
+  loadDetail();
+  document.getElementById('detailSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function loadDetail() {
+  if (!gCurrentOrder) return;
+  await Promise.all([loadTimeline(), loadHistory()]);
+}
+
+async function loadTimeline() {
+  const url = `/api/process/timeline/${encodeURIComponent(gCurrentOrder)}`;
+  try {
+    const r = await apiFetch(url);
+    const data = await r.json();
+    if (data.code !== 0) { showMsg(data.message || '加载失败', 'error'); return; }
+    const d = data.data || {};
+    gProcesses = d.processes || [];
+    document.getElementById('sumStart').textContent = fmtDate(d.plan_start) || '-';
+    document.getElementById('sumEnd').textContent = fmtDate(d.plan_end) || '-';
+    document.getElementById('sumCustomer').textContent = gStatusData?.customer_name || '-';
+    document.getElementById('sumProduct').textContent = gStatusData?.product_type || '-';
+    document.getElementById('sumQty').textContent = gStatusData?.order_quantity || '-';
+    renderGantt(d);
+    renderProcessTable();
+  } catch (e) {
+    showMsg('加载甘特图失败: ' + e.message, 'error');
+  }
+}
+
+async function loadStatusForDetail() {
+  const url = `/api/process/status/${encodeURIComponent(gCurrentOrder)}`;
+  try {
+    const r = await apiFetch(url);
+    const data = await r.json();
+    if (data.code === 0) {
+      gStatusData = data.data || {};
+      document.getElementById('sumCustomer').textContent = gStatusData.customer_name || '-';
+      document.getElementById('sumProduct').textContent = gStatusData.product_type || '-';
+      document.getElementById('sumQty').textContent = gStatusData.order_quantity || '-';
+    }
+  } catch (e) {}
+}
+
+async function loadHistory() {
+  const url = `/api/process/history/${encodeURIComponent(gCurrentOrder)}`;
+  const el = document.getElementById('historyList');
+  el.innerHTML = '<div class="pt-empty">加载中...</div>';
+  try {
+    const r = await apiFetch(url);
+    const data = await r.json();
+    if (data.code !== 0) { el.innerHTML = `<div class="pt-empty">${data.message || '加载失败'}</div>`; return; }
+    const logs = (data.data || {}).logs || [];
+    if (!logs.length) { el.innerHTML = '<div class="pt-empty">暂无排产历史</div>'; return; }
+    el.innerHTML = logs.map(log => `
+      <div class="timeline-item">
+        <div class="timeline-time">${fmtTime(log.created_at || log.processed_at)}</div>
+        <div class="timeline-content">
+          <div class="timeline-action">${log.action || log.scenario || log.event || '-'}</div>
+          <div class="timeline-meta">${log.operator_name || log.operator || ''} ${log.remark || ''}</div>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    el.innerHTML = `<div class="pt-empty">加载失败: ${e.message}</div>`;
+  }
+}
+
+function renderGantt(data) {
+  const wrap = document.getElementById('ganttWrap');
+  const processes = data.processes || [];
+  if (!processes.length) { wrap.innerHTML = '<div class="pt-empty">暂无工序数据</div>'; return; }
+  const startMs = new Date(data.plan_start || processes[0].start).getTime();
+  const endMs = new Date(data.plan_end || processes[processes.length-1].end).getTime();
+  const totalMs = Math.max(endMs - startMs, 1);
+  const labelW = 140;
+  const chartW = 800;
+  const rowH = 36;
+  const headH = 30;
+  const w = labelW + chartW;
+  const h = headH + processes.length * rowH + 10;
+  let svg = `<svg class="gantt-svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">`;
+  svg += `<rect x="0" y="0" width="${w}" height="${h}" fill="#fff" />`;
+  const ticks = 6;
+  for (let i = 0; i <= ticks; i++) {
+    const x = labelW + (chartW / ticks) * i;
+    const timeMs = startMs + (totalMs / ticks) * i;
+    const time = new Date(timeMs);
+    const lbl = `${pad(time.getMonth()+1)}/${pad(time.getDate())}`;
+    svg += `<line class="gantt-axis" x1="${x}" y1="${headH-5}" x2="${x}" y2="${h-5}" />`;
+    svg += `<text class="gantt-axis-text" x="${x}" y="${headH-10}" text-anchor="middle">${lbl}</text>`;
+    if (i < ticks) {
+      svg += `<line class="gantt-axis" x1="${x}" y1="${headH-5}" x2="${x}" y2="${headH-5}" stroke-width="2" />`;
+    }
+  }
+  svg += `<line class="gantt-axis" x1="0" y1="${headH-5}" x2="${w}" y2="${headH-5}" stroke-width="2" />`;
+  processes.forEach((p, i) => {
+    const y = headH + i * rowH;
+    svg += `<rect class="gantt-row-bg" x="0" y="${y}" width="${w}" height="${rowH}" />`;
+    svg += `<text class="gantt-label" x="10" y="${y + rowH/2 + 4}">${escapeHtml(p.name)}</text>`;
+    const pStart = new Date(p.start || data.plan_start).getTime();
+    const pEnd = new Date(p.end || data.plan_end).getTime();
+    const startX = labelW + ((pStart - startMs) / totalMs) * chartW;
+    const endX = labelW + ((pEnd - startMs) / totalMs) * chartW;
+    const barW = Math.max(endX - startX, 20);
+    const statusColor = getGanttColor(p.status);
+    svg += `<rect class="gantt-bar-bg" x="${startX}" y="${y+8}" width="${barW}" height="${rowH-16}" rx="3" />`;
+    const progressW = barW * (Math.min(p.completed_qty, p.planned_qty) / Math.max(p.planned_qty, 1));
+    svg += `<rect class="gantt-bar-progress" x="${startX}" y="${y+8}" width="${progressW}" height="${rowH-16}" rx="3" fill="${statusColor}" />`;
+    if (barW > 60) {
+      svg += `<text class="gantt-bar-text" x="${startX + barW/2}" y="${y + rowH/2 + 4}" text-anchor="middle">${p.status}</text>`;
+    }
+  });
+  svg += '</svg>';
+  wrap.innerHTML = svg;
+}
+
+function getGanttColor(status) {
+  const map = {
+    '已完成': '#27ae60', '完成': '#27ae60',
+    '生产中': '#e67e22', '进行中': '#e67e22',
+    '待开始': '#95a5a6', '待排产': '#3498db',
+    '阻塞': '#e74c3c', '失败': '#e74c3c',
+  };
+  return map[status] || '#95a5a6';
+}
+
+function renderProcessTable() {
+  const tbody = document.getElementById('processTbody');
+  if (!gProcesses.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:#999;">暂无工序</td></tr>'; return; }
+  tbody.innerHTML = gProcesses.map(p => `
+    <tr>
+      <td>${p.index}</td>
+      <td><strong>${escapeHtml(p.name)}</strong></td>
+      <td>${escapeHtml(p.operator) || '-'}</td>
+      <td>${fmtDate(p.start) || '-'}</td>
+      <td>${fmtDate(p.end) || '-'}</td>
+      <td>${p.completed_qty || 0} / ${p.planned_qty || 0}</td>
+      <td><span class="status-tag ${getStatusClass(p.status)}">${p.status}</span></td>
+    </tr>
+  `).join('');
+}
+
+function printWorkCard() {
+  if (!gCurrentOrder) return;
+  const order = gStatusData || {};
+  const processes = gProcesses || [];
+  document.getElementById('printContent').innerHTML = `
+    <div style="text-align:center;margin-bottom:16px;">
+      <h2 style="font-size:18px;margin-bottom:4px;">不锈钢网带跟单系统 - 工续卡</h2>
+      <div style="font-size:13px;color:#888;">订单号: ${gCurrentOrder} | 客户: ${order.customer_name || '-'}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;font-size:13px;">
+      <div><b>产品类型：</b>${order.product_name || order.product_type || '-'}</div>
+      <div><b>订单数量：</b>${order.quantity || order.order_quantity || '-'}</div>
+      <div><b>规格：</b>${order.spec || order.specification || '-'}</div>
+      <div><b>交期：</b>${fmtDate(order.delivery_date) || fmtDate(order.plan_end) || '-'}</div>
+    </div>
+    <table class="process-list" style="width:100%;border-collapse:collapse;margin-bottom:16px;">
+      <thead><tr style="background:#f0f0f0;">
+        <th style="padding:8px;border:1px solid #ddd;">序号</th>
+        <th style="padding:8px;border:1px solid #ddd;">工序</th>
+        <th style="padding:8px;border:1px solid #ddd;">负责人</th>
+        <th style="padding:8px;border:1px solid #ddd;">开始</th>
+        <th style="padding:8px;border:1px solid #ddd;">结束</th>
+        <th style="padding:8px;border:1px solid #ddd;">状态</th>
+      </tr></thead>
+      <tbody>
+        ${processes.map(p => `<tr>
+          <td style="padding:8px;border:1px solid #ddd;text-align:center;">${p.index}</td>
+          <td style="padding:8px;border:1px solid #ddd;">${escapeHtml(p.name)}</td>
+          <td style="padding:8px;border:1px solid #ddd;">${escapeHtml(p.operator) || '-'}</td>
+          <td style="padding:8px;border:1px solid #ddd;">${fmtDate(p.start) || '-'}</td>
+          <td style="padding:8px;border:1px solid #ddd;">${fmtDate(p.end) || '-'}</td>
+          <td style="padding:8px;border:1px solid #ddd;">${p.status}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    <div style="border-top:2px solid #333;padding-top:12px;font-size:12px;">
+      <div>车间签字: __________  质检签字: __________  客户签字: __________</div>
+      <div style="margin-top:8px;text-align:center;color:#aaa;">${fmtDate(new Date())} 由系统自动生成</div>
+    </div>`;
+  document.getElementById('printModal').classList.add('show');
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+function escapeHtml(s) { if (!s) return ''; return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+function fmtTime(s) { if (!s) return '-'; const d = new Date(s); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+function fmtDate(s) { if (!s) return '-'; const d = new Date(s); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function pad(n) { return String(n).padStart(2, '0'); }
+function showMsg(msg, type='info') {
+  const box = document.getElementById('msgBox');
+  box.textContent = msg;
+  box.className = `msg-box msg-${type}`;
+  box.style.display = 'block';
+  if (box._t) clearTimeout(box._t);
+  box._t = setTimeout(() => { box.style.display = 'none'; }, 4000);
+}
+function logout() { clearToken(); window.location.href = '/login'; }
+
+showUser();
+if (!getToken()) { window.location.href = '/login'; }
+else { loadList(); }
+</script>
+<style>
+@media print {
+  .navbar, .pt-toolbar, .pt-card-header, .pt-row-actions, .modal-actions, #msgBox { display: none !important; }
+  body { background: #fff; }
+  #printContent { border: none !important; box-shadow: none !important; }
+}
+</style>
+</body>
+</html>

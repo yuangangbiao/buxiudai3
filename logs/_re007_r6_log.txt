@@ -1,0 +1,50 @@
+============================================================
+RE-007 R6 Playwright 重验 v2
+============================================================
+
+[工单] ORD-202604210004
+  📸 00_default.png md5=2d01e36448
+  📸 tab_material.png md5=2d01e36448
+  📸 tab_process.png md5=8fd2a8293c
+  📸 tab_flow.png md5=27c6fdc6ef
+  📸 tab_quality.png md5=2742fda053
+  📸 tab_repair.png md5=0fb901486c
+  📸 tab_outsource.png md5=7752490611
+
+[工单] ORD-202605020001
+  📸 00_default.png md5=fbd3df4212
+  📸 tab_material.png md5=fbd3df4212
+  📸 tab_process.png md5=3b7f95607b
+  📸 tab_flow.png md5=1b5fcfd793
+  📸 tab_quality.png md5=a2ebb28f4f
+  📸 tab_repair.png md5=d3d885ab20
+  📸 tab_outsource.png md5=4d93ffd7bb
+
+[工单] ORD-202604210002
+  📸 00_default.png md5=ab3e79cb66
+  📸 tab_material.png md5=ab3e79cb66
+  📸 tab_process.png md5=10595e7d47
+  📸 tab_flow.png md5=28b681706e
+  📸 tab_quality.png md5=ea2268cb57
+  📸 tab_repair.png md5=87170fea72
+  📸 tab_outsource.png md5=12aa815b90
+
+[工单] ORD-202605010001
+  📸 00_default.png md5=0723004e5d
+  📸 tab_material.png md5=0723004e5d
+  📸 tab_process.png md5=cdcfe1fa29
+  📸 tab_flow.png md5=01007bf643
+  📸 tab_quality.png md5=864bdf8327
+  📸 tab_repair.png md5=54e5a16f2b
+  📸 tab_outsource.png md5=3f8f3a467c
+
+[Hash 差异检查]
+  ORD-202604210004: default=2d01e36448  unique_tabs=6  dupes=[]  non_material_same_as_default=[]
+  ORD-202605020001: default=fbd3df4212  unique_tabs=6  dupes=[]  non_material_same_as_default=[]
+  ORD-202604210002: default=ab3e79cb66  unique_tabs=6  dupes=[]  non_material_same_as_default=[]
+  ORD-202605010001: default=0723004e5d  unique_tabs=6  dupes=[]  non_material_same_as_default=[]
+
+============================================================
+结果: PASS ✓
+截图: d:\yuan\不锈钢网带跟单3.0\logs\R6_shots
+============================================================

@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>发货管理 - 不锈钢网带跟单系统</title>
+<link rel="stylesheet" href="/static/css/shared.css">
+<style>
+  .ship-tabs { display: flex; border-bottom: 2px solid #e1e4e8; padding: 0 24px; background: #fff; }
+  .ship-tab { padding: 12px 20px; cursor: pointer; font-size: 13px; color: #888; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
+  .ship-tab:hover { color: #667eea; }
+  .ship-tab.active { color: #667eea; border-bottom-color: #667eea; font-weight: 500; }
+  .ship-content { padding: 0; }
+  .create-bar { background: #fff; padding: 16px 24px; display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; border-bottom: 1px solid #f0f0f0; }
+  .create-group { display: flex; flex-direction: column; gap: 4px; }
+  .create-label { font-size: 12px; color: #888; }
+  .create-input { padding: 7px 12px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 13px; width: 180px; }
+  .create-input:focus { outline: none; border-color: #667eea; }
+  .shipment-card { background: #fff; border-radius: 6px; margin: 16px 24px; padding: 16px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-left: 4px solid #667eea; }
+  .shipment-card.pending { border-left-color: #f39c12; }
+  .shipment-card.shipped { border-left-color: #27ae60; }
+  .shipment-card.received { border-left-color: #16a085; }
+  .shipment-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+  .shipment-no { font-size: 14px; font-weight: 600; color: #2c3e50; }
+  .shipment-order { font-size: 12px; color: #888; margin-top: 2px; }
+  .shipment-body { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 12px; }
+  .shipment-field { }
+  .field-label { font-size: 11px; color: #aaa; margin-bottom: 2px; }
+  .field-value { font-size: 13px; color: #2c3e50; }
+  .shipment-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid #f0f0f0; }
+  .shipment-time { font-size: 12px; color: #888; }
+  .shipment-actions { display: flex; gap: 8px; }
+  .logistics-info { background: #f8f9fa; border-radius: 4px; padding: 10px 12px; margin-top: 8px; }
+  .logistics-item { display: flex; gap: 8px; font-size: 12px; color: #555; margin-bottom: 4px; }
+  .logistics-item:last-child { margin-bottom: 0; }
+  .logistics-time { color: #aaa; min-width: 140px; }
+  .stat-bar { display: flex; gap: 16px; padding: 12px 24px; background: #fff; border-bottom: 1px solid #f0f0f0; }
+  .stat-item { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+  .stat-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .empty-card { text-align: center; padding: 48px 20px; color: #95a5a6; font-size: 14px; }
+  .modal-field { margin-bottom: 14px; }
+  .modal-field label { display: block; font-size: 12px; color: #666; margin-bottom: 4px; }
+  .modal-field input, .modal-field select { width: 100%; padding: 8px 12px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 13px; }
+  .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+</style>
+</head>
+<body>
+<div id="appNav"></div>
+<script src="/static/js/shared.js"></script>
+<script>renderNav('shipment', '🚚 发货管理');</script>
+
+<div class="ship-tabs">
+  <div class="ship-tab active" data-tab="pending" onclick="switchTab('pending')">📦 待发货 <span id="pendingCount" class="badge-warning" style="padding:1px 6px;border-radius:10px;font-size:11px;margin-left:4px;"></span></div>
+  <div class="ship-tab" data-tab="all" onclick="switchTab('all')">📋 全部发货单</div>
+  <div class="ship-tab" data-tab="tracking" onclick="switchTab('tracking')">🚛 物流追踪</div>
+  <div class="ship-tab" data-tab="finished" onclick="switchTab('finished')">🏭 成品库</div>
+</div>
+
+<div id="msgBox" class="msg-box"></div>
+
+<div id="tabPending" class="ship-content">
+  <div class="create-bar">
+    <div class="create-group">
+      <span class="create-label">关键词</span>
+      <input class="create-input" id="kwPending" placeholder="订单号/客户/发货单号" oninput="debounceLoadPending()">
+    </div>
+    <button class="btn btn-primary" onclick="loadPending()">🔍 搜索</button>
+    <button class="btn btn-success" onclick="openCreateModal()">➕ 新建发货</button>
+    <button class="btn btn-secondary" onclick="loadPending()">🔄 刷新</button>
+    <button class="btn btn-outline" onclick="logout()">退出</button>
+  </div>
+  <div class="stat-bar">
+    <div class="stat-item"><span class="stat-dot" style="background:#f39c12"></span>待发货 <strong id="statPending">0</strong></div>
+    <div class="stat-item"><span class="stat-dot" style="background:#27ae60"></span>已发货 <strong id="statShipped">0</strong></div>
+    <div class="stat-item"><span class="stat-dot" style="background:#16a085"></span>已收货 <strong id="statReceived">0</strong></div>
+  </div>
+  <div id="pendingList"></div>
+</div>
+
+<div id="tabAll" class="ship-content" style="display:none;">
+  <div class="create-bar">
+    <div class="create-group">
+      <span class="create-label">状态</span>
+      <select class="create-input" id="filterStatus" onchange="loadAll()">
+        <option value="全部">全部</option>
+        <option value="待发货">待发货</option>
+        <option value="已发货">已发货</option>
+        <option value="已收货">已收货</option>
+      </select>
+    </div>
+    <div class="create-group">
+      <span class="create-label">关键词</span>
+      <input class="create-input" id="kwAll" placeholder="订单号/客户/发货单号" oninput="debounceLoadAll()">
+    </div>
+    <div class="create-group">
+      <span class="create-label">日期从</span>
+      <input class="create-input" type="date" id="dateFrom" onchange="loadAll()">
+    </div>
+    <div class="create-group">
+      <span class="create-label">日期到</span>
+      <input class="create-input" type="date" id="dateTo" onchange="loadAll()">
+    </div>
+    <button class="btn btn-primary" onclick="loadAll()">🔍 搜索</button>
+    <button class="btn btn-secondary" onclick="loadAll()">🔄 刷新</button>
+  </div>
+  <div class="summary" id="summaryAll"></div>
+  <div id="allList"></div>
+</div>
+
+<div id="tabTracking" class="ship-content" style="display:none;">
+  <div class="create-bar">
+    <div class="create-group">
+      <span class="create-label">关键词</span>
+      <input class="create-input" id="kwTracking" placeholder="订单号/物流单号" oninput="debounceLoadTracking()">
+    </div>
+    <button class="btn btn-primary" onclick="loadTracking()">🔍 搜索</button>
+    <button class="btn btn-secondary" onclick="loadTracking()">🔄 刷新</button>
+  </div>
+  <div id="trackingList"></div>
+</div>
+
+<div id="tabFinished" class="ship-content" style="display:none;">
+  <div class="create-bar">
+    <div class="create-group">
+      <span class="create-label">关键词</span>
+      <input class="create-input" id="kwFinished" placeholder="订单号/客户" oninput="debounceLoadFinished()">
+    </div>
+    <button class="btn btn-primary" onclick="loadFinished()">🔍 搜索</button>
+    <button class="btn btn-secondary" onclick="loadFinished()">🔄 刷新</button>
+  </div>
+  <div id="finishedList"></div>
+</div>
+
+<div class="modal-overlay" id="createModal" onclick="if(event.target===this)closeModal('createModal')">
+  <div class="modal-box">
+    <div class="modal-title">➕ 新建发货单</div>
+    <div class="modal-grid">
+      <div class="modal-field">
+        <label>成品库存 *</label>
+        <select id="cFinishedGoods" style="width:100%;padding:8px 12px;border:1px solid #dcdfe6;border-radius:4px;font-size:13px;">
+          <option value="">-- 选择成品库存 --</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label>发货数量 *</label>
+        <input id="cShipQty" type="number" min="1" placeholder="输入发货数量" style="width:100%;padding:8px 12px;border:1px solid #dcdfe6;border-radius:4px;font-size:13px;">
+      </div>
+    </div>
+    <div class="modal-grid">
+      <div class="modal-field">
+        <label>发货仓库</label>
+        <input id="cWarehouse" value="成品仓库" placeholder="发货仓库" style="width:100%;padding:8px 12px;border:1px solid #dcdfe6;border-radius:4px;font-size:13px;">
+      </div>
+      <div class="modal-field">
+        <label>物流公司</label>
+        <input id="cLogistics" placeholder="如：顺丰速运" style="width:100%;padding:8px 12px;border:1px solid #dcdfe6;border-radius:4px;font-size:13px;">
+      </div>
+    </div>
+    <div class="modal-grid">
+      <div class="modal-field">
+        <label>物流单号</label>
+        <input id="cTracking" placeholder="物流单号" style="width:100%;padding:8px 12px;border:1px solid #dcdfe6;border-radius:4px;font-size:13px;">
+      </div>
+      <div class="modal-field">
+        <label>运费</label>
+        <input id="cFreight" placeholder="运费" value="0" type="number" style="width:100%;padding:8px 12px;border:1px solid #dcdfe6;border-radius:4px;font-size:13px;">
+      </div>
+    </div>
+    <div class="modal-field">
+      <label>备注</label>
+      <input id="cRemark" placeholder="备注信息" style="width:100%;padding:8px 12px;border:1px solid #dcdfe6;border-radius:4px;font-size:13px;">
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('createModal')">取消</button>
+      <button class="modal-confirm" id="cSubmitBtn" onclick="doCreateShipment()">确认创建</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="printModal" onclick="if(event.target===this)closeModal('printModal')">
+  <div class="modal-box" style="max-width:800px;">
+    <div class="modal-title">📄 发货单预览</div>
+    <div id="printContent" style="padding:20px;background:#fff;border:1px solid #ddd;min-height:400px;"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('printModal')">关闭</button>
+      <button class="btn btn-primary" onclick="window.print()">🖨️ 打印</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let gCurrentTab = 'pending';
+
+function switchTab(tab) {
+  gCurrentTab = tab;
+  document.querySelectorAll('.ship-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+  document.querySelectorAll('.ship-content').forEach(c => c.style.display = 'none');
+  document.getElementById('tab' + capitalize(tab)).style.display = 'block';
+  if (tab === 'pending') loadPending();
+  else if (tab === 'all') loadAll();
+  else if (tab === 'tracking') loadTracking();
+  else if (tab === 'finished') loadFinished();
+}
+
+function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+let _t1, _t2, _t3, _t4;
+function debounceLoadPending() { clearTimeout(_t1); _t1 = setTimeout(loadPending, 300); }
+function debounceLoadAll() { clearTimeout(_t2); _t2 = setTimeout(loadAll, 300); }
+function debounceLoadTracking() { clearTimeout(_t3); _t3 = setTimeout(loadTracking, 300); }
+function debounceLoadFinished() { clearTimeout(_t4); _t4 = setTimeout(loadFinished, 300); }
+
+function apiFetch(url, opts = {}) {
+  opts.headers = { ...opts.headers, 'X-Dispatch-Token': getToken() || '' };
+  return fetch(url, opts);
+}
+
+async function loadPending() {
+  const kw = document.getElementById('kwPending').value.trim();
+  const url = '/api/shipment/pending' + (kw ? '?keyword=' + encodeURIComponent(kw) : '');
+  try {
+    const r = await apiFetch(url);
+    const data = await r.json();
+    if (data.code !== 0) { showMsg(data.message || '加载失败', 'error'); return; }
+    const items = data.data || [];
+    renderPendingList(items);
+    document.getElementById('pendingCount').textContent = items.length;
+    document.getElementById('statPending').textContent = items.filter(i => i.status === '待发货').length;
+    document.getElementById('statShipped').textContent = items.filter(i => i.status === '已发货').length;
+    document.getElementById('statReceived').textContent = items.filter(i => i.status === '已收货').length;
+  } catch (e) { showMsg('网络错误: ' + e.message, 'error'); }
+}
+
+async function loadAll() {
+  const status = document.getElementById('filterStatus').value;
+  const kw = document.getElementById('kwAll').value.trim();
+  const df = document.getElementById('dateFrom').value;
+  const dt = document.getElementById('dateTo').value;
+  const params = [];
+  if (status && status !== '全部') params.push('status=' + encodeURIComponent(status));
+  if (kw) params.push('keyword=' + encodeURIComponent(kw));
+  if (df) params.push('date_from=' + df);
+  if (dt) params.push('date_to=' + dt);
+  const url = '/api/shipment/list' + (params.length ? '?' + params.join('&') : '');
+  try {
+    const r = await apiFetch(url);
+    const data = await r.json();
+    if (data.code !== 0) { showMsg(data.message || '加载失败', 'error'); return; }
+    const items = data.data || [];
+    document.getElementById('summaryAll').textContent = `共 ${items.length} 条发货记录`;
+    renderAllList(items);
+  } catch (e) { showMsg('网络错误: ' + e.message, 'error'); }
+}
+
+async function loadTracking() {
+  const kw = document.getElementById('kwTracking').value.trim();
+  const url = '/api/shipment/tracking-list' + (kw ? '?keyword=' + encodeURIComponent(kw) : '');
+  try {
+    const r = await apiFetch(url);
+    const data = await r.json();
+    if (data.code !== 0) { showMsg(data.message || '加载失败', 'error'); return; }
+    renderTrackingList(data.data || []);
+  } catch (e) { showMsg('网络错误: ' + e.message, 'error'); }
+}
+
+async function loadFinished() {
+  const kw = document.getElementById('kwFinished').value.trim();
+  const url = '/api/shipment/finished-goods' + (kw ? '?keyword=' + encodeURIComponent(kw) : '');
+  try {
+    const r = await apiFetch(url);
+    const data = await r.json();
+    if (data.code !== 0) { showMsg(data.message || '加载失败', 'error'); return; }
+    renderFinishedList(data.data || []);
+  } catch (e) { showMsg('网络错误: ' + e.message, 'error'); }
+}
+
+function renderPendingList(items) {
+  const el = document.getElementById('pendingList');
+  if (!items.length) { el.innerHTML = '<div class="empty-card">暂无待发货订单</div>'; return; }
+  el.innerHTML = items.map(i => cardHTML(i, true)).join('');
+}
+
+function renderAllList(items) {
+  const el = document.getElementById('allList');
+  if (!items.length) { el.innerHTML = '<div class="empty-card">暂无发货记录</div>'; return; }
+  el.innerHTML = items.map(i => cardHTML(i, false)).join('');
+}
+
+function renderTrackingList(items) {
+  const el = document.getElementById('trackingList');
+  if (!items.length) { el.innerHTML = '<div class="empty-card">暂无物流追踪记录</div>'; return; }
+  el.innerHTML = items.map(i => trackingCard(i)).join('');
+}
+
+function renderFinishedList(items) {
+  const el = document.getElementById('finishedList');
+  if (!items.length) { el.innerHTML = '<div class="empty-card">暂无成品库存</div>'; return; }
+  el.innerHTML = items.map(i => finishedCard(i)).join('');
+}
+
+function cardHTML(item, showCreate) {
+  const statusMap = { '待发货': 'pending', '已发货': 'shipped', '已收货': 'received' };
+  const cls = statusMap[item.status] || '';
+  const actions = [];
+  if (item.status === '待发货') {
+    actions.push(`<button class="btn btn-success btn-sm" onclick="doConfirmShip(${item.id},'${item.shipment_no}')">📦 确认发货</button>`);
+    actions.push(`<button class="btn btn-warning btn-sm" onclick="openPrintModal(${item.id})">📄 打印</button>`);
+  }
+  if (item.status === '已发货') {
+    actions.push(`<button class="btn btn-secondary btn-sm" onclick="doConfirmReceive(${item.id},'${item.shipment_no}')">✅ 确认收货</button>`);
+    actions.push(`<button class="btn btn-warning btn-sm" onclick="openPrintModal(${item.id})">📄 打印</button>`);
+  }
+  if (item.status === '已收货') {
+    actions.push(`<button class="btn btn-outline btn-sm" onclick="openPrintModal(${item.id})">📄 查看发货单</button>`);
+  }
+  return `<div class="shipment-card ${cls}">
+    <div class="shipment-header">
+      <div>
+        <div class="shipment-no">📦 ${item.shipment_no || '无单号'}</div>
+        <div class="shipment-order">关联订单: ${item.order_no || '-'}</div>
+      </div>
+      <span class="status-tag ${item.status === '待发货' ? 'status-warning' : item.status === '已发货' ? 'status-success' : 'status-PACKED'}">${item.status || '-'}</span>
+    </div>
+    <div class="shipment-body">
+      <div class="shipment-field"><div class="field-label">客户</div><div class="field-value">${item.customer_name || '-'}</div></div>
+      <div class="shipment-field"><div class="field-label">产品类型</div><div class="field-value">${item.product_type || '-'}</div></div>
+      <div class="shipment-field"><div class="field-label">发货仓库</div><div class="field-value">${item.warehouse || '成品仓库'}</div></div>
+      <div class="shipment-field"><div class="field-label">物流公司</div><div class="field-value">${item.logistics_company || '-'}</div></div>
+      <div class="shipment-field"><div class="field-label">物流单号</div><div class="field-value">${item.tracking_no || '-'}</div></div>
+      <div class="shipment-field"><div class="field-label">发货数量</div><div class="field-value">${item.ship_quantity || '-'}</div></div>
+    </div>
+    ${item.tracking_no ? `<div class="logistics-info"><div class="logistics-item"><span class="logistics-time">${item.ship_date || ''}</span><span>已发货，等待物流更新...</span></div></div>` : ''}
+    <div class="shipment-footer">
+      <span class="shipment-time">创建: ${fmtTime(item.created_at)}</span>
+      <div class="shipment-actions">${actions.join('')}</div>
+    </div>
+  </div>`;
+}
+
+function trackingCard(item) {
+  return `<div class="shipment-card shipped">
+    <div class="shipment-header">
+      <div>
+        <div class="shipment-no">🚛 ${item.shipment_no || '-'}</div>
+        <div class="shipment-order">订单: ${item.order_no || '-'} | 客户: ${item.customer_name || '-'}</div>
+      </div>
+      <span class="status-tag status-success">已发货</span>
+    </div>
+    <div class="shipment-body">
+      <div class="shipment-field"><div class="field-label">物流公司</div><div class="field-value">${item.logistics_company || '-'}</div></div>
+      <div class="shipment-field"><div class="field-label">物流单号</div><div class="field-value text-primary">${item.tracking_no || '-'}</div></div>
+      <div class="shipment-field"><div class="field-label">发货时间</div><div class="field-value">${fmtTime(item.ship_date)}</div></div>
+      <div class="shipment-field"><div class="field-label">最新状态</div><div class="field-value">${item.latest_status || '运输中'}</div></div>
+    </div>
+    <div class="shipment-footer">
+      <span class="shipment-time">${item.latest_time || ''}</span>
+      <div class="shipment-actions">
+        ${item.status !== '已收货' ? `<button class="btn btn-secondary btn-sm" onclick="doConfirmReceive(${item.id},'${item.shipment_no}')">✅ 确认收货</button>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+function finishedCard(item) {
+  return `<div class="shipment-card">
+    <div class="shipment-header">
+      <div>
+        <div class="shipment-no">🏭 ${item.product_type || '成品'}</div>
+        <div class="shipment-order">规格: ${item.specification || '-'} | 单位: ${item.unit || '件'}</div>
+      </div>
+      <span class="status-tag status-PACKED">库存</span>
+    </div>
+    <div class="shipment-body">
+      <div class="shipment-field"><div class="field-label">当前库存</div><div class="field-value text-success" style="font-size:20px;font-weight:700">${item.stock_quantity || 0}</div></div>
+      <div class="shipment-field"><div class="field-label">仓库</div><div class="field-value">${item.warehouse || '成品仓库'}</div></div>
+      <div class="shipment-field"><div class="field-label">最后入库</div><div class="field-value">${fmtDate(item.last_in_date)}</div></div>
+      <div class="shipment-field"><div class="field-label">安全库存</div><div class="field-value">${item.safe_stock || 0}</div></div>
+    </div>
+  </div>`;
+}
+
+async function doConfirmShip(id, no) {
+  if (!confirm(`确认发货单 "${no}" 已发货？`)) return;
+  try {
+    const r = await apiFetch('/api/shipment/confirm-ship', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ shipment_id: id })
+    });
+    const data = await r.json();
+    if (data.code === 0) { showMsg('✅ 发货成功', 'success'); loadPending(); loadAll(); }
+    else { showMsg(data.message || '发货失败', 'error'); }
+  } catch (e) { showMsg('网络错误: ' + e.message, 'error'); }
+}
+
+async function doConfirmReceive(id, no) {
+  if (!confirm(`确认客户已收货 "${no}"？`)) return;
+  try {
+    const r = await apiFetch('/api/shipment/confirm-receive', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ shipment_id: id })
+    });
+    const data = await r.json();
+    if (data.code === 0) { showMsg('✅ 收货确认成功', 'success'); loadPending(); loadAll(); loadTracking(); }
+    else { showMsg(data.message || '确认失败', 'error'); }
+  } catch (e) { showMsg('网络错误: ' + e.message, 'error'); }
+}
+
+function openCreateModal() {
+  document.getElementById('cWarehouse').value = '成品仓库';
+  document.getElementById('cLogistics').value = '';
+  document.getElementById('cTracking').value = '';
+  document.getElementById('cRemark').value = '';
+  document.getElementById('cShipQty').value = '';
+  document.getElementById('createModal').classList.add('show');
+  loadFinishedGoodsForSelect();
+}
+
+async function loadFinishedGoodsForSelect() {
+  const select = document.getElementById('cFinishedGoods');
+  select.innerHTML = '<option value="">加载中...</option>';
+  try {
+    const r = await apiFetch('/api/shipment/finished-goods');
+    const data = await r.json();
+    const items = data.data || [];
+    select.innerHTML = '<option value="">-- 选择成品库存 --</option>';
+    items.forEach(item => {
+      const opt = document.createElement('option');
+      opt.value = item.id;
+      opt.textContent = `${item.product_type || '成品'} | 订单:${item.order_no || '-'} | 库存:${item.stock_quantity || 0}${item.unit || '件'}`;
+      select.appendChild(opt);
+    });
+  } catch (e) {
+    select.innerHTML = '<option value="">加载失败</option>';
+  }
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+async function doCreateShipment() {
+  const fgId = document.getElementById('cFinishedGoods').value;
+  const qty = parseFloat(document.getElementById('cShipQty').value);
+  if (!fgId) { showMsg('请选择成品库存', 'error'); return; }
+  if (!qty || qty <= 0) { showMsg('请输入正确的发货数量', 'error'); return; }
+  const btn = document.getElementById('cSubmitBtn');
+  btn.disabled = true; btn.textContent = '创建中...';
+  try {
+    const r = await apiFetch('/api/shipment/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        finished_goods_id: parseInt(fgId),
+        ship_quantity: qty,
+        warehouse: document.getElementById('cWarehouse').value.trim() || '成品仓库',
+        logistics_company: document.getElementById('cLogistics').value.trim(),
+        tracking_no: document.getElementById('cTracking').value.trim(),
+        freight: parseFloat(document.getElementById('cFreight').value) || 0,
+        remark: document.getElementById('cRemark').value.trim()
+      })
+    });
+    const data = await r.json();
+    if (data.code === 0) {
+      showMsg('✅ 发货单创建成功: ' + (data.data?.shipment_no || ''), 'success');
+      closeModal('createModal');
+      loadPending();
+    } else {
+      showMsg(data.message || '创建失败: ' + JSON.stringify(data), 'error');
+    }
+  } catch (e) { showMsg('网络错误: ' + e.message, 'error'); }
+  finally { btn.disabled = false; btn.textContent = '确认创建'; }
+}
+
+function openPrintModal(id) {
+  const r = gPrintData?.find(d => d.id === id);
+  if (!r) { showMsg('未找到发货单数据', 'error'); return; }
+  document.getElementById('printContent').innerHTML = `
+    <div style="text-align:center;margin-bottom:20px;">
+      <h2 style="font-size:18px;margin-bottom:4px;">不锈钢网带跟单系统 - 发货单</h2>
+      <div style="font-size:13px;color:#888;">单号: ${r.shipment_no || '-'} | 日期: ${fmtDate(r.ship_date || r.created_at)}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+      <div><div style="font-size:11px;color:#aaa;">客户名称</div><div style="font-size:14px;font-weight:500;">${r.customer_name || '-'}</div></div>
+      <div><div style="font-size:11px;color:#aaa;">关联订单</div><div style="font-size:14px;">${r.order_no || '-'}</div></div>
+      <div><div style="font-size:11px;color:#aaa;">物流公司</div><div style="font-size:14px;">${r.logistics_company || '-'}</div></div>
+      <div><div style="font-size:11px;color:#aaa;">物流单号</div><div style="font-size:14px;">${r.tracking_no || '-'}</div></div>
+      <div><div style="font-size:11px;color:#aaa;">发货仓库</div><div style="font-size:14px;">${r.warehouse || '成品仓库'}</div></div>
+      <div><div style="font-size:11px;color:#aaa;">发货数量</div><div style="font-size:14px;">${r.ship_quantity || '-'}</div></div>
+    </div>
+    <div style="border-top:2px solid #333;padding-top:12px;font-size:12px;color:#666;">
+      <div>收货地址: _______________________________________________</div>
+      <div style="margin-top:8px;">收货人: ______________ 电话: ______________ 签字: ______________</div>
+      <div style="margin-top:16px;text-align:center;color:#aaa;font-size:11px;">本单据由不锈钢网带跟单系统自动生成 ${fmtDate(new Date())}</div>
+    </div>`;
+  document.getElementById('printModal').classList.add('show');
+}
+
+let gPrintData = [];
+
+function fmtTime(s) { if (!s) return '-'; const d = new Date(s); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+function fmtDate(s) { if (!s) return '-'; const d = new Date(s); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function pad(n) { return String(n).padStart(2, '0'); }
+
+function showMsg(msg, type = 'info') {
+  const box = document.getElementById('msgBox');
+  box.textContent = msg;
+  box.className = 'msg-box msg-' + type;
+  box.style.display = 'block';
+  if (box._t) clearTimeout(box._t);
+  box._t = setTimeout(() => { box.style.display = 'none'; }, 4000);
+}
+
+function logout() { clearToken(); window.location.href = '/login'; }
+
+showUser();
+if (!getToken()) { window.location.href = '/login'; }
+else {
+  loadPending();
+  new AutoRefresh(loadPending, 30000, null).start();
+}
+</script>
+<style>
+@media print {
+  .navbar, .ship-tabs, .create-bar, .stat-bar, .shipment-actions, .modal-actions, #msgBox { display: none !important; }
+  body { background: #fff; }
+  #printContent { border: none !important; box-shadow: none !important; }
+}
+.status-warning { background: #f39c12 !important; }
+.status-success { background: #27ae60 !important; }
+</style>
+</body>
+</html>

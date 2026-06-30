@@ -1,0 +1,6 @@
+{
+  "enabled": false,
+  "interval": 12,
+  "backup_dir": "D:\\yuan\\不锈钢网带跟单3.0\\data\\backups",
+  "keep_days": 7
+}

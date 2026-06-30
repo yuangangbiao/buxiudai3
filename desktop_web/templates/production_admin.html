@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>生产排单管理 - 不锈钢网带跟单系统</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Microsoft YaHei", sans-serif; background: #f5f6fa; color: #2c3e50; }
+  .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .navbar h1 { font-size: 18px; }
+  .toolbar { background: #fff; padding: 14px 24px; display: flex; gap: 10px; align-items: center; border-bottom: 1px solid #e1e4e8; flex-wrap: wrap; }
+  .toolbar select, .toolbar input { padding: 7px 12px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 13px; }
+  .toolbar select:focus, .toolbar input:focus { outline: none; border-color: #667eea; }
+  .btn { padding: 7px 14px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 5px; }
+  .btn-primary { background: #667eea; color: #fff; }
+  .btn-primary:hover { background: #5569d6; }
+  .btn-success { background: #27ae60; color: #fff; }
+  .btn-success:hover { background: #219653; }
+  .btn-warning { background: #e67e22; color: #fff; }
+  .btn-warning:hover { background: #d35400; }
+  .btn-danger { background: #e74c3c; color: #fff; }
+  .btn-danger:hover { background: #c0392b; }
+  .btn-secondary { background: #95a5a6; color: #fff; }
+  .btn-secondary:hover { background: #7f8c8d; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .summary { padding: 10px 24px; color: #888; font-size: 13px; }
+  table { width: 100%; border-collapse: collapse; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  th { background: #f8f9fa; padding: 10px 14px; text-align: left; font-weight: 500; color: #555; border-bottom: 2px solid #e1e4e8; font-size: 13px; white-space: nowrap; cursor: pointer; user-select: none; }
+  th:hover { background: #f0f2f8; }
+  td { padding: 10px 14px; border-bottom: 1px solid #f0f0f0; font-size: 13px; vertical-align: middle; }
+  tr:hover { background: #f8f9fa; cursor: pointer; }
+  tr.selected { background: #eef2ff; }
+  .status-tag { padding: 2px 8px; border-radius: 10px; font-size: 11px; color: #fff; white-space: nowrap; }
+  .status-待发布 { background: #95a5a6; }
+  .status-待开始 { background: #3498db; }
+  .status-生产中 { background: #e67e22; }
+  .status-已完成 { background: #27ae60; }
+  .status-已取消 { background: #e74c3c; }
+  .status-已排产 { background: #9b59b6; }
+  .priority-tag { padding: 2px 6px; border-radius: 4px; font-size: 11px; color: #fff; }
+  .priority-1 { background: #e74c3c; }
+  .priority-3 { background: #e67e22; }
+  .priority-5 { background: #3498db; }
+  .priority-7 { background: #95a5a6; }
+  .priority-9 { background: #2ecc71; }
+  .table-wrap { background: #fff; margin: 12px 24px; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .col-check { width: 30px; text-align: center; }
+  .col-wo { width: 150px; }
+  .col-order { width: 140px; }
+  .col-customer { width: 100px; }
+  .col-product { width: 100px; }
+  .col-qty { width: 70px; text-align: center; }
+  .col-priority { width: 60px; text-align: center; }
+  .col-date { width: 90px; }
+  .col-status { width: 80px; }
+  .col-actions { width: 120px; text-align: center; }
+  .empty { text-align: center; padding: 60px 20px; color: #95a5a6; font-size: 14px; }
+  .msg-box { padding: 12px 24px; margin: 12px 24px; border-radius: 4px; font-size: 13px; display: none; }
+  .msg-error { background: #fdecea; border: 1px solid #f5c6cb; color: #c0392b; }
+  .msg-success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+  .msg-info { background: #e8f4fd; border: 1px solid #b8daff; color: #0c5460; }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; align-items: center; justify-content: center; }
+  .modal-overlay.show { display: flex; }
+  .modal-box { background: #fff; border-radius: 8px; padding: 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); max-height: 90vh; overflow-y: auto; }
+  .modal-box.modal-wide { min-width: 600px; max-width: 720px; }
+  .modal-box.modal-xl { min-width: 700px; max-width: 900px; }
+  .modal-title { font-size: 15px; font-weight: 600; margin-bottom: 16px; color: #2c3e50; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+  .modal-cancel { padding: 8px 16px; border: 1px solid #dcdfe6; background: #fff; border-radius: 4px; cursor: pointer; font-size: 13px; }
+  .modal-cancel:hover { background: #f5f5f5; }
+  .modal-confirm { padding: 8px 16px; border: none; background: #667eea; color: #fff; border-radius: 4px; cursor: pointer; font-size: 13px; }
+  .modal-confirm:hover { background: #5569d6; }
+  .modal-confirm:disabled { opacity: 0.5; cursor: not-allowed; }
+  .form-group { margin-bottom: 14px; }
+  .form-label { display: block; font-size: 13px; color: #555; margin-bottom: 5px; font-weight: 500; }
+  .form-control { width: 100%; padding: 8px 12px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 13px; }
+  .form-control:focus { outline: none; border-color: #667eea; }
+  .form-control[readonly] { background: #f5f7fa; color: #999; }
+  .form-row { display: flex; gap: 12px; }
+  .form-row .form-group { flex: 1; }
+  .detail-section { background: #f8f9fa; border-radius: 6px; padding: 14px 16px; margin-bottom: 12px; }
+  .detail-section h4 { font-size: 13px; color: #667eea; margin-bottom: 8px; font-weight: 600; }
+  .detail-row { display: flex; padding: 4px 0; font-size: 13px; }
+  .detail-label { color: #888; min-width: 80px; }
+  .detail-value { color: #2c3e50; font-weight: 500; }
+  .detail-highlight { color: #e67e22; font-weight: 600; }
+  .dead-letter-row { padding: 8px 12px; border-radius: 4px; margin-bottom: 4px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+  .dead-letter-row:hover { background: #f0f0f0; }
+  .dead-letter-row.selected { background: #eef2ff; border: 1px solid #667eea; }
+  .dead-letter-id { min-width: 40px; }
+  .dead-letter-status { min-width: 30px; font-size: 14px; }
+  .dead-letter-order { flex: 1; font-weight: 500; }
+  .dead-letter-retry { min-width: 50px; color: #888; font-size: 12px; }
+  .dead-letter-error { flex: 2; color: #c0392b; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px; }
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .sort-arrow { font-size: 10px; color: #667eea; }
+  .context-menu { position: fixed; background: #fff; border: 1px solid #e1e4e8; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); z-index: 2000; min-width: 160px; overflow: hidden; display: none; }
+  .context-menu.show { display: block; }
+  .context-item { padding: 9px 16px; font-size: 13px; cursor: pointer; color: #2c3e50; }
+  .context-item:hover { background: #f0f4ff; color: #667eea; }
+  .context-item.danger { color: #e74c3c; }
+  .context-item.danger:hover { background: #fdecea; }
+  .context-sep { border-top: 1px solid #f0f0f0; margin: 4px 0; }
+  .toggle-label { font-size: 13px; color: #555; display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 6px 10px; border-radius: 4px; border: 1px solid #dcdfe6; }
+  .toggle-label input { accent-color: #667eea; }
+  .toggle-label.active { background: #eef2ff; border-color: #667eea; color: #667eea; }
+  .batch-toolbar {
+    background: #fff3e0; padding: 8px 16px; display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid #ffcc80; margin: 0 24px 0; border-radius: 4px;
+  }
+  .batch-toolbar .sel-info { font-size: 13px; color: #e65100; font-weight: 500; }
+</style>
+</head>
+<body>
+<div id="appNav"></div>
+<script src="/static/js/shared.js"></script>
+<script>renderNav('production_admin', '🏭 生产排单');</script>
+
+<div class="toolbar">
+  <select id="statusFilter" onchange="loadOrders()">
+    <option value="">全部状态</option>
+    <option value="待发布">待发布</option>
+    <option value="待开始">待开始</option>
+    <option value="生产中">生产中</option>
+    <option value="已完成">已完成</option>
+  </select>
+  <input type="text" id="keywordInput" placeholder="🔍 工单号 / 订单号 / 客户 / 产品..." style="min-width:220px;" onkeydown="if(event.key==='Enter')loadOrders()">
+  <button class="btn btn-primary" onclick="loadOrders()">🔄 刷新</button>
+  <button class="btn btn-success" onclick="openNewWorkOrder()">➕ 新建工单</button>
+  <button class="btn btn-warning" onclick="openPublishTasks()">📤 发布任务</button>
+  <button class="btn btn-secondary" onclick="openDeadLetters()">🔄 重发死信</button>
+  <label class="toggle-label" id="autoPublishToggle" onclick="toggleAutoPublish()">
+    <input type="checkbox" id="autoPublishCheck">
+    ⚡ 自动发布
+  </label>
+  <button class="btn btn-secondary" onclick="syncStatus()">🔄 状态同步</button>
+  <button class="btn btn-secondary" onclick="gotoMaterialPrep()">📋 物料备料</button>
+  <button class="btn btn-secondary" onclick="logout()">退出</button>
+</div>
+
+<div id="msgBox" class="msg-box" style="display:none;"></div>
+<div id="batchToolbar" class="batch-toolbar" style="display:none;">
+  <span class="sel-info">已选择 <b id="woSelCount">0</b> 项</span>
+  <button class="btn btn-success btn-sm" onclick="batchPublishOrders()">📤 批量发布</button>
+  <button class="btn btn-secondary btn-sm" onclick="cancelBatchWo()">取消选择</button>
+</div>
+<div class="summary" id="summary">加载中...</div>
+
+<div class="table-wrap">
+  <table>
+    <thead id="tableHead"></thead>
+    <tbody id="ordersTbody"><tr><td colspan="10" class="empty">加载中...</td></tr></tbody>
+  </table>
+</div>
+
+<div id="contextMenu" class="context-menu">
+  <div class="context-item" onclick="ctxViewOrder()">🔍 查看订单详情</div>
+  <div class="context-item" onclick="ctxEditWorkOrder()">✏️ 编辑工单</div>
+  <div class="context-sep"></div>
+  <div class="context-item" onclick="ctxChangeStatus('生产中')">▶️ 开始生产</div>
+  <div class="context-item" onclick="ctxChangeStatus('已完成')">✅ 标记完成</div>
+  <div class="context-sep"></div>
+  <div class="context-item danger" onclick="ctxCancelWorkOrder()">🗑 作废工单</div>
+</div>
+
+<!-- 新建工单：选择订单 -->
+<div class="modal-overlay" id="selectOrderModal">
+  <div class="modal-box modal-wide">
+    <div class="modal-title">📋 选择订单（已确认但未排产）</div>
+    <div style="margin-bottom:12px;color:#888;font-size:13px;">共 <strong id="unScheduledCount">0</strong> 条未排产订单，请选择一条进行排产</div>
+    <div style="max-height:400px;overflow-y:auto;border:1px solid #e1e4e8;border-radius:4px;">
+      <table style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr style="background:#f8f9fa;">
+            <th style="padding:8px 12px;text-align:left;font-size:12px;color:#555;">订单号</th>
+            <th style="padding:8px 12px;text-align:left;font-size:12px;color:#555;">客户</th>
+            <th style="padding:8px 12px;text-align:left;font-size:12px;color:#555;">产品类型</th>
+            <th style="padding:8px 12px;text-align:left;font-size:12px;color:#555;">材质</th>
+            <th style="padding:8px 12px;text-align:center;font-size:12px;color:#555;">数量</th>
+            <th style="padding:8px 12px;text-align:center;font-size:12px;color:#555;">金额</th>
+            <th style="padding:8px 12px;text-align:center;font-size:12px;color:#555;">交期</th>
+            <th style="padding:8px 12px;text-align:center;font-size:12px;color:#555;">状态</th>
+          </tr>
+        </thead>
+        <tbody id="unScheduledTbody"><tr><td colspan="8" style="padding:20px;text-align:center;color:#888;">加载中...</td></tr></tbody>
+      </table>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('selectOrderModal')">取消</button>
+      <button class="modal-confirm" id="selectOrderConfirmBtn" onclick="confirmSelectOrder()" disabled>确认选择</button>
+    </div>
+  </div>
+</div>
+
+<!-- 新建工单：表单 -->
+<div class="modal-overlay" id="createWorkOrderModal">
+  <div class="modal-box modal-wide">
+    <div class="modal-title" id="createModalTitle">➕ 新建生产工单</div>
+    <div id="createForm"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('createWorkOrderModal')">取消</button>
+      <button class="modal-confirm" id="createWorkOrderBtn" onclick="submitCreateWorkOrder()">确认创建</button>
+    </div>
+  </div>
+</div>
+
+<!-- 编辑工单 -->
+<div class="modal-overlay" id="editWorkOrderModal">
+  <div class="modal-box modal-wide">
+    <div class="modal-title">✏️ 编辑工单</div>
+    <div id="editForm"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('editWorkOrderModal')">取消</button>
+      <button class="modal-confirm" id="editWorkOrderBtn" onclick="submitEditWorkOrder()">保存修改</button>
+    </div>
+  </div>
+</div>
+
+<!-- 发布确认 -->
+<div class="modal-overlay" id="publishModal">
+  <div class="modal-box modal-xl">
+    <div class="modal-title" id="publishModalTitle">📤 发布生产任务</div>
+    <div id="publishContent" style="max-height:65vh;overflow-y:auto;"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('publishModal')">取消</button>
+      <button class="modal-confirm btn-success" id="doPublishBtn" onclick="doPublish()">确认发布</button>
+    </div>
+  </div>
+</div>
+
+<!-- 死信重发 -->
+<div class="modal-overlay" id="deadLetterModal">
+  <div class="modal-box modal-xl">
+    <div class="modal-title">🔄 死信重发</div>
+    <div style="margin-bottom:12px;color:#888;font-size:13px;">共 <strong id="deadLetterCount">0</strong> 条死信（retry ≥ 5次）</div>
+    <div style="max-height:400px;overflow-y:auto;">
+      <div style="display:flex;align-items:center;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:12px;color:#888;font-weight:500;">
+        <label style="min-width:40px;"><input type="checkbox" id="dlSelectAll" onchange="toggleAllDL()"> 全选</label>
+        <span style="min-width:80px;padding-left:12px;">订单号</span>
+        <span style="min-width:60px;padding-left:12px;">重试</span>
+        <span style="flex:2;padding-left:12px;">最后错误</span>
+        <span style="flex:1;padding-left:12px;">更新时间</span>
+      </div>
+      <div id="deadLetterList"><div style="padding:20px;text-align:center;color:#888;">加载中...</div></div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('deadLetterModal')">关闭</button>
+      <button class="modal-confirm" id="retryDLBtn" onclick="doRetryDeadLetters()" disabled>🔄 重发选中</button>
+    </div>
+  </div>
+</div>
+
+<!-- 订单详情 -->
+<div class="modal-overlay" id="orderDetailModal">
+  <div class="modal-box modal-xl">
+    <div class="modal-title" id="orderDetailTitle">🔍 订单详情</div>
+    <div id="orderDetailContent" style="max-height:70vh;overflow-y:auto;"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('orderDetailModal')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let ordersData = [];
+let currentSort = { col: 'priority', reverse: false };
+let selectedOrderId = null;
+let ctxWorkOrder = null;
+let autoPublishEnabled = false;
+let deadLetters = [];
+let selectedDL = {};
+let selectedWorkOrderId = null;
+let publishWorkOrder = null;
+
+const COLUMNS = [
+  { key: 'check', label: '', cls: 'col-check', noSort: true },
+  { key: 'wo_no', label: '工单号', cls: 'col-wo' },
+  { key: 'order_no', label: '订单号', cls: 'col-order' },
+  { key: 'customer_name', label: '客户', cls: 'col-customer' },
+  { key: 'product_type', label: '产品类型', cls: 'col-product' },
+  { key: 'qty', label: '数量', cls: 'col-qty', fmt: v => v ? `${v} 米` : '-' },
+  { key: 'priority', label: '优先级', cls: 'col-priority', fmt: priorityTag },
+  { key: 'plan_start', label: '计划开始', cls: 'col-date' },
+  { key: 'plan_end', label: '计划结束', cls: 'col-date' },
+  { key: 'actual_start', label: '实际开始', cls: 'col-date' },
+  { key: 'status', label: '状态', cls: 'col-status', fmt: statusTag },
+  { key: 'actions', label: '操作', cls: 'col-actions', noSort: true },
+];
+
+function priorityTag(v) {
+  const m = { 1: '最高', 3: '高', 5: '中', 7: '低', 9: '最低' };
+  const c = { 1: 'priority-1', 3: 'priority-3', 5: 'priority-5', 7: 'priority-7', 9: 'priority-9' };
+  const label = m[v] || v || '中';
+  const cls = c[v] || 'priority-5';
+  return `<span class="priority-tag ${cls}">${escapeHtml(label)}</span>`;
+}
+
+function statusTag(v) {
+  if (!v) return '-';
+  return `<span class="status-tag status-${escapeHtml(v)}">${escapeHtml(v)}</span>`;
+}
+
+function actionBtns(id, wo) {
+  let html = `<button class="btn btn-primary" style="padding:4px 10px;font-size:12px;" onclick="openEditWorkOrder(${id})">编辑</button>`;
+  if (wo.status === '待发布') {
+    html += ` <button class="btn btn-success" style="padding:4px 10px;font-size:12px;" onclick="openPublishSingle(${id})">发布</button>`;
+  }
+  return html;
+}
+
+function renderTableHead() {
+  const th = document.getElementById('tableHead');
+  th.innerHTML = `<tr>${COLUMNS.map(c => {
+    const arrow = currentSort.col === c.key ? (currentSort.reverse ? ' ▼' : ' ▲') : '';
+    const cls = c.cls || '';
+    return `<th class="${cls}" onclick="${c.noSort ? '' : `sortBy('${c.key}')`}">${escapeHtml(c.label)}${arrow}</th>`;
+  }).join('')}</tr>`;
+}
+
+function sortBy(col) {
+  if (currentSort.col === col) {
+    currentSort.reverse = !currentSort.reverse;
+  } else {
+    currentSort.col = col;
+    currentSort.reverse = false;
+  }
+  renderTable();
+}
+
+function renderTable() {
+  renderTableHead();
+  const tbody = document.getElementById('ordersTbody');
+  if (!ordersData.length) {
+    tbody.innerHTML = '<tr><td colspan="10" class="empty">暂无数据</td></tr>';
+    return;
+  }
+  const kw = document.getElementById('keywordInput').value.trim().toLowerCase();
+  let data = ordersData;
+  if (kw) {
+    data = data.filter(o =>
+      (o.order_no || '').toLowerCase().includes(kw) ||
+      (o.wo_no || '').toLowerCase().includes(kw) ||
+      (o.customer_name || '').toLowerCase().includes(kw) ||
+      (o.product_type || '').toLowerCase().includes(kw)
+    );
+  }
+  const statusFilter = document.getElementById('statusFilter').value;
+  if (statusFilter) {
+    data = data.filter(o => o.status === statusFilter);
+  }
+  tbody.innerHTML = data.map(o => {
+    const id = o.id;
+    const vals = COLUMNS.map(c => {
+      if (c.key === 'check') return `<input type="checkbox" class="wo-check" value="${id}" data-status="${o.status || ''}" onchange="updateWoBatchUI()">`;
+      if (c.key === 'actions') return actionBtns(id, o);
+      if (c.key === 'wo_no') return escapeHtml(o.order_no || o.wo_no || '');
+      if (c.key === 'qty') return c.fmt ? c.fmt(o.quantity) : escapeHtml(o.quantity || '-');
+      if (c.key === 'priority') return c.fmt ? c.fmt(o.priority) : escapeHtml(o.priority || '5');
+      if (c.key === 'status') return c.fmt ? c.fmt(o.status) : escapeHtml(o.status || '');
+      return escapeHtml(o[c.key] || '-');
+    });
+    return `<tr data-id="${id}" data-wo='${JSON.stringify(o).replace(/'/g, "&#39;")}' onclick="onRowClick(event,${id})" oncontextmenu="onRightClick(event,${id})">${vals.map(v => `<td>${v}</td>`).join('')}</tr>`;
+  }).join('');
+  document.getElementById('summary').textContent = `共 ${data.length} 条工单`;
+}
+
+function onRowClick(e, id) {
+  if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
+  document.querySelectorAll('tr.selected').forEach(r => r.classList.remove('selected'));
+  const row = document.querySelector(`tr[data-id="${id}"]`);
+  if (row) row.classList.add('selected');
+}
+
+function onRightClick(e, id) {
+  e.preventDefault();
+  const wo = ordersData.find(o => o.id === id);
+  if (!wo) return;
+  ctxWorkOrder = wo;
+  const menu = document.getElementById('contextMenu');
+  menu.style.left = Math.min(e.clientX, window.innerWidth - 170) + 'px';
+  menu.style.top = Math.min(e.clientY, window.innerHeight - 200) + 'px';
+  menu.classList.add('show');
+}
+
+document.addEventListener('click', () => {
+  document.getElementById('contextMenu').classList.remove('show');
+});
+
+function ctxViewOrder() { if (ctxWorkOrder) viewOrderDetail(ctxWorkOrder.order_id || ctxWorkOrder.id); }
+function ctxEditWorkOrder() { if (ctxWorkOrder) openEditWorkOrder(ctxWorkOrder.id); }
+function ctxChangeStatus(newStatus) { if (ctxWorkOrder) doChangeStatus(ctxWorkOrder.id, newStatus); }
+function ctxCancelWorkOrder() {
+  if (ctxWorkOrder && confirm(`确认作废工单「${ctxWorkOrder.order_no}」？`)) {
+    doChangeStatus(ctxWorkOrder.id, '已取消');
+  }
+}
+
+async function loadOrders() {
+  try {
+    const [data, code] = await apiFetchJSON('/api/production/list?limit=500');
+    if (code === 200 && data.code === 0) {
+      ordersData = data.data.orders || [];
+      renderTable();
+    } else {
+      showMsg(data.message || '加载失败', 'error');
+    }
+  } catch (e) {
+    showMsg('网络错误: ' + e.message, 'error');
+  }
+}
+
+async function apiFetchJSON(url, options = {}) {
+  const r = await apiFetch(url, options);
+  if (!r) return [null, 0];
+  const d = await r.json();
+  return [d, r.status];
+}
+
+function showMsg(msg, type = 'info') {
+  const box = document.getElementById('msgBox');
+  box.textContent = msg;
+  box.className = 'msg-box msg-' + type;
+  box.style.display = 'block';
+  if (box._t) clearTimeout(box._t);
+  box._t = setTimeout(() => { box.style.display = 'none'; }, 5000);
+}
+
+// ── 新建工单 ──
+let creatingOrderId = null;
+
+async function openNewWorkOrder() {
+  try {
+    const [data, code] = await apiFetchJSON('/api/orders/unscheduled');
+    if (code !== 200 || data.code !== 0) {
+      showMsg('没有未排产的订单，请先在订单管理中确认订单', 'info');
+      return;
+    }
+    const orders = data.data.orders || [];
+    if (!orders.length) {
+      showMsg('没有未排产的订单', 'info');
+      return;
+    }
+    document.getElementById('unScheduledCount').textContent = orders.length;
+    const tbody = document.getElementById('unScheduledTbody');
+    tbody.innerHTML = orders.map(o => `
+      <tr class="un-scheduled-row" data-id="${o.id}" onclick="selectUnscheduled(${o.id})" style="cursor:pointer;">
+        <td style="padding:8px 12px;font-size:12px;">${escapeHtml(o.order_no)}</td>
+        <td style="padding:8px 12px;font-size:12px;">${escapeHtml(o.customer_name || o.customer_group || '-')}</td>
+        <td style="padding:8px 12px;font-size:12px;">${escapeHtml(o.product_type || '-')}</td>
+        <td style="padding:8px 12px;font-size:12px;">${escapeHtml(o.material || '-')}</td>
+        <td style="padding:8px 12px;font-size:12px;text-align:center;">${o.quantity || '-'}</td>
+        <td style="padding:8px 12px;font-size:12px;text-align:center;">${o.total_amount ? '¥' + Number(o.total_amount).toLocaleString() : '-'}</td>
+        <td style="padding:8px 12px;font-size:12px;text-align:center;">${escapeHtml(o.delivery_date || '-')}</td>
+        <td style="padding:8px 12px;font-size:12px;text-align:center;">${escapeHtml(o.status || '-')}</td>
+      </tr>
+    `).join('');
+    document.querySelectorAll('.un-scheduled-row').forEach(r => r.addEventListener('dblclick', () => { selectUnscheduled(parseInt(r.dataset.id)); confirmSelectOrder(); }));
+    selectedOrderId = null;
+    document.getElementById('selectOrderConfirmBtn').disabled = true;
+    openModal('selectOrderModal');
+  } catch (e) {
+    showMsg('加载未排产订单失败: ' + e.message, 'error');
+  }
+}
+
+function selectUnscheduled(id) {
+  document.querySelectorAll('.un-scheduled-row').forEach(r => r.style.background = '');
+  const row = document.querySelector(`.un-scheduled-row[data-id="${id}"]`);
+  if (row) row.style.background = '#eef2ff';
+  selectedOrderId = id;
+  document.getElementById('selectOrderConfirmBtn').disabled = false;
+}
+
+async function confirmSelectOrder() {
+  if (!selectedOrderId) return;
+  closeModal('selectOrderModal');
+  creatingOrderId = selectedOrderId;
+  const [data, code] = await apiFetchJSON(`/api/orders/${selectedOrderId}`);
+  if (code !== 200 || data.code !== 0) {
+    showMsg('获取订单详情失败', 'error');
+    return;
+  }
+  const order = data.data;
+  document.getElementById('createModalTitle').textContent = `➕ 新建生产工单 — ${escapeHtml(order.order_no)}`;
+  document.getElementById('createForm').innerHTML = buildWorkOrderForm(order, null);
+  openModal('createWorkOrderModal');
+}
+
+function buildWorkOrderForm(order, existing) {
+  const p = existing ? existing.priority : 5;
+  const pMap = { 1: '最高', 3: '高', 5: '中', 7: '低', 9: '最低' };
+  return `
+    <div class="detail-section">
+      <h4>关联订单信息</h4>
+      <div class="detail-row"><span class="detail-label">订单号</span><span class="detail-value">${escapeHtml(order.order_no)}</span></div>
+      <div class="detail-row"><span class="detail-label">客户</span><span class="detail-value">${escapeHtml(order.customer_name || '-')}</span></div>
+      <div class="detail-row"><span class="detail-label">产品类型</span><span class="detail-value">${escapeHtml(order.product_type || '-')}</span></div>
+      <div class="detail-row"><span class="detail-label">数量</span><span class="detail-value detail-highlight">${order.quantity || '-'} ${order.unit || '米'}</span></div>
+      <div class="detail-row"><span class="detail-label">网孔</span><span class="detail-value">${escapeHtml(order.mesh_size || '-')} mm</span></div>
+      <div class="detail-row"><span class="detail-label">材质</span><span class="detail-value">${escapeHtml(order.material || '-')}</span></div>
+      <div class="detail-row"><span class="detail-label">宽度</span><span class="detail-value">${escapeHtml(order.width || '-')} mm</span></div>
+      <div class="detail-row"><span class="detail-label">长度</span><span class="detail-value detail-highlight">${escapeHtml(order.length || '-')} mm</span></div>
+      <div class="detail-row"><span class="detail-label">交期</span><span class="detail-value">${escapeHtml(order.delivery_date || '-')}</span></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">优先级</label>
+        <select class="form-control" id="cwPriority">
+          ${Object.entries(pMap).map(([v, l]) => `<option value="${v}" ${String(p) === v ? 'selected' : ''}>${l}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">负责人</label>
+        <input class="form-control" id="cwAssignedTo" value="${existing ? escapeHtml(existing.assigned_to || '') : ''}" placeholder="可留空">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">计划开始</label>
+        <input class="form-control" type="date" id="cwPlanStart" value="${existing ? (existing.plan_start || '').substring(0,10) : ''}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">计划结束</label>
+        <input class="form-control" type="date" id="cwPlanEnd" value="${existing ? (existing.plan_end || '').substring(0,10) : ''}">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">备注</label>
+      <textarea class="form-control" id="cwRemark" rows="2" placeholder="可选">${existing ? escapeHtml(existing.remark || '') : ''}</textarea>
+    </div>
+  `;
+}
+
+async function submitCreateWorkOrder() {
+  const btn = document.getElementById('createWorkOrderBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 创建中...';
+  try {
+    const [data, code] = await apiFetchJSON(`/api/production/orders`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        order_id: creatingOrderId,
+        priority: parseInt(document.getElementById('cwPriority').value),
+        plan_start: document.getElementById('cwPlanStart').value,
+        plan_end: document.getElementById('cwPlanEnd').value,
+        assigned_to: document.getElementById('cwAssignedTo').value.trim(),
+        remark: document.getElementById('cwRemark').value.trim(),
+      })
+    });
+    if (code === 200 && data.code === 0) {
+      closeModal('createWorkOrderModal');
+      showMsg('工单创建成功', 'success');
+      loadOrders();
+      const prodId = data.data.id;
+      const wo = ordersData.find(o => o.id === prodId) || ordersData[0];
+      if (wo) openPublishSingle(wo.id);
+    } else {
+      showMsg(data.message || '创建失败', 'error');
+    }
+  } catch (e) {
+    showMsg('创建失败: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '确认创建';
+  }
+}
+
+// ── 编辑工单 ──
+async function openEditWorkOrder(id) {
+  try {
+    const [data, code] = await apiFetchJSON(`/api/production/orders/${id}`);
+    if (code !== 200 || data.code !== 0) {
+      showMsg('获取工单详情失败', 'error');
+      return;
+    }
+    const wo = data.data;
+    const order = { order_no: wo.order_no, customer_name: wo.customer_name, product_type: wo.product_type, quantity: wo.quantity, unit: '米', mesh_size: wo.mesh_size, material: wo.material, width: wo.width, length: wo.length, delivery_date: wo.delivery_date };
+    document.getElementById('editForm').innerHTML = buildWorkOrderForm(order, wo);
+    selectedWorkOrderId = id;
+    openModal('editWorkOrderModal');
+  } catch (e) {
+    showMsg('获取工单详情失败: ' + e.message, 'error');
+  }
+}
+
+async function submitEditWorkOrder() {
+  const btn = document.getElementById('editWorkOrderBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 保存中...';
+  try {
+    const [data, code] = await apiFetchJSON(`/api/production/orders/${selectedWorkOrderId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        priority: parseInt(document.getElementById('cwPriority').value),
+        plan_start: document.getElementById('cwPlanStart').value,
+        plan_end: document.getElementById('cwPlanEnd').value,
+        assigned_to: document.getElementById('cwAssignedTo').value.trim(),
+        remark: document.getElementById('cwRemark').value.trim(),
+      })
+    });
+    if (code === 200 && data.code === 0) {
+      closeModal('editWorkOrderModal');
+      showMsg('修改成功', 'success');
+      loadOrders();
+    } else {
+      showMsg(data.message || '保存失败', 'error');
+    }
+  } catch (e) {
+    showMsg('保存失败: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '保存修改';
+  }
+}
+
+async function doChangeStatus(id, newStatus) {
+  try {
+    const [data, code] = await apiFetchJSON(`/api/production/orders/${id}/status`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus })
+    });
+    if (code === 200 && data.code === 0) {
+      showMsg(`状态已更新为「${newStatus}」`, 'success');
+      loadOrders();
+    } else {
+      showMsg(data.message || '状态更新失败', 'error');
+    }
+  } catch (e) {
+    showMsg('状态更新失败: ' + e.message, 'error');
+  }
+}
+
+// ── 发布任务 ──
+async function openPublishTasks() {
+  try {
+    const [data, code] = await apiFetchJSON('/api/orders/unscheduled');
+    if (code !== 200 || data.code !== 0) {
+      showMsg('没有未排产的订单', 'info');
+      return;
+    }
+    const orders = data.data.orders || [];
+    if (!orders.length) {
+      showMsg('没有未排产的订单，请先在订单管理中确认订单', 'info');
+      return;
+    }
+    document.getElementById('unScheduledCount').textContent = orders.length;
+    const tbody = document.getElementById('unScheduledTbody');
+    tbody.innerHTML = orders.map(o => `
+      <tr class="un-scheduled-row" data-id="${o.id}" onclick="selectUnscheduled(${o.id})" style="cursor:pointer;">
+        <td style="padding:8px 12px;font-size:12px;">${escapeHtml(o.order_no)}</td>
+        <td style="padding:8px 12px;font-size:12px;">${escapeHtml(o.customer_name || o.customer_group || '-')}</td>
+        <td style="padding:8px 12px;font-size:12px;">${escapeHtml(o.product_type || '-')}</td>
+        <td style="padding:8px 12px;font-size:12px;">${escapeHtml(o.material || '-')}</td>
+        <td style="padding:8px 12px;font-size:12px;text-align:center;">${o.quantity || '-'}</td>
+        <td style="padding:8px 12px;font-size:12px;text-align:center;">${o.total_amount ? '¥' + Number(o.total_amount).toLocaleString() : '-'}</td>
+        <td style="padding:8px 12px;font-size:12px;text-align:center;">${escapeHtml(o.delivery_date || '-')}</td>
+        <td style="padding:8px 12px;font-size:12px;text-align:center;">${escapeHtml(o.status || '-')}</td>
+      </tr>
+    `).join('');
+    document.querySelectorAll('.un-scheduled-row').forEach(r => r.addEventListener('dblclick', () => { selectUnscheduled(parseInt(r.dataset.id)); openPublishAfterSelect(); }));
+    selectedOrderId = null;
+    document.getElementById('selectOrderConfirmBtn').disabled = true;
+    openModal('selectOrderModal');
+  } catch (e) {
+    showMsg('加载失败: ' + e.message, 'error');
+  }
+}
+
+function openPublishAfterSelect() {
+  if (!selectedOrderId) return;
+  closeModal('selectOrderModal');
+  openPublishSingleByOrder(selectedOrderId);
+}
+
+async function openPublishSingle(id) {
+  try {
+    const [data, code] = await apiFetchJSON(`/api/production/orders/${id}`);
+    if (code !== 200 || data.code !== 0) { showMsg('获取工单失败', 'error'); return; }
+    publishWorkOrder = data.data;
+    await showPublishDialog(publishWorkOrder);
+  } catch (e) { showMsg('获取工单失败: ' + e.message, 'error'); }
+}
+
+async function openPublishSingleByOrder(orderId) {
+  try {
+    const [data, code] = await apiFetchJSON(`/api/orders/${orderId}`);
+    if (code !== 200 || data.code !== 0) { showMsg('获取订单失败', 'error'); return; }
+    const order = data.data;
+    document.getElementById('publishModalTitle').textContent = `📤 发布生产任务 — ${escapeHtml(order.order_no)}`;
+    document.getElementById('publishContent').innerHTML = buildPublishContent(order, null);
+    publishWorkOrder = { order_no: order.order_no, id: null };
+    openModal('publishModal');
+  } catch (e) { showMsg('获取订单失败: ' + e.message, 'error'); }
+}
+
+function buildPublishContent(order, wo) {
+  const extra = (() => { try { return typeof order.extra_params === 'string' ? JSON.parse(order.extra_params) : (order.extra_params || {}); } catch(e) { return {}; } })();
+  const lines = [
+    ['工单号', order.order_no],
+    ['订单号', order.order_no],
+    ['客户', order.customer_group || order.customer_name || '-'],
+    ['产品类型', order.product_type || '-'],
+    ['网孔尺寸', order.mesh_size ? order.mesh_size + ' mm' : '- mm'],
+    ['丝径', order.wire_diameter ? order.wire_diameter + ' mm' : '- mm'],
+    ['宽度', order.width ? order.width + ' mm' : '- mm'],
+    ['长度', order.length ? order.length + ' mm' : '- mm'],
+    ['数量', `${order.quantity || '-'} ${order.unit || '米'}`],
+    ['材质', order.material || '-'],
+    ['表面处理', order.surface_treatment || '-'],
+    ['特殊要求', order.special_requirements || '-'],
+    ['交货日期', order.delivery_date || '-'],
+    ['备注', order.remark || '-'],
+  ];
+  const sections = [];
+  for (let i = 0; i < lines.length; i += 7) {
+    const chunk = lines.slice(i, i + 7);
+    sections.push(chunk.map(([k, v]) => `<div class="detail-row"><span class="detail-label">${k}</span><span class="${k === '长度' || k === '数量' ? 'detail-highlight' : 'detail-value'}">${escapeHtml(v)}</span></div>`).join(''));
+  }
+  let extraHtml = '';
+  if (Object.keys(extra).length) {
+    const extraLines = Object.entries(extra).filter(([,v]) => v).map(([k,v]) => `<div class="detail-row"><span class="detail-label">${escapeHtml(k)}</span><span class="detail-value">${escapeHtml(v)}</span></div>`).join('');
+    extraHtml = `<div class="detail-section"><h4>自定义参数</h4>${extraLines}</div>`;
+  }
+  return `
+    <div class="detail-section"><h4>工单信息</h4>${sections[0] || ''}</div>
+    <div class="detail-section"><h4>尺寸参数</h4>${sections[1] || ''}</div>
+    <div class="detail-section"><h4>生产参数</h4>${sections[2] || ''}${extraHtml}</div>
+  `;
+}
+
+async function doPublish() {
+  const btn = document.getElementById('doPublishBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 发布中...';
+  try {
+    const body = { order_no: publishWorkOrder.order_no };
+    if (publishWorkOrder.id) body.prod_id = publishWorkOrder.id;
+    const [data, code] = await apiFetchJSON('/api/schedule/publish', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (code === 200 && data.code === 0) {
+      closeModal('publishModal');
+      showMsg('排产发布成功，已发送到容器中心', 'success');
+      loadOrders();
+    } else {
+      showMsg(data.message || '发布失败', 'error');
+    }
+  } catch (e) {
+    showMsg('发布失败: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '确认发布';
+  }
+}
+
+// ── 死信重发 ──
+async function openDeadLetters() {
+  selectedDL = {};
+  try {
+    const [data, code] = await apiFetchJSON('/api/dispatch/dead-letters');
+    if (code !== 200 || data.code !== 0) {
+      showMsg('查询死信失败: ' + (data.message || ''), 'error');
+      return;
+    }
+    deadLetters = data.data.dead_letters || data.data || [];
+    document.getElementById('deadLetterCount').textContent = deadLetters.length;
+    renderDeadLetters();
+    openModal('deadLetterModal');
+  } catch (e) {
+    showMsg('查询死信失败: ' + e.message, 'error');
+  }
+}
+
+function renderDeadLetters() {
+  const list = document.getElementById('deadLetterList');
+  if (!deadLetters.length) {
+    list.innerHTML = '<div style="padding:30px;text-align:center;color:#888;">当前没有死信条目</div>';
+    return;
+  }
+  list.innerHTML = deadLetters.map((dl, i) => `
+    <div class="dead-letter-row" data-id="${dl.id}" onclick="toggleDL(${dl.id})">
+      <span class="dead-letter-id"><input type="checkbox" id="dl_${dl.id}" ${selectedDL[dl.id] ? 'checked' : ''}></span>
+      <span class="dead-letter-order">${escapeHtml(dl.order_no || dl.wo_no || '-')}</span>
+      <span class="dead-letter-retry">${dl.retry_count || 0}次</span>
+      <span class="dead-letter-error" title="${escapeHtml(dl.last_error || '未知')}">${escapeHtml((dl.last_error || '未知').substring(0, 80))}</span>
+      <span class="dead-letter-retry">${escapeHtml(String(dl.updated_at || dl.created_at || '').substring(0, 16))}</span>
+    </div>
+  `).join('');
+  updateDLBtn();
+}
+
+function toggleDL(id) {
+  selectedDL[id] = !selectedDL[id];
+  const cb = document.getElementById('dl_' + id);
+  if (cb) cb.checked = selectedDL[id];
+  const row = document.querySelector(`.dead-letter-row[data-id="${id}"]`);
+  if (row) row.classList.toggle('selected', selectedDL[id]);
+  updateDLBtn();
+}
+
+function toggleAllDL() {
+  const all = document.getElementById('dlSelectAll').checked;
+  deadLetters.forEach(dl => { selectedDL[dl.id] = all; });
+  renderDeadLetters();
+}
+
+function updateDLBtn() {
+  const count = Object.keys(selectedDL).filter(k => selectedDL[k]).length;
+  const btn = document.getElementById('retryDLBtn');
+  btn.disabled = count === 0;
+  btn.textContent = count ? `🔄 重发选中 (${count})` : '🔄 重发选中';
+}
+
+async function doRetryDeadLetters() {
+  const ids = Object.keys(selectedDL).filter(k => selectedDL[k]);
+  if (!ids.length) return;
+  const btn = document.getElementById('retryDLBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 重发中...';
+  try {
+    const [data, code] = await apiFetchJSON('/api/dispatch/dead-letters/batch-retry', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids })
+    });
+    if (code === 200 && data.code === 0) {
+      const results = data.data.results || [];
+      const ok = results.filter(r => r.success).length;
+      const fail = results.filter(r => !r.success).length;
+      closeModal('deadLetterModal');
+      showMsg(`重发完成：成功 ${ok} 条${fail ? '，失败 ' + fail + ' 条' : ''}`, ok > 0 ? 'success' : 'error');
+      loadOrders();
+    } else {
+      showMsg(data.message || '重发失败', 'error');
+    }
+  } catch (e) {
+    showMsg('重发失败: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔄 重发选中';
+  }
+}
+
+// ── 订单详情 ──
+async function viewOrderDetail(orderId) {
+  try {
+    const [data, code] = await apiFetchJSON(`/api/orders/${orderId}`);
+    if (code !== 200 || data.code !== 0) { showMsg('获取订单详情失败', 'error'); return; }
+    const o = data.data;
+    const extra = (() => { try { return typeof o.extra_params === 'string' ? JSON.parse(o.extra_params) : (o.extra_params || {}); } catch(e) { return {}; } })();
+    let extraHtml = '';
+    if (Object.keys(extra).length) {
+      extraHtml = `<div class="detail-section"><h4>自定义参数</h4>${Object.entries(extra).filter(([,v]) => v).map(([k,v]) => `<div class="detail-row"><span class="detail-label">${escapeHtml(k)}</span><span class="detail-value">${escapeHtml(v)}</span></div>`).join('')}</div>`;
+    }
+    document.getElementById('orderDetailTitle').textContent = `🔍 订单详情 — ${escapeHtml(o.order_no)}`;
+    document.getElementById('orderDetailContent').innerHTML = `
+      <div class="detail-section"><h4>基本信息</h4>
+        <div class="detail-row"><span class="detail-label">订单号</span><span class="detail-value">${escapeHtml(o.order_no)}</span></div>
+        <div class="detail-row"><span class="detail-label">客户</span><span class="detail-value">${escapeHtml(o.customer_name || '-')}</span></div>
+        <div class="detail-row"><span class="detail-label">状态</span><span class="detail-value">${escapeHtml(o.status || '-')}</span></div>
+        <div class="detail-row"><span class="detail-label">创建时间</span><span class="detail-value">${escapeHtml(o.created_at || '-')}</span></div>
+      </div>
+      <div class="detail-section"><h4>尺寸参数</h4>
+        <div class="detail-row"><span class="detail-label">网孔</span><span class="detail-value">${escapeHtml(o.mesh_size || '-')} mm</span></div>
+        <div class="detail-row"><span class="detail-label">丝径</span><span class="detail-value">${escapeHtml(o.wire_diameter || '-')} mm</span></div>
+        <div class="detail-row"><span class="detail-label">宽度</span><span class="detail-value">${escapeHtml(o.width || '-')} mm</span></div>
+        <div class="detail-row"><span class="detail-label">长度</span><span class="detail-value detail-highlight">${escapeHtml(o.length || '-')} mm</span></div>
+        <div class="detail-row"><span class="detail-label">数量</span><span class="detail-value detail-highlight">${o.quantity || '-'} ${o.unit || '米'}</span></div>
+        <div class="detail-row"><span class="detail-label">单价</span><span class="detail-value">${o.unit_price ? '¥' + Number(o.unit_price).toLocaleString() : '-'}</span></div>
+        <div class="detail-row"><span class="detail-label">总价</span><span class="detail-value">${o.total_amount ? '¥' + Number(o.total_amount).toLocaleString() : '-'}</span></div>
+      </div>
+      <div class="detail-section"><h4>生产参数</h4>
+        <div class="detail-row"><span class="detail-label">材质</span><span class="detail-value">${escapeHtml(o.material || '-')}</span></div>
+        <div class="detail-row"><span class="detail-label">表面处理</span><span class="detail-value">${escapeHtml(o.surface_treatment || '-')}</span></div>
+        <div class="detail-row"><span class="detail-label">特殊要求</span><span class="detail-value">${escapeHtml(o.special_requirements || '-')}</span></div>
+        <div class="detail-row"><span class="detail-label">交货日期</span><span class="detail-value">${escapeHtml(o.delivery_date || '-')}</span></div>
+        <div class="detail-row"><span class="detail-label">备注</span><span class="detail-value">${escapeHtml(o.remark || '-')}</span></div>
+      </div>
+      ${extraHtml}
+    `;
+    openModal('orderDetailModal');
+  } catch (e) {
+    showMsg('获取订单详情失败: ' + e.message, 'error');
+  }
+}
+
+// ── 其他 ──
+function toggleAutoPublish() {
+  autoPublishEnabled = !autoPublishEnabled;
+  document.getElementById('autoPublishCheck').checked = autoPublishEnabled;
+  document.getElementById('autoPublishToggle').classList.toggle('active', autoPublishEnabled);
+  showMsg(autoPublishEnabled ? '⚡ 自动发布已开启' : '⚡ 自动发布已关闭', 'info');
+}
+
+async function syncStatus() {
+  showMsg('状态同步中...', 'info');
+  await loadOrders();
+  showMsg('状态已同步', 'success');
+}
+
+function gotoMaterialPrep() {
+  const sel = document.querySelector('tr.selected');
+  if (sel) {
+    const wo = JSON.parse(sel.dataset.wo.replace(/&#39;/g, "'"));
+    window.location.href = `/material?order_id=${wo.order_id || wo.id}&wo_no=${encodeURIComponent(wo.order_no)}`;
+  } else {
+    window.location.href = '/material';
+  }
+}
+
+// ── Modal 工具 ──
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('show'); });
+});
+
+// 确认选择订单按钮的点击事件
+document.getElementById('selectOrderConfirmBtn').addEventListener('click', confirmSelectOrder);
+
+if (!requireAuth()) ;
+else loadOrders();
+
+function updateWoBatchUI() {
+  const checked = document.querySelectorAll('.wo-check:checked');
+  const toolbar = document.getElementById('batchToolbar');
+  const selCount = document.getElementById('woSelCount');
+  if (checked.length > 0) {
+    toolbar.style.display = 'flex';
+    selCount.textContent = checked.length;
+  } else {
+    toolbar.style.display = 'none';
+  }
+}
+
+function cancelBatchWo() {
+  document.querySelectorAll('.wo-check').forEach(c => c.checked = false);
+  updateWoBatchUI();
+}
+
+async function batchPublishOrders() {
+  const checked = [...document.querySelectorAll('.wo-check:checked')];
+  if (checked.length === 0) { showMsg('请选择要发布的工单', 'error'); return; }
+
+  const ids = checked.map(c => c.value);
+  if (!confirm(`确定发布选中的 ${ids.length} 个工单？`)) return;
+
+  let success = 0, failed = 0;
+  for (const id of ids) {
+    try {
+      const wo = ordersData.find(o => o.id == id);
+      if (!wo) { failed++; continue; }
+      const orderNo = wo.order_no || wo.wo_no;
+      const [data, code] = await apiFetchJSON('/api/schedule/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_no: orderNo })
+      });
+      if (code === 200 && data.code === 0) success++;
+      else failed++;
+    } catch(e) { failed++; }
+  }
+
+  showMsg(`发布完成：成功 ${success} 个${failed ? '，失败 ' + failed + ' 个' : ''}`, failed > 0 ? 'error' : 'success');
+  cancelBatchWo();
+  loadOrders();
+}
+</script>
+</body>
+</html>

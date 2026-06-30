@@ -1,0 +1,118 @@
+classDiagram
+    class QualityInspectionBP {
+        +GET /tasks 任务列表
+        +GET /tasks/pkg_id 任务详情
+        +POST /evaluate 逐项判定
+        +POST /submit 提交报告
+        +GET /history 历史记录
+        +GET /types 类型选项
+        +POST /review 审核操作
+        +GET /review/pending 待审核列表
+        +POST /rework 创建返工
+        +GET /versions/record_id 版本链
+        +POST /upload 照片上传
+    }
+
+    class QualityDAO {
+        +create(data) int
+        +create_full(order_no, inspection_type, process_name, inspector, items, overall_result, defect_description, defect_qty, handling_method, status) int
+        +create_full_v2(data) int
+        +update(record_id, data)
+        +get_by_id(record_id) dict
+        +get_by_order(order_id) list
+        +get_all(filters, limit, days_limit) list
+        +get_timeline(order_no) list
+        +get_record_items(record_id) list
+        +get_stats() dict
+        +delete(record_id)
+        +confirm_order_completion(order_id)
+        +submit_review(record_id, action, reviewer, comment) bool
+        +get_version_chain(record_id) list
+    }
+
+    class QualityRuleDAO {
+        +get_all() list
+        +get_by_id(rule_id) dict
+        +get_rules_by_process(process_name) list
+        +evaluate_quality_rules(order_id, measured_values) dict
+        +get_rule_items(rule_id) list
+        +get_matching_rules(product_type) list
+        +create(...) tuple
+        +update(...) tuple
+        +delete(rule_id) tuple
+        +init_default_rules()
+    }
+
+    class data_packages {
+        +id VARCHAR PK
+        +data_type VARCHAR
+        +status VARCHAR
+        +content TEXT
+        +related_order VARCHAR
+        +related_process VARCHAR
+        +created_at DATETIME
+        +updated_at DATETIME
+    }
+
+    class quality_records {
+        +id INT PK
+        +order_no VARCHAR
+        +inspection_type VARCHAR
+        +inspection_seq INT
+        +inspection_no VARCHAR
+        +process_name VARCHAR
+        +inspector VARCHAR
+        +result VARCHAR
+        +defect_description TEXT
+        +defect_qty INT
+        +handling_method VARCHAR
+        +status VARCHAR
+        +attachment_path VARCHAR
+        +parent_record_id INT FK
+        +rework_version INT
+        +review_status VARCHAR
+        +reviewed_by VARCHAR
+        +reviewed_at DATETIME
+        +review_comment VARCHAR
+        +attachment_paths TEXT
+        +version INT
+        +task_id VARCHAR
+        +record_date DATETIME
+    }
+
+    class quality_record_items {
+        +id INT PK
+        +record_id INT FK
+        +inspection_item VARCHAR
+        +measured_value VARCHAR
+        +standard_value VARCHAR
+        +tolerance VARCHAR
+        +is_passed TINYINT
+    }
+
+    class quality_rules {
+        +id INT PK
+        +rule_name VARCHAR
+        +process_name VARCHAR
+        +product_types_json TEXT
+        +condition_expr TEXT
+        +inspection_items_json TEXT
+        +check_formula TEXT
+        +priority INT
+        +enabled TINYINT
+    }
+
+    class dispatch_center {
+        +on_quality_record_completed(order_no, process_id, result, inspector) tuple
+    }
+
+    QualityInspectionBP ..> QualityDAO : 读写质检记录
+    QualityInspectionBP ..> QualityRuleDAO : 匹配规则+判定
+    QualityInspectionBP ..> data_packages : 读写任务状态
+    QualityInspectionBP ..> dispatch_center : 流程联动(合格时)
+    QualityDAO --> quality_records : CRUD
+    QualityDAO --> quality_record_items : CRUD
+    QualityRuleDAO --> quality_rules : 查询规则
+    quality_records ||--o{ quality_record_items : 1对多
+    data_packages ||--o{ quality_records : task_id关联
+    quality_records ||--o{ quality_records : parent_record_id自引用

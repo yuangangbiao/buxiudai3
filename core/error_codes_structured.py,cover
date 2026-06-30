@@ -1,0 +1,114 @@
+> """结构化错误码定义"""
+  
+  
+> class ErrorCode:
+>     """结构化错误码数据类。
+  
+>     Attributes:
+>         code: 错误码字符串，如 "E1001"
+>         message: 中文错误描述
+>         domain: 错误域，使用 ErrorDomain 枚举值
+>         severity: 严重程度，使用 ErrorSeverity 枚举值
+>         http_status: 对应的 HTTP 状态码，默认 500
+>     """
+  
+>     def __init__(self, code: str, message: str, domain: str, severity: str, http_status: int = 500):
+>         self.code = code
+>         self.message = message
+>         self.domain = domain
+>         self.severity = severity
+>         self.http_status = http_status
+  
+-     def __repr__(self) -> str:
+-         return f"ErrorCode(code={self.code!r}, message={self.message!r}, domain={self.domain!r}, severity={self.severity!r}, http_status={self.http_status})"
+  
+>     def __eq__(self, other: object) -> bool:
+>         if not isinstance(other, ErrorCode):
+>             return NotImplemented
+>         return self.code == other.code
+  
+  
+> class ErrorDomain:
+>     """错误域常量——按业务模块分类错误来源。"""
+>     ORDER: str = "order"
+>     PRODUCTION: str = "production"
+>     QUALITY: str = "quality"
+>     INVENTORY: str = "inventory"
+>     SYSTEM: str = "system"
+>     AUTH: str = "auth"
+  
+  
+> class ErrorSeverity:
+>     """错误严重程度常量。"""
+>     CRITICAL: str = "critical"
+>     ERROR: str = "error"
+>     WARNING: str = "warning"
+  
+  
+  # ---------------------------------------------------------------------------
+  # 结构化错误码字典
+  # ---------------------------------------------------------------------------
+> ERRORS: dict[str, ErrorCode] = {
+      # ---- 订单域 ----
+>     "ORDER_NOT_FOUND": ErrorCode(
+>         "E1001", "订单不存在",
+>         ErrorDomain.ORDER, ErrorSeverity.ERROR, 404,
+>     ),
+>     "ORDER_STATUS_INVALID": ErrorCode(
+>         "E1002", "订单状态流转无效",
+>         ErrorDomain.ORDER, ErrorSeverity.ERROR, 400,
+>     ),
+>     "ORDER_CREATE_FAILED": ErrorCode(
+>         "E1003", "订单创建失败",
+>         ErrorDomain.ORDER, ErrorSeverity.ERROR, 500,
+>     ),
+  
+      # ---- 系统校验 ----
+>     "VALIDATION_FAILED": ErrorCode(
+>         "E2001", "数据校验失败",
+>         ErrorDomain.SYSTEM, ErrorSeverity.ERROR, 400,
+>     ),
+  
+      # ---- 数据库 / 基础设施 ----
+>     "DATABASE_ERROR": ErrorCode(
+>         "E3001", "数据库操作失败",
+>         ErrorDomain.SYSTEM, ErrorSeverity.CRITICAL, 500,
+>     ),
+  
+      # ---- 认证 / 授权 ----
+>     "AUTH_FAILED": ErrorCode(
+>         "E4001", "认证失败",
+>         ErrorDomain.AUTH, ErrorSeverity.ERROR, 401,
+>     ),
+>     "PERMISSION_DENIED": ErrorCode(
+>         "E4002", "权限不足",
+>         ErrorDomain.AUTH, ErrorSeverity.ERROR, 403,
+>     ),
+  
+      # ---- 生产域 ----
+>     "PROCESS_NOT_FOUND": ErrorCode(
+>         "E5001", "工序不存在",
+>         ErrorDomain.PRODUCTION, ErrorSeverity.ERROR, 404,
+>     ),
+  
+      # ---- 质检域 ----
+>     "QUALITY_CHECK_FAILED": ErrorCode(
+>         "E6001", "质检未通过",
+>         ErrorDomain.QUALITY, ErrorSeverity.ERROR, 400,
+>     ),
+  
+      # ---- 库存域 ----
+>     "INVENTORY_SHORTAGE": ErrorCode(
+>         "E7001", "库存不足",
+>         ErrorDomain.INVENTORY, ErrorSeverity.WARNING, 400,
+>     ),
+> }
+  
+  # ---------------------------------------------------------------------------
+  # 向后兼容：模块级别名，保留原有 import 方式
+  # ---------------------------------------------------------------------------
+> ORDER_NOT_FOUND: ErrorCode = ERRORS["ORDER_NOT_FOUND"]
+> ORDER_STATUS_INVALID: ErrorCode = ERRORS["ORDER_STATUS_INVALID"]
+> ORDER_CREATE_FAILED: ErrorCode = ERRORS["ORDER_CREATE_FAILED"]
+> VALIDATION_FAILED: ErrorCode = ERRORS["VALIDATION_FAILED"]
+> DATABASE_ERROR: ErrorCode = ERRORS["DATABASE_ERROR"]

@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>质检管理 - 不锈钢网带跟单系统</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Microsoft YaHei", sans-serif; background: #f5f6fa; color: #2c3e50; }
+  .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .navbar h1 { font-size: 18px; }
+  .toolbar { background: #fff; padding: 14px 24px; display: flex; gap: 10px; align-items: center; border-bottom: 1px solid #e1e4e8; flex-wrap: wrap; }
+  .toolbar select, .toolbar input { padding: 7px 12px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 13px; }
+  .toolbar select:focus, .toolbar input:focus { outline: none; border-color: #667eea; }
+  .btn { padding: 7px 14px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 5px; }
+  .btn-primary { background: #667eea; color: #fff; }
+  .btn-primary:hover { background: #5569d6; }
+  .btn-success { background: #27ae60; color: #fff; }
+  .btn-success:hover { background: #219653; }
+  .btn-warning { background: #e67e22; color: #fff; }
+  .btn-warning:hover { background: #d35400; }
+  .btn-danger { background: #e74c3c; color: #fff; }
+  .btn-danger:hover { background: #c0392b; }
+  .btn-secondary { background: #95a5a6; color: #fff; }
+  .btn-secondary:hover { background: #7f8c8d; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .summary { padding: 10px 24px; color: #888; font-size: 13px; }
+  .stats-bar { background: #fff; margin: 12px 24px; padding: 16px 24px; border-radius: 8px; display: flex; gap: 24px; flex-wrap: wrap; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .stat-item { display: flex; flex-direction: column; align-items: center; min-width: 100px; }
+  .stat-value { font-size: 24px; font-weight: 700; color: #2c3e50; }
+  .stat-label { font-size: 12px; color: #888; margin-top: 4px; }
+  .stat-item.total .stat-value { color: #667eea; }
+  .stat-item.passed .stat-value { color: #27ae60; }
+  .stat-item.failed .stat-value { color: #e74c3c; }
+  .stat-item.pending .stat-value { color: #f39c12; }
+  .stat-item.rate .stat-value { color: #9b59b6; }
+  table { width: 100%; border-collapse: collapse; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  th { background: #f8f9fa; padding: 10px 14px; text-align: left; font-weight: 500; color: #555; border-bottom: 2px solid #e1e4e8; font-size: 13px; white-space: nowrap; cursor: pointer; user-select: none; }
+  th:hover { background: #f0f2f8; }
+  td { padding: 10px 14px; border-bottom: 1px solid #f0f0f0; font-size: 13px; vertical-align: middle; }
+  tr:hover { background: #f8f9fa; cursor: pointer; }
+  tr.selected { background: #eef2ff; }
+  .status-tag { padding: 2px 8px; border-radius: 10px; font-size: 11px; color: #fff; white-space: nowrap; }
+  .status-合格 { background: #27ae60; }
+  .status-不合格 { background: #e74c3c; }
+  .status-待检 { background: #f39c12; }
+  .status-待复检 { background: #3498db; }
+  .table-wrap { background: #fff; margin: 12px 24px; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .empty { text-align: center; padding: 60px 20px; color: #95a5a6; font-size: 14px; }
+  .msg-box { padding: 12px 24px; margin: 12px 24px; border-radius: 4px; font-size: 13px; display: none; }
+  .msg-error { background: #fdecea; border: 1px solid #f5c6cb; color: #c0392b; }
+  .msg-success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+  .msg-info { background: #e8f4fd; border: 1px solid #b8daff; color: #0c5460; }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; align-items: center; justify-content: center; }
+  .modal-overlay.show { display: flex; }
+  .modal-box { background: #fff; border-radius: 8px; padding: 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); max-height: 90vh; overflow-y: auto; }
+  .modal-box.modal-wide { min-width: 500px; max-width: 650px; }
+  .modal-box.modal-xl { min-width: 700px; max-width: 900px; }
+  .modal-title { font-size: 15px; font-weight: 600; margin-bottom: 16px; color: #2c3e50; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+  .modal-cancel { padding: 8px 16px; border: 1px solid #dcdfe6; background: #fff; border-radius: 4px; cursor: pointer; font-size: 13px; }
+  .modal-cancel:hover { background: #f5f5f5; }
+  .modal-confirm { padding: 8px 16px; border: none; background: #667eea; color: #fff; border-radius: 4px; cursor: pointer; font-size: 13px; }
+  .modal-confirm:hover { background: #5569d6; }
+  .modal-confirm:disabled { opacity: 0.5; cursor: not-allowed; }
+  .form-group { margin-bottom: 14px; }
+  .form-label { display: block; font-size: 13px; color: #555; margin-bottom: 5px; font-weight: 500; }
+  .form-control { width: 100%; padding: 8px 12px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 13px; }
+  .form-control:focus { outline: none; border-color: #667eea; }
+  .form-control[readonly] { background: #f5f7fa; color: #999; }
+  .form-row { display: flex; gap: 12px; }
+  .form-row .form-group { flex: 1; }
+  .detail-section { background: #f8f9fa; border-radius: 6px; padding: 14px 16px; margin-bottom: 12px; }
+  .detail-section h4 { font-size: 13px; color: #667eea; margin-bottom: 8px; font-weight: 600; }
+  .detail-row { display: flex; padding: 4px 0; font-size: 13px; }
+  .detail-label { color: #888; min-width: 80px; }
+  .detail-value { color: #2c3e50; font-weight: 500; }
+  .detail-highlight { color: #e67e22; font-weight: 600; }
+  .context-menu { position: fixed; background: #fff; border: 1px solid #e1e4e8; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); z-index: 2000; min-width: 160px; overflow: hidden; display: none; }
+  .context-menu.show { display: block; }
+  .context-item { padding: 9px 16px; font-size: 13px; cursor: pointer; color: #2c3e50; }
+  .context-item:hover { background: #f0f4ff; color: #667eea; }
+  .context-item.danger { color: #e74c3c; }
+  .context-item.danger:hover { background: #fdecea; }
+  .context-sep { border-top: 1px solid #f0f0f0; margin: 4px 0; }
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .sort-arrow { font-size: 10px; color: #667eea; }
+  .result-passed { color: #27ae60; font-weight: 600; }
+  .result-failed { color: #e74c3c; font-weight: 600; }
+  .result-pending { color: #f39c12; font-weight: 600; }
+  .required-star { color: #e74c3c; margin-left: 2px; }
+</style>
+</head>
+<body>
+<div id="appNav"></div>
+<script src="/static/js/shared.js"></script>
+<script>renderNav('quality_admin', '🔍 质检管理');</script>
+
+<div class="toolbar">
+  <select id="typeFilter" onchange="loadRecords()">
+    <option value="">全部类型</option>
+    <option value="首检">首检</option>
+    <option value="中检">中检</option>
+    <option value="终检">终检</option>
+    <option value="巡检">巡检</option>
+  </select>
+  <select id="resultFilter" onchange="loadRecords()">
+    <option value="">全部结果</option>
+    <option value="合格">合格</option>
+    <option value="不合格">不合格</option>
+    <option value="待检">待检</option>
+    <option value="待复检">待复检</option>
+  </select>
+  <input type="text" id="keywordInput" placeholder="🔍 订单号 / 客户 / 质检员..." style="min-width:200px;" onkeydown="if(event.key==='Enter')loadRecords()">
+  <button class="btn btn-primary" onclick="loadRecords()">🔄 刷新</button>
+  <button class="btn btn-success" onclick="openAddRecord()">➕ 新建记录</button>
+</div>
+
+<div id="msgBox" class="msg-box" style="display:none;"></div>
+
+<div class="stats-bar">
+  <div class="stat-item total">
+    <span class="stat-value" id="statTotal">-</span>
+    <span class="stat-label">总记录数</span>
+  </div>
+  <div class="stat-item passed">
+    <span class="stat-value" id="statPassed">-</span>
+    <span class="stat-label">合格</span>
+  </div>
+  <div class="stat-item failed">
+    <span class="stat-value" id="statFailed">-</span>
+    <span class="stat-label">不合格</span>
+  </div>
+  <div class="stat-item pending">
+    <span class="stat-value" id="statPending">-</span>
+    <span class="stat-label">待复检</span>
+  </div>
+  <div class="stat-item rate">
+    <span class="stat-value" id="statRate">-</span>
+    <span class="stat-label">合格率</span>
+  </div>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead id="tableHead"></thead>
+    <tbody id="recordsTbody"><tr><td colspan="10" class="empty">加载中...</td></tr></tbody>
+  </table>
+</div>
+<div class="summary" id="summary">加载中...</div>
+
+<div id="contextMenu" class="context-menu">
+  <div class="context-item" onclick="ctxViewDetail()">🔍 查看详情</div>
+  <div class="context-item" onclick="ctxEditRecord()">✏️ 编辑记录</div>
+  <div class="context-item" onclick="ctxChangeResult()">📋 变更判定</div>
+  <div class="context-sep"></div>
+  <div class="context-item danger" onclick="ctxDeleteRecord()">🗑 删除记录</div>
+</div>
+
+<!-- 新建/编辑记录 -->
+<div class="modal-overlay" id="recordModal">
+  <div class="modal-box modal-wide">
+    <div class="modal-title" id="recordModalTitle">➕ 新建质检记录</div>
+    <div id="recordForm"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('recordModal')">取消</button>
+      <button class="modal-confirm" id="recordSubmitBtn" onclick="submitRecord()">确认创建</button>
+    </div>
+  </div>
+</div>
+
+<!-- 变更判定 -->
+<div class="modal-overlay" id="resultModal">
+  <div class="modal-box" style="min-width:400px;">
+    <div class="modal-title">📋 变更判定结果</div>
+    <div class="form-group">
+      <label class="form-label">判定结果<span class="required-star">*</span></label>
+      <select class="form-control" id="resultSelect">
+        <option value="合格">合格</option>
+        <option value="不合格">不合格</option>
+        <option value="待复检">待复检</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">不良数量</label>
+      <input type="number" class="form-control" id="defectQtyInput" value="0" min="0">
+    </div>
+    <div class="form-group">
+      <label class="form-label">处理方式</label>
+      <select class="form-control" id="handlingSelect">
+        <option value="无">无</option>
+        <option value="返工">返工</option>
+        <option value="降级使用">降级使用</option>
+        <option value="报废">报废</option>
+        <option value="特采放行">特采放行</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">备注</label>
+      <input type="text" class="form-control" id="resultRemarkInput" placeholder="可选">
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('resultModal')">取消</button>
+      <button class="modal-confirm" id="resultSubmitBtn" onclick="submitResult()">确认变更</button>
+    </div>
+  </div>
+</div>
+
+<!-- 详情 -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal-box modal-wide">
+    <div class="modal-title" id="detailModalTitle">🔍 质检详情</div>
+    <div id="detailContent" style="max-height:70vh;overflow-y:auto;"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('detailModal')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let recordsData = [];
+let currentSort = { col: 'record_date', reverse: true };
+let selectedRecord = null;
+let editingRecordId = null;
+let isEditing = false;
+
+const COLUMNS = [
+  { key: 'record_date', label: '日期', width: '120px' },
+  { key: 'order_no', label: '订单号', width: '130px' },
+  { key: 'customer_name', label: '客户', width: '100px' },
+  { key: 'inspection_type', label: '质检类型', width: '80px' },
+  { key: 'inspection_no', label: '编号', width: '80px' },
+  { key: 'result', label: '结果', width: '70px', fmt: resultTag },
+  { key: 'defect_qty', label: '不良数', width: '60px', align: 'center' },
+  { key: 'inspection_items', label: '检验项目', width: '150px' },
+  { key: 'inspector', label: '质检员', width: '80px' },
+  { key: 'remark', label: '备注', width: '120px' },
+];
+
+function resultTag(v) {
+  if (!v) return '-';
+  const cls = { '合格': 'result-passed', '不合格': 'result-failed', '待检': 'result-pending', '待复检': 'result-pending' };
+  return `<span class="${cls[v] || ''}">${escapeHtml(v)}</span>`;
+}
+
+function renderTableHead() {
+  const th = document.getElementById('tableHead');
+  th.innerHTML = `<tr>${COLUMNS.map(c => {
+    const arrow = currentSort.col === c.key ? (currentSort.reverse ? ' ▼' : ' ▲') : '';
+    const align = c.align ? `style="text-align:${c.align}"` : '';
+    return `<th ${align} onclick="${c.noSort ? '' : `sortBy('${c.key}')`}">${escapeHtml(c.label)}${arrow}</th>`;
+  }).join('')}</tr>`;
+}
+
+function sortBy(col) {
+  if (currentSort.col === col) {
+    currentSort.reverse = !currentSort.reverse;
+  } else {
+    currentSort.col = col;
+    currentSort.reverse = false;
+  }
+  renderTable();
+}
+
+function renderTable() {
+  renderTableHead();
+  const tbody = document.getElementById('recordsTbody');
+  if (!recordsData.length) {
+    tbody.innerHTML = '<tr><td colspan="10" class="empty">暂无数据</td></tr>';
+    return;
+  }
+  tbody.innerHTML = recordsData.map(r => {
+    const vals = COLUMNS.map(c => {
+      if (c.key === 'result') return c.fmt ? c.fmt(r[c.key]) : escapeHtml(r[c.key] || '-');
+      if (c.key === 'defect_qty') return (r[c.key] || r[c.key] === 0) ? r[c.key] : '-';
+      const align = c.align ? `style="text-align:${c.align}"` : '';
+      return `<span ${align}>${escapeHtml(r[c.key] || '-')}</span>`;
+    });
+    return `<tr data-id="${r.id}" onclick="onRowClick(event,${r.id})" oncontextmenu="onRightClick(event,${r.id})">${vals.map(v => `<td>${v}</td>`).join('')}</tr>`;
+  }).join('');
+  document.getElementById('summary').textContent = `共 ${recordsData.length} 条记录`;
+}
+
+function onRowClick(e, id) {
+  if (e.target.tagName === 'BUTTON') return;
+  document.querySelectorAll('tr.selected').forEach(r => r.classList.remove('selected'));
+  const row = document.querySelector(`tr[data-id="${id}"]`);
+  if (row) row.classList.add('selected');
+}
+
+function onRightClick(e, id) {
+  e.preventDefault();
+  selectedRecord = recordsData.find(r => r.id === id);
+  if (!selectedRecord) return;
+  const menu = document.getElementById('contextMenu');
+  menu.style.left = Math.min(e.clientX, window.innerWidth - 170) + 'px';
+  menu.style.top = Math.min(e.clientY, window.innerHeight - 200) + 'px';
+  menu.classList.add('show');
+}
+
+document.addEventListener('click', () => {
+  document.getElementById('contextMenu').classList.remove('show');
+});
+
+function ctxViewDetail() { if (selectedRecord) viewDetail(selectedRecord); }
+function ctxEditRecord() { if (selectedRecord) openEditRecord(selectedRecord); }
+function ctxChangeResult() { if (selectedRecord) openChangeResult(selectedRecord); }
+function ctxDeleteRecord() {
+  if (selectedRecord && confirm(`确认删除这条质检记录？\n订单：${selectedRecord.order_no || ''}`)) {
+    deleteRecord(selectedRecord.id);
+  }
+}
+
+async function loadRecords() {
+  try {
+    const params = new URLSearchParams();
+    const typeFilter = document.getElementById('typeFilter').value;
+    const resultFilter = document.getElementById('resultFilter').value;
+    const keyword = document.getElementById('keywordInput').value.trim();
+    if (typeFilter) params.set('type', typeFilter);
+    if (resultFilter) params.set('result', resultFilter);
+    if (keyword) params.set('keyword', keyword);
+
+    const [data, code] = await apiFetchJSON('/api/quality/list?' + params.toString());
+    if (code === 200 && data.code === 0) {
+      recordsData = data.data.records || [];
+      renderTable();
+      updateStats();
+    } else {
+      showMsg(data.message || '加载失败', 'error');
+    }
+  } catch (e) {
+    showMsg('网络错误: ' + e.message, 'error');
+  }
+}
+
+async function updateStats() {
+  try {
+    const [data, code] = await apiFetchJSON('/api/quality/stats');
+    if (code === 200 && data.code === 0) {
+      const stats = data.data;
+      document.getElementById('statTotal').textContent = stats.total || 0;
+      document.getElementById('statPassed').textContent = stats.passed || 0;
+      document.getElementById('statFailed').textContent = stats.failed || 0;
+      document.getElementById('statPending').textContent = stats.pending || 0;
+      document.getElementById('statRate').textContent = stats.pass_rate || '0%';
+    }
+  } catch (e) {
+    console.error('stats error:', e);
+  }
+}
+
+async function apiFetchJSON(url, options = {}) {
+  const r = await apiFetch(url, options);
+  if (!r) return [null, 0];
+  const d = await r.json();
+  return [d, r.status];
+}
+
+function showMsg(msg, type = 'info') {
+  const box = document.getElementById('msgBox');
+  box.textContent = msg;
+  box.className = 'msg-box msg-' + type;
+  box.style.display = 'block';
+  if (box._t) clearTimeout(box._t);
+  box._t = setTimeout(() => { box.style.display = 'none'; }, 5000);
+}
+
+async function openAddRecord() {
+  try {
+    const [data, code] = await apiFetchJSON('/api/orders/quality-orders');
+    if (code !== 200 || data.code !== 0) {
+      showMsg('没有可质检的工单', 'info');
+      return;
+    }
+    const orders = data.data.orders || [];
+    if (!orders.length) {
+      showMsg('没有可质检的工单（需状态为：待排产/已排产/生产中/质检中）', 'info');
+      return;
+    }
+    isEditing = false;
+    editingRecordId = null;
+    document.getElementById('recordModalTitle').textContent = '➕ 新建质检记录';
+    document.getElementById('recordForm').innerHTML = buildRecordForm(null, orders);
+    document.getElementById('recordSubmitBtn').textContent = '确认创建';
+    openModal('recordModal');
+  } catch (e) {
+    showMsg('加载订单失败: ' + e.message, 'error');
+  }
+}
+
+function buildRecordForm(record, orders) {
+  const selectedOrder = record ? orders.find(o => o.id === record.order_id) : null;
+  const defaultOrder = selectedOrder || orders[0];
+  const orderOptions = orders.map(o => `<option value="${o.id}" ${defaultOrder && o.id === defaultOrder.id ? 'selected' : ''}>${escapeHtml(o.order_no)} - ${escapeHtml(o.customer_name || o.customer_group || '')}</option>`).join('');
+  const typeOptions = ['首检', '中检', '终检', '巡检'].map(t => `<option value="${t}" ${record && record.inspection_type === t ? 'selected' : ''}>${t}</option>`).join('');
+  const resultOptions = ['待检', '合格', '不合格', '待复检'].map(r => `<option value="${r}" ${record && record.result === r ? 'selected' : ''}>${r}</option>`).join('');
+  const handlingOptions = ['无', '返工', '降级使用', '报废', '特采放行'].map(h => `<option value="${h}" ${record && record.handling_method === h ? 'selected' : ''}>${h}</option>`).join('');
+
+  return `
+    <div class="form-group">
+      <label class="form-label">选择工单<span class="required-star">*</span></label>
+      <select class="form-control" id="fOrderId">
+        ${orderOptions}
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">质检类型<span class="required-star">*</span></label>
+        <select class="form-control" id="fInspectionType">${typeOptions}</select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">判定结果<span class="required-star">*</span></label>
+        <select class="form-control" id="fResult">${resultOptions}</select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">质检项目</label>
+      <input type="text" class="form-control" id="fInspectionItems" value="${escapeHtml(record ? (record.inspection_items || '') : '外观检验,尺寸检验')}" placeholder="多个项目用逗号分隔">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">不良描述</label>
+        <input type="text" class="form-control" id="fDefectDesc" value="${escapeHtml(record ? (record.defect_description || '') : '')}" placeholder="可选">
+      </div>
+      <div class="form-group">
+        <label class="form-label">不良数量</label>
+        <input type="number" class="form-control" id="fDefectQty" value="${record ? (record.defect_qty || 0) : 0}" min="0">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">处理方式</label>
+        <select class="form-control" id="fHandlingMethod">${handlingOptions}</select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">质检员</label>
+        <input type="text" class="form-control" id="fInspector" value="${escapeHtml(record ? (record.inspector || '') : '')}" placeholder="可选">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">备注</label>
+      <input type="text" class="form-control" id="fRemark" value="${escapeHtml(record ? (record.remark || '') : '')}" placeholder="可选">
+    </div>
+  `;
+}
+
+async function submitRecord() {
+  const btn = document.getElementById('recordSubmitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 处理中...';
+  try {
+    const orderId = parseInt(document.getElementById('fOrderId').value);
+    if (!orderId) {
+      showMsg('请选择工单', 'error');
+      return;
+    }
+    const payload = {
+      order_id: orderId,
+      inspection_type: document.getElementById('fInspectionType').value,
+      result: document.getElementById('fResult').value,
+      inspection_items: document.getElementById('fInspectionItems').value.trim(),
+      defect_description: document.getElementById('fDefectDesc').value.trim(),
+      defect_qty: parseInt(document.getElementById('fDefectQty').value) || 0,
+      handling_method: document.getElementById('fHandlingMethod').value,
+      inspector: document.getElementById('fInspector').value.trim(),
+      remark: document.getElementById('fRemark').value.trim(),
+    };
+    let url, method;
+    if (isEditing && editingRecordId) {
+      url = `/api/quality/${editingRecordId}`;
+      method = 'PUT';
+    } else {
+      url = '/api/quality/add';
+      method = 'POST';
+    }
+    const [data, code] = await apiFetchJSON(url, {
+      method: method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (code === 200 && data.code === 0) {
+      closeModal('recordModal');
+      showMsg(isEditing ? '修改成功' : '创建成功', 'success');
+      loadRecords();
+    } else {
+      showMsg(data.message || (isEditing ? '修改失败' : '创建失败'), 'error');
+    }
+  } catch (e) {
+    showMsg('操作失败: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = isEditing ? '保存修改' : '确认创建';
+  }
+}
+
+async function openEditRecord(record) {
+  try {
+    const [data, code] = await apiFetchJSON('/api/quality/' + record.id);
+    if (code !== 200 || data.code !== 0) {
+      showMsg('获取记录详情失败', 'error');
+      return;
+    }
+    const fullRecord = data.data;
+    const [ordersData, ordersCode] = await apiFetchJSON('/api/orders/quality-orders');
+    const orders = (ordersCode === 200 && ordersData.code === 0) ? (ordersData.data.orders || []) : [];
+    isEditing = true;
+    editingRecordId = record.id;
+    document.getElementById('recordModalTitle').textContent = '✏️ 编辑质检记录';
+    document.getElementById('recordForm').innerHTML = buildRecordForm(fullRecord, orders);
+    document.getElementById('recordSubmitBtn').textContent = '保存修改';
+    openModal('recordModal');
+  } catch (e) {
+    showMsg('获取记录详情失败: ' + e.message, 'error');
+  }
+}
+
+function openChangeResult(record) {
+  document.getElementById('resultSelect').value = record.result || '待检';
+  document.getElementById('defectQtyInput').value = record.defect_qty || 0;
+  document.getElementById('handlingSelect').value = record.handling_method || '无';
+  document.getElementById('resultRemarkInput').value = record.remark || '';
+  selectedRecord = record;
+  openModal('resultModal');
+}
+
+async function submitResult() {
+  const btn = document.getElementById('resultSubmitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 处理中...';
+  try {
+    const payload = {
+      result: document.getElementById('resultSelect').value,
+      defect_qty: parseInt(document.getElementById('defectQtyInput').value) || 0,
+      handling_method: document.getElementById('handlingSelect').value,
+      remark: document.getElementById('resultRemarkInput').value.trim(),
+    };
+    const [data, code] = await apiFetchJSON(`/api/quality/${selectedRecord.id}/result`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (code === 200 && data.code === 0) {
+      closeModal('resultModal');
+      showMsg('判定结果已更新', 'success');
+      loadRecords();
+    } else {
+      showMsg(data.message || '更新失败', 'error');
+    }
+  } catch (e) {
+    showMsg('更新失败: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '确认变更';
+  }
+}
+
+async function deleteRecord(id) {
+  try {
+    const [data, code] = await apiFetchJSON(`/api/quality/${id}`, { method: 'DELETE' });
+    if (code === 200 && data.code === 0) {
+      showMsg('删除成功', 'success');
+      loadRecords();
+    } else {
+      showMsg(data.message || '删除失败', 'error');
+    }
+  } catch (e) {
+    showMsg('删除失败: ' + e.message, 'error');
+  }
+}
+
+function viewDetail(record) {
+  const resultClass = { '合格': 'result-passed', '不合格': 'result-failed', '待检': 'result-pending', '待复检': 'result-pending' };
+  document.getElementById('detailModalTitle').textContent = `🔍 质检详情 — ${escapeHtml(record.inspection_no || '')}`;
+  document.getElementById('detailContent').innerHTML = `
+    <div class="detail-section">
+      <h4>基本信息</h4>
+      <div class="detail-row"><span class="detail-label">订单号</span><span class="detail-value">${escapeHtml(record.order_no || '-')}</span></div>
+      <div class="detail-row"><span class="detail-label">客户</span><span class="detail-value">${escapeHtml(record.customer_name || '-')}</span></div>
+      <div class="detail-row"><span class="detail-label">质检编号</span><span class="detail-value">${escapeHtml(record.inspection_no || '-')}</span></div>
+    </div>
+    <div class="detail-section">
+      <h4>检验信息</h4>
+      <div class="detail-row"><span class="detail-label">检验类型</span><span class="detail-value">${escapeHtml(record.inspection_type || '-')}</span></div>
+      <div class="detail-row"><span class="detail-label">判定结果</span><span class="${resultClass[record.result] || ''}">${escapeHtml(record.result || '-')}</span></div>
+      <div class="detail-row"><span class="detail-label">检验项目</span><span class="detail-value">${escapeHtml(record.inspection_items || '-')}</span></div>
+    </div>
+    <div class="detail-section">
+      <h4>不良信息</h4>
+      <div class="detail-row"><span class="detail-label">不良描述</span><span class="detail-value">${escapeHtml(record.defect_description || '-')}</span></div>
+      <div class="detail-row"><span class="detail-label">不良数量</span><span class="detail-value detail-highlight">${record.defect_qty || 0}</span></div>
+      <div class="detail-row"><span class="detail-label">处理方式</span><span class="detail-value">${escapeHtml(record.handling_method || '-')}</span></div>
+    </div>
+    <div class="detail-section">
+      <h4>其他信息</h4>
+      <div class="detail-row"><span class="detail-label">质检员</span><span class="detail-value">${escapeHtml(record.inspector || '-')}</span></div>
+      <div class="detail-row"><span class="detail-label">检验日期</span><span class="detail-value">${escapeHtml(record.record_date || '-')}</span></div>
+      <div class="detail-row"><span class="detail-label">备注</span><span class="detail-value">${escapeHtml(record.remark || '-')}</span></div>
+    </div>
+  `;
+  openModal('detailModal');
+}
+
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('show'); });
+});
+
+if (!requireAuth()) ;
+else loadRecords();
+</script>
+</body>
+</html>

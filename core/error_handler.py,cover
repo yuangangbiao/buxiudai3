@@ -1,0 +1,225 @@
+  # -*- coding: utf-8 -*-
+> """
+> 统一错误处理器
+> 负责错误编码识别、日志记录和用户提示
+> """
+  
+> import logging
+> import traceback
+> import re
+> from typing import Optional, Tuple
+  
+- logger = logging.getLogger(__name__)
+  
+  
+> ERROR_PATTERNS = [
+>     (r"Non-UTF-8 code starting with", "ERR-SYS-001"),
+>     (r"invalid character.*U\+FFFD", "ERR-SYS-002"),
+>     (r"unterminated string literal", "ERR-SYS-003"),
+>     (r"IndentationError", "ERR-SYS-004"),
+>     (r"SyntaxError.*invalid syntax", "ERR-SYS-005"),
+>     (r"name.*is not defined", "ERR-SYS-006"),
+>     (r"Can't connect to MySQL", "ERR-DB-001"),
+>     (r"Access denied.*password", "ERR-DB-002"),
+>     (r"Unknown database", "ERR-DB-003"),
+>     (r"You have an error in your SQL syntax", "ERR-DB-004"),
+>     (r"Table.*doesn't exist", "ERR-DB-005"),
+>     (r"Unknown column", "ERR-DB-006"),
+>     (r"pool exhausted|Too many connections", "ERR-DB-007"),
+>     (r"Lost connection to MySQL", "ERR-DB-008"),
+>     (r"BLOB.*can't have a default value", "ERR-DB-009"),
+>     (r"No module named", "ERR-INT-001"),
+>     (r"cannot import name", "ERR-INT-002"),
+>     (r"partially initialized module.*circular import", "ERR-INT-003"),
+>     (r"ModuleNotFoundError", "ERR-INT-004"),
+>     (r"hard-coded.*password|password.*硬编码", "ERR-SEC-001"),
+>     (r"hard-coded.*api.*key|api.*key.*硬编码", "ERR-SEC-002"),
+>     (r"SQL injection", "ERR-SEC-003"),
+>     (r"eval.*security|eval.*风险", "ERR-SEC-004"),
+>     (r"invalid literal for.*float", "ERR-VAL-001"),
+>     (r"invalid literal for.*int", "ERR-VAL-002"),
+>     (r"JSONDecodeError", "ERR-VAL-003"),
+>     (r"time data.*does not match format", "ERR-VAL-004"),
+>     (r"Required field.*is empty|必填字段.*为空", "ERR-VAL-005"),
+>     (r"operator.*is not defined|操作员未指定", "ERR-BIZ-001"),
+>     (r"Business rule validation failed", "ERR-BIZ-002"),
+>     (r"Order status.*does not allow", "ERR-BIZ-003"),
+>     (r"No material rule found", "ERR-BIZ-004"),
+>     (r"cursor is closed", "ERR-RES-001"),
+>     (r"\[Errno 2\].*No such file or directory", "ERR-RES-002"),
+>     (r"PermissionError.*Permission denied", "ERR-RES-003"),
+>     (r"MemoryError.*out of memory", "ERR-RES-004"),
+>     (r"ConnectionError.*Failed to establish", "ERR-NET-001"),
+>     (r"Timeout.*Connection timeout", "ERR-NET-002"),
+>     (r"HTTP \d+:.*Error", "ERR-NET-003"),
+> ]
+  
+  
+> def recognize_error_code(error_msg: str) -> Optional[str]:
+>     """
+>     从错误信息中识别错误编码
+  
+>     Args:
+>         error_msg: 原始错误信息
+  
+>     Returns:
+>         错误编码，如 "ERR-SYS-001"，未识别返回 None
+>     """
+>     if not error_msg:
+>         return None
+  
+>     for pattern, code in ERROR_PATTERNS:
+>         if re.search(pattern, error_msg, re.IGNORECASE | re.DOTALL):
+>             return code
+  
+>     return None
+  
+  
+> def handle_error(exc_type: type, exc_value: Exception, exc_traceback) -> Tuple[Optional[str], str]:
+>     """
+>     处理错误，自动识别编码并记录
+  
+>     Args:
+>         exc_type: 异常类型
+>         exc_value: 异常值
+>         exc_traceback: 堆栈跟踪
+  
+>     Returns:
+>         (错误编码, 格式化后的用户提示)
+>     """
+>     error_msg = str(exc_value)
+>     traceback_str = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+  
+>     error_code = recognize_error_code(error_msg)
+  
+>     if error_code:
+-         logger.error(f"[{error_code}] {error_msg}")
+-         logger.debug(f"[{error_code}] 完整堆栈:\n{traceback_str}")
+>     else:
+-         logger.error(f"[UNKNOWN] {error_msg}")
+-         logger.debug(f"[UNKNOWN] 完整堆栈:\n{traceback_str}")
+  
+>     try:
+>         from core.error_codes import format_error_for_display
+>         user_hint = format_error_for_display(error_code or "UNKNOWN", error_msg)
+>     except ImportError:
+-         logger.debug("core.error_codes 导入失败，回退到原始错误信息", exc_info=True)
+>         user_hint = f"错误: {error_msg}\n(错误编码解析不可用)"
+  
+>     return error_code, user_hint
+  
+  
+> def show_error_dialog(error_code: Optional[str], error_msg: str):
+>     """
+>     显示错误对话框（当图形界面可用时）
+  
+>     Args:
+>         error_code: 错误编码
+>         error_msg: 原始错误信息
+>     """
+>     try:
+>         from core.error_codes import format_error_for_display
+>         hint = format_error_for_display(error_code or "UNKNOWN", error_msg)
+!     except ImportError:
+-         logger.debug("core.error_codes 导入失败，回退到原始错误信息", exc_info=True)
+!         hint = f"错误: {error_msg}"
+  
+>     try:
+>         from tkinter import messagebox
+>         messagebox.showerror(f"错误 {error_code or 'UNKNOWN'}", hint)
+>     except Exception:
+-         logger.debug("tkinter messagebox 不可用，回退到 print", exc_info=True)
+>         print(hint)
+  
+  
+> def log_error_to_db(error_code: str, error_msg: str, traceback_str: str = None, context: dict = None):
+>     """
+>     将错误记录到数据库（可选）
+  
+>     Args:
+>         error_code: 错误编码
+>         error_msg: 错误信息
+>         traceback_str: 堆栈跟踪
+>         context: 额外上下文信息
+>     """
+>     try:
+>         from models.database import get_connection
+>         conn = get_connection()
+>         cursor = conn.cursor()
+  
+>         cursor.execute("""
+>             INSERT INTO error_logs (error_code, error_message, traceback, context, created_at)
+>             VALUES (%s, %s, %s, %s, NOW())
+>         """, (error_code, error_msg, traceback_str or '', str(context or {})))
+  
+!         conn.commit()
+!         cursor.close()
+!         conn.close()
+>     except Exception as e:
+-         logger.warning(f"记录错误到数据库失败: {e}")
+  
+  
+> def safe_error_handle(func):
+>     """
+>     错误处理的装饰器
+>     用于包装可能抛出异常的函数
+  
+>     用法:
+>         @safe_error_handle
+>         def some_function():
+>             ...
+>     """
+>     def wrapper(*args, **kwargs):
+>         try:
+>             return func(*args, **kwargs)
+>         except Exception as e:
+>             import sys
+>             error_code, user_hint = handle_error(type(e), e, e.__traceback__)
+-             logger.error(f"[{error_code or 'UNKNOWN'}] 在执行 {func.__name__} 时发生错误: {e}")
+>             raise
+>     return wrapper
+  
+  
+> def get_error_lookup_url(error_code: str) -> str:
+>     """
+>     获取错误编码的文档链接
+  
+>     Args:
+>         error_code: 错误编码
+  
+>     Returns:
+>         文档路径
+>     """
+>     return f"代码审查报告/错误代码分类目录.md#{error_code.lower()}"
+  
+  
+> class ErrorContext:
+>     """
+>     错误上下文管理器
+>     用于在代码块执行时捕获和记录错误
+  
+>     用法:
+>         with ErrorContext("执行订单更新"):
+>             update_order()
+>     """
+  
+>     def __init__(self, operation_name: str, raise_on_error: bool = True):
+>         self.operation_name = operation_name
+>         self.raise_on_error = raise_on_error
+>         self.error_code = None
+>         self.error_msg = None
+  
+>     def __enter__(self):
+>         return self
+  
+>     def __exit__(self, exc_type, exc_value, exc_traceback):
+>         if exc_type is not None:
+>             self.error_code, hint = handle_error(exc_type, exc_value, exc_traceback)
+>             self.error_msg = str(exc_value)
+-             logger.error(f"[{self.error_code or 'UNKNOWN'}] 在 {self.operation_name} 时发生错误: {self.error_msg}")
+  
+>             if self.raise_on_error:
+>                 return False
+>             return True
+  
+>         return False

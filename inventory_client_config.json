@@ -1,0 +1,6 @@
+{
+    "server_url": "http://192.168.1.32:8080",
+    "api_key": "steel_belt_inventory_key_2024",
+    "auto_refresh": true,
+    "refresh_interval": 60
+}

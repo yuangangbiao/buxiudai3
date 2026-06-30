@@ -1,0 +1,56 @@
+[TRACE] 注册中间件失败: No module named 'utils.trace'
+[启动检查] cs_report.html 不存在，跳过检查
+[启动检查] mobile_unified.html 不存在，跳过检查
+[DEPRECATED] integration/wechat_notifier.py 已弃用，请迁移到 services/notifier.py
+[DEPRECATED] WeChatNotifier(integration) 已弃用，请使用 services.notifier.WeChatNotifier
+[操作员预加载] 无用户数据
+[App] 统计引擎初始化失败: (1146, "Table 'container_center.report_definition' doesn't exist")
+[队列Worker] 处理失败: qid=269 TEST-EX/入库 retry=0 err=(1054, "Unknown column 'uuid' in 'field list'")
+WARNING:__main__:[队列Worker] 处理失败: qid=269 TEST-EX/入库 retry=1 err=(1054, "Unknown column 'uuid' in 'field list'")
+WARNING:__main__:[队列Worker] 处理失败: qid=269 TEST-EX/入库 retry=2 err=(1054, "Unknown column 'uuid' in 'field list'")
+WARNING:__main__:[SLOW API] /api/process_sub_step 501.26ms POST
+WARNING:__main__:[SLOW API] /api/process_sub_step 413.97ms POST
+WARNING:__main__:[SLOW API] /api/process_sub_step 249.15ms POST
+WARNING:__main__:[队列Worker] 处理失败: qid=623 TEST-CON-2341dd/入库 retry=0 err=(1054, "Unknown column 'uuid' in 'field list'")
+WARNING:__main__:[SLOW API] /api/process_sub_step 331.22ms POST
+WARNING:__main__:[队列Worker] 处理失败: qid=647 TEST-CON-50f2df/入库 retry=0 err=(1054, "Unknown column 'uuid' in 'field list'")
+WARNING:__main__:[SLOW API] /api/process_sub_step 486.89ms POST
+WARNING:__main__:[SLOW API] /api/process_sub_step 392.99ms POST
+WARNING:__main__:[SLOW API] /api/process_sub_step 515.76ms POST
+WARNING:__main__:[队列Worker] 处理失败: qid=719 TEST-CON-2fabb4/入库 retry=0 err=(1054, "Unknown column 'uuid' in 'field list'")
+WARNING:__main__:[队列Worker] 处理失败: qid=719 TEST-CON-2fabb4/入库 retry=1 err=(1054, "Unknown column 'uuid' in 'field list'")
+WARNING:__main__:[SLOW API] /api/process_sub_step 499.32ms POST
+WARNING:__main__:[队列Worker] 处理失败: qid=743 TEST-CON-bca550/入库 retry=0 err=(1054, "Unknown column 'uuid' in 'field list'")
+WARNING:__main__:[队列Worker] 处理失败: qid=743 TEST-CON-bca550/入库 retry=1 err=(1054, "Unknown column 'uuid' in 'field list'")
+WARNING:mobile_api_ai.api.health:[Health] 机器人检查失败: Can't instantiate abstract class GroupBot without an implementation for abstract methods 'send_markdown', 'send_news', 'send_text'
+WARNING:mobile_api_ai.api.health:[Health] 机器人检查失败: Can't instantiate abstract class GroupBot without an implementation for abstract methods 'send_markdown', 'send_news', 'send_text'
+WARNING:mobile_api_ai.api.health:[Health] 机器人检查失败: Can't instantiate abstract class GroupBot without an implementation for abstract methods 'send_markdown', 'send_news', 'send_text'
+WARNING:mobile_api_ai.api.health:[Health] 机器人检查失败: Can't instantiate abstract class GroupBot without an implementation for abstract methods 'send_markdown', 'send_news', 'send_text'
+WARNING:mobile_api_ai.api.health:[Health] 机器人检查失败: Can't instantiate abstract class GroupBot without an implementation for abstract methods 'send_markdown', 'send_news', 'send_text'
+WARNING:mobile_api_ai.api.health:[Health] 机器人检查失败: Can't instantiate abstract class GroupBot without an implementation for abstract methods 'send_markdown', 'send_news', 'send_text'
+WARNING:__main__:[SLOW API] /api/schedule/health 278.15ms GET
+WARNING:mobile_api_ai.api.health:[Health] 机器人检查失败: Can't instantiate abstract class GroupBot without an implementation for abstract methods 'send_markdown', 'send_news', 'send_text'
+WARNING:mobile_api_ai.api.health:[Health] 机器人检查失败: Can't instantiate abstract class GroupBot without an implementation for abstract methods 'send_markdown', 'send_news', 'send_text'
+WARNING:__main__:[队列Worker] 处理失败: qid=765 TEST-CON-417957/入库 retry=0 err=(1054, "Unknown column 'uuid' in 'field list'")
+WARNING:__main__:[队列Worker] 处理失败: qid=765 TEST-CON-417957/入库 retry=1 err=(1054, "Unknown column 'uuid' in 'field list'")
+WARNING:__main__:[SLOW API] /api/process_sub_step 397.45ms POST
+WARNING:mobile_api_ai.api.health:[Health] 机器人检查失败: Can't instantiate abstract class GroupBot without an implementation for abstract methods 'send_markdown', 'send_news', 'send_text'
+WARNING:mobile_api_ai.api.health:[Health] 机器人检查失败: Can't instantiate abstract class GroupBot without an implementation for abstract methods 'send_markdown', 'send_news', 'send_text'
+WARNING:mobile_api_ai.api.health:[Health] 机器人检查失败: Can't instantiate abstract class GroupBot without an implementation for abstract methods 'send_markdown', 'send_news', 'send_text'
+WARNING:mobile_api_ai.api.health:[Health] 机器人检查失败: Can't instantiate abstract class GroupBot without an implementation for abstract methods 'send_markdown', 'send_news', 'send_text'
+WARNING:mobile_api_ai.api.health:[Health] 机器人检查失败: Can't instantiate abstract class GroupBot without an implementation for abstract methods 'send_markdown', 'send_news', 'send_text'
+WARNING:mobile_api_ai.api.health:[Health] 机器人检查失败: Can't instantiate abstract class GroupBot without an implementation for abstract methods 'send_markdown', 'send_news', 'send_text'
+WARNING:mobile_api_ai.api.health:[Health] 机器人检查失败: Can't instantiate abstract class GroupBot without an implementation for abstract methods 'send_markdown', 'send_news', 'send_text'
+WARNING:mobile_api_ai.api.health:[Health] 机器人检查失败: Can't instantiate abstract class GroupBot without an implementation for abstract methods 'send_markdown', 'send_news', 'send_text'
+WARNING:mobile_api_ai.api.health:[Health] 机器人检查失败: Can't instantiate abstract class GroupBot without an implementation for abstract methods 'send_markdown', 'send_news', 'send_text'
+WARNING:mobile_api_ai.api.health:[Health] 机器人检查失败: Can't instantiate abstract class GroupBot without an implementation for abstract methods 'send_markdown', 'send_news', 'send_text'
+WARNING:__main__:[队列Worker] 处理失败: qid=789 TEST-CON-37644a/入库 retry=0 err=(1054, "Unknown column 'uuid' in 'field list'")
+WARNING:__main__:[队列Worker] 处理失败: qid=789 TEST-CON-37644a/入库 retry=1 err=(1054, "Unknown column 'uuid' in 'field list'")
+WARNING:__main__:[队列Worker] 处理失败: qid=789 TEST-CON-37644a/入库 retry=2 err=(1054, "Unknown column 'uuid' in 'field list'")
+WARNING:__main__:[SLOW API] /api/process_sub_step 415.33ms POST
+WARNING:mobile_api_ai.api.health:[Health] 机器人检查失败: Can't instantiate abstract class GroupBot without an implementation for abstract methods 'send_markdown', 'send_news', 'send_text'
+WARNING:mobile_api_ai.api.health:[Health] 机器人检查失败: Can't instantiate abstract class GroupBot without an implementation for abstract methods 'send_markdown', 'send_news', 'send_text'
+WARNING:mobile_api_ai.api.health:[Health] 机器人检查失败: Can't instantiate abstract class GroupBot without an implementation for abstract methods 'send_markdown', 'send_news', 'send_text'
+WARNING:mobile_api_ai.api.health:[Health] 机器人检查失败: Can't instantiate abstract class GroupBot without an implementation for abstract methods 'send_markdown', 'send_news', 'send_text'
+WARNING:__main__:[队列Worker] 处理失败: qid=813 TEST-CON-1c1f38/入库 retry=0 err=(1054, "Unknown column 'uuid' in 'field list'")
+WARNING:__main__:[队列Worker] 处理失败: qid=813 TEST-CON-1c1f38/入库 retry=1 err=(1054, "Unknown column 'uuid' in 'field list'")

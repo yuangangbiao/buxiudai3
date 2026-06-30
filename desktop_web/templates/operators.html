@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>操作员管理 - 不锈钢网带跟单系统</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Microsoft YaHei", sans-serif; background: #f0f2f5; color: #2c3e50; }
+  .main { padding: 16px 24px; max-width: 1400px; margin: 0 auto; }
+  .filter-bar { background: #fff; padding: 12px 16px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .filter-bar label { color: #555; font-size: 13px; }
+  .filter-bar input, .filter-bar select { padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
+  .filter-bar button { padding: 6px 16px; background: #667eea; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
+  .filter-bar button:hover { background: #5568d3; }
+  .filter-bar button.action { background: #4CAF50; }
+  .filter-bar button.action:hover { background: #388E3C; }
+  .filter-bar button.warn { background: #FF9800; }
+  .filter-bar button.warn:hover { background: #F57C00; }
+  .filter-bar button.danger { background: #F44336; }
+  .filter-bar button.danger:hover { background: #D32F2F; }
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .stat-card { background: #fff; padding: 14px 18px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .stat-label { color: #888; font-size: 12px; margin-bottom: 4px; }
+  .stat-value { font-size: 24px; font-weight: 700; color: #2c3e50; }
+  .stat-sub { color: #aaa; font-size: 11px; margin-top: 2px; }
+  .stat-card.dept .stat-value { color: #FF9800; }
+  .stat-card.role .stat-value { color: #2196F3; }
+  .panel { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden; margin-bottom: 16px; }
+  .panel-title { font-size: 15px; font-weight: 600; padding: 16px 20px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+  .panel-title .toolbar { display: flex; gap: 8px; }
+  .panel-title .toolbar button { padding: 4px 12px; border: 1px solid #dcdfe6; background: #fff; color: #2c3e50; border-radius: 4px; cursor: pointer; font-size: 12px; }
+  .panel-title .toolbar button:hover { background: #f0f2f5; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: #fafbfc; color: #555; font-weight: 600; padding: 12px 16px; text-align: left; border-bottom: 1px solid #f0f0f0; white-space: nowrap; }
+  td { padding: 12px 16px; border-bottom: 1px solid #f5f5f5; }
+  tr:hover { background: #fafbfc; }
+  .role-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .role-manager { background: #667eea; color: #fff; }
+  .role-operator { background: #2196F3; color: #fff; }
+  .role-admin { background: #FF5722; color: #fff; }
+  .role-default { background: #9E9E9E; color: #fff; }
+  .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; cursor: pointer; }
+  .status-dot:hover { transform: scale(1.5); }
+  .status-active { background: #4CAF50; }
+  .status-inactive { background: #F44336; }
+  .text-muted { color: #999; }
+  .text-sm { font-size: 12px; }
+  .empty { text-align: center; padding: 40px; color: #999; font-size: 13px; }
+  .pagination { padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f0f0f0; font-size: 13px; color: #666; }
+  .error { background: #e74c3c; color: #fff; padding: 10px 16px; border-radius: 4px; margin: 8px 0; font-size: 13px; }
+  .row-action { display: flex; gap: 6px; }
+  .row-action button { padding: 3px 10px; border: 1px solid #dcdfe6; background: #fff; color: #2c3e50; border-radius: 3px; cursor: pointer; font-size: 12px; }
+  .row-action button:hover { background: #f0f2f5; }
+  .row-action button.edit { color: #667eea; border-color: #667eea; }
+  .row-action button.del { color: #F44336; border-color: #F44336; }
+
+  /* 模态框 */
+  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: #fff; border-radius: 8px; width: 480px; max-width: 90vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+  .modal-header { padding: 16px 20px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+  .modal-title { font-size: 16px; font-weight: 600; }
+  .modal-close { cursor: pointer; font-size: 20px; color: #999; background: none; border: none; }
+  .modal-body { padding: 20px; }
+  .modal-footer { padding: 12px 20px; border-top: 1px solid #f0f0f0; display: flex; justify-content: flex-end; gap: 8px; }
+  .form-group { margin-bottom: 14px; }
+  .form-group label { display: block; font-size: 13px; color: #555; margin-bottom: 4px; }
+  .form-group label .required { color: #F44336; }
+  .form-group input, .form-group select { width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+  .modal-footer button { padding: 8px 18px; border-radius: 4px; border: none; cursor: pointer; font-size: 13px; }
+  .modal-footer .btn-cancel { background: #f0f2f5; color: #555; }
+  .modal-footer .btn-submit { background: #667eea; color: #fff; }
+  .modal-footer .btn-submit:hover { background: #5568d3; }
+
+  /* 提示对话框 */
+  .toast { position: fixed; top: 24px; right: 24px; min-width: 240px; max-width: 480px; padding: 12px 18px; border-radius: 6px; font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 2000; animation: slideIn 0.3s; }
+  .toast.success { background: #4CAF50; color: #fff; }
+  .toast.error { background: #F44336; color: #fff; }
+  .toast.warn { background: #FF9800; color: #fff; }
+  .toast.info { background: #2196F3; color: #fff; }
+  @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  /* 确认对话框 */
+  .confirm-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1500; }
+  .confirm-overlay.show { display: flex; }
+  .confirm-box { background: #fff; border-radius: 8px; width: 380px; max-width: 90vw; padding: 20px; }
+  .confirm-title { font-size: 15px; font-weight: 600; margin-bottom: 10px; }
+  .confirm-msg { font-size: 14px; color: #555; margin-bottom: 16px; line-height: 1.5; }
+  .confirm-btns { display: flex; justify-content: flex-end; gap: 8px; }
+  .confirm-btns button { padding: 8px 18px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
+  .confirm-btns .btn-cancel { background: #f0f2f5; color: #555; }
+  .confirm-btns .btn-ok { background: #667eea; color: #fff; }
+  .confirm-btns .btn-danger { background: #F44336; color: #fff; }
+
+  /* 统计面板 */
+  .stats-panel { background: #fff; border-radius: 8px; padding: 16px 20px; margin-bottom: 16px; }
+  .stats-panel-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+  .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  .stat-mini { padding: 12px; background: #f8f9fa; border-radius: 6px; text-align: center; }
+  .stat-mini .label { font-size: 11px; color: #888; margin-bottom: 4px; }
+  .stat-mini .value { font-size: 20px; font-weight: 700; color: #2c3e50; }
+  .stat-mini.warning .value { color: #FF9800; }
+  .stat-mini.danger .value { color: #F44336; }
+  .stat-mini.success .value { color: #4CAF50; }
+</style>
+</head>
+<body>
+<div id="appNav"></div>
+<script src="/static/js/shared.js"></script>
+<script>renderNav('operators', '👥 操作员管理');</script>
+
+<div class="main">
+  <div id="errorBox" class="error" style="display:none"></div>
+
+  <div class="filter-bar">
+    <label>姓名:</label>
+    <input id="f-name" placeholder="支持模糊搜索" style="width:140px">
+    <label>角色:</label>
+    <select id="f-role">
+      <option value="">全部</option>
+      <option value="员工">员工</option>
+      <option value="经理">经理</option>
+      <option value="管理员">管理员</option>
+    </select>
+    <label>部门:</label>
+    <select id="f-department" style="width:120px">
+      <option value="">全部</option>
+    </select>
+    <label>状态:</label>
+    <select id="f-is_active">
+      <option value="">全部</option>
+      <option value="1">在职</option>
+      <option value="0">离职</option>
+    </select>
+    <button onclick="loadData()">🔍 搜索</button>
+    <button onclick="resetFilter()" style="background:#999">↺ 重置</button>
+    <button class="action" onclick="openCreateDialog()">➕ 新增操作员</button>
+    <button class="warn" onclick="exportExcel()">📤 导出 Excel</button>
+    <button onclick="downloadTemplate()">📄 导入模板</button>
+    <button onclick="document.getElementById('importFile').click()">📥 批量导入</button>
+    <input type="file" id="importFile" accept=".xlsx,.xls" style="display:none" onchange="importExcel(this.files[0])">
+    <span style="margin-left:auto;color:#aaa;font-size:12px">每 30 秒自动刷新</span>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">总人数</div>
+      <div class="stat-value" id="s-total">-</div>
+      <div class="stat-sub">操作员总数</div>
+    </div>
+    <div class="stat-card role">
+      <div class="stat-label">经理数</div>
+      <div class="stat-value" id="s-manager">-</div>
+      <div class="stat-sub">manager 角色</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">在职数</div>
+      <div class="stat-value" id="s-active">-</div>
+      <div class="stat-sub">status=active</div>
+    </div>
+  </div>
+
+  <div class="panel" id="statsPanel" style="display:none">
+    <div class="panel-title">
+      <span>📊 操作员工时统计 - <span id="statsOpName" class="text-primary">-</span></span>
+      <span class="toolbar">
+        <select id="statsMonth" onchange="loadStats()">
+          <option value="">本月</option>
+        </select>
+        <button onclick="closeStats()">✕ 关闭</button>
+      </span>
+    </div>
+    <div class="stats-grid" style="padding: 16px 20px;">
+      <div class="stat-mini success">
+        <div class="label">本月工时(小时)</div>
+        <div class="value" id="stats-hours">-</div>
+      </div>
+      <div class="stat-mini">
+        <div class="label">本月报工数</div>
+        <div class="value" id="stats-qty">-</div>
+      </div>
+      <div class="stat-mini success">
+        <div class="label">本月合格数</div>
+        <div class="value" id="stats-qualified">-</div>
+      </div>
+      <div class="stat-mini warning">
+        <div class="label">合格率(%)</div>
+        <div class="value" id="stats-rate">-</div>
+      </div>
+      <div class="stat-mini">
+        <div class="label">报工次数</div>
+        <div class="value" id="stats-count">-</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">
+      <span>👥 操作员列表</span>
+      <span class="text-muted" id="page-info">第 1 页</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>微信UserID</th>
+            <th>姓名</th>
+            <th>角色</th>
+            <th>部门</th>
+            <th>电话</th>
+            <th>状态</th>
+            <th>更新时间</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="operatorTbody">
+          <tr><td colspan="9" class="empty">加载中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pagination">
+      <span id="total-info">共 0 条</span>
+      <div>
+        <button onclick="prevPage()" style="padding:4px 12px;border:1px solid #ddd;background:#fff;cursor:pointer;border-radius:4px">← 上一页</button>
+        <span id="page-num" style="margin:0 12px">1</span>
+        <button onclick="nextPage()" style="padding:4px 12px;border:1px solid #ddd;background:#fff;cursor:pointer;border-radius:4px">下一页 →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 新增/编辑对话框 -->
+<div class="modal-overlay" id="opDialog">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="opDialogTitle">新增操作员</div>
+      <button class="modal-close" onclick="closeOpDialog()">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="opForm">
+        <input type="hidden" id="op-id">
+        <input type="hidden" id="op-mode" value="create">
+        <div class="form-group">
+          <label>微信UserID <span class="required">*</span> <span class="text-muted" style="font-size:11px">(企业架构唯一标识)</span></label>
+          <input id="op-operator_id" placeholder="例: WeiFengXiYu">
+        </div>
+        <div class="form-group">
+          <label>姓名 <span class="required">*</span></label>
+          <input id="op-name" required>
+        </div>
+        <div class="form-group">
+          <label>角色</label>
+          <select id="op-role">
+            <option value="员工">员工</option>
+            <option value="经理">经理</option>
+            <option value="管理员">管理员</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>部门 <span class="text-muted" style="font-size:11px">(从企业架构)</span></label>
+          <select id="op-department">
+            <option value="">请选择部门</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>电话</label>
+          <input id="op-phone" placeholder="例: 13800138000">
+        </div>
+        <div class="form-group">
+          <label>密码 <span class="text-muted" style="font-size:11px">(编辑时留空保持不变)</span></label>
+          <input id="op-password" type="password" placeholder="默认123456">
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" type="button" onclick="closeOpDialog()">取消</button>
+      <button class="btn-submit" type="button" onclick="submitOperator()">提交</button>
+    </div>
+  </div>
+</div>
+
+<!-- 导入结果对话框 -->
+<div class="modal-overlay" id="importDialog">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📥 导入结果</div>
+      <button class="modal-close" onclick="document.getElementById('importDialog').classList.remove('show')">×</button>
+    </div>
+    <div class="modal-body" id="importResult">
+      <div style="text-align:center;padding:20px;color:#888;">处理中...</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="document.getElementById('importDialog').classList.remove('show')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let _autoRefresh = null;
+let currentPage = 1;
+const pageSize = 20;
+
+function toast(msg, type='info', duration=3000) {
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(() => t.remove(), 300); }, duration);
+}
+
+function confirmDialog(title, msg, okText='确定', danger=false) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.className = 'confirm-overlay show';
+    overlay.innerHTML = `
+      <div class="confirm-box">
+        <div class="confirm-title">${escapeHtml(title)}</div>
+        <div class="confirm-msg">${escapeHtml(msg)}</div>
+        <div class="confirm-btns">
+          <button class="btn-cancel" data-act="cancel">取消</button>
+          <button class="${danger ? 'btn-danger' : 'btn-ok'}" data-act="ok">${escapeHtml(okText)}</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', e => {
+      const act = e.target.dataset.act;
+      if (act === 'ok' || act === 'cancel') {
+        overlay.remove();
+        resolve(act === 'ok');
+      } else if (e.target === overlay) {
+        overlay.remove();
+        resolve(false);
+      }
+    });
+  });
+}
+
+function resetFilter() {
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-role').value = '';
+  document.getElementById('f-department').value = '';
+  document.getElementById('f-is_active').value = '';
+  currentPage = 1;
+  loadData();
+}
+
+let _enterpriseDepts = [];
+async function loadEnterpriseDepartments() {
+  try {
+    const r = await apiFetch('/api/enterprise/structure');
+    if (r && r.ok) {
+      const data = await r.json();
+      const depts = (data.data && data.data.departments) || [];
+      _enterpriseDepts = depts;
+      // 填充筛选下拉
+      const fDept = document.getElementById('f-department');
+      if (fDept) {
+        const first = fDept.options[0];
+        fDept.innerHTML = '';
+        fDept.appendChild(first);
+        depts.forEach(d => {
+          const opt = document.createElement('option');
+          opt.value = d.name;
+          opt.textContent = d.name;
+          fDept.appendChild(opt);
+        });
+      }
+      // 填充表单下拉
+      const opDept = document.getElementById('op-department');
+      if (opDept) {
+        const first = opDept.options[0];
+        opDept.innerHTML = '';
+        opDept.appendChild(first);
+        depts.forEach(d => {
+          const opt = document.createElement('option');
+          opt.value = d.name;
+          opt.textContent = d.name;
+          opDept.appendChild(opt);
+        });
+      }
+    }
+  } catch(e) { console.error('loadDepts error:', e); }
+}
+
+function prevPage() { if (currentPage > 1) { currentPage--; loadData(); } }
+function nextPage() { currentPage++; loadData(); }
+
+function roleClass(role) {
+  const roleMap = {
+    'manager': 'role-manager',
+    '操作员': 'role-operator',
+    'admin': 'role-admin',
+  };
+  return 'role-tag ' + (roleMap[role] || 'role-default');
+}
+
+function roleLabel(role) {
+  const labelMap = {
+    'manager': '经理',
+    '操作员': '操作员',
+    'admin': '管理员',
+  };
+  return labelMap[role] || role || '-';
+}
+
+async function loadData() {
+  const name = document.getElementById('f-name').value.trim();
+  const role = document.getElementById('f-role').value;
+  const department = document.getElementById('f-department').value;
+  const is_active = document.getElementById('f-is_active').value;
+
+  const params = new URLSearchParams({
+    page: currentPage, page_size: pageSize,
+  });
+  if (name) params.set('name', name);
+  if (role) params.set('role', role);
+  if (department) params.set('department', department);
+  if (is_active) params.set('is_active', is_active);
+
+  try {
+    const r = await apiFetch(`/api/operators/list?${params.toString()}`);
+    if (!r) return;
+    const data = await r.json();
+    if (data.code !== 0) {
+      showError('errorBox', data.message || '加载失败');
+      return;
+    }
+    const d = data.data;
+    renderRows(d.list);
+    renderStats(d);
+    renderPagination(d);
+  } catch (e) {
+    showError('errorBox', '网络错误: ' + e.message);
+  }
+}
+
+function renderRows(list) {
+  const tbody = document.getElementById('operatorTbody');
+  if (!list || list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty">📭 暂无操作员</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(op => {
+    const active = op.status === 'active';
+    const statusText = active ? '在职' : '离职';
+    const safeOp = escapeHtml(JSON.stringify(op));
+    return `<tr data-op='${safeOp}' data-op-id="${escapeHtml(op.operator_id || op.id)}">
+      <td class="text-muted text-sm"><code>${escapeHtml(op.operator_id || op.id || '-')}</code></td>
+      <td><b>${escapeHtml(op.name || '-')}</b></td>
+      <td><span class="${roleClass(op.role)}">${escapeHtml(roleLabel(op.role))}</span></td>
+      <td class="text-muted text-sm">${escapeHtml(op.department || '-')}</td>
+      <td class="text-muted text-sm">${escapeHtml(op.phone || '-')}</td>
+      <td>
+        <span class="status-dot ${active ? 'status-active' : 'status-inactive'}" data-active="${active}" title="点击切换状态"></span>
+        ${escapeHtml(statusText)}
+      </td>
+      <td class="text-muted text-sm">${escapeHtml((op.updated_at || '').slice(0,19).replace('T',' ')) || '-'}</td>
+      <td>
+        <div class="row-action">
+          <button class="edit btn-edit" data-op-id="${escapeHtml(op.operator_id || op.id)}">编辑</button>
+          <button class="del btn-delete" data-op-id="${escapeHtml(op.operator_id || op.id)}" data-op-name="${escapeHtml(op.name || '')}">停用</button>
+          <button class="btn-stats" data-op-id="${escapeHtml(op.operator_id || op.id)}" data-op-name="${escapeHtml(op.name || '')}">📊统计</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('operatorTbody').addEventListener('click', e => {
+    if (e.target.classList.contains('status-dot')) {
+      toggleStatus(e.target);
+      return;
+    }
+    const btn = e.target.closest('[data-op-id]');
+    if (!btn) return;
+    const opId = btn.dataset.opId;
+    const opName = btn.dataset.opName || '';
+    if (btn.classList.contains('btn-edit')) {
+      const row = btn.closest('tr');
+      const raw = row.dataset.op;
+      let op;
+      try { op = JSON.parse(raw); } catch { return; }
+      openEditDialog(op);
+    } else if (btn.classList.contains('btn-delete')) {
+      deleteOperator(opId, opName);
+    } else if (btn.classList.contains('btn-stats')) {
+      showStats(opId, opName);
+    }
+  });
+}
+
+function renderStats(d) {
+  const total = d.total || 0;
+  const role_dist = d.role_dist || [];
+  const managerCnt = (role_dist.find(r => r.role === 'manager') || {count: 0}).count;
+  const activeCnt = d.list.filter(op => op.status === 'active').length;
+  document.getElementById('s-total').textContent = total;
+  document.getElementById('s-manager').textContent = managerCnt;
+  document.getElementById('s-active').textContent = activeCnt;
+}
+
+function renderPagination(d) {
+  const total = d.total || 0;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  document.getElementById('page-num').textContent = currentPage;
+  document.getElementById('page-info').textContent = `第 ${currentPage} / ${totalPages} 页`;
+  document.getElementById('total-info').textContent = `共 ${total} 条`;
+}
+
+// ===== T7: 新增/编辑对话框 =====
+function openCreateDialog() {
+  document.getElementById('opDialogTitle').textContent = '新增操作员';
+  document.getElementById('opForm').reset();
+  document.getElementById('op-mode').value = 'create';
+  document.getElementById('op-id').value = '';
+  document.getElementById('op-operator_id').readOnly = false;
+  // 重置部门下拉
+  if (typeof _enterpriseDepts !== 'undefined' && _enterpriseDepts.length) {
+    const opDept = document.getElementById('op-department');
+    opDept.value = '';
+  }
+  document.getElementById('opDialog').classList.add('show');
+}
+
+function openEditDialog(op) {
+  document.getElementById('opDialogTitle').textContent = `编辑: ${op.name || ''}`;
+  document.getElementById('op-mode').value = 'edit';
+  document.getElementById('op-id').value = op.operator_id || op.id;
+  document.getElementById('op-operator_id').value = op.operator_id || op.id || '';
+  document.getElementById('op-operator_id').readOnly = true;
+  document.getElementById('op-name').value = op.name || '';
+  document.getElementById('op-role').value = op.role || '员工';
+  document.getElementById('op-department').value = op.department || '';
+  document.getElementById('op-phone').value = op.phone || '';
+  document.getElementById('op-password').value = '';
+  document.getElementById('opDialog').classList.add('show');
+}
+
+function closeOpDialog() {
+  document.getElementById('opDialog').classList.remove('show');
+}
+
+async function submitOperator() {
+  const mode = document.getElementById('op-mode').value;
+  const name = document.getElementById('op-name').value.trim();
+  if (!name) { toast('姓名必填', 'error'); return; }
+  const payload = {
+    name,
+    operator_id: document.getElementById('op-operator_id').value.trim() || undefined,
+    role: document.getElementById('op-role').value,
+    department: document.getElementById('op-department').value,
+    phone: document.getElementById('op-phone').value.trim(),
+  };
+  const pwd = document.getElementById('op-password').value;
+  if (pwd) payload.password = pwd;
+
+  try {
+    let r, url;
+    if (mode === 'create') {
+      url = '/api/operators';
+      r = await apiFetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+    } else {
+      const opId = document.getElementById('op-id').value;
+      url = `/api/operators/${encodeURIComponent(opId)}`;
+      r = await apiFetch(url, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+    }
+    if (!r) return;
+    const data = await r.json();
+    if (data.code === 0) {
+      alert(mode === 'create' ? '✅ 新增成功' : '✅ 更新成功');
+      closeOpDialog();
+      loadData();
+    } else {
+      alert('❌ 失败: ' + (data.message || '未知错误'));
+    }
+  } catch (e) {
+    alert('网络错误: ' + e.message);
+  }
+}
+
+// ===== T7: 删除 =====
+async function deleteOperator(opId, opName) {
+  if (!await confirmDialog('确认删除', `确认删除操作员 [${opName}] 吗？\n（软删除，可恢复）`, '删除', true)) return;
+  try {
+    const r = await apiFetch(`/api/operators/${encodeURIComponent(opId)}`, {
+      method: 'DELETE',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({})
+    });
+    if (!r) return;
+    const data = await r.json();
+    if (data.code === 0) {
+      alert('✅ 删除成功');
+      loadData();
+    } else {
+      alert('❌ 删除失败: ' + (data.message || '未知错误'));
+    }
+  } catch (e) {
+    alert('网络错误: ' + e.message);
+  }
+}
+
+// ===== T8: 状态切换 =====
+async function toggleStatus(el) {
+  const row = el.closest('tr');
+  const opId = row ? row.dataset.opId : null;
+  if (!opId) return;
+  const current = el.dataset.active === 'true';
+  const newStatus = !current;
+  if (!await confirmDialog('确认切换', `将状态切换为 ${newStatus ? '在职' : '离职'}?`, '切换')) return;
+  try {
+    const r = await apiFetch(`/api/operators/${encodeURIComponent(opId)}`, {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ status: newStatus ? 'active' : 'inactive' })
+    });
+    if (!r) return;
+    const data = await r.json();
+    if (data.code === 0) {
+      loadData();
+    } else {
+      alert('❌ 切换失败: ' + (data.message || '未知错误'));
+    }
+  } catch (e) {
+    alert('网络错误: ' + e.message);
+  }
+}
+
+// ===== T9: 导入导出 =====
+function downloadTemplate() {
+  const token = getToken() || '';
+  const url = '/api/operators/template';
+  fetch(url, { headers: { 'X-Dispatch-Token': token } })
+    .then(r => r.blob())
+    .then(blob => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = '操作员导入模板.xlsx';
+      a.click();
+    })
+    .catch(e => alert('下载失败: ' + e.message));
+}
+
+function exportExcel() {
+  const name = document.getElementById('f-name').value.trim();
+  const role = document.getElementById('f-role').value;
+  const is_active = document.getElementById('f-is_active').value;
+  const params = new URLSearchParams();
+  if (name) params.set('keyword', name);
+  if (role) params.set('role', role);
+  if (is_active) params.set('status', is_active === '1' ? 'active' : 'inactive');
+  window.location.href = '/api/operators/export?' + params.toString();
+}
+
+async function importExcel(file) {
+  if (!file) return;
+  if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+    toast('仅支持 .xlsx / .xls 格式', 'error');
+    return;
+  }
+  document.getElementById('importResult').innerHTML = '<div style="text-align:center;padding:20px;color:#888;">上传中...</div>';
+  document.getElementById('importDialog').classList.add('show');
+  const formData = new FormData();
+  formData.append('file', file);
+  try {
+    const token = getToken() || '';
+    const r = await fetch('/api/operators/import', {
+      method: 'POST',
+      headers: { 'X-Dispatch-Token': token },
+      body: formData
+    });
+    const data = await r.json();
+    const d = data.data || {};
+    let html = `<div style="margin-bottom:12px;">
+      <div>✅ 成功创建: <b style="color:#4CAF50;font-size:18px;">${d.created || 0}</b> 条</div>
+      <div>⏭️ 跳过（已存在）: ${d.skipped || 0} 条</div>
+      <div>❌ 失败: ${d.failed || 0} 条</div>
+    </div>`;
+    if (d.errors && d.errors.length > 0) {
+      html += `<div style="margin-top:12px;border-top:1px solid #eee;padding-top:8px;max-height:200px;overflow-y:auto;">
+        <div style="font-weight:600;margin-bottom:6px;">错误明细:</div>`;
+      d.errors.forEach(e => {
+        html += `<div style="font-size:12px;padding:3px 0;color:#F44336;">第${e.row}行: ${escapeHtml(e.msg || '')}</div>`;
+      });
+      html += '</div>';
+    }
+    document.getElementById('importResult').innerHTML = html;
+    loadData();
+  } catch (e) {
+    document.getElementById('importResult').innerHTML = `<div style="color:#F44336;">网络错误: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+// ===== T10: 工时统计 =====
+async function showStats(opId, opName) {
+  const panel = document.getElementById('statsPanel');
+  panel.dataset.opId = opId;
+  panel.style.display = 'block';
+  document.getElementById('statsOpName').textContent = opName || opId;
+  document.getElementById('statsMonth').value = '';
+  await loadStats();
+  panel.scrollIntoView({ behavior: 'smooth' });
+}
+
+function closeStats() {
+  document.getElementById('statsPanel').style.display = 'none';
+}
+
+async function loadStats() {
+  const opId = document.getElementById('statsPanel')?.dataset?.opId;
+  if (!opId) return;
+  const month = document.getElementById('statsMonth').value;
+  const url = `/api/operators/${encodeURIComponent(opId)}/stats` + (month ? `?month=${month}` : '');
+  try {
+    const r = await apiFetch(url);
+    if (!r) return;
+    const data = await r.json();
+    if (data.code === 0) {
+      const d = data.data;
+      document.getElementById('stats-hours').textContent = d.total_hours || 0;
+      document.getElementById('stats-qty').textContent = d.total_qty || 0;
+      document.getElementById('stats-qualified').textContent = d.total_qualified || 0;
+      document.getElementById('stats-rate').textContent = (d.qualify_rate || 0) + '%';
+      document.getElementById('stats-count').textContent = d.report_count || 0;
+    }
+  } catch (e) {
+    console.error('Stats load failed:', e);
+  }
+}
+
+// 初始化月份选择器
+(function initMonthSelector() {
+  const sel = document.getElementById('statsMonth');
+  const now = new Date();
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const label = `${d.getFullYear()}年${d.getMonth() + 1}月`;
+    const opt = document.createElement('option');
+    opt.value = val;
+    opt.textContent = label;
+    sel.appendChild(opt);
+  }
+})();
+
+showUser();
+if (requireAuth()) {
+  loadEnterpriseDepartments();
+  loadData();
+  _autoRefresh = new AutoRefresh(() => { if (getToken()) loadData(); }, 30000, null);
+  _autoRefresh.start();
+}
+</script>
+</body>
+</html>

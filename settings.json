@@ -1,0 +1,30 @@
+{
+  "colors": {
+    "primary": "#1E3A5F",
+    "primary_light": "#2E5A8F",
+    "accent": "#4A90D9",
+    "bg_main": "#F0F2F5",
+    "bg_card": "#FFFFFF",
+    "bg_sidebar": "#1E3A5F",
+    "text_primary": "#1A1A2E",
+    "text_secondary": "#666666",
+    "text_white": "#FFFFFF",
+    "success": "#4CAF50",
+    "warning": "#FF9800",
+    "danger": "#F44336",
+    "info": "#2196F3",
+    "table_header": "#F5F5F5",
+    "table_row_odd": "#FFFFFF",
+    "table_row_even": "#F9F9F9"
+  },
+  "fonts": {
+    "family": "微软雅黑",
+    "size": {
+      "title": 20,
+      "subtitle": 12,
+      "body": 10,
+      "small": 9,
+      "large": 18
+    }
+  }
+}

@@ -1,0 +1,193 @@
+[
+  {
+    "name": "5001_首页",
+    "url": "http://localhost:5001/login",
+    "checks": [
+      {
+        "desc": "包含\"订单\"",
+        "pass": false,
+        "value": "订单"
+      },
+      {
+        "desc": "包含\"生产\"",
+        "pass": false,
+        "value": "生产"
+      },
+      {
+        "desc": "存在导航菜单",
+        "pass": false,
+        "value": "元素数量: 0"
+      },
+      {
+        "desc": "存在按钮/链接",
+        "pass": true,
+        "value": "元素数量: 1"
+      }
+    ],
+    "passed": 1,
+    "failed": 3,
+    "title": "登录 - 不锈钢网带跟单系统",
+    "screenshot": "login_verify_5001____1782293099995.png"
+  },
+  {
+    "name": "5001_订单列表",
+    "url": "http://localhost:5001/login",
+    "checks": [
+      {
+        "desc": "包含\"订单\"",
+        "pass": false,
+        "value": "订单"
+      },
+      {
+        "desc": "存在数据表格",
+        "pass": false,
+        "value": "元素数量: 0"
+      },
+      {
+        "desc": "存在数据行",
+        "pass": false,
+        "value": "元素数量: 0"
+      }
+    ],
+    "passed": 0,
+    "failed": 3,
+    "title": "登录 - 不锈钢网带跟单系统",
+    "screenshot": "login_verify_5001______1782293108434.png"
+  },
+  {
+    "name": "5001_订单排产",
+    "url": "http://localhost:5001/scheduling",
+    "checks": [
+      {
+        "desc": "包含\"排产\"",
+        "pass": false,
+        "value": "排产"
+      },
+      {
+        "desc": "包含\"工序\"",
+        "pass": false,
+        "value": "工序"
+      }
+    ],
+    "passed": 0,
+    "failed": 2,
+    "title": "404 Not Found",
+    "screenshot": "login_verify_5001______1782293114400.png"
+  },
+  {
+    "name": "5002_容器中心",
+    "url": "http://localhost:5002/container/",
+    "checks": [
+      {
+        "desc": "包含\"容器\"",
+        "pass": true,
+        "value": "容器"
+      },
+      {
+        "desc": "存在菜单",
+        "pass": false,
+        "value": "元素数量: 0"
+      }
+    ],
+    "passed": 1,
+    "failed": 1,
+    "title": "容器中心 · 综合管理",
+    "screenshot": "login_verify_5002______1782293119607.png"
+  },
+  {
+    "name": "5002_库存仪表盘",
+    "url": "http://localhost:5002/inventory/dashboard",
+    "checks": [
+      {
+        "desc": "包含\"库存\"",
+        "pass": true,
+        "value": "库存"
+      },
+      {
+        "desc": "包含\"仪表盘\"",
+        "pass": false,
+        "value": "仪表盘"
+      }
+    ],
+    "passed": 1,
+    "failed": 1,
+    "title": "首页概览 — 宁津晨圣",
+    "screenshot": "login_verify_5002_______1782293141171.png"
+  },
+  {
+    "name": "5002_质检",
+    "url": "http://localhost:5002/quality",
+    "checks": [
+      {
+        "desc": "包含\"质量\"",
+        "pass": false,
+        "value": "质量"
+      },
+      {
+        "desc": "包含\"质检\"",
+        "pass": false,
+        "value": "质检"
+      }
+    ],
+    "passed": 0,
+    "failed": 2,
+    "title": "",
+    "screenshot": "login_verify_5002____1782293147032.png"
+  },
+  {
+    "name": "5003_调度",
+    "url": "http://localhost:5003/dispatch",
+    "checks": [
+      {
+        "desc": "包含\"调度\"",
+        "pass": false,
+        "value": "调度"
+      },
+      {
+        "desc": "包含\"dispatch\"",
+        "pass": false,
+        "value": "dispatch"
+      }
+    ],
+    "passed": 0,
+    "failed": 2,
+    "title": "",
+    "screenshot": "login_verify_5003____1782293150579.png"
+  },
+  {
+    "name": "5003_工序",
+    "url": "http://localhost:5003/process",
+    "checks": [
+      {
+        "desc": "包含\"工序\"",
+        "pass": false,
+        "value": "工序"
+      },
+      {
+        "desc": "包含\"process\"",
+        "pass": false,
+        "value": "process"
+      }
+    ],
+    "passed": 0,
+    "failed": 2,
+    "title": "",
+    "screenshot": "login_verify_5003____1782293154381.png"
+  },
+  {
+    "name": "5008_首页",
+    "url": "http://localhost:5008",
+    "checks": [],
+    "passed": 0,
+    "failed": 1,
+    "error": "page.fill: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"text\"], input[name=\"username\"], input[name=\"name\"]')\u001b[22m\n\u001b[2m    - locator resolved to <input type=\"text\" id=\"pt-filter\" placeholder=\"搜索订单号\" oninput=\"showProcessTasks()\"/>\u001b[22m\n\u001b[2m    - fill(\"苑岗彪\")\u001b[22m\n\u001b[2m  - attempting fill action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and editable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying fill action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and editable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying fill action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    58 × waiting for element to be visible, enabled and editable\u001b[22m\n\u001b[2m       - element is not visible\u001b[22m\n\u001b[2m     - retrying fill action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n"
+  },
+  {
+    "name": "5008_任务",
+    "url": "http://localhost:5008/#/tasks",
+    "checks": [],
+    "passed": 0,
+    "failed": 1,
+    "error": "page.fill: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"text\"], input[name=\"username\"], input[name=\"name\"]')\u001b[22m\n\u001b[2m    - locator resolved to <input type=\"text\" id=\"pt-filter\" placeholder=\"搜索订单号\" oninput=\"showProcessTasks()\"/>\u001b[22m\n\u001b[2m    - fill(\"苑岗彪\")\u001b[22m\n\u001b[2m  - attempting fill action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and editable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying fill action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and editable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying fill action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    58 × waiting for element to be visible, enabled and editable\u001b[22m\n\u001b[2m       - element is not visible\u001b[22m\n\u001b[2m     - retrying fill action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n"
+  }
+]

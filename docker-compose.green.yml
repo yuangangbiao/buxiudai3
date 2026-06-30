@@ -1,0 +1,26 @@
+# Blue-Green 部署 — green 环境（端口偏移+1000）
+services:
+  api-green:
+    build: .
+    ports: ["6008:6008"]
+    environment:
+      FLASK_PORT: "6008"
+      MYSQL_HOST: mysql
+      REDIS_HOST: redis
+    depends_on: [mysql, redis]
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: steel_belt
+    ports: ["3307:3306"]
+    volumes: [mysql_green_data:/var/lib/mysql]
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6380:6379"]
+
+volumes:
+  mysql_green_data:

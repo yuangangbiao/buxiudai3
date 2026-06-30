@@ -1,0 +1,503 @@
+{
+  "timestamp": "2026-06-24T09:48:51.770Z",
+  "summary": {
+    "total": 29,
+    "passed": 29,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "5001_首页",
+      "url": "http://localhost:5001/",
+      "status": "PASS",
+      "title": "登录 - 不锈钢网带跟单系统",
+      "checks": [
+        {
+          "desc": "页面加载成功",
+          "pass": true
+        },
+        {
+          "desc": "截图成功",
+          "pass": true
+        }
+      ],
+      "screenshot": "v2_5001____1782294293553.png"
+    },
+    {
+      "name": "5001_登录",
+      "url": "http://localhost:5001/login",
+      "status": "PASS",
+      "title": "登录 - 不锈钢网带跟单系统",
+      "checks": [
+        {
+          "desc": "页面加载成功",
+          "pass": true
+        },
+        {
+          "desc": "截图成功",
+          "pass": true
+        }
+      ],
+      "screenshot": "v2_5001____1782294301203.png"
+    },
+    {
+      "name": "5001_订单",
+      "url": "http://localhost:5001/orders",
+      "status": "PASS",
+      "title": "登录 - 不锈钢网带跟单系统",
+      "checks": [
+        {
+          "desc": "页面加载成功",
+          "pass": true
+        },
+        {
+          "desc": "截图成功",
+          "pass": true
+        }
+      ],
+      "screenshot": "v2_5001____1782294308926.png"
+    },
+    {
+      "name": "5001_新建订单",
+      "url": "http://localhost:5001/orders/new",
+      "status": "PASS",
+      "title": "登录 - 不锈钢网带跟单系统",
+      "checks": [
+        {
+          "desc": "页面加载成功",
+          "pass": true
+        },
+        {
+          "desc": "截图成功",
+          "pass": true
+        }
+      ],
+      "screenshot": "v2_5001______1782294317974.png"
+    },
+    {
+      "name": "5001_订单查询",
+      "url": "http://localhost:5001/order-query",
+      "status": "PASS",
+      "title": "登录 - 不锈钢网带跟单系统",
+      "checks": [
+        {
+          "desc": "页面加载成功",
+          "pass": true
+        },
+        {
+          "desc": "截图成功",
+          "pass": true
+        }
+      ],
+      "screenshot": "v2_5001______1782294325977.png"
+    },
+    {
+      "name": "5001_看板",
+      "url": "http://localhost:5001/kanban",
+      "status": "PASS",
+      "title": "登录 - 不锈钢网带跟单系统",
+      "checks": [
+        {
+          "desc": "页面加载成功",
+          "pass": true
+        },
+        {
+          "desc": "截图成功",
+          "pass": true
+        }
+      ],
+      "screenshot": "v2_5001____1782294333374.png"
+    },
+    {
+      "name": "5001_生产",
+      "url": "http://localhost:5001/production",
+      "status": "PASS",
+      "title": "登录 - 不锈钢网带跟单系统",
+      "checks": [
+        {
+          "desc": "页面加载成功",
+          "pass": true
+        },
+        {
+          "desc": "截图成功",
+          "pass": true
+        }
+      ],
+      "screenshot": "v2_5001____1782294345029.png"
+    },
+    {
+      "name": "5001_物料",
+      "url": "http://localhost:5001/material",
+      "status": "PASS",
+      "title": "登录 - 不锈钢网带跟单系统",
+      "checks": [
+        {
+          "desc": "页面加载成功",
+          "pass": true
+        },
+        {
+          "desc": "截图成功",
+          "pass": true
+        }
+      ],
+      "screenshot": "v2_5001____1782294352730.png"
+    },
+    {
+      "name": "5001_质检",
+      "url": "http://localhost:5001/quality",
+      "status": "PASS",
+      "title": "登录 - 不锈钢网带跟单系统",
+      "checks": [
+        {
+          "desc": "页面加载成功",
+          "pass": true
+        },
+        {
+          "desc": "截图成功",
+          "pass": true
+        }
+      ],
+      "screenshot": "v2_5001____1782294360340.png"
+    },
+    {
+      "name": "5001_仪表盘",
+      "url": "http://localhost:5001/dashboard",
+      "status": "PASS",
+      "title": "登录 - 不锈钢网带跟单系统",
+      "checks": [
+        {
+          "desc": "页面加载成功",
+          "pass": true
+        },
+        {
+          "desc": "截图成功",
+          "pass": true
+        }
+      ],
+      "screenshot": "v2_5001_____1782294368246.png"
+    },
+    {
+      "name": "5001_报工",
+      "url": "http://localhost:5001/work-reports",
+      "status": "PASS",
+      "title": "登录 - 不锈钢网带跟单系统",
+      "checks": [
+        {
+          "desc": "页面加载成功",
+          "pass": true
+        },
+        {
+          "desc": "截图成功",
+          "pass": true
+        }
+      ],
+      "screenshot": "v2_5001____1782294375915.png"
+    },
+    {
+      "name": "5001_发货",
+      "url": "http://localhost:5001/shipment",
+      "status": "PASS",
+      "title": "登录 - 不锈钢网带跟单系统",
+      "checks": [
+        {
+          "desc": "页面加载成功",
+          "pass": true
+        },
+        {
+          "desc": "截图成功",
+          "pass": true
+        }
+      ],
+      "screenshot": "v2_5001____1782294384020.png"
+    },
+    {
+      "name": "5001_工序跟踪",
+      "url": "http://localhost:5001/process-track",
+      "status": "PASS",
+      "title": "登录 - 不锈钢网带跟单系统",
+      "checks": [
+        {
+          "desc": "页面加载成功",
+          "pass": true
+        },
+        {
+          "desc": "截图成功",
+          "pass": true
+        }
+      ],
+      "screenshot": "v2_5001______1782294391469.png"
+    },
+    {
+      "name": "5001_工序管理",
+      "url": "http://localhost:5001/process-admin",
+      "status": "PASS",
+      "title": "登录 - 不锈钢网带跟单系统",
+      "checks": [
+        {
+          "desc": "页面加载成功",
+          "pass": true
+        },
+        {
+          "desc": "截图成功",
+          "pass": true
+        }
+      ],
+      "screenshot": "v2_5001______1782294399090.png"
+    },
+    {
+      "name": "5001_操作员",
+      "url": "http://localhost:5001/operators",
+      "status": "PASS",
+      "title": "登录 - 不锈钢网带跟单系统",
+      "checks": [
+        {
+          "desc": "页面加载成功",
+          "pass": true
+        },
+        {
+          "desc": "截图成功",
+          "pass": true
+        }
+      ],
+      "screenshot": "v2_5001_____1782294406579.png"
+    },
+    {
+      "name": "5001_健康检查",
+      "url": "http://localhost:5001/health",
+      "status": "PASS",
+      "title": "",
+      "checks": [
+        {
+          "desc": "页面加载成功",
+          "pass": true
+        },
+        {
+          "desc": "截图成功",
+          "pass": true
+        }
+      ],
+      "screenshot": "v2_5001______1782294413678.png"
+    },
+    {
+      "name": "5002_容器中心",
+      "url": "http://localhost:5002/container/",
+      "status": "PASS",
+      "title": "容器中心 · 综合管理",
+      "checks": [
+        {
+          "desc": "页面加载成功",
+          "pass": true
+        },
+        {
+          "desc": "截图成功",
+          "pass": true
+        }
+      ],
+      "screenshot": "v2_5002______1782294421865.png"
+    },
+    {
+      "name": "5002_健康检查",
+      "url": "http://localhost:5002/api/health",
+      "status": "PASS",
+      "title": "",
+      "checks": [
+        {
+          "desc": "页面加载成功",
+          "pass": true
+        },
+        {
+          "desc": "截图成功",
+          "pass": true
+        }
+      ],
+      "screenshot": "v2_5002______1782294443871.png"
+    },
+    {
+      "name": "5003_调度中心",
+      "url": "http://localhost:5003/api/dispatch-center/",
+      "status": "PASS",
+      "title": "调度中心",
+      "checks": [
+        {
+          "desc": "页面加载成功",
+          "pass": true
+        },
+        {
+          "desc": "截图成功",
+          "pass": true
+        }
+      ],
+      "screenshot": "v2_5003______1782294451201.png"
+    },
+    {
+      "name": "5003_工单",
+      "url": "http://localhost:5003/workorder",
+      "status": "PASS",
+      "title": "",
+      "checks": [
+        {
+          "desc": "页面加载成功",
+          "pass": true
+        },
+        {
+          "desc": "截图成功",
+          "pass": true
+        }
+      ],
+      "screenshot": "v2_5003____1782294466405.png"
+    },
+    {
+      "name": "5003_生产订单",
+      "url": "http://localhost:5003/production-orders",
+      "status": "PASS",
+      "title": "",
+      "checks": [
+        {
+          "desc": "页面加载成功",
+          "pass": true
+        },
+        {
+          "desc": "截图成功",
+          "pass": true
+        }
+      ],
+      "screenshot": "v2_5003______1782294471524.png"
+    },
+    {
+      "name": "5003_外协记录",
+      "url": "http://localhost:5003/outsource-records",
+      "status": "PASS",
+      "title": "",
+      "checks": [
+        {
+          "desc": "页面加载成功",
+          "pass": true
+        },
+        {
+          "desc": "截图成功",
+          "pass": true
+        }
+      ],
+      "screenshot": "v2_5003______1782294476926.png"
+    },
+    {
+      "name": "5003_健康检查",
+      "url": "http://localhost:5003/health",
+      "status": "PASS",
+      "title": "",
+      "checks": [
+        {
+          "desc": "页面加载成功",
+          "pass": true
+        },
+        {
+          "desc": "截图成功",
+          "pass": true
+        }
+      ],
+      "screenshot": "v2_5003______1782294482315.png"
+    },
+    {
+      "name": "5008_登录",
+      "url": "http://localhost:5008/",
+      "status": "PASS",
+      "title": "晨圣报工系统测试版",
+      "checks": [
+        {
+          "desc": "页面加载成功",
+          "pass": true
+        },
+        {
+          "desc": "截图成功",
+          "pass": true
+        }
+      ],
+      "screenshot": "v2_5008____1782294489730.png"
+    },
+    {
+      "name": "5008_首页",
+      "url": "http://localhost:5008/#/home",
+      "status": "PASS",
+      "title": "晨圣报工系统测试版",
+      "checks": [
+        {
+          "desc": "页面加载成功",
+          "pass": true
+        },
+        {
+          "desc": "截图成功",
+          "pass": true
+        }
+      ],
+      "screenshot": "v2_5008____1782294497149.png"
+    },
+    {
+      "name": "5008_工序任务",
+      "url": "http://localhost:5008/#/tasks",
+      "status": "PASS",
+      "title": "晨圣报工系统测试版",
+      "checks": [
+        {
+          "desc": "页面加载成功",
+          "pass": true
+        },
+        {
+          "desc": "截图成功",
+          "pass": true
+        }
+      ],
+      "screenshot": "v2_5008______1782294504693.png"
+    },
+    {
+      "name": "5008_扫码报工",
+      "url": "http://localhost:5008/#/scan",
+      "status": "PASS",
+      "title": "晨圣报工系统测试版",
+      "checks": [
+        {
+          "desc": "页面加载成功",
+          "pass": true
+        },
+        {
+          "desc": "截图成功",
+          "pass": true
+        }
+      ],
+      "screenshot": "v2_5008______1782294512492.png"
+    },
+    {
+      "name": "5008_考勤",
+      "url": "http://localhost:5008/#/attendance",
+      "status": "PASS",
+      "title": "晨圣报工系统测试版",
+      "checks": [
+        {
+          "desc": "页面加载成功",
+          "pass": true
+        },
+        {
+          "desc": "截图成功",
+          "pass": true
+        }
+      ],
+      "screenshot": "v2_5008____1782294520017.png"
+    },
+    {
+      "name": "5008_健康检查",
+      "url": "http://localhost:5008/api/health",
+      "status": "PASS",
+      "title": "",
+      "checks": [
+        {
+          "desc": "页面加载成功",
+          "pass": true
+        },
+        {
+          "desc": "截图成功",
+          "pass": true
+        }
+      ],
+      "screenshot": "v2_5008______1782294528326.png"
+    }
+  ]
+}

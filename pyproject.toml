@@ -1,0 +1,38 @@
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+pythonpath = ["."]
+addopts = ["-v", "--tb=short", "--strict-markers", "--ignore=tests/e2e", "--ignore=tests/integration", "--cov=core", "--cov=models", "--cov=services", "--cov=utils", "--cov-report=term-missing", "--cov-report=html:coverage_html", "--cov-report=xml:coverage.xml", "--cov-fail-under=48"]
+
+[tool.coverage.run]
+source = ["core", "models", "services", "utils"]
+omit = ["*/tests/*", "*/scripts/*", "*/views/*", "*/build/*", "*/dist/*", "*/temp_*/*", "*/_backup/*", "*/visualization_app/*", "*/mobile_api_ai/*"]
+# omit 中可选加 tests/ 避免误报:
+# omit = ["*/tests/*", "*/scripts/*", ...]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "def __str__",
+    "def __len__",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "logger\\(.*\\)",
+    "logging\\.",
+    "db\\.execute\\(",
+    "\\.error\\(",
+    "\\.warning\\(",
+    "\\.debug\\(",
+    "\\.exception\\(",
+    "except ImportError",
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.isort]
+profile = "black"
+line_length = 100

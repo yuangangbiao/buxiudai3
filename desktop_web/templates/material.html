@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>物料备料 - 不锈钢网带跟单系统</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Microsoft YaHei", sans-serif; background: #f5f6fa; color: #2c3e50; }
+  .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .navbar h1 { font-size: 18px; }
+  .navbar-right { display: flex; align-items: center; gap: 10px; }
+  .navbar-right .user { font-size: 14px; }
+  .navbar-right a, .navbar-right button { padding: 6px 12px; color: #fff; text-decoration: none; border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; font-size: 13px; background: rgba(255,255,255,0.1); cursor: pointer; }
+  .navbar-right a:hover, .navbar-right button:hover { background: rgba(255,255,255,0.2); }
+  .toolbar { background: #fff; padding: 12px 24px; display: flex; gap: 12px; align-items: center; border-bottom: 1px solid #e1e4e8; flex-wrap: wrap; }
+  .toolbar label { color: #666; font-size: 13px; }
+  .toolbar input, .toolbar select { padding: 6px 12px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 13px; }
+  .toolbar button { padding: 6px 16px; background: #667eea; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
+  .toolbar button:hover { background: #5a6fd6; }
+  .toolbar button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .summary { padding: 12px 24px; color: #555; font-size: 13px; }
+  .summary strong { color: #667eea; font-size: 16px; }
+  .error { background: #e74c3c; color: #fff; padding: 10px 24px; margin: 8px 24px; border-radius: 4px; font-size: 13px; }
+  .stat-bar { background: #fff; margin: 0 24px 12px; padding: 12px 16px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; gap: 20px; flex-wrap: wrap; }
+  .stat-bar .stat { display: flex; align-items: center; gap: 6px; }
+  .stat-bar .stat-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .stat-bar .stat-label { color: #888; font-size: 13px; }
+  .stat-bar .stat-count { font-weight: 700; font-size: 16px; color: #2c3e50; }
+  table { width: calc(100% - 48px); margin: 0 24px 24px; border-collapse: collapse; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); font-size: 13px; }
+  th { background: #f8f9fa; padding: 10px 12px; text-align: left; font-weight: 500; color: #555; border-bottom: 2px solid #e1e4e8; position: sticky; top: 0; }
+  td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; }
+  tr:hover { background: #f8f9fa; }
+  .status-tag { display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: 12px; color: #fff; font-weight: 500; }
+  .progress-bar { background: #ecf0f1; border-radius: 8px; height: 18px; position: relative; overflow: hidden; min-width: 80px; }
+  .progress-fill { height: 100%; transition: width 0.3s; background: linear-gradient(90deg, #4CAF50, #81C784); }
+  .progress-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #fff; font-weight: 600; }
+  .empty { text-align: center; padding: 60px 20px; color: #95a5a6; }
+  .tip { background: #FFF8E1; color: #FF8F00; padding: 8px 24px; font-size: 12px; border-bottom: 1px solid #FFE0B2; }
+</style>
+</head>
+<body>
+<div id="appNav"></div>
+<script src="/static/js/shared.js"></script>
+<script>renderNav('material', '📋 物料备料管理');</script>
+
+<div class="tip">💡 提示：仅显示已排产及后续状态订单（已排产/生产中/质检中/待发货/已发货/已完成）</div>
+
+<div class="toolbar">
+  <label>订单状态:</label>
+  <select id="statusFilter">
+    <option value="all">全部</option>
+    <option value="已排产">已排产</option>
+    <option value="生产中">生产中</option>
+    <option value="质检中">质检中</option>
+    <option value="待发货">待发货</option>
+    <option value="已发货">已发货</option>
+    <option value="已完成">已完成</option>
+  </select>
+  <label>备料状态:</label>
+  <select id="matStatusFilter">
+    <option value="all">全部</option>
+    <option value="待备料">待备料</option>
+    <option value="部分完成">部分完成</option>
+    <option value="已完成">已完成</option>
+  </select>
+  <label>关键字:</label>
+  <input type="text" id="keyword" placeholder="订单号/客户/产品" style="min-width: 200px;">
+  <button onclick="loadData()">🔍 搜索</button>
+  <button onclick="loadData()">🔄 刷新</button>
+  <span style="flex:1"></span>
+  <button id="autoRefreshBtn" onclick="toggleAutoRefresh()">⏸️ 暂停自动刷新</button>
+</div>
+
+<div class="stat-bar" id="statBar"></div>
+<div class="summary" id="summary">加载中...</div>
+<div id="errorBox" class="error" style="display:none"></div>
+
+<div style="overflow-x: auto; max-height: calc(100vh - 280px); overflow-y: auto;">
+<table>
+  <thead>
+    <tr>
+      <th>订单号</th>
+      <th>客户</th>
+      <th>产品</th>
+      <th style="text-align:center">数量</th>
+      <th>计划开始</th>
+      <th>计划结束</th>
+      <th>订单状态</th>
+      <th>备料状态</th>
+      <th>备料进度</th>
+      <th>计划/实际</th>
+    </tr>
+  </thead>
+  <tbody id="dataTbody">
+    <tr><td colspan="10" class="empty">加载中...</td></tr>
+  </tbody>
+</table>
+</div>
+
+<script>
+let _autoRefresh = null;
+
+// getToken / showUser / showError / escapeHtml / logout 来自 shared.js
+function statusTag(s, color) {
+  if (!s) return '';
+  return `<span class="status-tag" style="background:${color || '#666'}">${s}</span>`;
+}
+
+function progressBar(done, total) {
+  if (total === 0) return '<span style="color:#aaa">—</span>';
+  const pct = Math.round((done / total) * 100);
+  return `<div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div><div class="progress-text">${done}/${total} (${pct}%)</div></div>`;
+}
+
+function renderStats(orders) {
+  const stats = {
+    '待备料': 0, '部分完成': 0, '已完成': 0
+  };
+  orders.forEach(o => {
+    if (stats[o.mat_status] !== undefined) stats[o.mat_status]++;
+  });
+  const colors = {'待备料':'#FF9800', '部分完成':'#2196F3', '已完成':'#4CAF50'};
+  const html = Object.keys(stats).map(k =>
+    `<div class="stat"><span class="stat-dot" style="background:${colors[k]}"></span><span class="stat-label">${k}</span><span class="stat-count">${stats[k]}</span></div>`
+  ).join('');
+  document.getElementById('statBar').innerHTML = html;
+}
+
+async function loadData() {
+  const status = document.getElementById('statusFilter').value;
+  const matStatus = document.getElementById('matStatusFilter').value;
+  const keyword = document.getElementById('keyword').value.trim();
+  const tbody = document.getElementById('dataTbody');
+  tbody.innerHTML = '<tr><td colspan="10" class="empty">加载中...</td></tr>';
+
+  const qs = new URLSearchParams({
+    status: status,
+    mat_status: matStatus,
+    keyword: keyword,
+    limit: 200
+  });
+
+  try {
+    const r = await fetch('/api/material/list?' + qs.toString(), {
+      headers: { 'X-Dispatch-Token': getToken() }
+    });
+    if (r.status === 401) { window.location.href = '/login'; return; }
+    const data = await r.json();
+    if (data.code !== 0) {
+      showError('errorBox', data.message || '加载失败');
+      tbody.innerHTML = '<tr><td colspan="10" class="empty">加载失败</td></tr>';
+      return;
+    }
+    const orders = data.data.orders || [];
+    document.getElementById('summary').innerHTML = `共 <strong>${orders.length}</strong> 个需备料订单`;
+    renderStats(orders);
+    if (orders.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="10" class="empty">暂无备料订单</td></tr>';
+      return;
+    }
+    tbody.innerHTML = orders.map(o => {
+      const planActual = (o.mat_planned || o.mat_actual)
+        ? `${Number(o.mat_planned) || 0} / ${Number(o.mat_actual) || 0}`
+        : '—';
+      return `<tr>
+        <td><b>${escapeHtml(o.order_no)}</b></td>
+        <td>${escapeHtml(o.customer_name)}</td>
+        <td>${escapeHtml(o.product_name)}</td>
+        <td style="text-align:center">${Number(o.quantity) || 0}</td>
+        <td>${escapeHtml(o.plan_start) || '—'}</td>
+        <td>${escapeHtml(o.plan_end) || '—'}</td>
+        <td>${statusTag(o.order_status, o.order_status_color)}</td>
+        <td>${statusTag(o.mat_status, o.mat_status_color)}</td>
+        <td>${progressBar(o.mat_done || 0, o.mat_total || 0)}</td>
+        <td style="text-align:center">${planActual}</td>
+      </tr>`;
+    }).join('');
+  } catch (e) {
+    showError('errorBox', '网络错误: ' + e.message);
+    tbody.innerHTML = '<tr><td colspan="10" class="empty">网络错误</td></tr>';
+  }
+}
+
+function toggleAutoRefresh() {
+  if (_autoRefresh) _autoRefresh.toggle();
+}
+
+document.getElementById('statusFilter').addEventListener('change', loadData);
+document.getElementById('matStatusFilter').addEventListener('change', loadData);
+document.getElementById('keyword').addEventListener('keypress', e => {
+  if (e.key === 'Enter') loadData();
+});
+
+showUser();
+if (!getToken()) { window.location.href = '/login'; }
+else { loadData(); }
+
+// Auto refresh (使用 AutoRefresh 类, 含清理 + 倒计时)
+_autoRefresh = new AutoRefresh(() => { if (getToken()) loadData(); }, 30000, 'autoRefreshBtn');
+_autoRefresh.start();
+</script>
+</body>
+</html>

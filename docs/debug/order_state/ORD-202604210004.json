@@ -1,0 +1,285 @@
+{
+  "code": 0,
+  "data": {
+    "flow_production": [
+      {
+        "created_at": "2026-06-09T22:46:59",
+        "data_type": "flow_production",
+        "id": "5dc395ef",
+        "operator_name": "",
+        "planned_qty": 366,
+        "related_process": "",
+        "status": "created",
+        "target_operator": "",
+        "title": "ORD-202604210004 - 冷冻螺旋网"
+      }
+    ],
+    "flow_steps": [],
+    "material_tasks": [
+      {
+        "created_at": "2026-06-09T23:06:07",
+        "data_type": "material_request",
+        "id": "27B948C6",
+        "operator_name": "OP001",
+        "planned_qty": "366.00",
+        "related_process": "304不锈钢链条",
+        "status": "distributed",
+        "target_operator": "OP001",
+        "title": "ORD-202604210004 - 304不锈钢链条"
+      },
+      {
+        "created_at": "2026-06-09T23:06:05",
+        "data_type": "material_request",
+        "id": "72E29E2F",
+        "operator_name": "OP001",
+        "planned_qty": "150.00",
+        "related_process": "304不锈钢穿杆",
+        "status": "distributed",
+        "target_operator": "OP001",
+        "title": "ORD-202604210004 - 304不锈钢穿杆"
+      }
+    ],
+    "order_no": "ORD-202604210004",
+    "other_tasks": [],
+    "outsource_tasks": [],
+    "process": {
+      "completed_at": null,
+      "completed_by": "",
+      "completed_task_count": 0,
+      "content": {},
+      "created_at": "2026-06-09T22:46:59",
+      "created_by": "",
+      "current_step": 2,
+      "customer_group": "",
+      "customer_name": "",
+      "data_locked": 0,
+      "delivery_date": "2026-07-22",
+      "flow_type": "production",
+      "id": "146d5c1e",
+      "last_reverted_at": null,
+      "order_no": "ORD-202604210004",
+      "plan_end": "2026-06-28",
+      "plan_start": "2026-06-09",
+      "priority": "high",
+      "process_type": "production",
+      "prod_id": 51,
+      "product_name": "冷冻螺旋网",
+      "qc_required": 0,
+      "qc_trigger_reason": "",
+      "quantity": 366.0,
+      "source": "desktop_schedule",
+      "status": "in_production",
+      "steps": [
+        {
+          "name": "工单发布",
+          "role": "计划部",
+          "status_key": "published"
+        },
+        {
+          "name": "排产制定",
+          "role": "生产部",
+          "status_key": "scheduled"
+        },
+        {
+          "name": "排产确认",
+          "role": "计划部",
+          "status_key": "confirmed"
+        },
+        {
+          "name": "生产执行",
+          "role": "生产部",
+          "status_key": "in_production"
+        },
+        {
+          "name": "质检审核",
+          "parallel": true,
+          "role": "质检部",
+          "status_key": "qc_passed"
+        },
+        {
+          "name": "报工完成",
+          "role": "生产部",
+          "status_key": "reported"
+        },
+        {
+          "name": "完工入库",
+          "role": "仓库",
+          "status_key": "completed"
+        },
+        {
+          "name": "发货",
+          "role": "仓库",
+          "status_key": "shipped"
+        }
+      ],
+      "task_count": 0,
+      "template_id": null,
+      "unit": "米",
+      "updated_at": "2026-06-09T22:47:38",
+      "work_order_no": ""
+    },
+    "process_tasks": [
+      {
+        "created_at": "2026-06-09T23:07:02",
+        "data_type": "process_report",
+        "id": "9D3B76F0",
+        "operator_name": "OP001",
+        "planned_qty": 23,
+        "related_process": "包装入库",
+        "status": "distributed",
+        "target_operator": "OP001",
+        "title": "ORD-202604210004 - 包装入库"
+      },
+      {
+        "created_at": "2026-06-09T23:07:00",
+        "data_type": "process_report",
+        "id": "5FA7372A",
+        "operator_name": "OP001",
+        "planned_qty": 23,
+        "related_process": "质量检验",
+        "status": "distributed",
+        "target_operator": "OP001",
+        "title": "ORD-202604210004 - 质量检验"
+      },
+      {
+        "created_at": "2026-06-09T23:06:57",
+        "data_type": "process_report",
+        "id": "FB07DB91",
+        "operator_name": "OP001",
+        "planned_qty": 23,
+        "related_process": "表面处理",
+        "status": "distributed",
+        "target_operator": "OP001",
+        "title": "ORD-202604210004 - 表面处理"
+      },
+      {
+        "created_at": "2026-06-09T23:06:52",
+        "data_type": "process_report",
+        "id": "84B79D5D",
+        "operator_name": "OP001",
+        "planned_qty": 23,
+        "related_process": "焊接输送带",
+        "status": "distributed",
+        "target_operator": "OP001",
+        "title": "ORD-202604210004 - 焊接输送带"
+      },
+      {
+        "created_at": "2026-06-09T23:06:50",
+        "data_type": "process_report",
+        "id": "D5A77586",
+        "operator_name": "OP001",
+        "planned_qty": 23,
+        "related_process": "整形校直",
+        "status": "distributed",
+        "target_operator": "OP001",
+        "title": "ORD-202604210004 - 整形校直"
+      },
+      {
+        "created_at": "2026-06-09T23:06:48",
+        "data_type": "process_report",
+        "id": "E346796E",
+        "operator_name": "OP001",
+        "planned_qty": 23,
+        "related_process": "安装链条",
+        "status": "distributed",
+        "target_operator": "OP001",
+        "title": "ORD-202604210004 - 安装链条"
+      },
+      {
+        "created_at": "2026-06-09T23:06:46",
+        "data_type": "process_report",
+        "id": "2E733087",
+        "operator_name": "OP001",
+        "planned_qty": 23,
+        "related_process": "输送带组装穿杆",
+        "status": "distributed",
+        "target_operator": "OP001",
+        "title": "ORD-202604210004 - 输送带组装穿杆"
+      },
+      {
+        "created_at": "2026-06-09T23:06:44",
+        "data_type": "process_report",
+        "id": "85BF09B0",
+        "operator_name": "OP001",
+        "planned_qty": 659,
+        "related_process": "编制右旋",
+        "status": "distributed",
+        "target_operator": "OP001",
+        "title": "ORD-202604210004 - 编制右旋"
+      },
+      {
+        "created_at": "2026-06-09T23:06:38",
+        "data_type": "process_report",
+        "id": "009112A5",
+        "operator_name": "OP001",
+        "planned_qty": 659,
+        "related_process": "编制左旋",
+        "status": "distributed",
+        "target_operator": "OP001",
+        "title": "ORD-202604210004 - 编制左旋"
+      },
+      {
+        "created_at": "2026-06-09T23:06:36",
+        "data_type": "process_report",
+        "id": "618905DA",
+        "operator_name": "OP001",
+        "planned_qty": 0,
+        "related_process": "原材料准备",
+        "status": "distributed",
+        "target_operator": "OP001",
+        "title": "ORD-202604210004 - 原材料准备"
+      }
+    ],
+    "product_name": "",
+    "quality_tasks": [],
+    "quantity": 23,
+    "repair_tasks": [],
+    "stats": {
+      "completed_tasks": 0,
+      "total_tasks": 13
+    },
+    "status": "distributed",
+    "steps": [
+      {
+        "name": "工单发布",
+        "role": "计划部",
+        "status": "completed"
+      },
+      {
+        "name": "排产制定",
+        "role": "生产部",
+        "status": "completed"
+      },
+      {
+        "name": "排产确认",
+        "role": "计划部",
+        "status": "active"
+      },
+      {
+        "name": "生产执行",
+        "role": "生产部",
+        "status": "pending"
+      },
+      {
+        "name": "质检审核",
+        "role": "质检部",
+        "status": "pending"
+      },
+      {
+        "name": "报工完成",
+        "role": "生产部",
+        "status": "pending"
+      },
+      {
+        "name": "完工入库",
+        "role": "仓库",
+        "status": "pending"
+      },
+      {
+        "name": "发货",
+        "role": "仓库",
+        "status": "pending"
+      }
+    ]
+  }
+}

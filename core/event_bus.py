@@ -1,0 +1,140 @@
+# -*- coding: utf-8 -*-
+"""
+事件总线 - 实现模块间松耦合通信
+"""
+
+from typing import Callable, Dict, List, Any
+from collections import defaultdict
+import logging
+import threading
+
+logger = logging.getLogger(__name__)
+
+
+class EventBus:
+    """
+    简单事件总线，支持订阅/发布模式
+    """
+    
+    _instance = None
+    _handlers: Dict[str, List[Callable]] = defaultdict(list)
+    _lock = threading.Lock()
+    
+    def __new__(cls):
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
+                    cls._instance._handlers = defaultdict(list)
+                    cls._instance._sync_lock = threading.Lock()
+        return cls._instance
+    
+    @classmethod
+    def reset(cls) -> None:
+        """重置单例状态——仅用于测试。清空所有订阅者，释放实例。"""
+        with cls._lock:
+            cls._instance = None
+            cls._handlers = defaultdict(list)
+
+    @classmethod
+    def subscribe(cls, event: str, handler: Callable) -> None:
+        """
+        订阅事件
+        
+        Args:
+            event: 事件名称
+            handler: 处理函数，接收 event 和 data 两个参数
+        """
+        with cls._lock:
+            if handler not in cls._handlers[event]:
+                cls._handlers[event].append(handler)
+    
+    @classmethod
+    def unsubscribe(cls, event: str, handler: Callable) -> None:
+        """
+        取消订阅
+        
+        Args:
+            event: 事件名称
+            handler: 处理函数
+        """
+        with cls._lock:
+            if handler in cls._handlers[event]:
+                cls._handlers[event].remove(handler)
+    
+    @classmethod
+    def publish(cls, event: str, data: Any = None) -> None:
+        """
+        发布事件
+        
+        Args:
+            event: 事件名称
+            data: 事件数据
+        """
+        with cls._lock:
+            handlers = list(cls._handlers.get(event, []))
+        
+        for handler in handlers:
+            try:
+                handler(event, data)
+            except Exception as e:
+                logger.error("事件处理错误 [%s -> %s]: %s", event, handler.__name__, e)
+    
+    @classmethod
+    def clear(cls, event: str = None) -> None:
+        """
+        清除事件订阅
+        
+        Args:
+            event: 事件名称，None 表示清除所有
+        """
+        with cls._lock:
+            if event:
+                cls._handlers[event] = []
+            else:
+                cls._handlers.clear()
+    
+    @classmethod
+    def get_handlers(cls, event: str) -> List[str]:
+        """获取事件的所有处理器名称"""
+        return [h.__name__ for h in cls._handlers.get(event, [])]
+
+
+# 预定义事件常量
+class Events:
+    """事件名称常量"""
+    # 订单相关
+    ORDER_CREATED = 'order:created'
+    ORDER_UPDATED = 'order:updated'
+    ORDER_STATUS_CHANGED = 'order:status_changed'
+    ORDER_DELETED = 'order:deleted'
+    
+    # 库存相关
+    INVENTORY_INCREASED = 'inventory:increased'
+    INVENTORY_DECREASED = 'inventory:decreased'
+    INVENTORY_LOW_STOCK = 'inventory:low_stock'
+    
+    # 工序相关
+    PROCESS_STARTED = 'process:started'
+    PROCESS_COMPLETED = 'process:completed'
+    PROCESS_REPORTED = 'process:reported'
+    
+    # 系统相关
+    APP_STARTED = 'app:started'
+    APP_CLOSED = 'app:closed'
+    OPERATOR_LOGIN = 'operator:login'
+    OPERATOR_LOGOUT = 'operator:logout'
+
+
+# 便捷函数
+def on_event(event: str):
+    """事件订阅装饰器"""
+    def decorator(func: Callable):
+        EventBus.subscribe(event, func)
+        return func
+    return decorator
+
+
+def publish(event: str, data: Any = None) -> None:
+    """发布事件的便捷函数"""
+    EventBus.publish(event, data)

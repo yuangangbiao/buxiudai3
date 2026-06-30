@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>登录 - 不锈钢网带跟单系统</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Microsoft YaHei", sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  }
+  .card { background: #fff; border-radius: 12px; padding: 40px; width: 360px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+  h1 { font-size: 22px; text-align: center; margin-bottom: 8px; color: #2c3e50; }
+  .sub { text-align: center; color: #7f8c8d; font-size: 13px; margin-bottom: 24px; }
+  input { width: 100%; padding: 12px; border: 1px solid #dcdfe6; border-radius: 6px; font-size: 15px; margin-bottom: 16px; outline: none; }
+  input:focus { border-color: #667eea; }
+  button { width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; }
+  button:disabled { background: #95a5a6; }
+  .err { color: #e74c3c; text-align: center; font-size: 13px; min-height: 18px; margin-top: 8px; }
+  .hint { color: #95a5a6; font-size: 12px; text-align: center; margin-top: 16px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>📋 钢带跟单系统</h1>
+  <div class="sub">桌面 Web 端 (5001)</div>
+  <form id="f">
+    <input type="text" id="u" placeholder="请输入员工姓名" required autofocus>
+    <button type="submit" id="b">登 录</button>
+    <div class="err" id="e"></div>
+  </form>
+  <div class="hint">提示: 输入工厂登记的真实姓名</div>
+</div>
+<script src="/static/js/shared.js"></script>
+<script>
+document.getElementById('f').addEventListener('submit', async e => {
+  e.preventDefault();
+  const u = document.getElementById('u').value.trim();
+  if (!u) return;
+  const b = document.getElementById('b'); const err = document.getElementById('e');
+  b.disabled = true; b.textContent = '登录中...'; err.textContent = '';
+  try {
+    const r = await fetch('/api/login', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name: u, username: u, operator_id: u})
+    });
+    const data = await r.json();
+    if (data.code === 0) {
+      const user = data.data;
+      const csrfToken = user.csrf_token;
+      delete user.csrf_token;
+      const utf8 = new TextEncoder().encode(`${user.id}:${user.name}`);
+      const token = btoa(String.fromCharCode(...utf8));
+      localStorage.setItem('dispatch_token', token);
+      localStorage.setItem('dispatch_user', JSON.stringify(user));
+      if (csrfToken) localStorage.setItem('csrf_token', csrfToken);
+      window.location.href = '/orders';
+    } else {
+      err.textContent = data.message || '登录失败';
+      b.disabled = false; b.textContent = '登 录';
+    }
+  } catch (e2) {
+    err.textContent = '网络错误: ' + e2.message;
+    b.disabled = false; b.textContent = '登 录';
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>工序管理 - 不锈钢网带跟单系统</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Microsoft YaHei", sans-serif; background: #f5f6fa; color: #2c3e50; }
+  .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .navbar h1 { font-size: 18px; }
+  .toolbar { background: #fff; padding: 14px 24px; display: flex; gap: 10px; align-items: center; border-bottom: 1px solid #e1e4e8; flex-wrap: wrap; }
+  .toolbar select, .toolbar input { padding: 7px 12px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 13px; }
+  .toolbar select:focus, .toolbar input:focus { outline: none; border-color: #667eea; }
+  .btn { padding: 7px 14px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 5px; }
+  .btn-primary { background: #667eea; color: #fff; }
+  .btn-primary:hover { background: #5569d6; }
+  .btn-success { background: #27ae60; color: #fff; }
+  .btn-success:hover { background: #219653; }
+  .btn-warning { background: #e67e22; color: #fff; }
+  .btn-warning:hover { background: #d35400; }
+  .btn-danger { background: #e74c3c; color: #fff; }
+  .btn-danger:hover { background: #c0392b; }
+  .btn-secondary { background: #95a5a6; color: #fff; }
+  .btn-secondary:hover { background: #7f8c8d; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .summary { padding: 10px 24px; color: #888; font-size: 13px; }
+  table { width: 100%; border-collapse: collapse; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  th { background: #f8f9fa; padding: 10px 14px; text-align: left; font-weight: 500; color: #555; border-bottom: 2px solid #e1e4e8; font-size: 13px; white-space: nowrap; cursor: pointer; user-select: none; }
+  th:hover { background: #f0f2f8; }
+  td { padding: 10px 14px; border-bottom: 1px solid #f0f0f0; font-size: 13px; vertical-align: middle; }
+  tr:hover { background: #f8f9fa; cursor: pointer; }
+  tr.selected { background: #eef2ff; }
+  .status-tag { padding: 2px 8px; border-radius: 10px; font-size: 11px; color: #fff; white-space: nowrap; }
+  .status-待开始 { background: #3498db; }
+  .status-生产中 { background: #e67e22; }
+  .status-已完成 { background: #27ae60; }
+  .status-tag-yes { background: #e74c3c; }
+  .progress-cell { display: flex; align-items: center; gap: 6px; }
+  .progress-bar { width: 60px; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; background: #27ae60; border-radius: 4px; transition: width 0.3s; }
+  .progress-fill-warning { background: #e67e22; }
+  .table-wrap { background: #fff; margin: 12px 24px; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .empty { text-align: center; padding: 60px 20px; color: #95a5a6; font-size: 14px; }
+  .msg-box { padding: 12px 24px; margin: 12px 24px; border-radius: 4px; font-size: 13px; display: none; }
+  .msg-error { background: #fdecea; border: 1px solid #f5c6cb; color: #c0392b; }
+  .msg-success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+  .msg-info { background: #e8f4fd; border: 1px solid #b8daff; color: #0c5460; }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; align-items: center; justify-content: center; }
+  .modal-overlay.show { display: flex; }
+  .modal-box { background: #fff; border-radius: 8px; padding: 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); max-height: 90vh; overflow-y: auto; }
+  .modal-box.modal-wide { min-width: 500px; max-width: 600px; }
+  .modal-title { font-size: 15px; font-weight: 600; margin-bottom: 16px; color: #2c3e50; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+  .modal-cancel { padding: 8px 16px; border: 1px solid #dcdfe6; background: #fff; border-radius: 4px; cursor: pointer; font-size: 13px; }
+  .modal-cancel:hover { background: #f5f5f5; }
+  .modal-confirm { padding: 8px 16px; border: none; background: #667eea; color: #fff; border-radius: 4px; cursor: pointer; font-size: 13px; }
+  .modal-confirm:hover { background: #5569d6; }
+  .modal-confirm:disabled { opacity: 0.5; cursor: not-allowed; }
+  .form-group { margin-bottom: 14px; }
+  .form-label { display: block; font-size: 13px; color: #555; margin-bottom: 5px; font-weight: 500; }
+  .form-control { width: 100%; padding: 8px 12px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 13px; }
+  .form-control:focus { outline: none; border-color: #667eea; }
+  .form-control[readonly] { background: #f5f7fa; color: #999; }
+  .form-row { display: flex; gap: 12px; }
+  .form-row .form-group { flex: 1; }
+  .detail-section { background: #f8f9fa; border-radius: 6px; padding: 14px 16px; margin-bottom: 12px; }
+  .detail-section h4 { font-size: 13px; color: #667eea; margin-bottom: 8px; font-weight: 600; }
+  .detail-row { display: flex; padding: 4px 0; font-size: 13px; }
+  .detail-label { color: #888; min-width: 80px; }
+  .detail-value { color: #2c3e50; font-weight: 500; }
+  .detail-highlight { color: #e67e22; font-weight: 600; }
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .sort-arrow { font-size: 10px; color: #667eea; }
+  .context-menu { position: fixed; background: #fff; border: 1px solid #e1e4e8; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); z-index: 2000; min-width: 160px; overflow: hidden; display: none; }
+  .context-menu.show { display: block; }
+  .context-item { padding: 9px 16px; font-size: 13px; cursor: pointer; color: #2c3e50; }
+  .context-item:hover { background: #f0f4ff; color: #667eea; }
+  .context-item.danger { color: #e74c3c; }
+  .context-item.danger:hover { background: #fdecea; }
+  .context-sep { border-top: 1px solid #f0f0f0; margin: 4px 0; }
+  .stats-bar { display: flex; gap: 20px; padding: 12px 24px; background: #fff; margin: 0 24px 12px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .stat-card { flex: 1; text-align: center; padding: 12px; background: #f8f9fa; border-radius: 6px; }
+  .stat-value { font-size: 24px; font-weight: 600; color: #667eea; }
+  .stat-label { font-size: 12px; color: #888; margin-top: 4px; }
+  .progress-overview { padding: 12px 24px; background: #fff; margin: 0 24px 12px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 12px; }
+  .progress-text { font-size: 14px; color: #555; white-space: nowrap; }
+  .progress-bar-large { flex: 1; height: 12px; background: #e0e0e0; border-radius: 6px; overflow: hidden; }
+  .progress-bar-large .fill { height: 100%; background: linear-gradient(90deg, #27ae60, #2ecc71); border-radius: 6px; transition: width 0.5s; }
+</style>
+</head>
+<body>
+<div id="appNav"></div>
+<script src="/static/js/shared.js"></script>
+<script>renderNav('process_admin', '🔧 工序管理');</script>
+
+<div class="toolbar">
+  <select id="workOrderSelect" onchange="onWorkOrderChange()" style="min-width: 300px;">
+    <option value="">-- 请选择工单 --</option>
+  </select>
+  <input type="text" id="keywordInput" placeholder="🔍 搜索工单号/客户..." style="min-width:200px;" onkeydown="if(event.key==='Enter')searchWorkOrders()">
+  <button class="btn btn-primary" onclick="searchWorkOrders()">🔍 搜索</button>
+  <button class="btn btn-success" onclick="openAddProcess()">➕ 添加工序</button>
+  <button class="btn btn-warning" onclick="openInsertProcess()">📥 插入工序</button>
+  <button class="btn btn-primary" onclick="openQuickReport()">📝 报工</button>
+  <button class="btn btn-secondary" onclick="loadProcesses()">🔄 刷新</button>
+</div>
+
+<div id="msgBox" class="msg-box" style="display:none;"></div>
+
+<div class="stats-bar" id="statsBar" style="display:none;">
+  <div class="stat-card">
+    <div class="stat-value" id="statTotal">--</div>
+    <div class="stat-label">计划总量</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" id="statCompleted">--</div>
+    <div class="stat-label">已完成</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" id="statQualified">--</div>
+    <div class="stat-label">合格数</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" id="statInProgress">--</div>
+    <div class="stat-label">进行中</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" id="statPending">--</div>
+    <div class="stat-label">待开始</div>
+  </div>
+</div>
+
+<div class="progress-overview" id="progressOverview" style="display:none;">
+  <span class="progress-text" id="progressText">整体进度：0%</span>
+  <div class="progress-bar-large">
+    <div class="fill" id="progressFill" style="width: 0%;"></div>
+  </div>
+</div>
+
+<div class="summary" id="summary">请选择工单以查看工序</div>
+
+<div class="table-wrap">
+  <table>
+    <thead id="tableHead"></thead>
+    <tbody id="processTbody"><tr><td colspan="12" class="empty">请从上方选择一个工单查看工序</td></tr></tbody>
+  </table>
+</div>
+
+<div id="contextMenu" class="context-menu">
+  <div class="context-item" onclick="ctxEditProcess()">✏️ 编辑工序</div>
+  <div class="context-item" onclick="ctxAdjustQty()">🔢 调整计划量</div>
+  <div class="context-sep"></div>
+  <div class="context-item" onclick="ctxStartProcess()">▶️ 开始工序</div>
+  <div class="context-item" onclick="ctxCompleteProcess()">✅ 标记完成</div>
+  <div class="context-item" onclick="ctxResetProcess()">🔄 重置开始</div>
+  <div class="context-sep"></div>
+  <div class="context-item" onclick="ctxMoveUp()">⬆️ 上移</div>
+  <div class="context-item" onclick="ctxMoveDown()">⬇️ 下移</div>
+  <div class="context-sep"></div>
+  <div class="context-item danger" onclick="ctxDeleteProcess()">🗑️ 删除工序</div>
+</div>
+
+<!-- 添加工序 -->
+<div class="modal-overlay" id="addProcessModal">
+  <div class="modal-box modal-wide">
+    <div class="modal-title">➕ 添加工序</div>
+    <div id="addProcessForm"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('addProcessModal')">取消</button>
+      <button class="modal-confirm" id="addProcessBtn" onclick="submitAddProcess()">确认添加</button>
+    </div>
+  </div>
+</div>
+
+<!-- 插入工序 -->
+<div class="modal-overlay" id="insertProcessModal">
+  <div class="modal-box modal-wide">
+    <div class="modal-title">📥 插入工序（在选中工序之后）</div>
+    <div id="insertProcessForm"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('insertProcessModal')">取消</button>
+      <button class="modal-confirm" id="insertProcessBtn" onclick="submitInsertProcess()">确认插入</button>
+    </div>
+  </div>
+</div>
+
+<!-- 编辑工序 -->
+<div class="modal-overlay" id="editProcessModal">
+  <div class="modal-box modal-wide">
+    <div class="modal-title">✏️ 编辑工序</div>
+    <div id="editProcessForm"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('editProcessModal')">取消</button>
+      <button class="modal-confirm" id="editProcessBtn" onclick="submitEditProcess()">保存修改</button>
+    </div>
+  </div>
+</div>
+
+<!-- 调整计划量 -->
+<div class="modal-overlay" id="adjustQtyModal">
+  <div class="modal-box modal-wide">
+    <div class="modal-title">🔢 调整计划量</div>
+    <div id="adjustQtyForm"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('adjustQtyModal')">取消</button>
+      <button class="modal-confirm" id="adjustQtyBtn" onclick="submitAdjustQty()">确认调整</button>
+    </div>
+  </div>
+</div>
+
+<!-- 报工提交 -->
+<div class="modal-overlay" id="reportModal">
+  <div class="modal-box modal-wide">
+    <div class="modal-title">📝 工序报工</div>
+    <div id="reportForm"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('reportModal')">取消</button>
+      <button class="modal-confirm" id="reportBtn" onclick="submitReport()">提交报工</button>
+    </div>
+  </div>
+</div>
+
+<!-- 工序详情 -->
+<div class="modal-overlay" id="processDetailModal">
+  <div class="modal-box modal-wide">
+    <div class="modal-title" id="processDetailTitle">🔍 工序详情</div>
+    <div id="processDetailContent" style="max-height:60vh;overflow-y:auto;"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('processDetailModal')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let workOrders = [];
+let currentWorkOrderId = null;
+let currentProdId = null;
+let processesData = [];
+let selectedProcessId = null;
+let ctxProcess = null;
+
+const COLUMNS = [
+  { key: 'process_seq', label: '序', cls: 'col-seq', w: 40 },
+  { key: 'process_name', label: '工序名称', cls: 'col-name', w: 100 },
+  { key: 'process_code', label: '编码', cls: 'col-code', w: 70 },
+  { key: 'worker', label: '执行人', cls: 'col-worker', w: 80 },
+  { key: 'planned_qty', label: '计划', cls: 'col-qty', w: 60, align: 'center' },
+  { key: 'unit', label: '单位', cls: 'col-unit', w: 50, align: 'center' },
+  { key: 'completed_qty', label: '完成', cls: 'col-qty', w: 60, align: 'center' },
+  { key: 'qualified_qty', label: '合格', cls: 'col-qty', w: 60, align: 'center' },
+  { key: 'progress', label: '进度', cls: 'col-progress', w: 100, noSort: true },
+  { key: 'work_hours', label: '工时', cls: 'col-hours', w: 60, align: 'center' },
+  { key: 'status', label: '状态', cls: 'col-status', w: 80, align: 'center' },
+  { key: 'is_outsource', label: '外协', cls: 'col-outsource', w: 50, align: 'center' },
+];
+
+function renderTableHead() {
+  const th = document.getElementById('tableHead');
+  th.innerHTML = `<tr>${COLUMNS.map(c => {
+    const arrow = currentSort.col === c.key ? (currentSort.reverse ? ' ▼' : ' ▲') : '';
+    const cls = c.cls || '';
+    const align = c.align ? `style="text-align:${c.align}"` : '';
+    return `<th class="${cls}" ${align} onclick="${c.noSort ? '' : `sortBy('${c.key}')`}">${escapeHtml(c.label)}${arrow}</th>`;
+  }).join('')}</tr>`;
+}
+
+let currentSort = { col: 'process_seq', reverse: false };
+
+function sortBy(col) {
+  if (currentSort.col === col) {
+    currentSort.reverse = !currentSort.reverse;
+  } else {
+    currentSort.col = col;
+    currentSort.reverse = false;
+  }
+  renderTable();
+}
+
+function getProgressPercent(completed, planned) {
+  const c = parseFloat(completed) || 0;
+  const p = parseFloat(planned) || 1;
+  return p > 0 ? Math.min(100, Math.round(c / p * 100)) : 0;
+}
+
+function renderTable() {
+  renderTableHead();
+  const tbody = document.getElementById('processTbody');
+  if (!processesData.length) {
+    tbody.innerHTML = '<tr><td colspan="12" class="empty">暂无工序数据</td></tr>';
+    return;
+  }
+  tbody.innerHTML = processesData.map(p => {
+    const percent = getProgressPercent(p.completed_qty, p.planned_qty);
+    const isOutsource = p.is_outsource ? '是' : '';
+    const statusCls = p.status === '已完成' ? 'status-已完成' : (p.status === '生产中' ? 'status-生产中' : 'status-待开始');
+    const progressColor = percent >= 100 ? '' : (percent > 0 ? 'progress-fill-warning' : '');
+    const rowData = {
+      ...p,
+      wo_no: p.order_no || p.wo_no || '',
+      process_seq: p.process_seq || 0,
+    };
+    return `<tr data-id="${p.id}" data-process='${JSON.stringify(rowData).replace(/'/g, "&#39;")}' onclick="onRowClick(event,${p.id})" ondblclick="onRowDoubleClick(event,${p.id})" oncontextmenu="onRightClick(event,${p.id})">
+      <td style="text-align:center;">${p.process_seq || 0}</td>
+      <td>${escapeHtml(p.process_name || '-')}</td>
+      <td>${escapeHtml(p.process_code || '-')}</td>
+      <td>${escapeHtml(p.worker || '-')}</td>
+      <td style="text-align:center;">${p.planned_qty || 0}</td>
+      <td style="text-align:center;">${escapeHtml(p.unit || '件')}</td>
+      <td style="text-align:center;">${p.completed_qty || 0}</td>
+      <td style="text-align:center;">${p.qualified_qty || 0}</td>
+      <td>
+        <div class="progress-cell">
+          <div class="progress-bar"><div class="progress-fill ${progressColor}" style="width:${percent}%"></div></div>
+          <span style="font-size:12px;color:#666;">${percent}%</span>
+        </div>
+      </td>
+      <td style="text-align:center;">${((p.work_hours || 0).toFixed(1))}</td>
+      <td style="text-align:center;"><span class="status-tag ${statusCls}">${escapeHtml(p.status || '待开始')}</span></td>
+      <td style="text-align:center;"><span class="status-tag ${isOutsource ? 'status-tag-yes' : ''}">${isOutsource}</span></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('summary').textContent = `共 ${processesData.length} 道工序`;
+}
+
+function onRowClick(e, id) {
+  if (e.target.tagName === 'BUTTON') return;
+  document.querySelectorAll('tr.selected').forEach(r => r.classList.remove('selected'));
+  const row = document.querySelector(`tr[data-id="${id}"]`);
+  if (row) row.classList.add('selected');
+  selectedProcessId = id;
+}
+
+function onRowDoubleClick(e, id) {
+  const p = processesData.find(p => p.id === id);
+  if (p) showProcessDetail(p);
+}
+
+function onRightClick(e, id) {
+  e.preventDefault();
+  const p = processesData.find(p => p.id === id);
+  if (!p) return;
+  ctxProcess = p;
+  selectedProcessId = id;
+  const menu = document.getElementById('contextMenu');
+  menu.style.left = Math.min(e.clientX, window.innerWidth - 170) + 'px';
+  menu.style.top = Math.min(e.clientY, window.innerHeight - 300) + 'px';
+  menu.classList.add('show');
+}
+
+document.addEventListener('click', () => {
+  document.getElementById('contextMenu').classList.remove('show');
+});
+
+async function searchWorkOrders() {
+  const kw = document.getElementById('keywordInput').value.trim();
+  try {
+    const [data, code] = await apiFetchJSON('/api/production/list?limit=200&keyword=' + encodeURIComponent(kw));
+    if (code === 200 && data.code === 0) {
+      const orders = data.data.orders || data.data || [];
+      fillWorkOrderSelect(orders);
+    }
+  } catch (e) {
+    showMsg('搜索工单失败: ' + e.message, 'error');
+  }
+}
+
+async function loadWorkOrders() {
+  try {
+    const [data, code] = await apiFetchJSON('/api/production/list?limit=200');
+    if (code === 200 && data.code === 0) {
+      const orders = data.data.orders || data.data || [];
+      fillWorkOrderSelect(orders);
+    }
+  } catch (e) {
+    showMsg('加载工单失败: ' + e.message, 'error');
+  }
+}
+
+function fillWorkOrderSelect(orders) {
+  workOrders = orders;
+  const select = document.getElementById('workOrderSelect');
+  select.innerHTML = '<option value="">-- 请选择工单 --</option>' + orders.map(o => {
+    const label = `${o.order_no || o.wo_no || ''} - ${o.customer_name || o.customer_group || '客户'}`;
+    return `<option value="${o.id}" data-order-id="${o.order_id || o.id}">${escapeHtml(label)}</option>`;
+  }).join('');
+  if (currentWorkOrderId) {
+    select.value = currentWorkOrderId;
+  }
+}
+
+function onWorkOrderChange() {
+  const select = document.getElementById('workOrderSelect');
+  const option = select.options[select.selectedIndex];
+  if (!option.value) {
+    currentWorkOrderId = null;
+    currentProdId = null;
+    processesData = [];
+    renderTable();
+    updateStats(null);
+    return;
+  }
+  currentWorkOrderId = option.value;
+  currentProdId = option.dataset.orderId || option.value;
+  loadProcesses();
+}
+
+async function loadProcesses() {
+  if (!currentWorkOrderId) {
+    showMsg('请先选择一个工单', 'info');
+    return;
+  }
+  try {
+    const [data, code] = await apiFetchJSON(`/api/process/list?production_id=${currentWorkOrderId}`);
+    if (code === 200 && data.code === 0) {
+      processesData = data.data.processes || data.data || [];
+      processesData.sort((a, b) => (a.process_seq || 0) - (b.process_seq || 0));
+      renderTable();
+      updateStats(processesData);
+    } else {
+      showMsg(data.message || '加载工序失败', 'error');
+    }
+  } catch (e) {
+    showMsg('网络错误: ' + e.message, 'error');
+  }
+}
+
+function updateStats(processes) {
+  const statsBar = document.getElementById('statsBar');
+  const progressOverview = document.getElementById('progressOverview');
+  if (!processes || !processes.length) {
+    statsBar.style.display = 'none';
+    progressOverview.style.display = 'none';
+    return;
+  }
+  statsBar.style.display = 'flex';
+  progressOverview.style.display = 'flex';
+  let totalPlanned = 0, totalCompleted = 0, totalQualified = 0, inProgress = 0, pending = 0;
+  processes.forEach(p => {
+    totalPlanned += parseFloat(p.planned_qty) || 0;
+    totalCompleted += parseFloat(p.completed_qty) || 0;
+    totalQualified += parseFloat(p.qualified_qty) || 0;
+    if (p.status === '生产中') inProgress++;
+    else if (p.status === '待开始' || !p.status) pending++;
+  });
+  document.getElementById('statTotal').textContent = totalPlanned;
+  document.getElementById('statCompleted').textContent = totalCompleted;
+  document.getElementById('statQualified').textContent = totalQualified;
+  document.getElementById('statInProgress').textContent = inProgress;
+  document.getElementById('statPending').textContent = pending;
+  const overallPercent = totalPlanned > 0 ? Math.round(totalCompleted / totalPlanned * 100) : 0;
+  document.getElementById('progressText').textContent = `整体进度：${overallPercent}% (${totalCompleted}/${totalPlanned})`;
+  document.getElementById('progressFill').style.width = overallPercent + '%';
+}
+
+function showMsg(msg, type = 'info') {
+  const box = document.getElementById('msgBox');
+  box.textContent = msg;
+  box.className = 'msg-box msg-' + type;
+  box.style.display = 'block';
+  if (box._t) clearTimeout(box._t);
+  box._t = setTimeout(() => { box.style.display = 'none'; }, 5000);
+}
+
+async function apiFetchJSON(url, options = {}) {
+  const r = await apiFetch(url, options);
+  if (!r) return [null, 0];
+  const d = await r.json();
+  return [d, r.status];
+}
+
+// 添加工序
+function openAddProcess() {
+  if (!currentWorkOrderId) {
+    showMsg('请先选择一个工单', 'info');
+    return;
+  }
+  const nextSeq = (processesData.length > 0 ? Math.max(...processesData.map(p => p.process_seq || 0)) : 0) + 1;
+  document.getElementById('addProcessForm').innerHTML = `
+    <div class="form-group">
+      <label class="form-label">工序名称 *</label>
+      <input class="form-control" id="apName" placeholder="输入工序名称">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">执行人 *</label>
+        <input class="form-control" id="apWorker" placeholder="输入执行人姓名">
+      </div>
+      <div class="form-group">
+        <label class="form-label">排列序号</label>
+        <input class="form-control" type="number" id="apSeq" value="${nextSeq}">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">计划数量</label>
+        <input class="form-control" type="number" id="apPlannedQty" value="1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">单位</label>
+        <select class="form-control" id="apUnit">
+          <option value="件">件</option>
+          <option value="个">个</option>
+          <option value="米">米</option>
+          <option value="卷">卷</option>
+          <option value="套">套</option>
+          <option value="箱">箱</option>
+          <option value="kg">kg</option>
+          <option value="吨">吨</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">是否外协</label>
+      <select class="form-control" id="apOutsource">
+        <option value="0">否</option>
+        <option value="1">是</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">备注</label>
+      <textarea class="form-control" id="apRemark" rows="2" placeholder="可选"></textarea>
+    </div>
+  `;
+  openModal('addProcessModal');
+}
+
+async function submitAddProcess() {
+  const name = document.getElementById('apName').value.trim();
+  const worker = document.getElementById('apWorker').value.trim();
+  if (!name) { showMsg('请输入工序名称', 'error'); return; }
+  if (!worker) { showMsg('请输入执行人', 'error'); return; }
+  const btn = document.getElementById('addProcessBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 添加中...';
+  try {
+    const [data, code] = await apiFetchJSON('/api/process/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        production_id: parseInt(currentWorkOrderId),
+        process_name: name,
+        worker: worker,
+        process_seq: parseInt(document.getElementById('apSeq').value) || 1,
+        planned_qty: parseFloat(document.getElementById('apPlannedQty').value) || 1,
+        unit: document.getElementById('apUnit').value,
+        is_outsource: parseInt(document.getElementById('apOutsource').value),
+        remark: document.getElementById('apRemark').value.trim(),
+      })
+    });
+    if (code === 200 && data.code === 0) {
+      closeModal('addProcessModal');
+      showMsg('工序添加成功', 'success');
+      loadProcesses();
+    } else {
+      showMsg(data.message || '添加失败', 'error');
+    }
+  } catch (e) {
+    showMsg('添加失败: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '确认添加';
+  }
+}
+
+// 插入工序
+function openInsertProcess() {
+  if (!currentWorkOrderId) {
+    showMsg('请先选择一个工单', 'info');
+    return;
+  }
+  if (!ctxProcess) {
+    showMsg('请先在工序列表中选择一道工序', 'info');
+    return;
+  }
+  document.getElementById('insertProcessForm').innerHTML = `
+    <div class="detail-section">
+      <h4>插入位置</h4>
+      <div class="detail-row"><span class="detail-label">在</span><span class="detail-value">${escapeHtml(ctxProcess.process_name)}</span></div>
+      <div class="detail-row"><span class="detail-label">序号</span><span class="detail-value">${ctxProcess.process_seq}</span></div>
+      <div class="detail-row"><span class="detail-label">之后</span><span class="detail-value">插入新工序</span></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">工序名称 *</label>
+      <input class="form-control" id="ipName" placeholder="输入工序名称">
+    </div>
+    <div class="form-group">
+      <label class="form-label">执行人 *</label>
+      <input class="form-control" id="ipWorker" placeholder="输入执行人姓名">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">计划数量</label>
+        <input class="form-control" type="number" id="ipPlannedQty" value="1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">单位</label>
+        <select class="form-control" id="ipUnit">
+          <option value="件">件</option>
+          <option value="个">个</option>
+          <option value="米">米</option>
+          <option value="卷">卷</option>
+          <option value="套">套</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">备注</label>
+      <textarea class="form-control" id="ipRemark" rows="2" placeholder="可选"></textarea>
+    </div>
+  `;
+  openModal('insertProcessModal');
+}
+
+async function submitInsertProcess() {
+  const name = document.getElementById('ipName').value.trim();
+  const worker = document.getElementById('ipWorker').value.trim();
+  if (!name) { showMsg('请输入工序名称', 'error'); return; }
+  if (!worker) { showMsg('请输入执行人', 'error'); return; }
+  const btn = document.getElementById('insertProcessBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 插入中...';
+  try {
+    const [data, code] = await apiFetchJSON('/api/process/insert', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        production_id: parseInt(currentWorkOrderId),
+        after_process_id: ctxProcess.id,
+        process_name: name,
+        worker: worker,
+        planned_qty: parseFloat(document.getElementById('ipPlannedQty').value) || 1,
+        unit: document.getElementById('ipUnit').value,
+        remark: document.getElementById('ipRemark').value.trim(),
+      })
+    });
+    if (code === 200 && data.code === 0) {
+      closeModal('insertProcessModal');
+      showMsg('工序插入成功', 'success');
+      loadProcesses();
+    } else {
+      showMsg(data.message || '插入失败', 'error');
+    }
+  } catch (e) {
+    showMsg('插入失败: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '确认插入';
+  }
+}
+
+// 编辑工序
+function ctxEditProcess() {
+  if (!ctxProcess) return;
+  const p = ctxProcess;
+  document.getElementById('editProcessForm').innerHTML = `
+    <div class="form-group">
+      <label class="form-label">工序名称</label>
+      <input class="form-control" id="epName" value="${escapeHtml(p.process_name || '')}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">执行人</label>
+      <input class="form-control" id="epWorker" value="${escapeHtml(p.worker || '')}">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">计划数量</label>
+        <input class="form-control" type="number" id="epPlannedQty" value="${p.planned_qty || 1}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">单位</label>
+        <select class="form-control" id="epUnit">
+          ${['件','个','米','卷','套','箱','kg','吨'].map(u => `<option value="${u}" ${p.unit === u ? 'selected' : ''}>${u}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">状态</label>
+      <select class="form-control" id="epStatus">
+        <option value="待开始" ${p.status === '待开始' ? 'selected' : ''}>待开始</option>
+        <option value="生产中" ${p.status === '生产中' ? 'selected' : ''}>生产中</option>
+        <option value="已完成" ${p.status === '已完成' ? 'selected' : ''}>已完成</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">是否外协</label>
+      <select class="form-control" id="epOutsource">
+        <option value="0" ${!p.is_outsource ? 'selected' : ''}>否</option>
+        <option value="1" ${p.is_outsource ? 'selected' : ''}>是</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">备注</label>
+      <textarea class="form-control" id="epRemark" rows="2">${escapeHtml(p.remark || '')}</textarea>
+    </div>
+  `;
+  openModal('editProcessModal');
+}
+
+async function submitEditProcess() {
+  const btn = document.getElementById('editProcessBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 保存中...';
+  try {
+    const [data, code] = await apiFetchJSON(`/api/process/${ctxProcess.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        process_name: document.getElementById('epName').value.trim(),
+        worker: document.getElementById('epWorker').value.trim(),
+        planned_qty: parseFloat(document.getElementById('epPlannedQty').value) || 1,
+        unit: document.getElementById('epUnit').value,
+        status: document.getElementById('epStatus').value,
+        is_outsource: parseInt(document.getElementById('epOutsource').value),
+        remark: document.getElementById('epRemark').value.trim(),
+      })
+    });
+    if (code === 200 && data.code === 0) {
+      closeModal('editProcessModal');
+      showMsg('工序已更新', 'success');
+      loadProcesses();
+    } else {
+      showMsg(data.message || '保存失败', 'error');
+    }
+  } catch (e) {
+    showMsg('保存失败: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '保存修改';
+  }
+}
+
+// 调整计划量
+function ctxAdjustQty() {
+  if (!ctxProcess) return;
+  const p = ctxProcess;
+  document.getElementById('adjustQtyForm').innerHTML = `
+    <div class="detail-section">
+      <h4>当前信息</h4>
+      <div class="detail-row"><span class="detail-label">工序</span><span class="detail-value">${escapeHtml(p.process_name)}</span></div>
+      <div class="detail-row"><span class="detail-label">当前计划</span><span class="detail-value detail-highlight">${p.planned_qty} ${p.unit || '件'}</span></div>
+      <div class="detail-row"><span class="detail-label">已完成</span><span class="detail-value">${p.completed_qty || 0}</span></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">新计划数量</label>
+        <input class="form-control" type="number" id="aqQty" value="${p.planned_qty || 1}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">单位</label>
+        <select class="form-control" id="aqUnit">
+          ${['件','个','米','卷','套','箱','kg','吨'].map(u => `<option value="${u}" ${p.unit === u ? 'selected' : ''}>${u}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+  `;
+  openModal('adjustQtyModal');
+}
+
+async function submitAdjustQty() {
+  const btn = document.getElementById('adjustQtyBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 调整中...';
+  try {
+    const [data, code] = await apiFetchJSON(`/api/process/${ctxProcess.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        planned_qty: parseFloat(document.getElementById('aqQty').value) || 1,
+        unit: document.getElementById('aqUnit').value,
+      })
+    });
+    if (code === 200 && data.code === 0) {
+      closeModal('adjustQtyModal');
+      showMsg('计划量已调整', 'success');
+      loadProcesses();
+    } else {
+      showMsg(data.message || '调整失败', 'error');
+    }
+  } catch (e) {
+    showMsg('调整失败: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '确认调整';
+  }
+}
+
+// 报工
+function openQuickReport() {
+  if (!currentWorkOrderId) {
+    showMsg('请先选择一个工单', 'info');
+    return;
+  }
+  if (ctxProcess) {
+    fillReportForm(ctxProcess);
+  } else if (processesData.length > 0) {
+    fillReportForm(processesData[0]);
+  } else {
+    showMsg('没有可报工的工序', 'info');
+    return;
+  }
+  openModal('reportModal');
+}
+
+function fillReportForm(p) {
+  document.getElementById('reportForm').innerHTML = `
+    <div class="detail-section">
+      <h4>报工工序</h4>
+      <div class="detail-row"><span class="detail-label">工序</span><span class="detail-value">${escapeHtml(p.process_name)}</span></div>
+      <div class="detail-row"><span class="detail-label">计划量</span><span class="detail-value">${p.planned_qty || 0} ${p.unit || '件'}</span></div>
+      <div class="detail-row"><span class="detail-label">已完成</span><span class="detail-value detail-highlight">${p.completed_qty || 0}</span></div>
+    </div>
+    <input type="hidden" id="rProcessId" value="${p.id}">
+    <div class="form-group">
+      <label class="form-label">本次完成量 *</label>
+      <input class="form-control" type="number" id="rQty" value="0" min="0">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">合格数量</label>
+        <input class="form-control" type="number" id="rQualified" value="0" min="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">工时(小时)</label>
+        <input class="form-control" type="number" id="rHours" value="0" min="0" step="0.5">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">操作员</label>
+      <input class="form-control" id="rWorker" value="${escapeHtml(p.worker || '')}" placeholder="输入操作员姓名">
+    </div>
+    <div class="form-group">
+      <label class="form-label">备注</label>
+      <textarea class="form-control" id="rRemark" rows="2" placeholder="可选"></textarea>
+    </div>
+  `;
+}
+
+async function submitReport() {
+  const processId = document.getElementById('rProcessId').value;
+  const qty = parseFloat(document.getElementById('rQty').value) || 0;
+  if (qty <= 0) { showMsg('请输入大于0的完成量', 'error'); return; }
+  const btn = document.getElementById('reportBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 提交中...';
+  try {
+    const [data, code] = await apiFetchJSON(`/api/process/${processId}/report`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        qty: qty,
+        qualified: parseFloat(document.getElementById('rQualified').value) || 0,
+        hours: parseFloat(document.getElementById('rHours').value) || 0,
+        worker: document.getElementById('rWorker').value.trim(),
+        remark: document.getElementById('rRemark').value.trim(),
+      })
+    });
+    if (code === 200 && data.code === 0) {
+      closeModal('reportModal');
+      showMsg(`报工成功！${data.message || ''}`, 'success');
+      loadProcesses();
+    } else {
+      showMsg(data.message || '报工失败', 'error');
+    }
+  } catch (e) {
+    showMsg('报工失败: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '提交报工';
+  }
+}
+
+// 工序操作
+async function ctxStartProcess() {
+  if (!ctxProcess) return;
+  try {
+    const [data, code] = await apiFetchJSON(`/api/process/${ctxProcess.id}/start`, { method: 'PUT' });
+    if (code === 200 && data.code === 0) {
+      showMsg('工序已开始', 'success');
+      loadProcesses();
+    } else {
+      showMsg(data.message || '操作失败', 'error');
+    }
+  } catch (e) {
+    showMsg('操作失败: ' + e.message, 'error');
+  }
+}
+
+async function ctxCompleteProcess() {
+  if (!ctxProcess) return;
+  try {
+    const [data, code] = await apiFetchJSON(`/api/process/${ctxProcess.id}/complete`, { method: 'PUT' });
+    if (code === 200 && data.code === 0) {
+      showMsg('工序已标记完成', 'success');
+      loadProcesses();
+    } else {
+      showMsg(data.message || '操作失败', 'error');
+    }
+  } catch (e) {
+    showMsg('操作失败: ' + e.message, 'error');
+  }
+}
+
+async function ctxResetProcess() {
+  if (!ctxProcess) return;
+  try {
+    const [data, code] = await apiFetchJSON(`/api/process/${ctxProcess.id}/reset`, { method: 'PUT' });
+    if (code === 200 && data.code === 0) {
+      showMsg('工序已重置为待开始', 'success');
+      loadProcesses();
+    } else {
+      showMsg(data.message || '操作失败', 'error');
+    }
+  } catch (e) {
+    showMsg('操作失败: ' + e.message, 'error');
+  }
+}
+
+async function ctxMoveUp() {
+  if (!ctxProcess) return;
+  const idx = processesData.findIndex(p => p.id === ctxProcess.id);
+  if (idx <= 0) { showMsg('已经是第一道工序', 'info'); return; }
+  const prevProcess = processesData[idx - 1];
+  await swapSeq(ctxProcess.id, prevProcess.id);
+}
+
+async function ctxMoveDown() {
+  if (!ctxProcess) return;
+  const idx = processesData.findIndex(p => p.id === ctxProcess.id);
+  if (idx >= processesData.length - 1) { showMsg('已经是最后一道工序', 'info'); return; }
+  const nextProcess = processesData[idx + 1];
+  await swapSeq(ctxProcess.id, nextProcess.id);
+}
+
+async function swapSeq(id1, id2) {
+  try {
+    const [data, code] = await apiFetchJSON('/api/process/swap-seq', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id1, id2 })
+    });
+    if (code === 200 && data.code === 0) {
+      showMsg('顺序已调整', 'success');
+      loadProcesses();
+    } else {
+      showMsg(data.message || '调整失败', 'error');
+    }
+  } catch (e) {
+    showMsg('调整失败: ' + e.message, 'error');
+  }
+}
+
+async function ctxDeleteProcess() {
+  if (!ctxProcess) return;
+  if (!confirm(`确定要删除「${ctxProcess.process_name}」这道工序吗？`)) return;
+  try {
+    const [data, code] = await apiFetchJSON(`/api/process/${ctxProcess.id}`, { method: 'DELETE' });
+    if (code === 200 && data.code === 0) {
+      showMsg('工序已删除', 'success');
+      loadProcesses();
+    } else {
+      showMsg(data.message || '删除失败', 'error');
+    }
+  } catch (e) {
+    showMsg('删除失败: ' + e.message, 'error');
+  }
+}
+
+function showProcessDetail(p) {
+  document.getElementById('processDetailTitle').textContent = `🔍 工序详情 — ${escapeHtml(p.process_name)}`;
+  const percent = getProgressPercent(p.completed_qty, p.planned_qty);
+  document.getElementById('processDetailContent').innerHTML = `
+    <div class="detail-section">
+      <h4>基本信息</h4>
+      <div class="detail-row"><span class="detail-label">工序名称</span><span class="detail-value">${escapeHtml(p.process_name)}</span></div>
+      <div class="detail-row"><span class="detail-label">编码</span><span class="detail-value">${escapeHtml(p.process_code || '-')}</span></div>
+      <div class="detail-row"><span class="detail-label">序号</span><span class="detail-value">${p.process_seq}</span></div>
+      <div class="detail-row"><span class="detail-label">执行人</span><span class="detail-value">${escapeHtml(p.worker || '-')}</span></div>
+      <div class="detail-row"><span class="detail-label">状态</span><span class="detail-value">${escapeHtml(p.status || '待开始')}</span></div>
+    </div>
+    <div class="detail-section">
+      <h4>数量信息</h4>
+      <div class="detail-row"><span class="detail-label">计划量</span><span class="detail-value">${p.planned_qty || 0} ${p.unit || '件'}</span></div>
+      <div class="detail-row"><span class="detail-label">已完成</span><span class="detail-value detail-highlight">${p.completed_qty || 0}</span></div>
+      <div class="detail-row"><span class="detail-label">合格数</span><span class="detail-value">${p.qualified_qty || 0}</span></div>
+      <div class="detail-row"><span class="detail-label">进度</span><span class="detail-value">${percent}%</span></div>
+      <div class="detail-row"><span class="detail-label">工时</span><span class="detail-value">${((p.work_hours || 0).toFixed(1))} 小时</span></div>
+    </div>
+    <div class="detail-section">
+      <h4>其他信息</h4>
+      <div class="detail-row"><span class="detail-label">外协</span><span class="detail-value">${p.is_outsource ? '是' : '否'}</span></div>
+      <div class="detail-row"><span class="detail-label">开始时间</span><span class="detail-value">${escapeHtml(p.start_time || '-')}</span></div>
+      <div class="detail-row"><span class="detail-label">结束时间</span><span class="detail-value">${escapeHtml(p.end_time || '-')}</span></div>
+      <div class="detail-row"><span class="detail-label">备注</span><span class="detail-value">${escapeHtml(p.remark || '-')}</span></div>
+    </div>
+  `;
+  openModal('processDetailModal');
+}
+
+// Modal 工具
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('show'); });
+});
+
+if (!requireAuth()) ;
+else {
+  loadWorkOrders();
+  renderTableHead();
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>生产排单 - 不锈钢网带跟单系统</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Microsoft YaHei", sans-serif; background: #f5f6fa; color: #2c3e50; }
+  .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .navbar h1 { font-size: 18px; }
+  .navbar-right { display: flex; align-items: center; gap: 12px; }
+  .navbar-right .user { font-size: 14px; }
+  .navbar-right button { padding: 6px 14px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; border-radius: 4px; cursor: pointer; font-size: 13px; }
+  .navbar-right button:hover { background: rgba(255,255,255,0.25); }
+  .toolbar { background: #fff; padding: 12px 24px; display: flex; gap: 12px; align-items: center; border-bottom: 1px solid #e1e4e8; flex-wrap: wrap; }
+  .toolbar label { color: #666; font-size: 13px; }
+  .toolbar input, .toolbar select { padding: 6px 12px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 13px; }
+  .toolbar button { padding: 6px 16px; background: #667eea; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
+  .toolbar button:hover { background: #5a6fd6; }
+  .toolbar button.secondary { background: #95a5a6; }
+  .toolbar button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .summary { padding: 12px 24px; color: #555; font-size: 13px; }
+  .summary strong { color: #667eea; font-size: 16px; }
+  .error { background: #e74c3c; color: #fff; padding: 10px 24px; margin: 8px 24px; border-radius: 4px; font-size: 13px; }
+  table { width: calc(100% - 48px); margin: 0 24px 24px; border-collapse: collapse; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); font-size: 13px; }
+  th { background: #f8f9fa; padding: 10px 12px; text-align: left; font-weight: 500; color: #555; border-bottom: 2px solid #e1e4e8; cursor: pointer; user-select: none; position: sticky; top: 0; }
+  th:hover { background: #eef0f3; }
+  th .arrow { font-size: 10px; margin-left: 4px; color: #667eea; }
+  td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; }
+  tr:hover { background: #f8f9fa; }
+  .status-tag { display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: 12px; color: #fff; font-weight: 500; }
+  .priority-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+  .priority-高 { background: #ffe5e5; color: #d32f2f; }
+  .priority-中 { background: #fff3cd; color: #f57c00; }
+  .priority-低 { background: #e0f2f1; color: #00796b; }
+  .empty { text-align: center; padding: 60px 20px; color: #95a5a6; }
+  .wrap { overflow-x: auto; max-height: calc(100vh - 240px); overflow-y: auto; }
+</style>
+</head>
+<body>
+<div id="appNav"></div>
+<script src="/static/js/shared.js"></script>
+<script>renderNav('production', '🏭 生产排单管理');</script>
+
+<div class="toolbar">
+  <label>状态:</label>
+  <select id="statusFilter">
+    <option value="all">全部</option>
+    <option value="待发布">待发布</option>
+    <option value="待排产">待排产</option>
+    <option value="已排产">已排产</option>
+    <option value="生产中">生产中</option>
+    <option value="已完成">已完成</option>
+    <option value="已取消">已取消</option>
+  </select>
+  <label>关键字:</label>
+  <input type="text" id="keyword" placeholder="订单号/客户/产品" style="min-width: 200px;">
+  <button onclick="loadData()">🔍 搜索</button>
+  <button onclick="loadData()">🔄 刷新</button>
+  <span style="flex:1"></span>
+  <button id="autoRefreshBtn" onclick="toggleAutoRefresh()">⏸️ 暂停自动刷新</button>
+</div>
+
+<div class="summary" id="summary">加载中...</div>
+<div id="errorBox" class="error" style="display:none"></div>
+
+<div class="wrap">
+<table>
+  <thead>
+    <tr>
+      <th data-col="wo_no">工单号<span class="arrow"></span></th>
+      <th data-col="customer">客户<span class="arrow"></span></th>
+      <th data-col="product">产品<span class="arrow"></span></th>
+      <th data-col="qty">数量<span class="arrow"></span></th>
+      <th data-col="priority">优先级<span class="arrow"></span></th>
+      <th data-col="plan_start">计划开始<span class="arrow"></span></th>
+      <th data-col="plan_end">计划结束<span class="arrow"></span></th>
+      <th data-col="actual_start">实际开始<span class="arrow"></span></th>
+      <th>负责人</th>
+      <th data-col="status">状态<span class="arrow"></span></th>
+    </tr>
+  </thead>
+  <tbody id="dataTbody">
+    <tr><td colspan="10" class="empty">加载中...</td></tr>
+  </tbody>
+</table>
+</div>
+
+<script>
+let sortCol = 'priority';
+let sortReverse = false;
+let _autoRefresh = null;
+
+// getToken / showUser / showError / escapeHtml / logout 来自 shared.js
+// 业务函数保持本地化
+
+function updateSortHeaders() {
+  document.querySelectorAll('th[data-col]').forEach(th => {
+    const arrow = th.querySelector('.arrow');
+    if (th.dataset.col === sortCol) {
+      arrow.textContent = sortReverse ? '▼' : '▲';
+    } else {
+      arrow.textContent = '';
+    }
+  });
+}
+
+function statusTag(s, color) {
+  if (!s) return '';
+  return `<span class="status-tag" style="background:${color || '#666'}">${s}</span>`;
+}
+
+function priorityTag(prio, text) {
+  return `<span class="priority-tag priority-${text}">${text}</span>`;
+}
+
+async function loadData() {
+  const status = document.getElementById('statusFilter').value;
+  const keyword = document.getElementById('keyword').value.trim();
+  const tbody = document.getElementById('dataTbody');
+  tbody.innerHTML = '<tr><td colspan="10" class="empty">加载中...</td></tr>';
+
+  const qs = new URLSearchParams({
+    status: status,
+    keyword: keyword,
+    sort_col: sortCol,
+    sort_reverse: sortReverse,
+    limit: 200
+  });
+
+  try {
+    const r = await fetch('/api/production/list?' + qs.toString(), {
+      headers: { 'X-Dispatch-Token': getToken() }
+    });
+    if (r.status === 401) { window.location.href = '/login'; return; }
+    const data = await r.json();
+    if (data.code !== 0) {
+      showError('errorBox', data.message || '加载失败');
+      tbody.innerHTML = '<tr><td colspan="10" class="empty">加载失败</td></tr>';
+      return;
+    }
+    const orders = data.data.orders || [];
+    document.getElementById('summary').innerHTML = `共 <strong>${orders.length}</strong> 条生产工单`;
+    if (orders.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="10" class="empty">暂无工单</td></tr>';
+      return;
+    }
+    tbody.innerHTML = orders.map(o => {
+      return `<tr>
+        <td><b>${escapeHtml(o.order_no)}</b></td>
+        <td>${escapeHtml(o.customer_name)}</td>
+        <td>${escapeHtml(o.product_name)}</td>
+        <td style="text-align:center">${Number(o.quantity) || 0}</td>
+        <td>${priorityTag(o.priority, o.priority_text)}</td>
+        <td>${escapeHtml(o.plan_start) || '—'}</td>
+        <td>${escapeHtml(o.plan_end) || '—'}</td>
+        <td>${escapeHtml(o.actual_start) || '—'}</td>
+        <td>${escapeHtml(o.assigned_to) || '—'}</td>
+        <td>${statusTag(o.status, o.status_color)}</td>
+      </tr>`;
+    }).join('');
+    updateSortHeaders();
+  } catch (e) {
+    showError('errorBox', '网络错误: ' + e.message);
+    tbody.innerHTML = '<tr><td colspan="10" class="empty">网络错误</td></tr>';
+  }
+}
+
+function toggleAutoRefresh() {
+  if (_autoRefresh) _autoRefresh.toggle();
+}
+
+// Bind column headers for sort
+document.querySelectorAll('th[data-col]').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.col;
+    if (sortCol === col) {
+      sortReverse = !sortReverse;
+    } else {
+      sortCol = col;
+      sortReverse = false;
+    }
+    loadData();
+  });
+});
+
+// Status / keyword change
+document.getElementById('statusFilter').addEventListener('change', loadData);
+document.getElementById('keyword').addEventListener('keypress', e => {
+  if (e.key === 'Enter') loadData();
+});
+
+showUser();
+if (!getToken()) { window.location.href = '/login'; }
+else { loadData(); }
+
+// Auto refresh (使用 AutoRefresh 类, 含清理 + 倒计时)
+_autoRefresh = new AutoRefresh(() => { if (getToken()) loadData(); }, 30000, 'autoRefreshBtn');
+_autoRefresh.start();
+</script>
+</body>
+</html>

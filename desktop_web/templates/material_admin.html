@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>物料备料管理</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Microsoft YaHei', Arial, sans-serif; background: #f0f2f5; font-size: 14px; color: #333; }
+    #appNav { margin-bottom: 0; }
+
+    .toolbar {
+      background: #fff; padding: 10px 20px; display: flex; align-items: center; gap: 8px;
+      flex-wrap: wrap; border-bottom: 1px solid #e8e8e8; margin-bottom: 12px;
+    }
+    .toolbar .section { display: flex; align-items: center; gap: 6px; }
+    .toolbar .section-right { margin-left: auto; }
+    .toolbar .sep { width: 1px; height: 24px; background: #ddd; margin: 0 4px; }
+
+    .btn {
+      padding: 6px 14px; border: 1px solid #d9d9d9; border-radius: 4px;
+      background: #fff; cursor: pointer; font-size: 13px; white-space: nowrap;
+      transition: all .15s; display: inline-flex; align-items: center; gap: 4px;
+    }
+    .btn:hover { border-color: #667eea; color: #667eea; }
+    .btn-primary { background: #667eea; color: #fff; border-color: #667eea; }
+    .btn-primary:hover { background: #5568d3; border-color: #5568d3; }
+    .btn-danger { color: #ff4d4f; border-color: #ff4d4f; }
+    .btn-danger:hover { background: #fff1f0; }
+    .btn-success { color: #52c41a; border-color: #52c41a; }
+    .btn-success:hover { background: #f6ffed; }
+    .btn-warning { color: #faad14; border-color: #faad14; }
+    .btn-warning:hover { background: #fffbe6; }
+    .btn-sm { padding: 3px 10px; font-size: 12px; }
+
+    .sync-status { font-size: 12px; padding: 3px 10px; border-radius: 12px; }
+    .sync-ok { background: #f6ffed; color: #52c41a; }
+    .sync-pending { background: #fffbe6; color: #faad14; }
+    .sync-warn { background: #fff1f0; color: #ff4d4f; }
+
+    .filter-select { padding: 6px 10px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 13px; background: #fff; }
+    .keyword-input { padding: 6px 10px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 13px; width: 180px; }
+
+    .main-container { display: flex; gap: 12px; padding: 0 16px 16px; height: calc(100vh - 130px); }
+    .panel-left { width: 42%; display: flex; flex-direction: column; min-width: 0; }
+    .panel-right { width: 58%; display: flex; flex-direction: column; min-width: 0; }
+    .panel { background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.08); display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+    .panel-header { padding: 12px 16px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .panel-header h3 { font-size: 15px; font-weight: 600; color: #262626; flex: 1; }
+    .panel-header .badge { background: #667eea; color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 12px; }
+    .panel-body { flex: 1; overflow: auto; padding: 0; }
+
+    .table-wrap { overflow: auto; height: 100%; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th {
+      position: sticky; top: 0; background: #fafafa; z-index: 2;
+      padding: 10px 12px; text-align: left; font-weight: 600; color: #595959;
+      border-bottom: 2px solid #f0f0f0; white-space: nowrap;
+    }
+    tbody tr { border-bottom: 1px solid #f5f5f5; cursor: pointer; transition: background .1s; }
+    tbody tr:hover { background: #f9f9ff; }
+    tbody tr.selected { background: #e8eaff; }
+    tbody td { padding: 9px 12px; vertical-align: middle; }
+
+    .status-badge {
+      display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: 500;
+    }
+    .status-complete { background: #f6ffed; color: #52c41a; }
+    .status-partial { background: #fffbe6; color: #faad14; }
+    .status-shortage { background: #fff1f0; color: #ff4d4f; }
+    .status-pending { background: #f5f5f5; color: #8c8c8c; }
+    .status-mobile { background: #f9f0ff; color: #722ed1; }
+    .status-calculating { background: #e6f7ff; color: #1890ff; }
+
+    .progress-bar { display: inline-flex; align-items: center; gap: 5px; }
+    .progress-bar .bar { width: 50px; height: 6px; background: #f0f0f0; border-radius: 3px; overflow: hidden; }
+    .progress-bar .fill { height: 100%; background: #667eea; border-radius: 3px; transition: width .3s; }
+    .progress-bar.complete .fill { background: #52c41a; }
+    .progress-bar.partial .fill { background: #faad14; }
+    .progress-bar.shortage .fill { background: #ff4d4f; }
+
+    .order-info-bar {
+      padding: 8px 16px; background: #e6f7ff; border-bottom: 1px solid #bae7ff;
+      font-size: 13px; color: #1890ff; flex-shrink: 0;
+    }
+    .order-info-bar .stat { margin-right: 16px; }
+    .order-info-bar .stat.complete { color: #52c41a; }
+    .order-info-bar .stat.shortage { color: #ff4d4f; }
+
+    .right-toolbar { padding: 8px 16px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid #f0f0f0; flex-shrink: 0; }
+
+    .empty-tip { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 200px; color: #bfbfbf; gap: 10px; }
+    .empty-tip .icon { font-size: 48px; }
+
+    .detail-source { font-size: 11px; padding: 1px 5px; border-radius: 3px; }
+    .detail-source.mobile { background: #f9f0ff; color: #722ed1; }
+    .detail-source.desktop { background: #f5f5f5; color: #595959; }
+    .detail-locked { font-size: 11px; padding: 1px 5px; border-radius: 3px; background: #fff1f0; color: #ff4d4f; }
+    .detail-unlocked { font-size: 11px; padding: 1px 5px; border-radius: 3px; background: #f6ffed; color: #52c41a; }
+
+    .detail-row-locked { background: #fff7e6; }
+    .detail-row-complete { }
+    .detail-row-shortage { }
+    .detail-row-partial { }
+
+    tr.row-locked { background: #fff7e6 !important; }
+    tr.row-shortage td:first-child::before { content: ''; display: inline-block; width: 8px; height: 8px; background: #ff4d4f; border-radius: 50%; margin-right: 4px; }
+
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 1000;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: #fff; border-radius: 10px; width: 480px; max-width: 95vw;
+      box-shadow: 0 6px 32px rgba(0,0,0,.15); overflow: hidden;
+      animation: modalIn .15s ease;
+    }
+    @keyframes modalIn { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
+    .modal-header {
+      padding: 16px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff; display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal-header h3 { font-size: 16px; font-weight: 600; }
+    .modal-close { background: none; border: none; color: rgba(255,255,255,.8); font-size: 20px; cursor: pointer; padding: 0; line-height: 1; }
+    .modal-close:hover { color: #fff; }
+    .modal-body { padding: 20px; max-height: 70vh; overflow: auto; }
+    .modal-footer { padding: 12px 20px; border-top: 1px solid #f0f0f0; display: flex; justify-content: flex-end; gap: 8px; }
+
+    .form-row { margin-bottom: 14px; }
+    .form-row label { display: block; font-size: 13px; color: #595959; margin-bottom: 4px; font-weight: 500; }
+    .form-row label .required { color: #ff4d4f; margin-left: 2px; }
+    .form-row input, .form-row select, .form-row textarea {
+      width: 100%; padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 5px;
+      font-size: 13px; transition: border-color .2s;
+    }
+    .form-row input:focus, .form-row select:focus, .form-row textarea:focus {
+      outline: none; border-color: #667eea; box-shadow: 0 0 0 2px rgba(102,126,234,.15);
+    }
+    .form-row textarea { resize: vertical; min-height: 60px; }
+    .form-row .hint { font-size: 12px; color: #8c8c8c; margin-top: 3px; }
+    .form-info { background: #f9f9f9; padding: 10px 12px; border-radius: 5px; font-size: 13px; color: #595959; margin-bottom: 14px; }
+    .form-info .row { display: flex; justify-content: space-between; padding: 3px 0; }
+
+    .toast {
+      position: fixed; top: 80px; right: 20px; z-index: 9999;
+      background: #fff; border-radius: 8px; padding: 12px 20px;
+      box-shadow: 0 4px 16px rgba(0,0,0,.12); font-size: 14px;
+      display: none; max-width: 320px; animation: toastIn .2s ease;
+    }
+    .toast.show { display: block; }
+    .toast.success { border-left: 4px solid #52c41a; }
+    .toast.error { border-left: 4px solid #ff4d4f; }
+    .toast.info { border-left: 4px solid #1890ff; }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+    .dead-letter-panel {
+      position: fixed; right: 0; top: 0; bottom: 0; width: 480px;
+      background: #fff; box-shadow: -4px 0 20px rgba(0,0,0,.12); z-index: 900;
+      transform: translateX(100%); transition: transform .3s ease;
+      display: flex; flex-direction: column;
+    }
+    .dead-letter-panel.open { transform: translateX(0); }
+    .dl-header { padding: 16px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; display: flex; align-items: center; justify-content: space-between; }
+    .dl-header h3 { font-size: 16px; }
+    .dl-close { background: none; border: none; color: rgba(255,255,255,.8); font-size: 20px; cursor: pointer; }
+    .dl-body { flex: 1; overflow: auto; padding: 16px; }
+
+    .history-panel {
+      position: fixed; right: 0; top: 0; bottom: 0; width: 500px;
+      background: #fff; box-shadow: -4px 0 20px rgba(0,0,0,.12); z-index: 900;
+      transform: translateX(100%); transition: transform .3s ease;
+      display: flex; flex-direction: column;
+    }
+    .history-panel.open { transform: translateX(0); }
+    .history-header { padding: 16px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; display: flex; align-items: center; justify-content: space-between; }
+    .history-header h3 { font-size: 16px; }
+    .history-close { background: none; border: none; color: rgba(255,255,255,.8); font-size: 20px; cursor: pointer; }
+    .history-body { flex: 1; overflow: auto; padding: 16px; }
+
+    .history-item { border-left: 3px solid #667eea; padding: 10px 16px; margin-bottom: 12px; background: #f9f9ff; border-radius: 0 6px 6px 0; }
+    .history-item .action { font-weight: 600; color: #262626; margin-bottom: 4px; }
+    .history-item .detail { font-size: 12px; color: #8c8c8c; }
+    .history-item .time { font-size: 12px; color: #bfbfbf; margin-top: 4px; }
+
+    .context-menu {
+      position: fixed; background: #fff; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,.15);
+      z-index: 2000; min-width: 180px; overflow: hidden; display: none;
+    }
+    .context-menu.show { display: block; }
+    .context-menu-item {
+      padding: 10px 16px; cursor: pointer; font-size: 13px; transition: background .1s;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .context-menu-item:hover { background: #f5f5f5; }
+    .context-menu-item.danger { color: #ff4d4f; }
+    .context-menu-item.danger:hover { background: #fff1f0; }
+    .context-menu-sep { height: 1px; background: #f0f0f0; margin: 4px 0; }
+
+    .mobile-tag { display: inline-block; font-size: 10px; padding: 0 4px; background: #f9f0ff; color: #722ed1; border-radius: 3px; margin-left: 4px; }
+
+    .tip-bar { background: #fffbe6; padding: 6px 20px; font-size: 12px; color: #ad8b00; border-bottom: 1px solid #ffe58f; }
+
+    .batch-toolbar {
+      background: #fff3e0; padding: 8px 16px; display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid #ffcc80; margin-bottom: 8px; border-radius: 4px;
+    }
+    .batch-toolbar .sel-info { font-size: 13px; color: #e65100; font-weight: 500; }
+  </style>
+</head>
+<body>
+
+<div id="appNav"></div>
+
+<div class="tip-bar">💡 提示：仅显示已排产及后续状态的订单</div>
+
+<div class="toolbar">
+  <div class="section">
+    <span style="font-weight:600;font-size:15px;color:#262626;">📋 订单材料备料</span>
+    <span id="syncStatus" class="sync-status sync-ok">🟢 已同步</span>
+  </div>
+  <div class="section">
+    <select id="statusFilter" class="filter-select">
+      <option value="全部">全部状态</option>
+    </select>
+    <input type="text" id="keywordInput" class="keyword-input" placeholder="搜索订单号/客户群...">
+    <button class="btn" onclick="loadOrders()">🔍 搜索</button>
+  </div>
+  <div class="section section-right">
+    <button class="btn" onclick="openDeadLetters()">🔄 重发死信</button>
+    <button class="btn" onclick="loadOrders()">🔄 刷新</button>
+    <button class="btn" onclick="syncStatus()">🔄 状态同步</button>
+  </div>
+</div>
+
+<div class="main-container">
+  <div class="panel-left">
+    <div class="panel">
+      <div class="panel-header">
+        <h3>📦 订单列表</h3>
+        <span id="orderCount" class="badge">0</span>
+      </div>
+      <div class="panel-body">
+        <div class="table-wrap">
+          <table id="orderTable">
+            <thead>
+              <tr>
+                <th>订单号</th>
+                <th>客户群</th>
+                <th>产品</th>
+                <th>交货日期</th>
+                <th>备料状态</th>
+                <th>进度</th>
+              </tr>
+            </thead>
+            <tbody id="orderTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-right">
+    <div class="panel">
+      <div class="panel-header">
+        <h3>🧾 物料备料明细</h3>
+        <div style="display:flex;gap:6px;margin-left:auto;">
+          <button class="btn btn-sm" onclick="openSaveTemplate()">💾 保存模板</button>
+          <button class="btn btn-sm" onclick="openLoadTemplate()">📥 载入模板</button>
+          <button class="btn btn-sm btn-success" onclick="calculateMaterials()">🔧 计算物料</button>
+          <button class="btn btn-sm" onclick="openHistory()">📜 历史</button>
+          <button class="btn btn-sm btn-primary" onclick="openAddMaterial()">➕ 添加物料</button>
+          <button class="btn btn-sm" onclick="openEditMaterial()">📝 编辑</button>
+          <button class="btn btn-sm btn-warning" onclick="unlockMaterial()">🔓 解锁</button>
+          <button class="btn btn-sm" onclick="gotoProcess()">🔧 工序追踪</button>
+        </div>
+      </div>
+      <div id="orderInfoBar" class="order-info-bar" style="display:none;">
+        <span id="orderInfoText">请选择左侧订单查看备料情况</span>
+      </div>
+      <div id="batchToolbar" class="batch-toolbar" style="display:none;">
+        <span class="sel-info">已选择 <b id="matSelCount">0</b> 项</span>
+        <button class="btn btn-sm btn-danger" onclick="batchDeleteMaterials()">🗑️ 批量删除</button>
+        <button class="btn btn-sm btn-secondary" onclick="cancelBatchMat()">取消选择</button>
+      </div>
+      <div class="panel-body">
+        <div class="table-wrap">
+          <table id="materialTable">
+            <thead>
+              <tr>
+                <th style="width:30px;"><input type="checkbox" id="matCheckAll" onchange="toggleMatAll()"></th>
+                <th>物料名称</th>
+                <th>规格</th>
+                <th>单位</th>
+                <th>需求数量</th>
+                <th>已备数量</th>
+                <th>缺口</th>
+                <th>状态</th>
+                <th>锁定</th>
+                <th>更新时间</th>
+                <th>来源</th>
+              </tr>
+            </thead>
+            <tbody id="materialTbody"></tbody>
+          </table>
+          <div id="materialEmpty" class="empty-tip">
+            <div class="icon">📦</div>
+            <div>请选择左侧订单查看物料明细</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<div id="modalOverlay" class="modal-overlay">
+  <div class="modal" id="modalBox">
+    <div class="modal-header">
+      <h3 id="modalTitle">弹窗</h3>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<div id="orderCtxMenu" class="context-menu">
+  <div class="context-menu-item" onclick="ctxEditPrep()">📝 编辑订单备料</div>
+  <div class="context-menu-item" onclick="ctxAddMaterial()">➕ 添加物料</div>
+  <div class="context-menu-sep"></div>
+  <div class="context-menu-item" onclick="ctxMarkAllDone()">✅ 全部标记已备齐</div>
+  <div class="context-menu-item" onclick="ctxResetPrep()">🔄 重置备料</div>
+</div>
+
+<div id="matCtxMenu" class="context-menu">
+  <div class="context-menu-item" onclick="ctxEditMaterial()">📝 编辑</div>
+  <div class="context-menu-item" onclick="ctxMarkDone()">✅ 标记已备齐</div>
+  <div class="context-menu-item" onclick="ctxAddQty()">🔢 添加入库</div>
+  <div class="context-menu-sep"></div>
+  <div class="context-menu-item danger" onclick="ctxDeleteMaterial()">🗑️ 删除</div>
+</div>
+
+<div id="deadLetterPanel" class="dead-letter-panel">
+  <div class="dl-header">
+    <h3>🔄 报工死信重发</h3>
+    <button class="dl-close" onclick="closeDeadLetters()">&times;</button>
+  </div>
+  <div class="dl-body" id="dlBody"></div>
+</div>
+
+<div id="historyPanel" class="history-panel">
+  <div class="history-header">
+    <h3>📜 物料备料历史</h3>
+    <button class="history-close" onclick="closeHistory()">&times;</button>
+  </div>
+  <div class="history-body" id="historyBody"></div>
+</div>
+
+<script src="/static/js/shared.js"></script>
+<script>
+renderNav('material_admin', '📋 物料备料管理');
+
+let selectedOrderId = null;
+let selectedMaterialKey = null;
+let ordersData = [];
+let materialsData = [];
+let deadLetterTimer = null;
+
+const MOBILE_STATUSES = ['采购中', '已到货', '验货中', '已验收', '配送中', '已取消'];
+
+async function api(url, opts = {}) {
+  const r = await apiFetch(url, opts);
+  if (!r) return null;
+  return r.json();
+}
+
+function toast(msg, type = 'info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast show ${type}`;
+  if (t._t) clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+function _s(v) { return v == null ? '' : String(v); }
+
+async function loadOrders() {
+  const kw = document.getElementById('keywordInput').value.trim().toLowerCase();
+  const filter = document.getElementById('statusFilter').value;
+  const r = await api('/api/dispatch-center/material/list?limit=500');
+  if (!r || r.code !== 0) { toast('加载失败: ' + (r?.message || '未知错误'), 'error'); return; }
+
+  let items = r.data?.orders || [];
+  if (r.data && Array.isArray(r.data)) items = r.data;
+
+  if (kw) {
+    items = items.filter(o => {
+      const no = _s(o.order_no).toLowerCase();
+      const cust = _s(o.customer_name || o.customer_group || '').toLowerCase();
+      const prod = _s(o.product_type || '').toLowerCase();
+      return no.includes(kw) || cust.includes(kw) || prod.includes(kw);
+    });
+  }
+
+  ordersData = items;
+  document.getElementById('orderCount').textContent = items.length;
+
+  const tbody = document.getElementById('orderTbody');
+  tbody.innerHTML = '';
+
+  items.forEach((o, i) => {
+    const prepStatus = _s(o.prep_status || '待备料');
+    const progress = parseInt(o.progress || 0);
+    const statusTag = getStatusTag(prepStatus);
+    const progClass = progress >= 100 ? 'complete' : progress > 0 ? 'partial' : 'shortage';
+
+    const tr = document.createElement('tr');
+    tr.dataset.orderId = o.order_id || o.id;
+    tr.dataset.index = i;
+    tr.onclick = () => selectOrder(o.order_id || o.id, i);
+    tr.ondblclick = () => { selectOrder(o.order_id || o.id, i); openEditPrep(); };
+    tr.oncontextmenu = e => { e.preventDefault(); selectOrder(o.order_id || o.id, i); showOrderCtx(e); };
+
+    const delivery = o.delivery_date ? _s(o.delivery_date).slice(0, 10) : '-';
+
+    tr.innerHTML = `
+      <td><span style="font-weight:500">${escapeHtml(_s(o.order_no))}</span></td>
+      <td>${escapeHtml(_s(o.customer_group || o.customer_name || '—'))}</td>
+      <td>${escapeHtml(_s(o.product_type || '—'))}</td>
+      <td>${escapeHtml(delivery)}</td>
+      <td>${statusTag}</td>
+      <td><div class="progress-bar ${progClass}"><div class="bar"><div class="fill" style="width:${progress}%"></div></div><span>${progress}%</span></div></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  loadStatusFilter(items);
+}
+
+function loadStatusFilter(items) {
+  const s = new Set();
+  items.forEach(o => {
+    const ps = _s(o.prep_status || '待备料');
+    if (ps && ps !== '待备料') s.add(ps);
+  });
+  ['待备料', '缺料', '部分缺料', '已备齐', ...MOBILE_STATUSES].forEach(v => s.add(v));
+
+  const sel = document.getElementById('statusFilter');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="全部">全部状态</option>';
+  [...s].sort().forEach(v => {
+    sel.innerHTML += `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`;
+  });
+  const idx = [...sel.options].findIndex(o => o.value === cur);
+  if (idx >= 0) sel.selectedIndex = idx;
+}
+
+async function selectOrder(orderId, index) {
+  selectedOrderId = orderId;
+  document.querySelectorAll('#orderTbody tr').forEach((tr, i) => {
+    tr.classList.toggle('selected', i === index);
+  });
+  await loadMaterials(orderId);
+}
+
+async function loadMaterials(orderId) {
+  const infoBar = document.getElementById('orderInfoBar');
+  const empty = document.getElementById('materialEmpty');
+  const tbody = document.getElementById('materialTbody');
+  tbody.innerHTML = '';
+  empty.style.display = 'none';
+
+  const r = await api(`/api/dispatch-center/material/list?limit=1&order_id=${orderId}`);
+  let mats = [];
+  if (r?.code === 0) {
+    mats = r.data?.materials || [];
+    if (!mats.length && r.data && Array.isArray(r.data)) mats = r.data;
+  }
+
+  if (!mats.length) {
+    mats = await loadMaterialsDirect(orderId);
+  }
+
+  materialsData = mats;
+
+  if (!mats.length) {
+    infoBar.style.display = 'none';
+    empty.style.display = 'flex';
+    return;
+  }
+
+  const order = ordersData.find(o => (o.order_id || o.id) == orderId);
+  const orderNo = order?.order_no || '';
+  let total = mats.length, complete = 0, shortage = 0, totalReq = 0, totalPrep = 0;
+
+  mats.forEach(m => {
+    const req = parseFloat(m.required_qty) || 0;
+    const prep = parseFloat(m.prepared_qty) || 0;
+    totalReq += req; totalPrep += prep;
+    if (req > 0 && prep >= req) complete++;
+    else if (req > 0 && prep === 0) shortage++;
+  });
+
+  const progress = totalReq > 0 ? Math.round(totalPrep / totalReq * 100) : 0;
+  const infoText = `订单：${escapeHtml(orderNo)} | 物料：${total}种 | 🟢齐全：${complete} | 🔴缺料：${shortage} | 整体进度：${progress}%`;
+  document.getElementById('orderInfoText').textContent = infoText;
+  infoBar.style.display = 'block';
+  infoBar.style.color = shortage === 0 ? '#52c41a' : '#ff4d4f';
+
+  tbody.innerHTML = '';
+  mats.forEach(m => {
+    const req = parseFloat(m.required_qty) || 0;
+    const prep = parseFloat(m.prepared_qty) || 0;
+    const shortage2 = Math.max(0, req - prep);
+    const ps = _s(m.prep_status || '');
+    let statusTag, rowClass = '';
+    if (MOBILE_STATUSES.includes(ps)) {
+      statusTag = `<span class="status-badge status-mobile">${escapeHtml(ps)}<span class="mobile-tag">📱</span></span>`;
+    } else if (req === 0) {
+      statusTag = '<span class="status-badge status-pending">无需备料</span>';
+    } else if (prep === 0) {
+      statusTag = '<span class="status-badge status-shortage">缺料</span>'; rowClass = 'row-shortage';
+    } else if (prep < req) {
+      statusTag = '<span class="status-badge status-partial">部分缺料</span>'; rowClass = 'row-shortage';
+    } else {
+      statusTag = '<span class="status-badge status-complete">已备齐</span>';
+    }
+
+    const locked = m.locked;
+    const lockedTag = locked ? '<span class="detail-locked">是</span>' : '<span class="detail-unlocked">否</span>';
+    const updated = m.updated_at ? _s(m.updated_at).slice(0, 16) : '';
+    const source = MOBILE_STATUSES.includes(ps)
+      ? '<span class="detail-source mobile">📱 移动端</span>'
+      : '<span class="detail-source desktop">💻 桌面端</span>';
+
+    const shortageStr = shortage2 > 0 ? shortage2 : '—';
+    const key = `${m.material_name}__${m.id || m.material_type || ''}`;
+
+    const tr = document.createElement('tr');
+    tr.dataset.key = key;
+    tr.dataset.id = m.id;
+    tr.className = rowClass + (locked ? ' row-locked' : '');
+    tr.onclick = e => { if(e.target.type !== 'checkbox') selectMaterial(key, m.id); };
+    tr.ondblclick = () => { selectMaterial(key, m.id); openEditMaterial(); };
+    tr.oncontextmenu = e => { e.preventDefault(); selectMaterial(key, m.id); showMatCtx(e); };
+
+    tr.innerHTML = `
+      <td><input type="checkbox" class="mat-check" value="${m.id}" onchange="updateBatchUI()"></td>
+      <td>${escapeHtml(_s(m.material_name))}</td>
+      <td>${escapeHtml(_s(m.spec || m.material_type || ''))}</td>
+      <td>${escapeHtml(_s(m.unit || '米'))}</td>
+      <td>${req}</td>
+      <td>${prep}</td>
+      <td>${shortageStr}</td>
+      <td>${statusTag}</td>
+      <td>${lockedTag}</td>
+      <td>${escapeHtml(updated)}</td>
+      <td>${source}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function loadMaterialsDirect(orderId) {
+  try {
+    const r = await api(`/api/material/list?limit=200&order_id=${orderId}`);
+    if (r?.code === 0) {
+      let mats = r.data?.materials || [];
+      if (!mats.length && r.data && Array.isArray(r.data)) mats = r.data;
+      return mats;
+    }
+  } catch(e) {}
+  return [];
+}
+
+function selectMaterial(key, id) {
+  selectedMaterialKey = key;
+  document.querySelectorAll('#materialTbody tr').forEach(tr => {
+    tr.classList.toggle('selected', tr.dataset.key === key);
+  });
+}
+
+function getStatusTag(ps) {
+  const cls = ps === '已备齐' ? 'status-complete'
+    : ps === '部分缺料' ? 'status-partial'
+    : MOBILE_STATUSES.includes(ps) ? 'status-mobile'
+    : ps === '缺料' ? 'status-shortage'
+    : 'status-pending';
+  return `<span class="status-badge ${cls}">${escapeHtml(ps)}</span>`;
+}
+
+function openAddMaterial() {
+  if (!selectedOrderId) { toast('请先选择订单', 'error'); return; }
+  showModal('➕ 添加物料', `
+    <div class="form-row">
+      <label>物料名称 <span class="required">*</span></label>
+      <input type="text" id="f_material_name" placeholder="如：不锈钢网带、链条、轴承">
+    </div>
+    <div class="form-row">
+      <label>规格</label>
+      <input type="text" id="f_material_type" placeholder="如：SUS304、Φ10">
+    </div>
+    <div class="form-row">
+      <label>单位</label>
+      <input type="text" id="f_unit" value="米" placeholder="米/个/套">
+    </div>
+    <div class="form-row">
+      <label>需求数量</label>
+      <input type="number" id="f_required_qty" value="0" min="0" step="0.01">
+    </div>
+    <div class="form-row">
+      <label>备注</label>
+      <textarea id="f_remark" placeholder="备注信息"></textarea>
+    </div>
+  `, [
+    { label: '取消', onclick: 'closeModal()', class: 'btn' },
+    { label: '确认添加', onclick: 'doAddMaterial()', class: 'btn btn-primary' }
+  ]);
+}
+
+async function doAddMaterial() {
+  const name = document.getElementById('f_material_name').value.trim();
+  if (!name) { toast('物料名称不能为空', 'error'); return; }
+  const r = await api('/api/material/add', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      order_id: selectedOrderId,
+      material_name: name,
+      material_type: document.getElementById('f_material_type').value.trim(),
+      unit: document.getElementById('f_unit').value.trim() || '米',
+      required_qty: parseFloat(document.getElementById('f_required_qty').value) || 0,
+      remark: document.getElementById('f_remark').value.trim()
+    })
+  });
+  if (!r) return;
+  if (r.code === 0) {
+    toast('物料添加成功', 'success');
+    closeModal();
+    await loadMaterials(selectedOrderId);
+    await loadOrders();
+  } else {
+    toast(r.message || '添加失败', 'error');
+  }
+}
+
+function openEditMaterial() {
+  if (!selectedMaterialKey) { toast('请先选择物料', 'error'); return; }
+  const m = materialsData.find(x => `${x.material_name}__${x.id || x.material_type || ''}` === selectedMaterialKey);
+  if (!m) return;
+  if (m.locked) { toast('该物料已锁定，请先解锁后再编辑', 'error'); return; }
+
+  showModal('📝 编辑物料', `
+    <div class="form-info">
+      <div class="row"><span>物料名称</span><span>${escapeHtml(_s(m.material_name))}</span></div>
+    </div>
+    <div class="form-row">
+      <label>规格</label>
+      <input type="text" id="f_spec" value="${escapeHtml(_s(m.spec || ''))}">
+    </div>
+    <div class="form-row">
+      <label>单位</label>
+      <input type="text" id="f_unit2" value="${escapeHtml(_s(m.unit || '米'))}">
+    </div>
+    <div class="form-row">
+      <label>需求数量</label>
+      <input type="number" id="f_req" value="${parseFloat(m.required_qty) || 0}" min="0" step="0.01">
+    </div>
+    <div class="form-row">
+      <label>已备数量</label>
+      <input type="number" id="f_prep" value="${parseFloat(m.prepared_qty) || 0}" min="0" step="0.01">
+    </div>
+    <div class="form-row">
+      <label>备注</label>
+      <textarea id="f_remark2">${escapeHtml(_s(m.remark || ''))}</textarea>
+    </div>
+  `, [
+    { label: '取消', onclick: 'closeModal()', class: 'btn' },
+    { label: '保存修改', onclick: `doEditMaterial(${m.id})`, class: 'btn btn-primary' }
+  ]);
+}
+
+async function doEditMaterial(id) {
+  const req = parseFloat(document.getElementById('f_req').value) || 0;
+  const prep = parseFloat(document.getElementById('f_prep').value) || 0;
+  let status = '待备料';
+  if (prep === 0 && req > 0) status = '缺料';
+  else if (prep < req) status = '部分缺料';
+  else if (prep >= req) status = '已备齐';
+
+  const r = await api(`/api/material/edit/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      spec: document.getElementById('f_spec').value.trim(),
+      unit: document.getElementById('f_unit2').value.trim() || '米',
+      required_qty: req,
+      prepared_qty: prep,
+      prep_status: status,
+      remark: document.getElementById('f_remark2').value.trim()
+    })
+  });
+  if (!r) return;
+  if (r.code === 0) {
+    toast('物料已更新', 'success');
+    closeModal();
+    await loadMaterials(selectedOrderId);
+    await loadOrders();
+  } else {
+    toast(r.message || '更新失败', 'error');
+  }
+}
+
+async function unlockMaterial() {
+  if (!selectedMaterialKey) { toast('请先选择物料', 'error'); return; }
+  const m = materialsData.find(x => `${x.material_name}__${x.id || x.material_type || ''}` === selectedMaterialKey);
+  if (!m) return;
+  if (!m.locked) { toast('该物料已是解锁状态', 'info'); return; }
+
+  const r = await api(`/api/material/unlock/${m.id}`, { method: 'PUT' });
+  if (!r) return;
+  if (r.code === 0) {
+    toast('物料已解锁', 'success');
+    await loadMaterials(selectedOrderId);
+  } else {
+    toast(r.message || '解锁失败', 'error');
+  }
+}
+
+async function calculateMaterials() {
+  if (!selectedOrderId) { toast('请先选择订单', 'error'); return; }
+  const r = await api('/api/material/calculate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ order_id: selectedOrderId })
+  });
+  if (!r) return;
+  if (r.code === 0) {
+    toast(r.message || '物料计算完成', 'success');
+    await loadMaterials(selectedOrderId);
+    await loadOrders();
+  } else {
+    toast(r.message || '计算失败', 'error');
+  }
+}
+
+async function openSaveTemplate() {
+  if (!selectedOrderId) { toast('请先选择订单', 'error'); return; }
+  if (!materialsData.length) { toast('当前订单没有物料明细', 'error'); return; }
+  showModal('💾 保存模板', `
+    <div class="form-info"><span>当前订单共有 ${materialsData.length} 种物料</span></div>
+    <div class="form-row">
+      <label>模板名称 <span class="required">*</span></label>
+      <input type="text" id="f_tpl_name" placeholder="如：标准网带配置">
+    </div>
+    <div class="form-row">
+      <label>模板描述</label>
+      <textarea id="f_tpl_desc" placeholder="模板用途说明"></textarea>
+    </div>
+  `, [
+    { label: '取消', onclick: 'closeModal()', class: 'btn' },
+    { label: '保存模板', onclick: 'doSaveTemplate()', class: 'btn btn-primary' }
+  ]);
+}
+
+async function doSaveTemplate() {
+  const name = document.getElementById('f_tpl_name').value.trim();
+  if (!name) { toast('模板名称不能为空', 'error'); return; }
+  const materials = materialsData.map(m => ({
+    name: m.material_name,
+    unit: m.unit || '米',
+    required_qty: parseFloat(m.required_qty) || 0,
+    remark: m.remark || ''
+  }));
+  const r = await api('/api/material/template', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name, description: document.getElementById('f_tpl_desc').value.trim(),
+      order_id: selectedOrderId, materials
+    })
+  });
+  if (!r) return;
+  if (r.code === 0) { toast('模板保存成功', 'success'); closeModal(); }
+  else toast(r.message || '保存失败', 'error');
+}
+
+async function openLoadTemplate() {
+  if (!selectedOrderId) { toast('请先选择订单', 'error'); return; }
+  const r = await api('/api/material/template/list');
+  if (!r || r.code !== 0) { toast('加载模板列表失败', 'error'); return; }
+  const templates = r.data || [];
+  if (!templates.length) { toast('暂无可用模板', 'info'); return; }
+
+  let opts = templates.map(t => `<option value="${escapeHtml(_s(t.name))}">${escapeHtml(_s(t.name))}</option>`).join('');
+  showModal('📥 载入模板', `
+    <div class="form-row">
+      <label>选择模板</label>
+      <select id="f_sel_tpl"><option value="">— 请选择 —</option>${opts}</select>
+    </div>
+    <div class="form-row">
+      <label>应用模式</label>
+      <select id="f_tpl_mode">
+        <option value="append">追加（保留现有物料）</option>
+        <option value="replace">覆盖（清空后应用）</option>
+      </select>
+    </div>
+  `, [
+    { label: '取消', onclick: 'closeModal()', class: 'btn' },
+    { label: '确认应用', onclick: 'doLoadTemplate()', class: 'btn btn-primary' }
+  ]);
+}
+
+async function doLoadTemplate() {
+  const tplName = document.getElementById('f_sel_tpl').value;
+  if (!tplName) { toast('请选择模板', 'error'); return; }
+  const r = await api('/api/material/template/apply', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      order_id: selectedOrderId, template_name: tplName,
+      mode: document.getElementById('f_tpl_mode').value
+    })
+  });
+  if (!r) return;
+  if (r.code === 0) {
+    toast(r.message || '模板应用成功', 'success');
+    closeModal();
+    await loadMaterials(selectedOrderId);
+    await loadOrders();
+  } else {
+    toast(r.message || '应用失败', 'error');
+  }
+}
+
+async function openHistory() {
+  if (!selectedOrderId) { toast('请先选择订单', 'error'); return; }
+  const r = await api(`/api/material/history?order_id=${selectedOrderId}&limit=50`);
+  const body = document.getElementById('historyBody');
+  if (!r || r.code !== 0 || !r.data?.length) {
+    body.innerHTML = '<div class="empty-tip"><div class="icon">📜</div><div>暂无历史记录</div></div>';
+  } else {
+    body.innerHTML = r.data.map(h => `
+      <div class="history-item">
+        <div class="action">${escapeHtml(_s(h.action))} ${escapeHtml(_s(h.material_name)) ? '— ' + escapeHtml(_s(h.material_name)) : ''}</div>
+        <div class="detail">${escapeHtml(_s(h.detail || ''))}</div>
+        <div class="time">${_s(h.created_at || '').slice(0, 19)}</div>
+      </div>
+    `).join('');
+  }
+  document.getElementById('historyPanel').classList.add('open');
+}
+
+function closeHistory() { document.getElementById('historyPanel').classList.remove('open'); }
+
+async function openDeadLetters() {
+  const r = await api('/api/dispatch/dead-letters');
+  const body = document.getElementById('dlBody');
+  if (!r || r.code !== 0 || !r.data?.length) {
+    body.innerHTML = '<div class="empty-tip"><div class="icon">✅</div><div>当前没有死信任务</div></div>';
+  } else {
+    const dls = r.data;
+    let html = `<div style="margin-bottom:12px;">报工死信列表（共 ${dls.length} 条）</div>`;
+    html += '<div id="dlItems">';
+    dls.forEach(d => {
+      html += `<div style="padding:10px 12px;border:1px solid #f0f0f0;border-radius:6px;margin-bottom:8px;background:#f9f9f9;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <input type="checkbox" class="dl-check" value="${escapeHtml(_s(d.id))}" checked>
+          <strong>${escapeHtml(_s(d.order_no))}</strong>
+          <span>${escapeHtml(_s(d.process_name || '备料'))}</span>
+          <span style="margin-left:auto;color:#ff4d4f;font-size:12px;">重试:${escapeHtml(_s(d.retry_count || 0))}</span>
+        </div>
+        <div style="font-size:12px;color:#8c8c8c;">${escapeHtml(_s(d.last_error || '未知错误')).slice(0, 80)}</div>
+        <div style="font-size:11px;color:#bfbfbf;margin-top:3px;">${escapeHtml(_s(d.updated_at || d.created_at || '')).slice(0, 19)}</div>
+      </div>`;
+    });
+    html += '</div>';
+    html += '<div style="margin-top:12px;"><button class="btn btn-primary" onclick="retryDeadLetters()">🔄 重发选中</button></div>';
+    body.innerHTML = html;
+  }
+  document.getElementById('deadLetterPanel').classList.add('open');
+}
+
+function closeDeadLetters() { document.getElementById('deadLetterPanel').classList.remove('open'); }
+
+async function retryDeadLetters() {
+  const checks = document.querySelectorAll('.dl-check:checked');
+  if (!checks.length) { toast('请至少选择一条死信', 'error'); return; }
+  const ids = [...checks].map(c => c.value);
+  const r = await api('/api/dispatch/dead-letters/batch-retry', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ids })
+  });
+  if (!r) return;
+  toast(r.message || `重发完成`, r.code === 0 ? 'success' : 'error');
+  closeDeadLetters();
+}
+
+async function syncStatus() {
+  const r = await api('/api/dispatch-center/material/list?limit=1');
+  if (r?.code === 0) {
+    document.getElementById('syncStatus').textContent = '🟢 已同步';
+    document.getElementById('syncStatus').className = 'sync-status sync-ok';
+    toast('状态同步成功', 'success');
+  } else {
+    document.getElementById('syncStatus').textContent = '🟡 待同步';
+    document.getElementById('syncStatus').className = 'sync-status sync-pending';
+  }
+}
+
+function openEditPrep() {
+  if (!selectedOrderId) { toast('请先选择订单', 'error'); return; }
+  const order = ordersData.find(o => (o.order_id || o.id) == selectedOrderId);
+  const orderNo = order?.order_no || '';
+  const mats = materialsData;
+  let total = mats.length, complete = 0;
+  mats.forEach(m => {
+    const req = parseFloat(m.required_qty) || 0;
+    const prep = parseFloat(m.prepared_qty) || 0;
+    if (req > 0 && prep >= req) complete++;
+  });
+  showModal(`📋 备料概览 - ${orderNo}`, `
+    <div class="form-info">
+      <div class="row"><span>订单号</span><span>${escapeHtml(orderNo)}</span></div>
+      <div class="row"><span>客户群</span><span>${escapeHtml(_s(order?.customer_group || '—'))}</span></div>
+      <div class="row"><span>产品</span><span>${escapeHtml(_s(order?.product_type || '—'))}</span></div>
+      <div class="row"><span>物料数</span><span>${total} 种</span></div>
+      <div class="row"><span>已备齐</span><span>${complete} 种</span></div>
+    </div>
+  `, [{ label: '关闭', onclick: 'closeModal(); loadOrders(); loadMaterials(selectedOrderId);', class: 'btn' }]);
+}
+
+function showOrderCtx(e) {
+  const menu = document.getElementById('orderCtxMenu');
+  menu.style.left = e.clientX + 'px';
+  menu.style.top = e.clientY + 'px';
+  menu.classList.add('show');
+  closeMatCtx();
+}
+
+function showMatCtx(e) {
+  const menu = document.getElementById('matCtxMenu');
+  menu.style.left = e.clientX + 'px';
+  menu.style.top = e.clientY + 'px';
+  menu.classList.add('show');
+  closeOrderCtx();
+}
+
+function closeOrderCtx() { document.getElementById('orderCtxMenu').classList.remove('show'); }
+function closeMatCtx() { document.getElementById('matCtxMenu').classList.remove('show'); }
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('#orderCtxMenu')) closeOrderCtx();
+  if (!e.target.closest('#matCtxMenu')) closeMatCtx();
+});
+
+function ctxEditPrep() { closeOrderCtx(); openEditPrep(); }
+function ctxAddMaterial() { closeOrderCtx(); openAddMaterial(); }
+async function ctxMarkAllDone() {
+  closeOrderCtx();
+  if (!selectedOrderId) return;
+  const r = await api(`/api/material/mark-all-done`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ order_id: selectedOrderId })
+  });
+  if (r?.code === 0) {
+    toast('已全部标记为已备齐', 'success');
+    await loadMaterials(selectedOrderId);
+    await loadOrders();
+  }
+}
+async function ctxResetPrep() {
+  closeOrderCtx();
+  if (!selectedOrderId) return;
+  const r = await api(`/api/material/reset`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ order_id: selectedOrderId })
+  });
+  if (r?.code === 0) {
+    toast('备料已重置', 'success');
+    await loadMaterials(selectedOrderId);
+    await loadOrders();
+  }
+}
+
+function ctxEditMaterial() { closeMatCtx(); openEditMaterial(); }
+async function ctxMarkDone() {
+  closeMatCtx();
+  const m = materialsData.find(x => `${x.material_name}__${x.id || x.material_type || ''}` === selectedMaterialKey);
+  if (!m) return;
+  const r = await api(`/api/material/mark-done/${m.id}`, { method: 'PUT' });
+  if (r?.code === 0) {
+    toast('已标记为已备齐', 'success');
+    await loadMaterials(selectedOrderId);
+    await loadOrders();
+  }
+}
+
+function ctxAddQty() {
+  closeMatCtx();
+  const m = materialsData.find(x => `${x.material_name}__${x.id || x.material_type || ''}` === selectedMaterialKey);
+  if (!m) return;
+  showModal('🔢 添加入库数量', `
+    <div class="form-info">
+      <div class="row"><span>物料</span><span>${escapeHtml(_s(m.material_name))}</span></div>
+      <div class="row"><span>当前已备</span><span>${parseFloat(m.prepared_qty)||0} ${_s(m.unit||'米')}</span></div>
+      <div class="row"><span>需求数量</span><span>${parseFloat(m.required_qty)||0} ${_s(m.unit||'米')}</span></div>
+    </div>
+    <div class="form-row">
+      <label>入库数量</label>
+      <input type="number" id="f_add_qty" value="0" min="0" step="0.01">
+    </div>
+    <div class="form-row">
+      <label>入库批次号</label>
+      <input type="text" id="f_batch_no" placeholder="可选">
+    </div>
+    <div class="form-row">
+      <label>备注</label>
+      <textarea id="f_in_remark" placeholder="可选备注"></textarea>
+    </div>
+  `, [
+    { label: '取消', onclick: 'closeModal()', class: 'btn' },
+    { label: '确认入库', onclick: `doAddQty(${m.id})`, class: 'btn btn-primary' }
+  ]);
+}
+
+async function doAddQty(id) {
+  const addQty = parseFloat(document.getElementById('f_add_qty').value) || 0;
+  if (addQty <= 0) { toast('入库数量必须大于0', 'error'); return; }
+  const r = await api(`/api/material/add-qty/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      add_qty: addQty,
+      batch_no: document.getElementById('f_batch_no').value.trim(),
+      remark: document.getElementById('f_in_remark').value.trim()
+    })
+  });
+  if (!r) return;
+  if (r.code === 0) {
+    toast('入库成功', 'success');
+    closeModal();
+    await loadMaterials(selectedOrderId);
+    await loadOrders();
+  } else {
+    toast(r.message || '入库失败', 'error');
+  }
+}
+
+async function ctxDeleteMaterial() {
+  closeMatCtx();
+  const m = materialsData.find(x => `${x.material_name}__${x.id || x.material_type || ''}` === selectedMaterialKey);
+  if (!m) return;
+  if (!confirm(`确定删除物料「${m.material_name}」？`)) return;
+  const r = await api(`/api/material/delete/${m.id}`, { method: 'DELETE' });
+  if (r?.code === 0) {
+    toast('物料已删除', 'success');
+    await loadMaterials(selectedOrderId);
+    await loadOrders();
+  } else {
+    toast(r?.message || '删除失败', 'error');
+  }
+}
+
+function gotoProcess() {
+  if (!selectedOrderId) { toast('请先选择订单', 'error'); return; }
+  const order = ordersData.find(o => (o.order_id || o.id) == selectedOrderId);
+  const orderNo = order?.order_no || selectedOrderId;
+  window.location.href = `/process-track?order_no=${encodeURIComponent(orderNo)}`;
+}
+
+function showModal(title, bodyHtml, buttons) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = bodyHtml;
+  document.getElementById('modalFooter').innerHTML = '';
+  buttons.forEach(b => {
+    const btn = document.createElement('button');
+    btn.className = b.class || 'btn';
+    btn.textContent = b.label;
+    btn.onclick = new Function(b.onclick);
+    document.getElementById('modalFooter').appendChild(btn);
+  });
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function closeModal() { document.getElementById('modalOverlay').classList.remove('show'); }
+
+document.getElementById('modalOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+});
+
+document.getElementById('keywordInput').addEventListener('keyup', e => {
+  if (e.key === 'Enter') loadOrders();
+});
+
+document.getElementById('statusFilter').addEventListener('change', loadOrders);
+
+loadOrders();
+setInterval(syncStatus, 300000);
+
+function toggleMatAll() {
+  const allChecked = document.getElementById('matCheckAll').checked;
+  document.querySelectorAll('.mat-check').forEach(c => c.checked = allChecked);
+  updateBatchUI();
+}
+
+function updateBatchUI() {
+  const checked = document.querySelectorAll('.mat-check:checked');
+  const toolbar = document.getElementById('batchToolbar');
+  const selCount = document.getElementById('matSelCount');
+  const checkAll = document.getElementById('matCheckAll');
+  if (checked.length > 0) {
+    toolbar.style.display = 'flex';
+    selCount.textContent = checked.length;
+  } else {
+    toolbar.style.display = 'none';
+  }
+  const total = document.querySelectorAll('.mat-check').length;
+  checkAll.checked = total > 0 && checked.length === total;
+  checkAll.indeterminate = checked.length > 0 && checked.length < total;
+}
+
+function cancelBatchMat() {
+  document.querySelectorAll('.mat-check').forEach(c => c.checked = false);
+  updateBatchUI();
+}
+
+async function batchDeleteMaterials() {
+  const checked = [...document.querySelectorAll('.mat-check:checked')];
+  if (checked.length === 0) { toast('请选择要删除的物料', 'error'); return; }
+  if (!confirm(`确定删除选中的 ${checked.length} 个物料？此操作不可恢复！`)) return;
+
+  const ids = checked.map(c => c.value);
+  let failed = 0;
+  for (const id of ids) {
+    try {
+      const r = await api(`/api/material/delete/${id}`, { method: 'DELETE' });
+      if (!r || r.code !== 0) failed++;
+    } catch(e) { failed++; }
+  }
+
+  if (failed === 0) {
+    toast(`成功删除 ${ids.length} 个物料`, 'success');
+  } else {
+    toast(`删除完成：成功 ${ids.length - failed} 个，失败 ${failed} 个`, 'error');
+  }
+  cancelBatchMat();
+  if (selectedOrderId) await loadMaterials(selectedOrderId);
+  await loadOrders();
+}
+</script>
+</body>
+</html>

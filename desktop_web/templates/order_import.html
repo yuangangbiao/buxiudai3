@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>订单批量导入 - 不锈钢网带跟单系统</title>
+<link rel="stylesheet" href="/static/css/shared.css">
+<style>
+  body { background: #f5f6fa; }
+  .page-wrap { max-width: 720px; margin: 32px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; }
+  .page-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 24px 32px; }
+  .page-header h2 { font-size: 18px; margin: 0 0 4px; }
+  .page-header p { font-size: 13px; opacity: 0.85; margin: 0; }
+  .page-body { padding: 28px 32px; }
+  .step-card { border: 1px solid #e8ecf0; border-radius: 6px; padding: 16px 20px; margin-bottom: 16px; }
+  .step-num { display: inline-block; width: 24px; height: 24px; background: #667eea; color: #fff; border-radius: 50%; text-align: center; line-height: 24px; font-size: 12px; font-weight: 600; margin-right: 10px; }
+  .step-title { font-size: 14px; font-weight: 600; color: #2c3e50; vertical-align: middle; }
+  .step-body { margin-top: 10px; margin-left: 34px; font-size: 13px; color: #555; line-height: 1.8; }
+  .drop-zone { border: 2px dashed #d0d7e2; border-radius: 8px; padding: 48px 24px; text-align: center; cursor: pointer; transition: all 0.2s; margin-top: 12px; }
+  .drop-zone:hover, .drop-zone.dragover { border-color: #667eea; background: #f0f2ff; }
+  .drop-zone-icon { font-size: 36px; margin-bottom: 8px; }
+  .drop-zone-text { font-size: 14px; color: #888; }
+  .drop-zone-text strong { color: #667eea; }
+  .btn { padding: 9px 18px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+  .btn-primary { background: #667eea; color: #fff; }
+  .btn-primary:hover { background: #5569d6; }
+  .btn-outline { background: #fff; color: #667eea; border: 1px solid #667eea; }
+  .btn-outline:hover { background: #f0f2ff; }
+  .result-card { border-radius: 6px; padding: 16px 20px; margin-top: 16px; }
+  .result-success { background: #d4edda; border: 1px solid #c3e6cb; }
+  .result-error { background: #fdecea; border: 1px solid #f5c6cb; }
+  .result-warning { background: #fff3cd; border: 1px solid #ffeeba; }
+  .result-title { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+  .result-body { font-size: 13px; line-height: 1.8; }
+  .error-row { padding: 6px 0; border-bottom: 1px solid rgba(0,0,0,0.06); }
+  .nav-bar { display: flex; gap: 8px; margin-bottom: 20px; }
+  .table-wrap { margin-top: 16px; border: 1px solid #eee; border-radius: 6px; overflow: hidden; }
+  .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .data-table th { background: #f5f6fa; padding: 8px 12px; text-align: left; font-weight: 500; border-bottom: 1px solid #eee; }
+  .data-table td { padding: 7px 12px; border-bottom: 1px solid #f0f0f0; }
+  .data-table tr:last-child td { border-bottom: none; }
+  .field-tag { display: inline-block; background: #e8f0fe; color: #4472c4; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin: 2px; }
+  .loading { text-align: center; padding: 24px; color: #888; font-size: 13px; }
+  input[type="file"] { display: none; }
+</style>
+</head>
+<body>
+<div id="appNav"></div>
+<script src="/static/js/shared.js"></script>
+<script>renderNav('order_import', '📥 订单批量导入');</script>
+
+<div class="page-wrap">
+  <div class="page-header">
+    <h2>📥 订单批量导入</h2>
+    <p>上传标准 Excel 模板，批量创建订单（支持 .xlsx / .xls）</p>
+  </div>
+
+  <div class="page-body">
+    <div class="nav-bar">
+      <a href="/orders"><button class="btn btn-outline">← 返回订单列表</button></a>
+      <a href="/api/orders/template" download><button class="btn btn-primary">📄 下载标准模板</button></a>
+    </div>
+
+    <div class="step-card">
+      <div><span class="step-num">1</span><span class="step-title">下载标准模板</span></div>
+      <div class="step-body">
+        点击上方「下载标准模板」按钮，获取标准 Excel 文件。模板包含18个字段，其中 <strong>客户名称</strong>、<strong>产品类型</strong>、<strong>数量</strong> 为必填，其余选填。
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div><span class="step-num">2</span><span class="step-title">填写 Excel</span></div>
+      <div class="step-body">
+        按行填写订单数据，支持多个订单（从第2行开始，第1行是表头勿修改）。必填字段：客户名称、产品类型、数量。
+        <div style="margin-top:8px;">
+          <span class="field-tag">必填 客户名称</span>
+          <span class="field-tag">必填 产品类型</span>
+          <span class="field-tag">必填 数量</span>
+          <span class="field-tag">选填 订单号</span>
+          <span class="field-tag">选填 客户分组</span>
+          <span class="field-tag">选填 客户电话</span>
+          <span class="field-tag">选填 客户地址</span>
+          <span class="field-tag">选填 材质</span>
+          <span class="field-tag">选填 网孔尺寸</span>
+          <span class="field-tag">选填 丝径(mm)</span>
+          <span class="field-tag">选填 宽度(mm)</span>
+          <span class="field-tag">选填 长度(m)</span>
+          <span class="field-tag">选填 单位</span>
+          <span class="field-tag">选填 单价(元)</span>
+          <span class="field-tag">选填 表面处理</span>
+          <span class="field-tag">选填 特殊要求</span>
+          <span class="field-tag">选填 交期(YYYY-MM-DD)</span>
+          <span class="field-tag">选填 备注</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div><span class="step-num">3</span><span class="step-title">上传并导入</span></div>
+      <div class="step-body">
+        上传填写好的 Excel 文件，系统将自动解析并导入。已存在的订单号会自动跳过。
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+          <div class="drop-zone-icon">📁</div>
+          <div class="drop-zone-text">
+            拖拽 Excel 文件到这里，或 <strong>点击选择文件</strong>
+          </div>
+          <div style="font-size:12px;color:#aaa;margin-top:6px;">支持 .xlsx / .xls，最大 10MB</div>
+        </div>
+        <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="handleFileSelect(this.files[0])">
+        <div id="previewArea" style="display:none;" class="table-wrap"></div>
+        <div id="resultArea"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const dropZone = document.getElementById('dropZone');
+
+dropZone.addEventListener('dragover', e => {
+  e.preventDefault();
+  dropZone.classList.add('dragover');
+});
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  const f = e.dataTransfer.files[0];
+  if (f) handleFileSelect(f);
+});
+
+function handleFileSelect(file) {
+  if (!file) return;
+  if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+    showResult('error', '仅支持 .xlsx / .xls 格式，请重新选择文件');
+    return;
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    showResult('error', '文件超过 10MB 限制');
+    return;
+  }
+  doImport(file);
+}
+
+async function doImport(file) {
+  showResult('loading', '正在解析文件...');
+  const formData = new FormData();
+  formData.append('file', file);
+  try {
+    const r = await fetch('/api/orders/import', {
+      method: 'POST',
+      headers: { 'X-Dispatch-Token': getToken() || '' },
+      body: formData,
+    });
+    const data = await r.json();
+    if (data.code === 0) {
+      const d = data.data || {};
+      let html = `<div class="result-card result-success">
+        <div class="result-title">✅ 导入完成</div>
+        <div class="result-body">
+          <p><strong>成功创建：${d.created || 0} 条</strong></p>
+          <p>跳过（已存在）：${d.skipped || 0} 条</p>`;
+      if (d.errors && d.errors.length > 0) {
+        html += `<p style="color:#c0392b;">解析错误：${d.errors.length} 行</p>`;
+        d.errors.forEach(e => {
+          html += `<div class="error-row">第${e.row}行：${e.msg}</div>`;
+        });
+      }
+      html += `<p style="margin-top:12px;"><a href="/orders"><button class="btn btn-primary">查看订单列表</button></a></p></div></div>`;
+      showResult('done', html);
+    } else {
+      showResult('error', data.message || '导入失败，请检查文件格式');
+    }
+  } catch (e) {
+    showResult('error', '网络错误: ' + e.message);
+  }
+}
+
+function showResult(type, html) {
+  const el = document.getElementById('resultArea');
+  if (type === 'loading') {
+    el.innerHTML = `<div class="result-card" style="background:#f8f9fa;border-color:#e8ecf0;text-align:center;padding:20px;color:#888;">${html}</div>`;
+  } else if (type === 'done') {
+    el.innerHTML = html;
+  } else if (type === 'error') {
+    el.innerHTML = `<div class="result-card result-error"><div class="result-title">❌ 错误</div><div class="result-body">${html}</div></div>`;
+  }
+}
+</script>
+</body>
+</html>

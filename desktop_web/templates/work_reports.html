@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>报工记录 - 不锈钢网带跟单系统</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Microsoft YaHei", sans-serif; background: #f0f2f5; color: #2c3e50; }
+  .main { padding: 16px 24px; max-width: 1400px; margin: 0 auto; }
+  .filter-bar { background: #fff; padding: 12px 16px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .filter-bar label { color: #555; font-size: 13px; }
+  .filter-bar input, .filter-bar select { padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
+  .filter-bar button { padding: 6px 16px; background: #667eea; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
+  .filter-bar button:hover { background: #5568d3; }
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+  .stat-card { background: #fff; padding: 14px 18px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .stat-label { color: #888; font-size: 12px; margin-bottom: 4px; }
+  .stat-value { font-size: 22px; font-weight: 700; color: #2c3e50; }
+  .stat-sub { color: #aaa; font-size: 11px; margin-top: 2px; }
+  .panel { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden; }
+  .panel-title { font-size: 15px; font-weight: 600; padding: 16px 20px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: #fafbfc; color: #555; font-weight: 600; padding: 12px 16px; text-align: left; border-bottom: 1px solid #f0f0f0; white-space: nowrap; }
+  td { padding: 12px 16px; border-bottom: 1px solid #f5f5f5; }
+  tr:hover { background: #fafbfc; }
+  .status-tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; color: #fff; }
+  .status-completed { background: #4CAF50; }
+  .status-pending { background: #FF9800; }
+  .status-failed { background: #F44336; }
+  .status-processing { background: #2196F3; }
+  .num-cell { font-weight: 600; color: #2c3e50; text-align: right; }
+  .text-muted { color: #999; }
+  .empty { text-align: center; padding: 40px; color: #999; font-size: 13px; }
+  .pagination { padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f0f0f0; font-size: 13px; color: #666; }
+  .error { background: #e74c3c; color: #fff; padding: 10px 16px; border-radius: 4px; margin: 8px 0; font-size: 13px; }
+</style>
+</head>
+<body>
+<div id="appNav"></div>
+<script src="/static/js/shared.js"></script>
+<script>renderNav('work_reports', '📝 报工记录');</script>
+
+<div class="main">
+  <div id="errorBox" class="error" style="display:none"></div>
+
+  <div class="filter-bar">
+    <label>订单号:</label>
+    <input id="f-order_no" placeholder="支持模糊搜索" style="width:160px">
+    <label>操作员:</label>
+    <input id="f-operator" placeholder="支持模糊搜索" style="width:140px">
+    <label>工序:</label>
+    <input id="f-step_name" placeholder="支持模糊搜索" style="width:140px">
+    <label>状态:</label>
+    <select id="f-status">
+      <option value="">全部</option>
+      <option value="completed">已完成</option>
+      <option value="pending">待处理</option>
+      <option value="processing">处理中</option>
+      <option value="failed">失败</option>
+    </select>
+    <button onclick="loadData()">🔍 搜索</button>
+    <button onclick="resetFilter()" style="background:#999">↺ 重置</button>
+    <span style="margin-left:auto;color:#aaa;font-size:12px">每 30 秒自动刷新</span>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">总报工数</div>
+      <div class="stat-value" id="s-total">-</div>
+      <div class="stat-sub">所有报工记录</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">已通过数</div>
+      <div class="stat-value" id="s-completed">-</div>
+      <div class="stat-sub">已完成状态</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">合格率</div>
+      <div class="stat-value" id="s-pass-rate">-</div>
+      <div class="stat-sub">合格数量 / 总数量</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">
+      <span>📋 报工列表</span>
+      <span class="text-muted" id="page-info">第 1 页</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>订单号</th>
+            <th>工序</th>
+            <th>数量</th>
+            <th>合格数</th>
+            <th>合格率</th>
+            <th>操作员</th>
+            <th>状态</th>
+            <th>重试</th>
+            <th>入队时间</th>
+            <th>处理时间</th>
+          </tr>
+        </thead>
+        <tbody id="reportTbody">
+          <tr><td colspan="11" class="empty">加载中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pagination">
+      <span id="total-info">共 0 条</span>
+      <div>
+        <button onclick="prevPage()" style="padding:4px 12px;border:1px solid #ddd;background:#fff;cursor:pointer;border-radius:4px">← 上一页</button>
+        <span id="page-num" style="margin:0 12px">1</span>
+        <button onclick="nextPage()" style="padding:4px 12px;border:1px solid #ddd;background:#fff;cursor:pointer;border-radius:4px">下一页 →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let _autoRefresh = null;
+let currentPage = 1;
+const pageSize = 20;
+
+function resetFilter() {
+  document.getElementById('f-order_no').value = '';
+  document.getElementById('f-operator').value = '';
+  document.getElementById('f-step_name').value = '';
+  document.getElementById('f-status').value = '';
+  currentPage = 1;
+  loadData();
+}
+
+function prevPage() { if (currentPage > 1) { currentPage--; loadData(); } }
+function nextPage() { currentPage++; loadData(); }
+
+function statusClass(s) {
+  return 'status-tag status-' + (s || 'pending');
+}
+
+function formatQty(v) {
+  const n = Number(v);
+  if (isNaN(n)) return '-';
+  return n % 1 === 0 ? n.toString() : n.toFixed(2);
+}
+
+async function retryReport(id) {
+  if (!confirm('确认重新执行该报工任务？')) return;
+  try {
+    const r = await apiFetch('/api/work-reports/retry', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    if (!r) return;
+    const data = await r.json();
+    if (data.code === 0) {
+      showError('errorBox', '✅ 重试已提交', 2000);
+      loadData();
+    } else {
+      showError('errorBox', data.message || '重试失败');
+    }
+  } catch (e) {
+    showError('errorBox', '重试失败: ' + e.message);
+  }
+}
+
+async function loadData() {
+  const order_no = document.getElementById('f-order_no').value.trim();
+  const operator = document.getElementById('f-operator').value.trim();
+  const step_name = document.getElementById('f-step_name').value.trim();
+  const status = document.getElementById('f-status').value;
+
+  const params = new URLSearchParams({
+    page: currentPage, page_size: pageSize,
+  });
+  if (order_no) params.set('order_no', order_no);
+  if (operator) params.set('operator', operator);
+  if (step_name) params.set('step_name', step_name);
+  if (status) params.set('status', status);
+
+  try {
+    const r = await apiFetch(`/api/work-reports/list?${params.toString()}`);
+    if (!r) return;
+    const data = await r.json();
+    if (data.code !== 0) {
+      showError('errorBox', data.message || '加载失败');
+      return;
+    }
+    const d = data.data;
+    renderRows(d.list);
+    renderStats(d);
+    renderPagination(d);
+  } catch (e) {
+    showError('errorBox', '网络错误: ' + e.message);
+  }
+}
+
+function renderRows(list) {
+  const tbody = document.getElementById('reportTbody');
+  if (!list || list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="11" class="empty">📭 暂无报工记录</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(r => {
+    const qty = Number(r.quantity) || 0;
+    const qual = Number(r.qualified_qty) || 0;
+    const passRate = qty > 0 ? ((qual / qty) * 100).toFixed(1) + '%' : '—';
+    const isFailed = r.status === 'failed';
+    const retryBtn = isFailed
+      ? `<button onclick="retryReport(${r.id})" style="padding:2px 8px;background:#e67e22;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;">🔁 重试</button>`
+      : `${r.retry_count || 0}/${r.max_retries || 3}`;
+    return `<tr>
+      <td>${r.id}</td>
+      <td><b>${escapeHtml(r.order_no || '-')}</b></td>
+      <td>${escapeHtml(r.step_name || '-')}</td>
+      <td class="num-cell">${formatQty(qty)}</td>
+      <td class="num-cell">${formatQty(qual)}</td>
+      <td class="num-cell">${passRate}</td>
+      <td>${escapeHtml(r.operator || '-')}</td>
+      <td><span class="${statusClass(r.status)}">${escapeHtml(r.status || '-')}</span></td>
+      <td>${retryBtn}</td>
+      <td class="text-muted" style="font-size:12px">${escapeHtml(r.enqueued_at || '-')}</td>
+      <td class="text-muted" style="font-size:12px">${escapeHtml(r.processed_at || '-')}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderStats(d) {
+  const total = d.total || 0;
+  const statusDist = d.status_dist || {};
+  const completed = statusDist.completed || 0;
+  const passRate = total > 0 ? ((completed / total) * 100).toFixed(1) + '%' : '—';
+  document.getElementById('s-total').textContent = total;
+  document.getElementById('s-completed').textContent = completed;
+  document.getElementById('s-pass-rate').textContent = passRate;
+}
+
+function renderPagination(d) {
+  const total = d.total || 0;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  document.getElementById('page-num').textContent = currentPage;
+  document.getElementById('page-info').textContent = `第 ${currentPage} / ${totalPages} 页`;
+  document.getElementById('total-info').textContent = `共 ${total} 条`;
+}
+
+showUser();
+if (requireAuth()) {
+  loadData();
+  _autoRefresh = new AutoRefresh(() => { if (getToken()) loadData(); }, 30000, null);
+  _autoRefresh.start();
+}
+</script>
+</body>
+</html>

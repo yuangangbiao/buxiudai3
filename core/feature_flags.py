@@ -1,0 +1,57 @@
+"""特性开关——代码部署≠功能上线"""
+import os
+
+
+class FeatureFlags:
+    """特性开关管理器。
+
+    通过环境变量 FEATURE_* 控制功能的上线/下线，
+    实现代码部署与功能上线的解耦。
+
+    使用方式:
+        from core.feature_flags import FeatureFlags
+
+        if FeatureFlags.is_enabled('ai_report'):
+            # 执行 AI 报表相关逻辑
+            pass
+    """
+
+    _flags: dict[str, bool] = {}
+
+    @classmethod
+    def load(cls) -> None:
+        """从环境变量加载所有 FEATURE_ 前缀的开关。
+
+        环境变量格式: FEATURE_<NAME>=true|false|1|0|yes|no|on|off
+        例如: FEATURE_AI_REPORT=true → flags['ai_report'] = True
+        """
+        for key, val in os.environ.items():
+            if key.startswith('FEATURE_'):
+                name = key[8:].lower()
+                cls._flags[name] = val.lower() in ('true', '1', 'yes', 'on')
+
+    @classmethod
+    def is_enabled(cls, name: str, default: bool = False) -> bool:
+        """检查指定特性开关是否启用。
+
+        Args:
+            name: 特性名称（大小写不敏感）
+            default: 未配置时的默认值，默认为 False
+
+        Returns:
+            bool: 特性是否启用
+        """
+        return cls._flags.get(name.lower(), default)
+
+    @classmethod
+    def all(cls) -> dict[str, bool]:
+        """返回所有已加载的特性开关（浅拷贝）。
+
+        Returns:
+            dict[str, bool]: 特性名称 → 启用状态
+        """
+        return dict(cls._flags)
+
+
+# 模块导入时自动加载
+FeatureFlags.load()

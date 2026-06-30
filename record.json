@@ -1,0 +1,324 @@
+{
+  "testcases": [
+    {
+      "name": "test_count_exactly_19",
+      "params": "",
+      "classname": "tests.unit.core.test_process_code.TestProcessCodesIntegrity",
+      "time": 0.002,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_all_keys_are_strings",
+      "params": "",
+      "classname": "tests.unit.core.test_process_code.TestProcessCodesIntegrity",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_all_values_valid_format",
+      "params": "",
+      "classname": "tests.unit.core.test_process_code.TestProcessCodesIntegrity",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_no_duplicate_values",
+      "params": "",
+      "classname": "tests.unit.core.test_process_code.TestProcessCodesIntegrity",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_full_range_all_codes",
+      "params": "",
+      "classname": "tests.unit.core.test_process_code.TestProcessCodesIntegrity",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_all_standard_names_present",
+      "params": "",
+      "classname": "tests.unit.core.test_process_code.TestProcessCodesIntegrity",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_standard_process_returns_correct_code",
+      "params": "原材料准备-P01",
+      "classname": "tests.unit.core.test_process_code.TestGetProcessCodeStandard",
+      "time": 0.001,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_standard_process_returns_correct_code",
+      "params": "焊接眼镜网-P02",
+      "classname": "tests.unit.core.test_process_code.TestGetProcessCodeStandard",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_standard_process_returns_correct_code",
+      "params": "激光切板-P03",
+      "classname": "tests.unit.core.test_process_code.TestGetProcessCodeStandard",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_standard_process_returns_correct_code",
+      "params": "链板冲压孔-P04",
+      "classname": "tests.unit.core.test_process_code.TestGetProcessCodeStandard",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_standard_process_returns_correct_code",
+      "params": "链板冲压成型-P05",
+      "classname": "tests.unit.core.test_process_code.TestGetProcessCodeStandard",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_standard_process_returns_correct_code",
+      "params": "编制左旋-P06",
+      "classname": "tests.unit.core.test_process_code.TestGetProcessCodeStandard",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_standard_process_returns_correct_code",
+      "params": "编制右旋-P07",
+      "classname": "tests.unit.core.test_process_code.TestGetProcessCodeStandard",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_standard_process_returns_correct_code",
+      "params": "穿曲轴-P08",
+      "classname": "tests.unit.core.test_process_code.TestGetProcessCodeStandard",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_standard_process_returns_correct_code",
+      "params": "输送带组装穿杆-P09",
+      "classname": "tests.unit.core.test_process_code.TestGetProcessCodeStandard",
+      "time": 0.001,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_standard_process_returns_correct_code",
+      "params": "安装链条-P10",
+      "classname": "tests.unit.core.test_process_code.TestGetProcessCodeStandard",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_standard_process_returns_correct_code",
+      "params": "安装裙边-P11",
+      "classname": "tests.unit.core.test_process_code.TestGetProcessCodeStandard",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_standard_process_returns_correct_code",
+      "params": "整形校直-P12",
+      "classname": "tests.unit.core.test_process_code.TestGetProcessCodeStandard",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_standard_process_returns_correct_code",
+      "params": "焊接输送带-P13",
+      "classname": "tests.unit.core.test_process_code.TestGetProcessCodeStandard",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_standard_process_returns_correct_code",
+      "params": "表面处理-P14",
+      "classname": "tests.unit.core.test_process_code.TestGetProcessCodeStandard",
+      "time": 0.001,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_standard_process_returns_correct_code",
+      "params": "质量检验-P15",
+      "classname": "tests.unit.core.test_process_code.TestGetProcessCodeStandard",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_standard_process_returns_correct_code",
+      "params": "包装入库-P16",
+      "classname": "tests.unit.core.test_process_code.TestGetProcessCodeStandard",
+      "time": 0.001,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_empty_string_returns_empty",
+      "params": "",
+      "classname": "tests.unit.core.test_process_code.TestGetProcessCodeEdgeCases",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_none_returns_empty",
+      "params": "",
+      "classname": "tests.unit.core.test_process_code.TestGetProcessCodeEdgeCases",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_whitespace_generates_hash",
+      "params": "",
+      "classname": "tests.unit.core.test_process_code.TestGetProcessCodeEdgeCases",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_non_standard_returns_px_format",
+      "params": "",
+      "classname": "tests.unit.core.test_process_code.TestGetProcessCodeEdgeCases",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_non_standard_is_deterministic",
+      "params": "",
+      "classname": "tests.unit.core.test_process_code.TestGetProcessCodeEdgeCases",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_non_standard_different_names_different_codes",
+      "params": "",
+      "classname": "tests.unit.core.test_process_code.TestGetProcessCodeEdgeCases",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_long_process_name_does_not_crash",
+      "params": "",
+      "classname": "tests.unit.core.test_process_code.TestGetProcessCodeEdgeCases",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_unicode_process_name",
+      "params": "",
+      "classname": "tests.unit.core.test_process_code.TestGetProcessCodeEdgeCases",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_garbage_data",
+      "params": "",
+      "classname": "tests.unit.core.test_process_code.TestGetProcessCodeEdgeCases",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_pure_english_name",
+      "params": "",
+      "classname": "tests.unit.core.test_process_code.TestGetProcessCodeEdgeCases",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_same_name_same_result_no_matter_process",
+      "params": "",
+      "classname": "tests.unit.core.test_process_code.TestGetProcessCodeDeterminism",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_px_format_is_always_uppercase",
+      "params": "",
+      "classname": "tests.unit.core.test_process_code.TestGetProcessCodeDeterminism",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_px_code_is_unique_for_each_standard",
+      "params": "",
+      "classname": "tests.unit.core.test_process_code.TestGetProcessCodeDeterminism",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_code_fits_in_varchar_10",
+      "params": "",
+      "classname": "tests.unit.core.test_process_code.TestProcessCodeCompatibility",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_code_is_ascii",
+      "params": "",
+      "classname": "tests.unit.core.test_process_code.TestProcessCodeCompatibility",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_no_special_sql_chars",
+      "params": "",
+      "classname": "tests.unit.core.test_process_code.TestProcessCodeCompatibility",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_known_hash",
+      "params": "",
+      "classname": "tests.unit.core.test_process_code.TestHashCorrectness",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "test_hash_consistent_with_md5_spec",
+      "params": "",
+      "classname": "tests.unit.core.test_process_code.TestHashCorrectness",
+      "time": 0.0,
+      "status": "passed",
+      "message": ""
+    }
+  ]
+}

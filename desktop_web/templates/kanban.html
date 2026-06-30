@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>生产跟单看板 - 不锈钢网带跟单系统</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Microsoft YaHei", sans-serif; background: #1a1a2e; color: #2c3e50; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+  .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 10px 24px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .navbar h1 { font-size: 16px; font-weight: 600; }
+  .navbar-right { display: flex; align-items: center; gap: 12px; }
+  .navbar-right .user { font-size: 13px; opacity: 0.9; }
+  .navbar-right button { padding: 6px 14px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; border-radius: 4px; cursor: pointer; font-size: 13px; transition: background 0.2s; }
+  .navbar-right button:hover { background: rgba(255,255,255,0.25); }
+
+  .stats-bar { background: #fff; padding: 8px 24px; display: flex; gap: 16px; align-items: center; border-bottom: 1px solid #e1e4e8; flex-shrink: 0; font-size: 13px; flex-wrap: wrap; }
+  .stats-bar .stat { display: flex; align-items: center; gap: 4px; }
+  .stats-bar .stat-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .stats-bar .stat-label { color: #888; }
+  .stats-bar .stat-count { font-weight: 600; color: #2c3e50; }
+  .stats-bar .total { font-size: 14px; font-weight: 700; color: #667eea; }
+  #refreshBtn { padding: 6px 16px; background: #667eea; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 500; }
+  #refreshBtn:hover { background: #5a6fd6; }
+  #refreshBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .board-wrap { flex: 1; overflow-x: auto; overflow-y: hidden; padding: 12px 16px; }
+  .board { display: flex; gap: 10px; height: 100%; min-width: max-content; }
+
+  .column { display: flex; flex-direction: column; width: 200px; min-width: 200px; max-height: 100%; background: #f0f2f5; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  .col-header { padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; min-height: 42px; }
+  .col-header .col-title { font-size: 13px; font-weight: 600; color: #fff; }
+  .col-count { background: rgba(255,255,255,0.25); color: #fff; font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 10px; min-width: 24px; text-align: center; }
+
+  .col-cards { flex: 1; overflow-y: auto; padding: 6px; display: flex; flex-direction: column; gap: 6px; }
+  .col-cards::-webkit-scrollbar { width: 4px; }
+  .col-cards::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 2px; }
+  .col-cards::-webkit-scrollbar-track { background: transparent; }
+
+  .card { background: #fff; border-radius: 8px; overflow: hidden; cursor: pointer; transition: box-shadow 0.15s, transform 0.1s; border: 1px solid #e8e8e8; }
+  .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); transform: translateY(-1px); }
+
+  .card-urgency-bar { height: 3px; width: 100%; }
+
+  .card-body { padding: 8px 10px; }
+  .card-order-no { font-size: 12px; font-weight: 700; color: #667eea; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-customer { font-size: 11px; color: #888; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-product { font-size: 11px; color: #444; background: #f0f4f8; padding: 2px 6px; border-radius: 3px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-spec { font-size: 11px; color: #888; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .card-footer { display: flex; justify-content: space-between; align-items: center; }
+  .card-qty { font-size: 11px; color: #888; }
+  .card-delivery { font-size: 11px; font-weight: 600; }
+
+  .card-overflow { text-align: center; padding: 8px; color: #aaa; font-size: 12px; }
+  .card-overflow a { color: #667eea; text-decoration: none; }
+
+  .empty-col { flex: 1; display: flex; align-items: center; justify-content: center; color: #ccc; font-size: 13px; }
+
+  #loadingOverlay { position: fixed; inset: 0; background: rgba(255,255,255,0.7); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+  #loadingOverlay .spinner { width: 36px; height: 36px; border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #e74c3c; color: #fff; padding: 10px 20px; border-radius: 6px; font-size: 13px; z-index: 10000; display: none; }
+  .error-toast.show { display: block; }
+</style>
+</head>
+<body>
+
+<div id="appNav"></div>
+<script src="/static/js/shared.js"></script>
+<script>renderNav('kanban', '📋 生产跟单看板');</script>
+
+<div class="stats-bar">
+  <div class="total" id="stat-total">总计: -</div>
+  <div style="flex:1"></div>
+  <div id="stat-items"></div>
+  <button id="refreshBtn" onclick="loadKanban()">🔄 刷新</button>
+</div>
+
+<div class="board-wrap">
+  <div class="board" id="board">
+    <div class="empty-col">加载中...</div>
+  </div>
+</div>
+
+<div id="loadingOverlay"><div class="spinner"></div></div>
+<div class="error-toast" id="errorToast"></div>
+
+<script>
+const ALL_STATUSES = [
+  { status: '待确认', color: '#9E9E9E' },
+  { status: '待排产', color: '#2196F3' },
+  { status: '待发布', color: '#00BCD4' },
+  { status: '已发布', color: '#0097A7' },
+  { status: '已排产', color: '#03A9F4' },
+  { status: '生产中', color: '#FF9800' },
+  { status: '质检中', color: '#FF5722' },
+  { status: '已完成', color: '#4CAF50' },
+  { status: '待发货', color: '#9C27B0' },
+  { status: '已发货', color: '#9C27B0' },
+  { status: '已取消', color: '#F44336' },
+];
+
+// getToken / showUser / showError / escapeHtml / logout 来自 shared.js
+function showErrorToast(msg) {
+  const t = document.getElementById('errorToast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 5000);
+}
+
+function setLoading(on) {
+  document.getElementById('loadingOverlay').style.display = on ? 'flex' : 'none';
+  document.getElementById('refreshBtn').disabled = on;
+}
+
+function buildBoard(columns) {
+  const colMap = {};
+  columns.forEach(c => { colMap[c.status] = c; });
+
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+
+  let totalOrders = 0;
+  const statItems = document.getElementById('stat-items');
+  statItems.innerHTML = '';
+
+  ALL_STATUSES.forEach(({ status, color }) => {
+    const col = colMap[status] || { status, color, orders: [], count: 0 };
+    totalOrders += col.count || 0;
+
+    const statDiv = document.createElement('div');
+    statDiv.className = 'stat';
+    statDiv.innerHTML = `<span class="stat-dot" style="background:${color}"></span><span class="stat-label">${status}</span> <span class="stat-count">${col.count || 0}</span>`;
+    statItems.appendChild(statDiv);
+
+    const colEl = document.createElement('div');
+    colEl.className = 'column';
+
+    const header = document.createElement('div');
+    header.className = 'col-header';
+    header.style.background = color;
+    header.innerHTML = `<span class="col-title">${status}</span><span class="col-count">${col.count || 0}</span>`;
+    colEl.appendChild(header);
+
+    const cardsEl = document.createElement('div');
+    cardsEl.className = 'col-cards';
+    cardsEl.id = 'col-' + status;
+
+    const orders = col.orders || [];
+    if (orders.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'empty-col';
+      empty.textContent = '无订单';
+      cardsEl.appendChild(empty);
+    } else {
+      orders.forEach(o => {
+        const cardEl = document.createElement('div');
+        cardEl.className = 'card';
+        cardEl.dataset.orderNo = o.order_no;
+        cardEl.onclick = () => window.location.href = '/orders?search=' + encodeURIComponent(o.order_no);
+        cardEl.innerHTML =
+          `<div class="card-urgency-bar" style="background:${escapeHtml(o.urgency_color)}"></div>` +
+          `<div class="card-body">` +
+            `<div class="card-order-no">${escapeHtml(o.order_no)}</div>` +
+            `<div class="card-customer">${escapeHtml(o.customer_name)}</div>` +
+            `<div class="card-product">${escapeHtml(o.product_name)}</div>` +
+            `<div class="card-spec">${escapeHtml(o.spec)}</div>` +
+            `<div class="card-footer">` +
+              `<span class="card-qty">×${Number(o.quantity) || 0}${escapeHtml(o.unit) || '米'}</span>` +
+              `<span class="card-delivery" style="color:${escapeHtml(o.urgency_color)}">${escapeHtml(o.delivery_text)}</span>` +
+            `</div>` +
+          `</div>`;
+        cardsEl.appendChild(cardEl);
+      });
+
+      if (col.truncated) {
+        const overflow = document.createElement('div');
+        overflow.className = 'card-overflow';
+        overflow.innerHTML = `… 还有 ${(col.count || 0) - orders.length} 条，<a href="/orders?status_filter=${encodeURIComponent(status)}">去列表查看</a>`;
+        cardsEl.appendChild(overflow);
+      }
+    }
+
+    colEl.appendChild(cardsEl);
+    board.appendChild(colEl);
+  });
+
+  document.getElementById('stat-total').textContent = '总计: ' + totalOrders + ' 个订单';
+}
+
+async function loadKanban() {
+  setLoading(true);
+  const board = document.getElementById('board');
+  board.innerHTML = '<div class="empty-col">加载中...</div>';
+  try {
+    const r = await fetch('/api/kanban/list?limit=200', {
+      headers: { 'X-Dispatch-Token': getToken() }
+    });
+    if (r.status === 401) {
+      window.location.href = '/login';
+      return;
+    }
+    const data = await r.json();
+    if (data.code !== 0) {
+      showErrorToast(data.message || '加载失败');
+      board.innerHTML = '<div class="empty-col">加载失败</div>';
+      return;
+    }
+    const columns = data.data?.columns || [];
+    buildBoard(columns);
+  } catch (e) {
+    showErrorToast('网络错误: ' + e.message);
+    board.innerHTML = '<div class="empty-col">网络错误</div>';
+  } finally {
+    setLoading(false);
+  }
+}
+
+function logout() {
+  localStorage.clear(); sessionStorage.clear();
+  window.location.href = '/login';
+}
+
+showUser();
+if (!getToken()) { window.location.href = '/login'; }
+else { loadKanban(); }
+
+const _autoRefresh = new AutoRefresh(() => { if (getToken()) loadKanban(); }, 30000, null);
+_autoRefresh.start();
+</script>
+</body>
+</html>

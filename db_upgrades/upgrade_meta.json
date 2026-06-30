@@ -1,0 +1,10 @@
+{
+  "1.0.0": {
+    "version": "1.0.0",
+    "description": "添加订单归档功能字段（is_archived, archived_at, archived_by, original_status）",
+    "created_at": "2026-05-04T21:39:32.379911",
+    "checksum": "8f84196ef61242cc580c0b8bd3a63c48f6701652e32fdbddf17509fa8e8894cb",
+    "sql_file": "upgrade.sql",
+    "status": "generated"
+  }
+}

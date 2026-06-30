@@ -1,0 +1,23 @@
+import functools
+from flask import request, jsonify
+
+
+def require_json_content_type(func):
+    """
+    视图函数装饰器：要求请求包含 Content-Type: application/json
+    拒绝 force=True 的隐式解析行为
+
+    用法:
+        @bp.route('/api/xxx', methods=['POST'])
+        @require_json_content_type
+        def my_view():
+            data = request.get_json()
+    """
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        if request.method in ('POST', 'PUT', 'PATCH'):
+            ct = request.content_type or ''
+            if 'application/json' not in ct and 'text/plain' not in ct:
+                return jsonify({'code': 415, 'message': '请求必须包含 Content-Type: application/json'}), 415
+        return func(*args, **kwargs)
+    return wrapper

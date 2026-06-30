@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>订单列表 - 不锈钢网带跟单系统</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Microsoft YaHei", sans-serif; background: #f5f6fa; color: #2c3e50; }
+  .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .navbar h1 { font-size: 18px; }
+  .toolbar { background: #fff; padding: 14px 24px; display: flex; gap: 10px; align-items: center; border-bottom: 1px solid #e1e4e8; flex-wrap: wrap; }
+  .toolbar input, .toolbar select { padding: 7px 12px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 13px; }
+  .toolbar input:focus, .toolbar select:focus { outline: none; border-color: #667eea; }
+  .btn { padding: 7px 14px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 5px; }
+  .btn-primary { background: #667eea; color: #fff; }
+  .btn-primary:hover { background: #5569d6; }
+  .btn-success { background: #27ae60; color: #fff; }
+  .btn-success:hover { background: #219653; }
+  .btn-warning { background: #e67e22; color: #fff; }
+  .btn-warning:hover { background: #d35400; }
+  .btn-danger { background: #e74c3c; color: #fff; }
+  .btn-danger:hover { background: #c0392b; }
+  .btn-secondary { background: #95a5a6; color: #fff; }
+  .btn-secondary:hover { background: #7f8c8d; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .batch-bar { background: #fff8e6; border: 1px solid #ffe082; padding: 10px 24px; display: none; align-items: center; gap: 12px; font-size: 13px; border-radius: 4px; margin: 12px 24px 0; }
+  .batch-bar.show { display: flex; }
+  .summary { padding: 10px 24px; color: #888; font-size: 13px; }
+  table { width: 100%; border-collapse: collapse; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  th { background: #f8f9fa; padding: 10px 14px; text-align: left; font-weight: 500; color: #555; border-bottom: 2px solid #e1e4e8; font-size: 13px; white-space: nowrap; }
+  td { padding: 10px 14px; border-bottom: 1px solid #f0f0f0; font-size: 13px; vertical-align: middle; }
+  tr:hover { background: #f8f9fa; }
+  tr.selected { background: #eef2ff; }
+  .status-tag { padding: 2px 8px; border-radius: 10px; font-size: 11px; color: #fff; white-space: nowrap; }
+  .status-PENDING    { background: #95a5a6; }
+  .status-CONFIRMED  { background: #3498db; }
+  .status-PRODUCTION { background: #e67e22; }
+  .status-QC         { background: #9b59b6; }
+  .status-FINISHED   { background: #27ae60; }
+  .status-PACKED     { background: #16a085; }
+  .status-SHIPPED    { background: #2c3e50; }
+  .badge-blocked { background: #e74c3c; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; white-space: nowrap; }
+  .badge-new     { background: #3498db; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
+  .progress-bar { background: #ecf0f1; border-radius: 8px; height: 14px; width: 100px; position: relative; overflow: hidden; display: inline-block; vertical-align: middle; }
+  .progress-fill { background: linear-gradient(90deg, #667eea, #764ba2); height: 100%; transition: width 0.3s; }
+  .progress-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; font-weight: 500; }
+  .table-wrap { background: #fff; margin: 12px 24px; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .pagination { display: flex; justify-content: space-between; align-items: center; padding: 12px 24px; background: #fff; margin: 0 24px 16px; border-radius: 0 0 6px 6px; border-top: 1px solid #f0f0f0; }
+  .pagination-info { font-size: 13px; color: #888; }
+  .pagination-controls { display: flex; gap: 4px; align-items: center; }
+  .pagination button { padding: 5px 10px; border: 1px solid #dcdfe6; background: #fff; border-radius: 4px; cursor: pointer; font-size: 12px; color: #555; }
+  .pagination button:hover { background: #f0f4ff; border-color: #667eea; color: #667eea; }
+  .pagination button.active { background: #667eea; color: #fff; border-color: #667eea; }
+  .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .col-select { width: 36px; text-align: center; }
+  .col-order { width: 160px; }
+  .col-status { width: 90px; }
+  .col-qty { width: 70px; text-align: center; }
+  .col-progress { width: 120px; }
+  .col-date { width: 90px; }
+  .col-actions { width: 80px; text-align: center; }
+  .empty { text-align: center; padding: 60px 20px; color: #95a5a6; font-size: 14px; }
+  .error-box { background: #fdecea; border: 1px solid #f5c6cb; color: #c0392b; padding: 12px 24px; margin: 12px 24px; border-radius: 4px; font-size: 13px; }
+  .success-box { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 12px 24px; margin: 12px 24px; border-radius: 4px; font-size: 13px; }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; align-items: center; justify-content: center; }
+  .modal-overlay.show { display: flex; }
+  .modal-box { background: #fff; border-radius: 8px; padding: 24px; min-width: 360px; max-width: 480px; box-shadow: 0 8px 32px rgba(0,0,0,0.15); }
+  .modal-title { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+  .modal-cancel { padding: 8px 16px; border: 1px solid #dcdfe6; background: #fff; border-radius: 4px; cursor: pointer; font-size: 13px; }
+  .modal-confirm { padding: 8px 16px; border: none; background: #667eea; color: #fff; border-radius: 4px; cursor: pointer; font-size: 13px; }
+  .modal-confirm:hover { background: #5569d6; }
+  .modal-confirm:disabled { opacity: 0.5; cursor: not-allowed; }
+  input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: #667eea; }
+</style>
+</head>
+<body>
+<div id="appNav"></div>
+<script src="/static/js/shared.js"></script>
+<script>renderNav('orders', '📋 订单管理');</script>
+
+<div class="toolbar">
+  <input type="text" id="searchInput" placeholder="🔍 搜索订单号 / 客户 / 产品..." style="min-width: 240px;" oninput="debouncedFilter()">
+  <select id="statusFilter" onchange="filterAndRender()">
+    <option value="all">全部状态</option>
+    <option value="processing">进行中</option>
+    <option value="blocked">⚠️ 阻塞</option>
+    <option value="completed">已完成</option>
+    <option value="PENDING">待确认</option>
+    <option value="CONFIRMED">已确认</option>
+    <option value="PRODUCTION">生产中</option>
+    <option value="QC">质检中</option>
+    <option value="FINISHED">已完成</option>
+    <option value="PACKED">已打包</option>
+    <option value="SHIPPED">已发货</option>
+  </select>
+  <select id="customerGroupFilter" onchange="filterAndRender()">
+    <option value="">全部客户分组</option>
+  </select>
+  <input type="date" id="dateFrom" placeholder="交期从" style="width:130px;" onchange="filterAndRender()">
+  <span style="color:#aaa;">-</span>
+  <input type="date" id="dateTo" placeholder="交期到" style="width:130px;" onchange="filterAndRender()">
+  <button class="btn btn-primary" onclick="loadOrders()">🔄 刷新</button>
+  <button class="btn btn-success" onclick="location.href='/orders/new'">➕ 新建订单</button>
+  <button class="btn btn-secondary" onclick="exportAllExcel()">📤 导出全部</button>
+  <button class="btn btn-secondary" onclick="location.href='/order-import'">📥 批量导入</button>
+  <button class="btn btn-secondary" onclick="logout()">退出</button>
+</div>
+
+<div id="batchBar" class="batch-bar">
+  <span>已选择 <strong id="selectedCount">0</strong> 个订单：</span>
+  <select id="batchStatusSelect" style="padding:5px 10px;border:1px solid #dcdfe6;border-radius:4px;font-size:13px;">
+    <option value="">改状态为...</option>
+    <option value="CONFIRMED">已确认</option>
+    <option value="PRODUCTION">生产中</option>
+    <option value="QC">质检中</option>
+    <option value="FINISHED">已完成</option>
+    <option value="SHIPPED">已发货</option>
+  </select>
+  <button class="btn btn-warning" id="batchStatusBtn" onclick="doBatchStatus()" disabled>✅ 批量改状态</button>
+  <button class="btn btn-danger" id="batchExportBtn" onclick="doBatchExport()">📤 导出选中</button>
+  <button class="btn btn-secondary" onclick="clearSelection()">取消选择</button>
+</div>
+
+<div id="msgBox" style="display:none;"></div>
+
+<div class="summary" id="summary">加载中...</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th class="col-select"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
+        <th class="col-order">订单号</th>
+        <th>产品名称</th>
+        <th>客户</th>
+        <th class="col-status">状态</th>
+        <th class="col-qty">数量</th>
+        <th>完成数</th>
+        <th class="col-progress">进度</th>
+        <th class="col-date">交期</th>
+        <th>异常</th>
+        <th class="col-actions">操作</th>
+      </tr>
+    </thead>
+    <tbody id="ordersTbody">
+      <tr><td colspan="11" class="empty">加载中...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="pagination" id="pagination" style="display:none;">
+  <span class="pagination-info" id="paginationInfo"></span>
+  <div class="pagination-controls" id="paginationControls"></div>
+</div>
+
+<div class="modal-overlay" id="statusModal" onclick="if(event.target===this)closeStatusModal()">
+  <div class="modal-box">
+    <div class="modal-title">🔄 批量修改状态</div>
+    <div style="font-size:13px;color:#555;margin-bottom:12px;">
+      确认将 <strong id="modalCount">0</strong> 个订单的状态改为
+      <strong id="modalStatus"></strong>？
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeStatusModal()">取消</button>
+      <button class="modal-confirm" id="modalConfirmBtn" onclick="confirmBatchStatus()">确认修改</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="detailModal" onclick="if(event.target===this)closeDetailModal()">
+  <div class="modal-box" style="max-width:760px;">
+    <div class="modal-title">👁 订单详情 - <span id="detailOrderNo" class="text-primary"></span></div>
+    <div id="detailContent"><div class="loading">加载中...</div></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeDetailModal()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="printModal" onclick="if(event.target===this)closePrintModal()">
+  <div class="modal-box" style="max-width:760px;">
+    <div class="modal-title">🖨️ 订单打印预览</div>
+    <div id="printContent" style="padding:20px;background:#fff;border:1px solid #ddd;min-height:400px;"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closePrintModal()">关闭</button>
+      <button class="btn btn-primary" onclick="window.print()">🖨️ 打印</button>
+    </div>
+  </div>
+</div>
+
+<style>
+@media print {
+  .navbar, .toolbar, .batch-bar, .pagination, .modal-actions, #msgBox, .summary { display: none !important; }
+  body { background: #fff; }
+  #printContent { border: none !important; box-shadow: none !important; }
+}
+</style>
+
+<script>
+let gAllOrders = [];
+let gFilteredOrders = [];
+let gSelectedIds = new Set();
+let gCurrentPage = 1;
+const PAGE_SIZE = 20;
+
+let _debounceTimer = null;
+function debouncedFilter() {
+  clearTimeout(_debounceTimer);
+  _debounceTimer = setTimeout(filterAndRender, 300);
+}
+
+async function loadOrders() {
+  gSelectedIds.clear();
+  updateBatchBar();
+  document.getElementById('ordersTbody').innerHTML = '<tr><td colspan="11" class="empty">加载中...</td></tr>';
+  document.getElementById('pagination').style.display = 'none';
+  try {
+    const filter = document.getElementById('statusFilter').value;
+    const r = await fetch(`/api/orders/list?limit=500&status_filter=${filter}`, {
+      headers: { 'X-Dispatch-Token': getToken() }
+    });
+    if (r.status === 401) { window.location.href = '/login'; return; }
+    const data = await r.json();
+    if (data.code !== 0) { showError(data.message || '加载失败'); return; }
+    gAllOrders = data.data.orders || [];
+    loadCustomerGroups();
+    filterAndRender();
+    document.getElementById('summary').textContent =
+      `共 ${gAllOrders.length} 个订单（已加载全部）`;
+  } catch (e) {
+    showError('网络错误: ' + e.message);
+    document.getElementById('ordersTbody').innerHTML =
+      '<tr><td colspan="11" class="empty">网络错误</td></tr>';
+  }
+}
+
+function loadCustomerGroups() {
+  const groups = new Set();
+  gAllOrders.forEach(o => {
+    if (o.customer_group) groups.add(o.customer_group);
+  });
+  const sel = document.getElementById('customerGroupFilter');
+  sel.innerHTML = '<option value="">全部客户分组</option>';
+  Array.from(groups).sort().forEach(g => {
+    const opt = document.createElement('option');
+    opt.value = g; opt.textContent = g;
+    sel.appendChild(opt);
+  });
+}
+
+function filterAndRender() {
+  const search = document.getElementById('searchInput').value.trim().toLowerCase();
+  const status = document.getElementById('statusFilter').value;
+  const group = document.getElementById('customerGroupFilter').value;
+  const dateFrom = document.getElementById('dateFrom').value;
+  const dateTo = document.getElementById('dateTo').value;
+
+  gFilteredOrders = gAllOrders.filter(o => {
+    if (search) {
+      const s = search.toLowerCase();
+      if (!(o.order_no && o.order_no.toLowerCase().includes(s)) &&
+          !(o.customer_name && o.customer_name.toLowerCase().includes(s)) &&
+          !(o.product_name && o.product_name.toLowerCase().includes(s))) {
+        return false;
+      }
+    }
+    if (status === 'processing') {
+      if (['PENDING','CONFIRMED','PRODUCTION','QC'].indexOf(o.order_status) === -1) return false;
+    } else if (status === 'blocked') {
+      if (!o.is_blocked) return false;
+    } else if (status === 'completed') {
+      if (['FINISHED','PACKED','SHIPPED'].indexOf(o.order_status) === -1) return false;
+    } else if (status && status !== 'all') {
+      if (o.order_status !== status) return false;
+    }
+    if (group && o.customer_group !== group) return false;
+    if (dateFrom && o.delivery_date) {
+      if (o.delivery_date < dateFrom) return false;
+    }
+    if (dateTo && o.delivery_date) {
+      if (o.delivery_date > dateTo + ' 23:59:59') return false;
+    }
+    return true;
+  });
+
+  gCurrentPage = 1;
+  document.getElementById('summary').textContent =
+    `共 ${gAllOrders.length} 个订单，符合条件 ${gFilteredOrders.length} 个`;
+  renderPage();
+}
+
+function renderPage() {
+  const start = (gCurrentPage - 1) * PAGE_SIZE;
+  const pageOrders = gFilteredOrders.slice(start, start + PAGE_SIZE);
+  const tbody = document.getElementById('ordersTbody');
+
+  if (gFilteredOrders.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="11" class="empty">没有符合条件的订单</td></tr>';
+    document.getElementById('pagination').style.display = 'none';
+    return;
+  }
+
+  tbody.innerHTML = pageOrders.map(o => {
+    const pct = Math.round((o.progress || 0) * 100);
+    const blocked = o.is_blocked
+      ? `<span class="badge-blocked">质检 ${Number(o.quality_failed)||0} / 物料 ${Number(o.material_pending)||0}</span>`
+      : '—';
+    const checked = gSelectedIds.has(o.id) ? 'checked' : '';
+    return `<tr class="${gSelectedIds.has(o.id) ? 'selected' : ''}">
+      <td class="col-select"><input type="checkbox" value="${o.id}" ${checked} onchange="toggleSelect(${o.id})"></td>
+      <td><b>${e(o.order_no)}</b></td>
+      <td>${e(o.product_name)}</td>
+      <td>${e(o.customer_name)}</td>
+      <td>${statusTag(o.order_status)}</td>
+      <td style="text-align:center;">${Number(o.quantity)||0}</td>
+      <td>${Number(o.completed_qty)||0}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+          <span style="font-size:11px;color:#888;">${pct}%</span>
+        </div>
+      </td>
+      <td>${o.delivery_date ? o.delivery_date.substring(0,10) : '—'}</td>
+      <td>${blocked}</td>
+      <td>
+        <button class="btn btn-primary" style="padding:4px 10px;font-size:12px;" onclick="location.href='/orders/new?edit=${o.id}'" title="编辑">✏️</button>
+        <button class="btn btn-info" style="padding:4px 10px;font-size:12px;background:#17a2b8;" onclick="viewOrderDetail('${(o.order_no||'').replace(/'/g, '')}')" title="详情">👁</button>
+        <button class="btn btn-warning" style="padding:4px 10px;font-size:12px;" onclick="printOrder('${(o.order_no||'').replace(/'/g, '')}')" title="打印">🖨️</button>
+        <button class="btn btn-danger" style="padding:4px 10px;font-size:12px;" onclick="deleteOrder('${(o.order_no||'').replace(/'/g, '')}')" title="删除">🗑️</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('selectAll').checked =
+    pageOrders.length > 0 && pageOrders.every(o => gSelectedIds.has(o.id));
+
+  renderPagination();
+}
+
+function renderPagination() {
+  const total = gFilteredOrders.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  document.getElementById('pagination').style.display = total > PAGE_SIZE ? 'flex' : 'none';
+  document.getElementById('paginationInfo').textContent =
+    `第 ${gCurrentPage} / ${totalPages} 页，共 ${total} 条`;
+
+  const ctrl = document.getElementById('paginationControls');
+  let html = `<button onclick="goPage(${gCurrentPage - 1})" ${gCurrentPage === 1 ? 'disabled' : ''}>‹</button>`;
+  const range = getPageRange(gCurrentPage, totalPages);
+  range.forEach(p => {
+    if (p === '...') { html += '<button disabled>…</button>'; }
+    else { html += `<button class="${p === gCurrentPage ? 'active' : ''}" onclick="goPage(${p})">${p}</button>`; }
+  });
+  html += `<button onclick="goPage(${gCurrentPage + 1})" ${gCurrentPage === totalPages ? 'disabled' : ''}>›</button>`;
+  ctrl.innerHTML = html;
+}
+
+function getPageRange(cur, total) {
+  if (total <= 7) return Array.from({length: total}, (_, i) => i + 1);
+  const pages = [];
+  pages.push(1);
+  if (cur > 3) pages.push('...');
+  for (let p = Math.max(2, cur - 1); p <= Math.min(total - 1, cur + 1); p++) pages.push(p);
+  if (cur < total - 2) pages.push('...');
+  pages.push(total);
+  return pages;
+}
+
+function goPage(n) {
+  const totalPages = Math.ceil(gFilteredOrders.length / PAGE_SIZE);
+  gCurrentPage = Math.max(1, Math.min(n, totalPages));
+  renderPage();
+}
+
+function statusTag(s) {
+  if (!s) return '';
+  return `<span class="status-tag status-${s}">${s}</span>`;
+}
+
+function e(s) { return s == null ? '' : String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function toggleSelect(id) {
+  if (gSelectedIds.has(id)) gSelectedIds.delete(id);
+  else gSelectedIds.add(id);
+  updateBatchBar();
+  renderPage();
+}
+
+function toggleSelectAll() {
+  const start = (gCurrentPage - 1) * PAGE_SIZE;
+  const pageOrders = gFilteredOrders.slice(start, start + PAGE_SIZE);
+  const allSelected = pageOrders.every(o => gSelectedIds.has(o.id));
+  pageOrders.forEach(o => {
+    if (allSelected) gSelectedIds.delete(o.id);
+    else gSelectedIds.add(o.id);
+  });
+  updateBatchBar();
+  renderPage();
+}
+
+function updateBatchBar() {
+  const n = gSelectedIds.size;
+  document.getElementById('selectedCount').textContent = n;
+  document.getElementById('batchBar').classList.toggle('show', n > 0);
+  document.getElementById('batchStatusBtn').disabled = n === 0;
+}
+
+function clearSelection() {
+  gSelectedIds.clear();
+  updateBatchBar();
+  renderPage();
+}
+
+function showError(msg) {
+  const box = document.getElementById('msgBox');
+  box.className = 'error-box';
+  box.textContent = msg;
+  box.style.display = 'block';
+  setTimeout(() => { box.style.display = 'none'; }, 5000);
+}
+
+function showSuccess(msg) {
+  const box = document.getElementById('msgBox');
+  box.className = 'success-box';
+  box.textContent = msg;
+  box.style.display = 'block';
+  setTimeout(() => { box.style.display = 'none'; }, 3000);
+}
+
+function closeStatusModal() {
+  document.getElementById('statusModal').classList.remove('show');
+}
+
+function doBatchStatus() {
+  const newStatus = document.getElementById('batchStatusSelect').value;
+  if (!newStatus) { showError('请先选择要改成的状态'); return; }
+  document.getElementById('modalCount').textContent = gSelectedIds.size;
+  document.getElementById('modalStatus').textContent = newStatus;
+  document.getElementById('statusModal').classList.add('show');
+}
+
+async function confirmBatchStatus() {
+  const newStatus = document.getElementById('batchStatusSelect').value;
+  const ids = Array.from(gSelectedIds);
+  const btn = document.getElementById('modalConfirmBtn');
+  btn.disabled = true;
+  btn.textContent = '修改中...';
+  let success = 0, fail = 0;
+  for (const id of ids) {
+    try {
+      const r = await fetch(`/api/orders/${id}`, {
+        method: 'PUT',
+        headers: { 'X-Dispatch-Token': getToken(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (r.ok) success++;
+      else fail++;
+    } catch (e) { fail++; }
+  }
+  closeStatusModal();
+  btn.disabled = false;
+  btn.textContent = '确认修改';
+  if (fail === 0) showSuccess(`成功修改 ${success} 个订单`);
+  else showError(`成功 ${success} 个，失败 ${fail} 个`);
+  gSelectedIds.clear();
+  updateBatchBar();
+  await loadOrders();
+}
+
+function doBatchExport() {
+  const ids = Array.from(gSelectedIds);
+  if (ids.length === 0) { showError('请先选择要导出的订单'); return; }
+  const orders = gAllOrders.filter(o => ids.includes(o.id));
+  window.location.href = buildExportUrl(orders);
+}
+
+function buildExportUrl(orders) {
+  const params = new URLSearchParams();
+  if (orders.length > 0) {
+    orders.forEach(o => params.append('ids', o.id || o.order_no || ''));
+  }
+  return '/api/orders/export?' + params.toString();
+}
+
+function exportAllExcel() {
+  if (gFilteredOrders.length === 0) { showError('没有可导出的订单'); return; }
+  window.location.href = buildExportUrl(gFilteredOrders);
+}
+
+function fmtDate(d) {
+  return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+}
+
+// ── 订单详情弹窗 ─────────────────────────────────────────
+async function viewOrderDetail(orderNo) {
+  document.getElementById('detailOrderNo').textContent = orderNo || '';
+  document.getElementById('detailContent').innerHTML = '<div class="loading">加载中...</div>';
+  document.getElementById('detailModal').classList.add('show');
+  try {
+    const r = await fetch(`/api/orders/by-no/${encodeURIComponent(orderNo)}/detail`, { headers: { 'X-Dispatch-Token': getToken() || '' } });
+    const data = await r.json();
+    if (data.code !== 0) { document.getElementById('detailContent').innerHTML = `<div class="empty">${data.message || '加载失败'}</div>`; return; }
+    const d = data.data || {};
+    const o = d.order || {};
+    const processes = d.processes || [];
+    document.getElementById('detailContent').innerHTML = `
+      <div class="pt-summary" style="margin-bottom:12px;">
+        <div class="pt-summary-card"><div class="pt-summary-label">订单号</div><div class="pt-summary-value" style="font-size:14px;">${o.order_no || orderNo || '-'}</div></div>
+        <div class="pt-summary-card"><div class="pt-summary-label">客户</div><div class="pt-summary-value" style="font-size:14px;">${o.customer_name || '-'}</div></div>
+        <div class="pt-summary-card"><div class="pt-summary-label">产品类型</div><div class="pt-summary-value" style="font-size:14px;">${o.product_type || o.product_name || '-'}</div></div>
+        <div class="pt-summary-card"><div class="pt-summary-label">数量</div><div class="pt-summary-value" style="font-size:14px;">${o.quantity || 0}${o.unit || ''}</div></div>
+        <div class="pt-summary-card"><div class="pt-summary-label">状态</div><div class="pt-summary-value" style="font-size:14px;">${o.order_status || o.status || '-'}</div></div>
+        <div class="pt-summary-card"><div class="pt-summary-label">交期</div><div class="pt-summary-value" style="font-size:14px;">${o.delivery_date ? o.delivery_date.substring(0,10) : '-'}</div></div>
+      </div>
+      <div class="card" style="margin-top:8px;">
+        <div class="card-header">🔧 工序列表（${processes.length}）</div>
+        <div class="card-body" style="padding:0;">
+          <table class="data-table">
+            <thead><tr><th>工序</th><th>负责人</th><th>状态</th><th>计划</th></tr></thead>
+            <tbody>${(processes.length ? processes : [{}]).map(p => `
+              <tr><td>${p.process_name || p.name || '-'}</td><td>${p.operator_name || p.operator || '-'}</td><td>${p.status || '-'}</td><td>${p.plan_start || ''} → ${p.plan_end || ''}</td></tr>
+            `).join('')}</tbody>
+          </table>
+          ${processes.length === 0 ? '<div class="empty">暂无工序数据</div>' : ''}
+        </div>
+      </div>
+    `;
+  } catch (e) {
+    document.getElementById('detailContent').innerHTML = `<div class="empty">网络错误: ${e.message}</div>`;
+  }
+}
+
+function closeDetailModal() { document.getElementById('detailModal').classList.remove('show'); }
+
+// ── 订单打印 ─────────────────────────────────────────
+async function printOrder(orderNo) {
+  try {
+    const r = await fetch(`/api/orders/by-no/${encodeURIComponent(orderNo)}/print`, { headers: { 'X-Dispatch-Token': getToken() || '' } });
+    const data = await r.json();
+    if (data.code !== 0) { alert(data.message || '加载订单失败'); return; }
+    const o = (data.data || {}).order || {};
+    document.getElementById('printContent').innerHTML = `
+      <div style="text-align:center;margin-bottom:16px;">
+        <h2 style="font-size:18px;margin-bottom:4px;">不锈钢网带跟单系统 - 订单</h2>
+        <div style="font-size:13px;color:#888;">订单号: ${o.order_no || orderNo || '-'}</div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <tr><td style="padding:6px;background:#f5f5f5;font-weight:500;width:120px;">客户</td><td style="padding:6px;">${o.customer_name || '-'}</td><td style="padding:6px;background:#f5f5f5;font-weight:500;width:120px;">电话</td><td style="padding:6px;">${o.customer_phone || '-'}</td></tr>
+        <tr><td style="padding:6px;background:#f5f5f5;font-weight:500;">产品类型</td><td style="padding:6px;">${o.product_type || o.product_name || '-'}</td><td style="padding:6px;background:#f5f5f5;font-weight:500;">规格</td><td style="padding:6px;">${o.specification || o.spec || '-'}</td></tr>
+        <tr><td style="padding:6px;background:#f5f5f5;font-weight:500;">数量</td><td style="padding:6px;">${o.quantity || 0} ${o.unit || ''}</td><td style="padding:6px;background:#f5f5f5;font-weight:500;">单价</td><td style="padding:6px;">${o.unit_price || 0} 元</td></tr>
+        <tr><td style="padding:6px;background:#f5f5f5;font-weight:500;">交期</td><td style="padding:6px;">${o.delivery_date ? o.delivery_date.substring(0,10) : '-'}</td><td style="padding:6px;background:#f5f5f5;font-weight:500;">状态</td><td style="padding:6px;">${o.order_status || o.status || '-'}</td></tr>
+        <tr><td style="padding:6px;background:#f5f5f5;font-weight:500;">下单时间</td><td style="padding:6px;" colspan="3">${o.created_at || '-'}</td></tr>
+        <tr><td style="padding:6px;background:#f5f5f5;font-weight:500;">备注</td><td style="padding:6px;" colspan="3">${o.remark || '-'}</td></tr>
+      </table>
+      <div style="margin-top:24px;border-top:2px solid #333;padding-top:12px;font-size:12px;">
+        <div>客户签字: __________  日期: __________</div>
+        <div style="margin-top:20px;text-align:center;color:#aaa;">${fmtPrintDate(new Date())} 由系统自动生成</div>
+      </div>`;
+    document.getElementById('printModal').classList.add('show');
+  } catch (e) {
+    alert('加载失败: ' + e.message);
+  }
+}
+
+function closePrintModal() { document.getElementById('printModal').classList.remove('show'); }
+function fmtPrintDate(d) { return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+function pad(n) { return String(n).padStart(2, '0'); }
+
+// ── 订单删除（软删除） ─────────────────────────────────────────
+async function deleteOrder(orderNo) {
+  if (!confirm(`确认删除订单 "${orderNo}" 吗？\n（软删除，保留审计历史）`)) return;
+  try {
+    const r = await fetch(`/api/orders/by-no/${encodeURIComponent(orderNo)}`, {
+      method: 'DELETE',
+      headers: { 'X-Dispatch-Token': getToken() || '' }
+    });
+    const data = await r.json();
+    if (data.code === 0) {
+      alert('删除成功');
+      loadOrders();
+    } else {
+      alert(data.message || '删除失败');
+    }
+  } catch (e) {
+    alert('网络错误: ' + e.message);
+  }
+}
+
+document.getElementById('customerGroupFilter').addEventListener('change', filterAndRender);
+document.getElementById('searchInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') filterAndRender();
+});
+
+showUser();
+if (!getToken()) { window.location.href = '/login'; }
+else { loadOrders(); }
+
+const _autoRefresh = new AutoRefresh(() => { if (getToken()) loadOrders(); }, 60000, null);
+_autoRefresh.start();
+</script>
+</body>
+</html>

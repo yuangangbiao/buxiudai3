@@ -1,0 +1,43 @@
+  # -*- coding: utf-8 -*-
+> """
+> 核心模块
+> """
+  
+> from .exceptions import (
+>     BusinessException,
+>     ValidationException,
+>     NotFoundException,
+>     DuplicateException,
+>     PermissionException,
+>     StateException,
+>     DatabaseException,
+>     ConfigException,
+>     handle_exceptions,
+>     validation_required,
+> )
+  
+> from .event_bus import (
+>     EventBus,
+>     Events,
+>     on_event,
+>     publish,
+> )
+  
+> __all__ = [
+      # 异常
+>     'BusinessException',
+>     'ValidationException', 
+>     'NotFoundException',
+>     'DuplicateException',
+>     'PermissionException',
+>     'StateException',
+>     'DatabaseException',
+>     'ConfigException',
+>     'handle_exceptions',
+>     'validation_required',
+      # 事件总线
+>     'EventBus',
+>     'Events',
+>     'on_event',
+>     'publish',
+> ]

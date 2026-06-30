@@ -1,0 +1,2161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>新建订单 - 不锈钢网带跟单系统</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Microsoft YaHei", sans-serif; background: #f5f6fa; color: #2c3e50; font-size: 14px; }
+  .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .navbar h1 { font-size: 18px; }
+  .navbar .user { font-size: 14px; }
+  .page-wrap { max-width: 1200px; margin: 0 auto; padding: 20px 16px 80px; }
+
+  .top-bar { background: #fff; border-radius: 8px; padding: 16px 20px; margin-bottom: 16px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; box-shadow: 0 1px 3px rgba(0,0,0,0.07); }
+  .top-bar .field { display: flex; align-items: center; gap: 8px; }
+  .top-bar label { font-weight: 500; color: #555; white-space: nowrap; }
+  .top-bar label .red { color: #e74c3c; }
+  .top-bar select, .top-bar input { padding: 8px 12px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 14px; }
+  .top-bar select { min-width: 160px; background: #fff; cursor: pointer; }
+  .order-no-display { background: #f0f4ff; border: 1px solid #c5d0ff; border-radius: 4px; padding: 8px 16px; font-weight: 600; color: #667eea; font-size: 15px; letter-spacing: 0.5px; }
+  .btn-new { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; border: none; border-radius: 4px; padding: 8px 20px; cursor: pointer; font-size: 14px; font-weight: 500; }
+  .btn-new:hover { opacity: 0.9; }
+  .btn-new:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .section { background: #fff; border-radius: 8px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.07); overflow: hidden; }
+  .section-header { background: #fff; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; border-bottom: 1px solid transparent; transition: background 0.2s; }
+  .section-header:hover { background: #f8f9fc; }
+  .section-header.open { border-bottom-color: #eef0f5; }
+  .section-title { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .section-title .icon { font-size: 16px; }
+  .section-title .count { background: #ecf0f1; color: #7f8c8d; font-size: 11px; font-weight: 400; padding: 1px 6px; border-radius: 8px; margin-left: 4px; }
+  .section-title .count.has-val { background: #d4edda; color: #155724; }
+  .section-actions { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+  .section-sort-btn { background: none; border: 1px solid #eef0f5; border-radius: 4px; padding: 4px 8px; font-size: 12px; cursor: pointer; color: #888; transition: all 0.15s; }
+  .section-sort-btn:hover { border-color: #667eea; color: #667eea; background: #f0f4ff; }
+  .toggle-icon { color: #aaa; font-size: 12px; transition: transform 0.2s; margin-left: 8px; }
+  .section-header.open .toggle-icon { transform: rotate(180deg); }
+  .section-body { display: none; padding: 20px; background: #fff; }
+  .section-body.open { display: block; }
+
+  .form-row { display: flex; gap: 16px; margin-bottom: 14px; flex-wrap: wrap; }
+  .form-field { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 4px; }
+  .form-field label { font-size: 13px; color: #555; font-weight: 500; }
+  .form-field label .req { color: #e74c3c; margin-left: 2px; }
+  .form-field input, .form-field select, .form-field textarea { padding: 9px 12px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 14px; font-family: inherit; transition: border-color 0.2s; }
+  .form-field input:focus, .form-field select:focus, .form-field textarea:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 2px rgba(102,126,234,0.1); }
+  .form-field input.error { border-color: #e74c3c; }
+  .form-field textarea { resize: vertical; min-height: 80px; }
+  .form-field .hint { font-size: 11px; color: #aaa; }
+  .form-field .unit-suffix { position: relative; }
+  .form-field .unit-suffix input { padding-right: 40px; }
+  .form-field .unit-label { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #aaa; font-size: 13px; pointer-events: none; }
+
+  .param-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+  .param-item { display: flex; flex-direction: column; gap: 4px; }
+  .param-item label { font-size: 12px; color: #555; display: flex; align-items: center; gap: 4px; }
+  .param-item label .req { color: #e74c3c; }
+  .param-item .input-wrap { display: flex; align-items: center; }
+  .param-item input { flex: 1; padding: 7px 10px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 13px; transition: border-color 0.2s; }
+  .param-item input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 2px rgba(102,126,234,0.1); }
+  .param-item input.has-val { border-color: #27ae60; background: #f0fdf4; }
+  .param-item .unit-tag { padding: 7px 8px; background: #f0f4f8; border: 1px solid #dcdfe6; border-left: none; border-radius: 0 4px 4px 0; color: #7f8c8d; font-size: 12px; white-space: nowrap; }
+  .param-item select { padding: 7px 10px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 13px; background: #fff; cursor: pointer; min-width: 120px; }
+
+  .group-label { grid-column: 1 / -1; font-size: 12px; font-weight: 600; color: #667eea; padding: 8px 0 4px; border-bottom: 1px solid #eef0f5; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #e1e4e8; padding: 12px 24px; display: flex; justify-content: center; gap: 12px; z-index: 100; box-shadow: 0 -2px 8px rgba(0,0,0,0.06); }
+  .bottom-bar button { padding: 10px 32px; border: none; border-radius: 4px; font-size: 15px; font-weight: 500; cursor: pointer; }
+  .btn-cancel { background: #ecf0f1; color: #555; }
+  .btn-cancel:hover { background: #dfe6e9; }
+  .btn-submit { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; }
+  .btn-submit:hover { opacity: 0.9; }
+  .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .msg { padding: 12px 20px; border-radius: 4px; margin-bottom: 16px; font-size: 14px; display: none; }
+  .msg.error { background: #fdecea; border: 1px solid #f5c6cb; color: #721c24; display: block; }
+  .msg.success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; display: block; }
+
+  .param-count-badge { font-size: 11px; background: #ecf0f1; color: #7f8c8d; padding: 2px 7px; border-radius: 10px; margin-left: 6px; }
+  .param-count-badge.filled { background: #d4edda; color: #155724; }
+
+  .attach-section { padding: 12px 0; }
+  .attach-add-btn { display: inline-flex; align-items: center; gap: 6px; background: #f0f4ff; border: 1px dashed #667eea; border-radius: 4px; padding: 8px 16px; cursor: pointer; color: #667eea; font-size: 13px; transition: all 0.2s; }
+  .attach-add-btn:hover { background: #e8edff; border-color: #5569d6; }
+  .attach-add-btn input[type="file"] { display: none; }
+  .attach-list { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .attach-item { display: flex; align-items: center; gap: 10px; background: #f8f9fc; border: 1px solid #eef0f5; border-radius: 4px; padding: 8px 12px; }
+  .attach-icon { font-size: 18px; flex-shrink: 0; }
+  .attach-info { flex: 1; min-width: 0; }
+  .attach-name { font-size: 13px; font-weight: 500; color: #2c3e50; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .attach-meta { font-size: 11px; color: #aaa; }
+  .attach-remove { background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 13px; padding: 4px 8px; border-radius: 3px; transition: background 0.2s; }
+  .attach-remove:hover { background: #fdecea; }
+  .attach-empty { font-size: 13px; color: #aaa; padding: 8px 0; }
+  .attach-loading { font-size: 13px; color: #888; padding: 8px 0; }
+
+  .pt-actions { display: flex; gap: 6px; align-items: center; }
+  .pt-action-btn { background: none; border: 1px solid #dcdfe6; border-radius: 4px; padding: 7px 10px; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+  .pt-action-btn:hover { border-color: #667eea; color: #667eea; background: #f0f4ff; }
+  .pt-action-btn.danger:hover { border-color: #e74c3c; color: #e74c3c; background: #fdecea; }
+
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; z-index: 500; }
+  .modal-overlay.show { display: flex; }
+  .modal-box { background: #fff; border-radius: 10px; padding: 28px 28px 20px; width: 420px; max-width: 90vw; box-shadow: 0 8px 32px rgba(0,0,0,0.18); }
+  .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 20px; color: #2c3e50; }
+  .modal-field { margin-bottom: 14px; }
+  .modal-field label { display: block; font-size: 13px; color: #555; font-weight: 500; margin-bottom: 6px; }
+  .modal-field input, .modal-field select { width: 100%; padding: 9px 12px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 14px; box-sizing: border-box; }
+  .modal-field input:focus, .modal-field select:focus { outline: none; border-color: #667eea; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+  .modal-cancel { padding: 9px 20px; border: 1px solid #dcdfe6; border-radius: 4px; background: #fff; color: #555; cursor: pointer; font-size: 14px; }
+  .modal-cancel:hover { background: #f5f5f5; }
+  .modal-confirm { padding: 9px 20px; border: none; border-radius: 4px; background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; cursor: pointer; font-size: 14px; }
+  .modal-confirm:hover { opacity: 0.9; }
+  .modal-confirm:disabled { opacity: 0.5; cursor: not-allowed; }
+  .error-field { background: #fff5f5 !important; }
+  .flow-options { display: flex; gap: 12px; margin-top: 6px; }
+  .flow-options label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; }
+  .flow-options input[type="radio"] { accent-color: #667eea; }
+
+  .skirt-toggle { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+  .skirt-toggle input[type="radio"] { accent-color: #667eea; }
+  .skirt-toggle label { cursor: pointer; font-size: 14px; }
+  .skirt-fields { display: none; }
+  .skirt-fields.show { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+
+  .loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.85); display: none; align-items: center; justify-content: center; z-index: 200; flex-direction: column; gap: 12px; }
+  .loading-overlay.show { display: flex; }
+  .spinner { width: 36px; height: 36px; border: 3px solid #e1e4e8; border-top-color: #667eea; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 768px) {
+    .param-grid { grid-template-columns: 1fr 1fr; }
+    .form-row { flex-direction: column; }
+    .form-field { min-width: unset; }
+  }
+</style>
+</head>
+<body>
+<div id="appNav"></div>
+<script src="/static/js/shared.js"></script>
+<script>renderNav('orders', '📋 新建订单');</script>
+
+<div class="page-wrap">
+  <div class="msg" id="msgBox"></div>
+
+  <div class="top-bar">
+    <div class="field" style="align-items:flex-start;">
+      <label style="margin-bottom:4px;">产品类型 <span class="red">*</span></label>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <select id="productType" style="min-width:160px;">
+          <option value="">-- 选择产品类型 --</option>
+        </select>
+        <div class="pt-actions">
+          <button class="pt-action-btn" onclick="openAddProductType()" title="添加自定义产品类型">➕ 添加</button>
+          <button class="pt-action-btn danger" onclick="deleteCurrentProductType()" title="删除当前产品类型">➖ 删除</button>
+          <button class="pt-action-btn" onclick="openLoadTemplate()" title="加载已有模板参数">📂 加载模板</button>
+          <button class="pt-action-btn" onclick="openSaveTemplate()" title="保存当前参数为模板">💾 保存模板</button>
+          <button class="pt-action-btn" onclick="openManageTemplates()" title="管理模板">⚙️ 管理</button>
+        </div>
+      </div>
+    </div>
+    <div class="field" style="flex:1">
+      <label>订单号</label>
+      <span class="order-no-display" id="orderNoDisplay">保存时自动生成</span>
+    </div>
+    <button class="btn-new" id="submitBtn" onclick="submitOrder()">💾 确认新建</button>
+  </div>
+
+  <div class="modal-overlay" id="loadTplModal" onclick="if(event.target===this)closeLoadTemplate()">
+    <div class="modal-box">
+      <div class="modal-title">📂 加载模板</div>
+      <div class="modal-field">
+        <label>选择模板</label>
+        <select id="loadTplSel" style="width:100%;padding:9px 12px;border:1px solid #dcdfe6;border-radius:4px;font-size:14px;">
+          <option value="">-- 加载中... --</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="closeLoadTemplate()">取消</button>
+        <button class="modal-confirm" id="loadTplBtn" onclick="doLoadTemplate()">加载</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="saveTplModal" onclick="if(event.target===this)closeSaveTemplate()">
+    <div class="modal-box">
+      <div class="modal-title">💾 保存为模板</div>
+      <div class="modal-field">
+        <label>模板名称 <span style="color:#e74c3c;">*</span></label>
+        <input type="text" id="saveTplName" placeholder="如：标准冷冻螺旋参数" maxlength="50" onkeydown="if(event.key==='Enter')doSaveTemplate()">
+      </div>
+      <div style="font-size:12px;color:#aaa;margin-top:-8px;margin-bottom:12px;">将只保存尺寸和材质参数，不包含客户信息</div>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="closeSaveTemplate()">取消</button>
+        <button class="modal-confirm" id="saveTplBtn" onclick="doSaveTemplate()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="manageTplModal" onclick="if(event.target===this)closeManageTemplates()">
+    <div class="modal-box" style="width:520px;">
+      <div class="modal-title">⚙️ 管理模板</div>
+      <div style="margin-bottom:12px;font-size:13px;color:#555;">
+        当前产品类型：<strong id="manageTplPt"></strong>
+      </div>
+      <div id="manageTplList" style="max-height:320px;overflow-y:auto;border:1px solid #eef0f5;border-radius:6px;">
+        <div style="padding:20px;text-align:center;color:#aaa;">加载中...</div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="closeManageTemplates()">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="addSurfaceModal" onclick="if(event.target===this)closeAddSurface()">
+    <div class="modal-box" style="width:400px;">
+      <div class="modal-title">✨ 添加自定义表面处理</div>
+      <div class="modal-field">
+        <label>处理方式名称 <span style="color:#e74c3c;">*</span></label>
+        <input type="text" id="addSurfaceName" placeholder="如：喷砂处理" maxlength="30" onkeydown="if(event.key==='Enter')doAddSurface()">
+      </div>
+      <div id="addSurfaceError" style="display:none;color:#e74c3c;font-size:12px;margin-bottom:8px;"></div>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="closeAddSurface()">取消</button>
+        <button class="modal-confirm" id="addSurfaceBtn" onclick="doAddSurface()">添加</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="customDimModal" onclick="if(event.target===this)closeCustomDim()">
+    <div class="modal-box" style="width:480px;">
+      <div class="modal-title">📏 管理自定义尺寸参数</div>
+      <div style="margin-bottom:10px;font-size:12px;color:#888;">已保存的自定义参数（可添加/删除）</div>
+      <div id="customDimList" style="max-height:240px;overflow-y:auto;border:1px solid #eef0f5;border-radius:6px;margin-bottom:12px;">
+        <div style="padding:20px;text-align:center;color:#aaa;">加载中...</div>
+      </div>
+      <div style="border-top:1px solid #eef0f5;padding-top:12px;">
+        <div style="font-size:13px;color:#555;margin-bottom:8px;">新建自定义尺寸参数</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="text" id="newDimName" placeholder="参数名称，如：法兰直径" maxlength="20" style="flex:1;padding:8px 12px;border:1px solid #dcdfe6;border-radius:4px;font-size:13px;" onkeydown="if(event.key==='Enter')doAddCustomDim()">
+          <select id="newDimUnit" style="padding:8px;border:1px solid #dcdfe6;border-radius:4px;font-size:13px;min-width:70px;">
+            <option value="mm">mm</option>
+            <option value="m">m</option>
+            <option value="目">目</option>
+            <option value="条">条</option>
+            <option value="个">个</option>
+            <option value="齿">齿</option>
+          </select>
+          <button class="modal-confirm" id="addDimBtn" onclick="doAddCustomDim()" style="padding:8px 14px;">添加</button>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="closeCustomDim()">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="customMatModal" onclick="if(event.target===this)closeCustomMat()">
+    <div class="modal-box" style="width:440px;">
+      <div class="modal-title">🔩 管理自定义材质参数</div>
+      <div id="customMatList" style="max-height:200px;overflow-y:auto;border:1px solid #eef0f5;border-radius:6px;margin-bottom:12px;">
+        <div style="padding:20px;text-align:center;color:#aaa;">加载中...</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="text" id="newMatName" placeholder="参数名称，如：内层材质" maxlength="20" style="flex:1;padding:8px 12px;border:1px solid #dcdfe6;border-radius:4px;font-size:13px;" onkeydown="if(event.key==='Enter')doAddCustomMat()">
+        <button class="modal-confirm" id="addMatBtn" onclick="doAddCustomMat()" style="padding:8px 14px;">添加</button>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="closeCustomMat()">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="paramPickerModal" onclick="if(event.target===this)closeParamPicker()">
+    <div class="modal-box" style="width:560px;max-height:80vh;">
+      <div class="modal-title" id="pickerTitle">📋 添加尺寸参数</div>
+      <div style="margin-bottom:10px;">
+        <input type="text" id="pickerSearch" placeholder="🔍 搜索参数..." oninput="filterPickerItems(this.value)" style="width:100%;padding:8px 12px;border:1px solid #eef0f5;border-radius:6px;font-size:13px;box-sizing:border-box;">
+      </div>
+      <div id="pickerContent" style="max-height:400px;overflow-y:auto;border:1px solid #eef0f5;border-radius:6px;margin-bottom:12px;">
+        <div style="padding:20px;text-align:center;color:#aaa;">加载中...</div>
+      </div>
+      <div style="font-size:12px;color:#888;margin-bottom:8px;">
+        已选 <span id="pickerCount">0</span> 项
+        <button onclick="selectAllPicker()" style="background:none;border:none;color:#667eea;cursor:pointer;font-size:12px;padding:0 8px;">全选</button>
+        <button onclick="deselectAllPicker()" style="background:none;border:none;color:#888;cursor:pointer;font-size:12px;padding:0 8px;">取消全选</button>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="closeParamPicker()">取消</button>
+        <button class="modal-confirm" id="pickerConfirmBtn" onclick="confirmParamPicker()">添加选中</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header open" onclick="toggleSection(this)">
+      <div class="section-title"><span class="icon">👤</span> 客户信息</div>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="section-body open" id="sec-customer">
+      <div class="form-row">
+        <div class="form-field">
+          <label>客户名称 <span class="req">*</span></label>
+          <input type="text" id="customer_name" placeholder="如：振华机械" maxlength="100">
+        </div>
+        <div class="form-field">
+          <label>联系电话</label>
+          <input type="text" id="customer_phone" placeholder="如：13800138000" maxlength="30">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>客户地址</label>
+          <input type="text" id="customer_address" placeholder="如：广东省深圳市" maxlength="200">
+        </div>
+        <div class="form-field">
+          <label>客户分组</label>
+          <input type="text" id="customer_group" placeholder="如：华东区/外贸客户" maxlength="50">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>数　量 <span class="req">*</span></label>
+          <input type="number" id="quantity" placeholder="如：100" min="1" step="1">
+        </div>
+        <div class="form-field">
+          <label>单价（元）</label>
+          <input type="number" id="unit_price" placeholder="如：58.5" min="0" step="0.01">
+        </div>
+        <div class="form-field">
+          <label>单　位</label>
+          <select id="unit">
+            <option value="米">米</option>
+            <option value="条">条</option>
+            <option value="个">个</option>
+            <option value="平方米">平方米</option>
+            <option value="套">套</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>交货日期</label>
+          <input type="date" id="delivery_date">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header open" onclick="toggleSection(this)">
+      <div class="section-title"><span class="icon">📏</span> 尺寸参数</div>
+      <div class="section-actions">
+        <button class="section-sort-btn" onclick="event.stopPropagation();moveDimParam(-999)" title="置顶">⏮️</button>
+        <button class="section-sort-btn" onclick="event.stopPropagation();moveDimParam(-1)" title="上移">⬆️</button>
+        <button class="section-sort-btn" onclick="event.stopPropagation();moveDimParam(1)" title="下移">⬇️</button>
+        <button class="section-sort-btn" onclick="event.stopPropagation();moveDimParam(999)" title="置底">⏭️</button>
+        <button class="section-sort-btn" onclick="event.stopPropagation();openCustomDim()" title="管理自定义参数">✏️ 自定义</button>
+        <button class="section-sort-btn" onclick="event.stopPropagation();openParamPicker('dim')" title="添加更多尺寸参数" style="color:#27ae60;border-color:#27ae60;">➕ 添加参数</button>
+      </div>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="section-body open" id="sec-dim">
+      <div style="margin-bottom:12px;">
+        <input type="text" id="dimSearch" placeholder="🔍 搜索尺寸参数..." oninput="filterDimParams(this.value)" style="width:100%;padding:8px 12px;border:1px solid #eef0f5;border-radius:6px;font-size:13px;box-sizing:border-box;">
+      </div>
+      <div class="param-grid" id="dimGrid"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header open" onclick="toggleSection(this)">
+      <div class="section-title"><span class="icon">👗</span> 裙边参数</div>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="section-body open" id="sec-skirt">
+      <div class="skirt-toggle">
+        <input type="radio" id="skirtNo" name="hasSkirt" value="无" checked onchange="toggleSkirt()">
+        <label for="skirtNo">无裙边</label>
+        <input type="radio" id="skirtYes" name="hasSkirt" value="有" onchange="toggleSkirt()">
+        <label for="skirtYes">有裙边</label>
+      </div>
+      <div class="skirt-fields" id="skirtFields">
+        <div class="param-item">
+          <label>裙边宽度</label>
+          <div class="input-wrap">
+            <input type="number" id="裙边宽度" min="0" step="1" oninput="markFilled(this)">
+            <span class="unit-tag">mm</span>
+          </div>
+        </div>
+        <div class="param-item">
+          <label>裙边类型</label>
+          <select id="裙边类型" onchange="markFilled(this)">
+            <option value="">-- 选择 --</option>
+            <option value="鱼鳞">鱼鳞</option>
+            <option value="直起">直起</option>
+            <option value="压弯">压弯</option>
+          </select>
+        </div>
+        <div class="param-item">
+          <label>裙边板厚</label>
+          <div class="input-wrap">
+            <input type="number" id="裙边板厚" min="0" step="0.1" oninput="markFilled(this)">
+            <span class="unit-tag">mm</span>
+          </div>
+        </div>
+        <div class="param-item">
+          <label>裙边高度</label>
+          <div class="input-wrap">
+            <input type="number" id="裙边高度" min="0" step="1" oninput="markFilled(this)">
+            <span class="unit-tag">mm</span>
+          </div>
+        </div>
+        <div class="param-item">
+          <label>裙边材质</label>
+          <select id="裙边材质" onchange="markFilled(this)">
+            <option value="">-- 选择 --</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header" onclick="toggleSection(this)">
+      <div class="section-title"><span class="icon">🔩</span> 材质参数</div>
+      <div class="section-actions">
+        <button class="section-sort-btn" onclick="event.stopPropagation();moveMatParam(-999)" title="置顶">⏮️</button>
+        <button class="section-sort-btn" onclick="event.stopPropagation();moveMatParam(-1)" title="上移">⬆️</button>
+        <button class="section-sort-btn" onclick="event.stopPropagation();moveMatParam(1)" title="下移">⬇️</button>
+        <button class="section-sort-btn" onclick="event.stopPropagation();moveMatParam(999)" title="置底">⏭️</button>
+        <button class="section-sort-btn" onclick="event.stopPropagation();openCustomMat()" title="管理自定义参数">✏️ 自定义</button>
+        <button class="section-sort-btn" onclick="event.stopPropagation();openParamPicker('mat')" title="添加更多材质参数" style="color:#27ae60;border-color:#27ae60;">➕ 添加参数</button>
+      </div>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="section-body" id="sec-mat">
+      <div style="margin-bottom:12px;">
+        <input type="text" id="matSearch" placeholder="🔍 搜索材质参数..." oninput="filterMatParams(this.value)" style="width:100%;padding:8px 12px;border:1px solid #eef0f5;border-radius:6px;font-size:13px;box-sizing:border-box;">
+      </div>
+      <div class="param-grid" id="matGrid"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header" onclick="toggleSection(this)">
+      <div class="section-title"><span class="icon">✨</span> 表面处理</div>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="section-body" id="sec-surface">
+      <div class="param-grid" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div class="param-item" style="max-width: 280px;">
+          <label>表面处理方式</label>
+          <select id="表面处理" onchange="markFilled(this)">
+            <option value="">-- 选择 --</option>
+          </select>
+        </div>
+        <button class="section-sort-btn" onclick="openAddSurface()" title="添加自定义表面处理">➕ 添加自定义</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header" onclick="toggleSection(this)">
+      <div class="section-title"><span class="icon">📦</span> 物料预览</div>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="section-body" id="sec-materials">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <button class="btn-new" id="calcBtn" onclick="calcMaterials()">🔄 刷新预览</button>
+        <span style="font-size:13px;color:#888;">填写尺寸/材质参数后点击「刷新预览」查看所需物料</span>
+      </div>
+      <div id="materialList">
+        <div style="color:#aaa;font-size:13px;padding:8px 0;">暂无数据，请先填写参数后点击「刷新预览」</div>
+      </div>
+      <div id="materialLoading" style="display:none;padding:12px;color:#888;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:16px;height:16px;border:2px solid #e1e4e8;border-top-color:#667eea;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+          计算中...
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header" onclick="toggleSection(this)">
+      <div class="section-title"><span class="icon">📝</span> 备注</div>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="section-body" id="sec-remark">
+      <div class="form-row" style="flex-direction: column;">
+        <div class="form-field">
+          <label>订单备注</label>
+          <textarea id="remark" placeholder="订单整体说明、特殊要求、交货约定等" maxlength="500"></textarea>
+        </div>
+      </div>
+      <div class="form-row" style="flex-direction: column;">
+        <div class="form-field">
+          <label>产品备注</label>
+          <textarea id="product_remark" placeholder="详细描述产品规格、特殊要求等（产品专属备注，与订单备注区分）" maxlength="500"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header" onclick="toggleSection(this)">
+      <div class="section-title"><span class="icon">📎</span> 附件</div>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="section-body" id="sec-attach">
+      <div class="attach-section">
+        <label class="attach-add-btn">
+          <span>➕</span> 添加附件
+          <input type="file" id="attachInput" multiple onchange="handleAttachSelect(this)">
+        </label>
+        <div class="attach-list" id="attachList">
+          <div class="attach-empty" id="attachEmpty">暂无附件（支持：图片、PDF、CAD图纸、Word、Excel、文本等）</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-bar">
+  <button class="btn-cancel" onclick="history.back()">取消</button>
+  <button class="btn-submit" id="submitBtn2" onclick="submitOrder()">💾 确认新建</button>
+</div>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div style="color:#555;font-size:14px;">提交中...</div>
+</div>
+
+<div class="modal-overlay" id="addPtModal" onclick="if(event.target===this)closeAddProductType()">
+  <div class="modal-box">
+    <div class="modal-title">➕ 添加自定义产品类型</div>
+    <div class="modal-field">
+      <label>产品类型名称 <span style="color:#e74c3c;">*</span></label>
+      <input type="text" id="ptNameInput" placeholder="如：耐高温网带" maxlength="50" onkeydown="if(event.key==='Enter')doAddProductType()">
+    </div>
+    <div class="modal-field">
+      <label>流程类型</label>
+      <div class="flow-options">
+        <label><input type="radio" name="ptFlowType" value="production" checked> 生产</label>
+        <label><input type="radio" name="ptFlowType" value="outsource"> 外协</label>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeAddProductType()">取消</button>
+      <button class="modal-confirm" id="ptAddBtn" onclick="doAddProductType()">添加</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let gProductTypes = [];
+let gDimFields = [];
+let gMatFields = [];
+let gSurfaceOpts = [];
+let gMaterialOpts = [];
+let gCurrentProductType = '';
+let gAttachments = [];
+let gSelectedDimIdx = -1;
+let gSelectedMatIdx = -1;
+let gEditOrderId = null;
+let gStandardDimFields = [];
+let gStandardMatFields = [];
+let gAddedDimStdKeys = new Set();
+let gAddedMatStdKeys = new Set();
+let gPickerType = 'dim';
+let gPickerAllItems = [];
+let gPickerCheckedKeys = new Set();
+
+async function loadOrderData(orderId) {
+  try {
+    showLoading(true);
+    const r = await fetch('/api/orders/' + orderId);
+    const json = await r.json();
+    if (json.code !== 0) {
+      showMsg('加载订单失败：' + (json.message || '未知错误'), 'error');
+      return;
+    }
+    const order = json.data;
+    document.getElementById('orderNoDisplay').textContent = order.order_no || '（无订单号）';
+    if (order.product_type) {
+      await loadProductTypes(false);
+      document.getElementById('productType').value = order.product_type;
+      await loadParams(order.product_type);
+    }
+    const fillStr = (id, val) => {
+      const el = document.getElementById(id);
+      if (el && val != null) {
+        el.value = val;
+        el.classList.add('has-val');
+      }
+    };
+    const fillNum = (id, val) => {
+      const el = document.getElementById(id);
+      if (el && val != null) {
+        el.value = val;
+        el.classList.add('has-val');
+      }
+    };
+    fillStr('customer_name', order.customer_name);
+    fillStr('customer_phone', order.customer_phone);
+    fillStr('customer_address', order.customer_address);
+    fillStr('customer_group', order.customer_group);
+    fillNum('quantity', order.quantity);
+    fillNum('unit_price', order.unit_price);
+    fillStr('unit', order.unit);
+    fillStr('delivery_date', order.delivery_date);
+    fillStr('remark', order.remark);
+    fillStr('product_remark', order.product_remark);
+    const extra = order.extra_params || {};
+    const dimProdKeys = new Set(gDimFields.map(f => f.key));
+    const matProdKeys = new Set(gMatFields.map(f => f.key));
+    Object.entries(extra).forEach(([key, val]) => {
+      if (val == null || val === '') return;
+      const dimInput = document.getElementById('dim_' + key);
+      if (dimInput) { dimInput.value = val; dimInput.classList.add('has-val'); return; }
+      const matSel = document.getElementById('mat_' + key);
+      if (matSel) { matSel.value = val; matSel.classList.add('has-val'); return; }
+      const otherEl = document.getElementById(key);
+      if (otherEl && (otherEl.tagName === 'INPUT' || otherEl.tagName === 'SELECT')) {
+        otherEl.value = val;
+        otherEl.classList.add('has-val');
+        return;
+      }
+      if (key === 'material' || key === 'mat_材质') {
+        const sel = document.getElementById('material_sel');
+        if (sel) { sel.value = val; sel.classList.add('has-val'); }
+        return;
+      }
+      if (key === 'surface_treatment') {
+        const sel = document.getElementById('表面处理');
+        if (sel) { sel.value = val; sel.classList.add('has-val'); }
+        return;
+      }
+      if (!dimProdKeys.has(key) && !matProdKeys.has(key)) {
+        const isStdDim = gStandardDimFields.some(f => f.key === key);
+        const isStdMat = gStandardMatFields.some(f => f.key === key);
+        if (isStdDim) {
+          gAddedDimStdKeys.add(key);
+          buildDimGrid();
+          const el = document.getElementById('dim_' + key);
+          if (el) { el.value = val; el.classList.add('has-val'); }
+        } else if (isStdMat) {
+          gAddedMatStdKeys.add(key);
+          buildMatGrid();
+          const el = document.getElementById('mat_' + key);
+          if (el) { el.value = val; el.classList.add('has-val'); }
+        }
+      }
+    });
+    if (extra.attachments) {
+      gAttachments = extra.attachments;
+      renderAttachList();
+    }
+  } catch (e) {
+    showMsg('加载订单失败：' + e.message, 'error');
+  } finally {
+    showLoading(false);
+  }
+}
+
+async function updateOrder() {
+  const errors = validateForm();
+  if (errors.length > 0) {
+    showMsg(errors[0], 'error');
+    const firstErr = document.querySelector('.error-field');
+    if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+  showLoading(true);
+  const data = buildSubmitData();
+  data.id = gEditOrderId;
+  try {
+    const r = await fetch('/api/orders/' + gEditOrderId, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const json = await r.json();
+    if (json.code === 0) {
+      showMsg('订单修改成功！', 'success');
+      setTimeout(() => { window.location.href = '/orders'; }, 1500);
+    } else {
+      showMsg(json.message || '修改失败', 'error');
+    }
+  } catch (e) {
+    showMsg('修改失败：' + e.message, 'error');
+  } finally {
+    showLoading(false);
+  }
+}
+
+function buildSubmitData() {
+  const data = {
+    product_type: document.getElementById('productType').value,
+    customer_name: document.getElementById('customer_name').value.trim(),
+    customer_phone: document.getElementById('customer_phone').value.trim(),
+    customer_address: document.getElementById('customer_address').value.trim(),
+    customer_group: document.getElementById('customer_group').value.trim(),
+    quantity: parseFloat(document.getElementById('quantity').value) || 1,
+    unit_price: parseFloat(document.getElementById('unit_price').value) || 0,
+    unit: document.getElementById('unit').value,
+    delivery_date: document.getElementById('delivery_date').value || null,
+    surface_treatment: document.getElementById('表面处理').value,
+    remark: document.getElementById('remark').value.trim(),
+    product_remark: document.getElementById('product_remark').value.trim(),
+    attachments: gAttachments,
+  };
+  const matSel = document.getElementById('material_sel');
+  if (matSel && matSel.value) data.material = matSel.value;
+  gDimFields.forEach(fd => {
+    const el = document.getElementById('dim_' + fd.key);
+    if (el && el.value.trim()) {
+      const v = parseFloat(el.value);
+      if (!isNaN(v)) data[fd.key] = v;
+    }
+  });
+  gAddedDimStdKeys.forEach(key => {
+    const el = document.getElementById('dim_' + key);
+    if (el && el.value.trim()) {
+      const v = parseFloat(el.value);
+      if (!isNaN(v)) data[key] = v;
+    }
+  });
+  gMatFields.forEach(fd => {
+    const el = document.getElementById('mat_' + fd.key);
+    if (el && el.value) data[fd.key] = el.value;
+  });
+  gAddedMatStdKeys.forEach(key => {
+    const el = document.getElementById('mat_' + key);
+    if (el && el.value) data[key] = el.value;
+  });
+  if (document.getElementById('skirtYes').checked) {
+    ['裙边宽度', '裙边类型', '裙边板厚', '裙边材质', '裙边高度'].forEach(k => {
+      const el = document.getElementById(k);
+      if (el && el.value) {
+        const v = parseFloat(el.value);
+        data[k] = isNaN(v) ? el.value : v;
+      }
+    });
+  }
+  return data;
+}
+
+async function initPage() {
+  loadStandardFields();
+  const params = new URLSearchParams(window.location.search);
+  const editId = params.get('edit');
+  if (editId) {
+    gEditOrderId = parseInt(editId);
+    document.title = '编辑订单 - 不锈钢网带跟单系统';
+    const titleEl = document.querySelector('.navbar h1');
+    if (titleEl) titleEl.textContent = '📝 编辑订单';
+    document.querySelectorAll('#submitBtn, #submitBtn2').forEach(b => {
+      b.textContent = '💾 保存修改';
+      b.onclick = updateOrder;
+    });
+    document.getElementById('orderNoDisplay').textContent = '加载中...';
+    await loadOrderData(gEditOrderId);
+  } else {
+    loadProductTypes();
+  }
+}
+
+function openAddProductType() {
+  document.getElementById('addPtModal').classList.add('show');
+  document.getElementById('ptNameInput').focus();
+}
+
+function closeAddProductType() {
+  document.getElementById('addPtModal').classList.remove('show');
+  document.getElementById('ptNameInput').value = '';
+}
+
+function doAddProductType() {
+  const name = document.getElementById('ptNameInput').value.trim();
+  if (!name) {
+    showMsg('产品类型名称不能为空', 'error');
+    return;
+  }
+  const flowType = document.querySelector('input[name="ptFlowType"]:checked').value;
+  document.getElementById('ptAddBtn').disabled = true;
+  fetch('/api/orders/product-types', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, flow_type: flowType }),
+  })
+  .then(r => r.json())
+  .then(json => {
+    document.getElementById('ptAddBtn').disabled = false;
+    if (json.code === 0) {
+      closeAddProductType();
+      loadProductTypes(false).then(() => {
+        document.getElementById('productType').value = name;
+        loadParams(name);
+      });
+      showMsg('已添加「' + name + '」', 'success');
+    } else {
+      showMsg(json.message || '添加失败', 'error');
+    }
+  })
+  .catch(e => {
+    document.getElementById('ptAddBtn').disabled = false;
+    showMsg('添加失败：' + e.message, 'error');
+  });
+}
+
+function deleteCurrentProductType() {
+  const name = document.getElementById('productType').value;
+  if (!name) {
+    showMsg('请先选择一个产品类型', 'error');
+    return;
+  }
+  if (!confirm('确定要删除产品类型「' + name + '」吗？\n\n删除后无法恢复！')) return;
+  fetch('/api/orders/product-types/' + encodeURIComponent(name), { method: 'DELETE' })
+  .then(r => r.json())
+  .then(json => {
+    if (json.code === 0) {
+      showMsg('已删除「' + name + '」', 'success');
+      loadProductTypes(true);
+    } else {
+      showMsg(json.message || '删除失败', 'error');
+    }
+  })
+  .catch(e => showMsg('删除失败：' + e.message, 'error'));
+}
+
+function getTplValues() {
+  const data = {};
+  document.querySelectorAll('#sec-dim input[type="number"]').forEach(el => {
+    if (el.id && el.value.trim()) {
+      const v = parseFloat(el.value);
+      if (!isNaN(v)) data[el.id.replace('dim_', '')] = v;
+    }
+  });
+  document.querySelectorAll('#sec-mat select[data-key]').forEach(sel => {
+    if (sel.dataset.key && sel.value) data[sel.dataset.key] = sel.value;
+  });
+  const matSel = document.getElementById('material_sel');
+  if (matSel && matSel.value) data.material = matSel.value;
+  const surfaceSel = document.getElementById('表面处理');
+  if (surfaceSel && surfaceSel.value) data.surface_treatment = surfaceSel.value;
+  if (document.getElementById('skirtYes').checked) {
+    ['裙边宽度', '裙边类型', '裙边板厚', '裙边材质', '裙边高度'].forEach(k => {
+      const el = document.getElementById(k);
+      if (el && el.value) {
+        const v = parseFloat(el.value);
+        data[k] = isNaN(v) ? el.value : v;
+      }
+    });
+  }
+  return data;
+}
+
+function setTplValues(values) {
+  Object.entries(values).forEach(([key, val]) => {
+    const dimInput = document.getElementById('dim_' + key);
+    if (dimInput) {
+      dimInput.value = val;
+      dimInput.classList.add('has-val');
+    }
+    const matSel = document.getElementById('mat_' + key);
+    if (matSel) {
+      matSel.value = val;
+      matSel.classList.add('has-val');
+    }
+    const otherEl = document.getElementById(key);
+    if (otherEl && (otherEl.tagName === 'INPUT' || otherEl.tagName === 'SELECT')) {
+      otherEl.value = val;
+      otherEl.classList.add('has-val');
+    }
+    if (key === 'material' || key === 'surface_treatment') {
+      const sel = document.getElementById(key === 'material' ? 'material_sel' : '表面处理');
+      if (sel) { sel.value = val; sel.classList.add('has-val'); }
+    }
+    if (['裙边宽度', '裙边类型', '裙边板厚', '裙边材质', '裙边高度'].includes(key)) {
+      const skirtYes = document.getElementById('skirtYes');
+      if (skirtYes) skirtYes.checked = true;
+      toggleSkirt();
+    }
+  });
+}
+
+function selectDimItem(idx) {
+  document.querySelectorAll('#dimGrid .param-item').forEach((el, i) => {
+    el.style.outline = (i === idx) ? '2px solid #667eea' : 'none';
+  });
+  gSelectedDimIdx = idx;
+}
+
+function selectMatItem(idx) {
+  document.querySelectorAll('#matGrid .param-item').forEach((el, i) => {
+    el.style.outline = (i === idx) ? '2px solid #667eea' : 'none';
+  });
+  gSelectedMatIdx = idx;
+}
+
+function moveDimParam(delta) {
+  const items = document.querySelectorAll('#dimGrid .param-item');
+  if (items.length === 0) return;
+  if (gSelectedDimIdx < 0) gSelectedDimIdx = 0;
+  const total = items.length;
+  let newIdx;
+  if (delta === -999) newIdx = 0;
+  else if (delta === 999) newIdx = total - 1;
+  else newIdx = Math.max(0, Math.min(total - 1, gSelectedDimIdx + delta));
+  if (newIdx === gSelectedDimIdx) return;
+  const grid = document.getElementById('dimGrid');
+  const allItems = Array.from(grid.querySelectorAll('.param-item'));
+  const groups = Array.from(grid.querySelectorAll('.group-label'));
+  const reordered = [...groups];
+  const item = allItems[gSelectedDimIdx];
+  reordered.splice(reordered.indexOf(item), 1);
+  reordered.splice(newIdx, 0, item);
+  reordered.forEach(el => grid.appendChild(el));
+  selectDimItem(newIdx);
+}
+
+function moveMatParam(delta) {
+  const items = document.querySelectorAll('#matGrid .param-item');
+  if (items.length === 0) return;
+  if (gSelectedMatIdx < 0) gSelectedMatIdx = 0;
+  const total = items.length;
+  let newIdx;
+  if (delta === -999) newIdx = 0;
+  else if (delta === 999) newIdx = total - 1;
+  else newIdx = Math.max(0, Math.min(total - 1, gSelectedMatIdx + delta));
+  if (newIdx === gSelectedMatIdx) return;
+  const grid = document.getElementById('matGrid');
+  const allItems = Array.from(grid.querySelectorAll('.param-item'));
+  const groups = Array.from(grid.querySelectorAll('.group-label'));
+  const reordered = [...groups];
+  const item = allItems[gSelectedMatIdx];
+  reordered.splice(reordered.indexOf(item), 1);
+  reordered.splice(newIdx, 0, item);
+  reordered.forEach(el => grid.appendChild(el));
+  selectMatItem(newIdx);
+}
+
+async function openLoadTemplate() {
+  const pt = document.getElementById('productType').value;
+  if (!pt) { showMsg('请先选择产品类型', 'error'); return; }
+  document.getElementById('loadTplModal').classList.add('show');
+  const sel = document.getElementById('loadTplSel');
+  sel.innerHTML = '<option value="">加载中...</option>';
+  try {
+    const r = await fetch('/api/orders/templates/' + encodeURIComponent(pt));
+    const json = await r.json();
+    if (json.code === 0) {
+      if (json.data.length === 0) {
+        sel.innerHTML = '<option value="">该产品类型暂无模板</option>';
+      } else {
+        sel.innerHTML = '<option value="">-- 请选择 --</option>' +
+          json.data.map(n => '<option value="' + n + '">' + n + '</option>').join('');
+      }
+    } else {
+      sel.innerHTML = '<option value="">加载失败</option>';
+    }
+  } catch (e) {
+    sel.innerHTML = '<option value="">加载失败</option>';
+  }
+}
+
+function closeLoadTemplate() {
+  document.getElementById('loadTplModal').classList.remove('show');
+}
+
+async function doLoadTemplate() {
+  const pt = document.getElementById('productType').value;
+  const name = document.getElementById('loadTplSel').value;
+  if (!name) { showMsg('请选择要加载的模板', 'error'); return; }
+  document.getElementById('loadTplBtn').disabled = true;
+  try {
+    const r = await fetch('/api/orders/templates/' + encodeURIComponent(pt) + '/' + encodeURIComponent(name));
+    const json = await r.json();
+    if (json.code === 0) {
+      const values = json.data.values || {};
+      setTplValues(values);
+      closeLoadTemplate();
+      showMsg('模板「' + name + '」已加载', 'success');
+    } else {
+      showMsg(json.message || '加载失败', 'error');
+    }
+  } catch (e) {
+    showMsg('加载失败：' + e.message, 'error');
+  } finally {
+    document.getElementById('loadTplBtn').disabled = false;
+  }
+}
+
+function openSaveTemplate() {
+  const pt = document.getElementById('productType').value;
+  if (!pt) { showMsg('请先选择产品类型', 'error'); return; }
+  document.getElementById('saveTplModal').classList.add('show');
+  document.getElementById('saveTplName').value = '';
+  document.getElementById('saveTplName').focus();
+}
+
+function closeSaveTemplate() {
+  document.getElementById('saveTplModal').classList.remove('show');
+}
+
+async function doSaveTemplate() {
+  const pt = document.getElementById('productType').value;
+  const name = document.getElementById('saveTplName').value.trim();
+  if (!name) { showMsg('模板名称不能为空', 'error'); return; }
+  document.getElementById('saveTplBtn').disabled = true;
+  const values = getTplValues();
+  try {
+    const r = await fetch('/api/orders/templates', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ product_type: pt, name, values }),
+    });
+    const json = await r.json();
+    if (json.code === 0) {
+      closeSaveTemplate();
+      showMsg('模板「' + name + '」已保存', 'success');
+    } else {
+      showMsg(json.message || '保存失败', 'error');
+    }
+  } catch (e) {
+    showMsg('保存失败：' + e.message, 'error');
+  } finally {
+    document.getElementById('saveTplBtn').disabled = false;
+  }
+}
+
+async function openManageTemplates() {
+  const pt = document.getElementById('productType').value;
+  if (!pt) { showMsg('请先选择产品类型', 'error'); return; }
+  document.getElementById('manageTplPt').textContent = pt;
+  document.getElementById('manageTplModal').classList.add('show');
+  await refreshManageTplList(pt);
+}
+
+function closeManageTemplates() {
+  document.getElementById('manageTplModal').classList.remove('show');
+}
+
+async function refreshManageTplList(pt) {
+  const list = document.getElementById('manageTplList');
+  list.innerHTML = '<div style="padding:20px;text-align:center;color:#aaa;">加载中...</div>';
+  try {
+    const r = await fetch('/api/orders/templates/' + encodeURIComponent(pt));
+    const json = await r.json();
+    if (json.code === 0) {
+      if (json.data.length === 0) {
+        list.innerHTML = '<div style="padding:20px;text-align:center;color:#aaa;">暂无模板</div>';
+        return;
+      }
+      list.innerHTML = json.data.map(n => `
+        <div style="display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid #f0f0f0;gap:8px;">
+          <span style="flex:1;font-size:13px;">📄 ${n}</span>
+          <button onclick="renameTemplate('${n}')" style="background:none;border:1px solid #dcdfe6;border-radius:4px;padding:4px 10px;cursor:pointer;font-size:12px;color:#555;">✏️ 重命名</button>
+          <button onclick="delTemplate('${n}')" style="background:none;border:1px solid #f5c6cb;border-radius:4px;padding:4px 10px;cursor:pointer;font-size:12px;color:#e74c3c;">🗑️ 删除</button>
+        </div>`).join('');
+    } else {
+      list.innerHTML = '<div style="padding:20px;color:#e74c3c;">加载失败</div>';
+    }
+  } catch (e) {
+    list.innerHTML = '<div style="padding:20px;color:#e74c3c;">加载失败</div>';
+  }
+}
+
+async function renameTemplate(oldName) {
+  const newName = prompt('将模板「' + oldName + '」重命名为：', oldName);
+  if (!newName || newName === oldName) return;
+  const pt = document.getElementById('manageTplPt').textContent;
+  try {
+    const r = await fetch('/api/orders/templates/' + encodeURIComponent(pt) + '/' + encodeURIComponent(oldName), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ new_name: newName }),
+    });
+    const json = await r.json();
+    if (json.code === 0) {
+      showMsg('已重命名为「' + newName + '」', 'success');
+      refreshManageTplList(pt);
+    } else {
+      showMsg(json.message || '重命名失败', 'error');
+    }
+  } catch (e) {
+    showMsg('重命名失败：' + e.message, 'error');
+  }
+}
+
+async function delTemplate(name) {
+  if (!confirm('确定要删除模板「' + name + '」吗？\n\n删除后无法恢复！')) return;
+  const pt = document.getElementById('manageTplPt').textContent;
+  try {
+    const r = await fetch('/api/orders/templates/' + encodeURIComponent(pt) + '/' + encodeURIComponent(name), { method: 'DELETE' });
+    const json = await r.json();
+    if (json.code === 0) {
+      showMsg('已删除「' + name + '」', 'success');
+      refreshManageTplList(pt);
+    } else {
+      showMsg(json.message || '删除失败', 'error');
+    }
+  } catch (e) {
+    showMsg('删除失败：' + e.message, 'error');
+  }
+}
+
+function openAddSurface() {
+  document.getElementById('addSurfaceModal').classList.add('show');
+  document.getElementById('addSurfaceName').value = '';
+  document.getElementById('addSurfaceError').style.display = 'none';
+  document.getElementById('addSurfaceName').focus();
+}
+
+function closeAddSurface() {
+  document.getElementById('addSurfaceModal').classList.remove('show');
+}
+
+async function doAddSurface() {
+  const name = document.getElementById('addSurfaceName').value.trim();
+  if (!name) {
+    document.getElementById('addSurfaceError').textContent = '请输入处理方式名称';
+    document.getElementById('addSurfaceError').style.display = 'block';
+    return;
+  }
+  document.getElementById('addSurfaceBtn').disabled = true;
+  try {
+    const r = await fetch('/api/orders/custom-params/surface', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+    const json = await r.json();
+    if (json.code === 0) {
+      closeAddSurface();
+      showMsg('已添加「' + name + '」', 'success');
+      await refreshSurfaceOptions();
+    } else {
+      document.getElementById('addSurfaceError').textContent = json.message || '添加失败';
+      document.getElementById('addSurfaceError').style.display = 'block';
+    }
+  } catch (e) {
+    document.getElementById('addSurfaceError').textContent = '添加失败：' + e.message;
+    document.getElementById('addSurfaceError').style.display = 'block';
+  } finally {
+    document.getElementById('addSurfaceBtn').disabled = false;
+  }
+}
+
+async function refreshSurfaceOptions() {
+  try {
+    const r = await fetch('/api/orders/custom-params/surface');
+    const json = await r.json();
+    if (json.code === 0) {
+      const sel = document.getElementById('表面处理');
+      const currentVal = sel.value;
+      sel.innerHTML = '<option value="">-- 选择 --</option>';
+      json.data.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s;
+        opt.textContent = s;
+        sel.appendChild(opt);
+      });
+      if (currentVal && json.data.includes(currentVal)) {
+        sel.value = currentVal;
+      }
+    }
+  } catch (e) {
+    // silent fail
+  }
+}
+
+function openCustomDim() {
+  document.getElementById('customDimModal').classList.add('show');
+  document.getElementById('newDimName').value = '';
+  document.getElementById('newDimUnit').value = 'mm';
+  refreshCustomDimList();
+}
+
+function closeCustomDim() {
+  document.getElementById('customDimModal').classList.remove('show');
+}
+
+async function refreshCustomDimList() {
+  const list = document.getElementById('customDimList');
+  list.innerHTML = '<div style="padding:20px;text-align:center;color:#aaa;">加载中...</div>';
+  try {
+    const r = await fetch('/api/orders/custom-params/dim');
+    const json = await r.json();
+    if (json.code === 0) {
+      if (json.data.length === 0) {
+        list.innerHTML = '<div style="padding:16px;text-align:center;color:#aaa;">暂无自定义尺寸参数</div>';
+        return;
+      }
+      list.innerHTML = json.data.map(d => `
+        <div style="display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid #f0f0f0;gap:8px;">
+          <span style="flex:1;font-size:13px;">📏 ${d.name} <span style="color:#aaa;">(${d.unit})</span></span>
+          <button onclick="delCustomDim('${d.name}')" style="background:none;border:1px solid #f5c6cb;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:12px;color:#e74c3c;">删除</button>
+        </div>`).join('');
+    } else {
+      list.innerHTML = '<div style="padding:20px;color:#e74c3c;">加载失败</div>';
+    }
+  } catch (e) {
+    list.innerHTML = '<div style="padding:20px;color:#e74c3c;">加载失败</div>';
+  }
+}
+
+async function doAddCustomDim() {
+  const name = document.getElementById('newDimName').value.trim();
+  const unit = document.getElementById('newDimUnit').value;
+  if (!name) { showMsg('请输入参数名称', 'error'); return; }
+  document.getElementById('addDimBtn').disabled = true;
+  try {
+    const r = await fetch('/api/orders/custom-params/dim', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, unit }),
+    });
+    const json = await r.json();
+    if (json.code === 0) {
+      showMsg('已添加「' + name + '」(' + unit + ')', 'success');
+      document.getElementById('newDimName').value = '';
+      refreshCustomDimList();
+    } else {
+      showMsg(json.message || '添加失败', 'error');
+    }
+  } catch (e) {
+    showMsg('添加失败：' + e.message, 'error');
+  } finally {
+    document.getElementById('addDimBtn').disabled = false;
+  }
+}
+
+async function delCustomDim(name) {
+  if (!confirm('确定要删除自定义尺寸「' + name + '」吗？')) return;
+  try {
+    const r = await fetch('/api/orders/custom-params/dim/' + encodeURIComponent(name), { method: 'DELETE' });
+    const json = await r.json();
+    if (json.code === 0) {
+      showMsg('已删除「' + name + '」', 'success');
+      refreshCustomDimList();
+    } else {
+      showMsg(json.message || '删除失败', 'error');
+    }
+  } catch (e) {
+    showMsg('删除失败：' + e.message, 'error');
+  }
+}
+
+function openCustomMat() {
+  document.getElementById('customMatModal').classList.add('show');
+  document.getElementById('newMatName').value = '';
+  refreshCustomMatList();
+}
+
+function closeCustomMat() {
+  document.getElementById('customMatModal').classList.remove('show');
+}
+
+async function refreshCustomMatList() {
+  const list = document.getElementById('customMatList');
+  list.innerHTML = '<div style="padding:20px;text-align:center;color:#aaa;">加载中...</div>';
+  try {
+    const r = await fetch('/api/orders/custom-params/mat');
+    const json = await r.json();
+    if (json.code === 0) {
+      if (json.data.length === 0) {
+        list.innerHTML = '<div style="padding:16px;text-align:center;color:#aaa;">暂无自定义材质参数</div>';
+        return;
+      }
+      list.innerHTML = json.data.map(n => `
+        <div style="display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid #f0f0f0;gap:8px;">
+          <span style="flex:1;font-size:13px;">🔩 ${n}</span>
+          <button onclick="delCustomMat('${n}')" style="background:none;border:1px solid #f5c6cb;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:12px;color:#e74c3c;">删除</button>
+        </div>`).join('');
+    } else {
+      list.innerHTML = '<div style="padding:20px;color:#e74c3c;">加载失败</div>';
+    }
+  } catch (e) {
+    list.innerHTML = '<div style="padding:20px;color:#e74c3c;">加载失败</div>';
+  }
+}
+
+async function doAddCustomMat() {
+  const name = document.getElementById('newMatName').value.trim();
+  if (!name) { showMsg('请输入参数名称', 'error'); return; }
+  document.getElementById('addMatBtn').disabled = true;
+  try {
+    const r = await fetch('/api/orders/custom-params/mat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+    const json = await r.json();
+    if (json.code === 0) {
+      showMsg('已添加「' + name + '」', 'success');
+      document.getElementById('newMatName').value = '';
+      refreshCustomMatList();
+    } else {
+      showMsg(json.message || '添加失败', 'error');
+    }
+  } catch (e) {
+    showMsg('添加失败：' + e.message, 'error');
+  } finally {
+    document.getElementById('addMatBtn').disabled = false;
+  }
+}
+
+async function delCustomMat(name) {
+  if (!confirm('确定要删除自定义材质「' + name + '」吗？')) return;
+  try {
+    const r = await fetch('/api/orders/custom-params/mat/' + encodeURIComponent(name), { method: 'DELETE' });
+    const json = await r.json();
+    if (json.code === 0) {
+      showMsg('已删除「' + name + '」', 'success');
+      refreshCustomMatList();
+    } else {
+      showMsg(json.message || '删除失败', 'error');
+    }
+  } catch (e) {
+    showMsg('删除失败：' + e.message, 'error');
+  }
+}
+
+async function openParamPicker(type) {
+  gPickerType = type;
+  gPickerCheckedKeys.clear();
+  document.getElementById('pickerSearch').value = '';
+  document.getElementById('pickerCount').textContent = '0';
+
+  if (gStandardDimFields.length === 0 || gStandardMatFields.length === 0) {
+    await loadStandardFields();
+  }
+
+  const isDim = type === 'dim';
+  const title = isDim ? '📏 添加尺寸参数' : '🔩 添加材质参数';
+  document.getElementById('pickerTitle').textContent = title;
+  document.getElementById('paramPickerModal').classList.add('show');
+
+  const content = document.getElementById('pickerContent');
+  content.innerHTML = '<div style="padding:20px;text-align:center;color:#aaa;">加载中...</div>';
+
+  const prodKeys = new Set(isDim
+    ? gDimFields.map(f => f.key)
+    : gMatFields.map(f => f.key));
+  const addedStdKeys = isDim ? gAddedDimStdKeys : gAddedMatStdKeys;
+
+  gPickerAllItems = (isDim ? gStandardDimFields : gStandardMatFields)
+    .filter(fd => !prodKeys.has(fd.key) && !addedStdKeys.has(fd.key));
+
+  if (gPickerAllItems.length === 0) {
+    content.innerHTML = '<div style="padding:24px;text-align:center;color:#aaa;">所有参数已添加完毕 ✓</div>';
+    return;
+  }
+
+  renderPickerItems(gPickerAllItems);
+}
+
+function closeParamPicker() {
+  document.getElementById('paramPickerModal').classList.remove('show');
+}
+
+function renderPickerItems(items) {
+  const content = document.getElementById('pickerContent');
+  const groups = {};
+  items.forEach(fd => {
+    const g = fd.group || '其他';
+    if (!groups[g]) groups[g] = [];
+    groups[g].push(fd);
+  });
+
+  let html = '';
+  for (const [gname, glist] of Object.entries(groups)) {
+    html += `<div class="group-label" style="background:#f8f9fa;padding:6px 12px;font-size:12px;color:#666;font-weight:600;">${gname}</div>`;
+    glist.forEach(fd => {
+      const checked = gPickerCheckedKeys.has(fd.key) ? 'checked' : '';
+      const unitHint = fd.unit ? ` <span style="color:#aaa;font-size:11px;">(${fd.unit})</span>` : '';
+      html += `<label style="display:flex;align-items:center;padding:8px 12px;cursor:pointer;gap:8px;font-size:13px;border-bottom:1px solid #f0f0f0;">
+        <input type="checkbox" value="${fd.key}" ${checked} onchange="togglePickerItem('${fd.key}')" style="width:16px;height:16px;cursor:pointer;">
+        <span style="flex:1;">${fd.label}${unitHint}</span>
+      </label>`;
+    });
+  }
+  content.innerHTML = html || '<div style="padding:20px;text-align:center;color:#aaa;">无匹配参数</div>';
+  document.getElementById('pickerCount').textContent = gPickerCheckedKeys.size;
+}
+
+function togglePickerItem(key) {
+  if (gPickerCheckedKeys.has(key)) {
+    gPickerCheckedKeys.delete(key);
+  } else {
+    gPickerCheckedKeys.add(key);
+  }
+  document.getElementById('pickerCount').textContent = gPickerCheckedKeys.size;
+}
+
+function selectAllPicker() {
+  gPickerAllItems.forEach(fd => gPickerCheckedKeys.add(fd.key));
+  renderPickerItems(gPickerAllItems);
+}
+
+function deselectAllPicker() {
+  gPickerCheckedKeys.clear();
+  renderPickerItems(gPickerAllItems);
+}
+
+function filterPickerItems(query) {
+  const q = query.trim().toLowerCase();
+  if (!q) {
+    renderPickerItems(gPickerAllItems);
+    return;
+  }
+  const filtered = gPickerAllItems.filter(fd =>
+    fd.label.toLowerCase().includes(q) || fd.key.toLowerCase().includes(q)
+  );
+  renderPickerItems(filtered);
+}
+
+function confirmParamPicker() {
+  if (gPickerCheckedKeys.size === 0) {
+    showMsg('请先选择要添加的参数', 'error');
+    return;
+  }
+  const isDim = gPickerType === 'dim';
+  if (isDim) {
+    gPickerCheckedKeys.forEach(k => gAddedDimStdKeys.add(k));
+    buildDimGrid();
+  } else {
+    gPickerCheckedKeys.forEach(k => gAddedMatStdKeys.add(k));
+    buildMatGrid();
+  }
+  closeParamPicker();
+  showMsg('已添加 ' + gPickerCheckedKeys.size + ' 个参数', 'success');
+}
+
+function removeStdDimParam(key) {
+  gAddedDimStdKeys.delete(key);
+  buildDimGrid();
+}
+
+function removeStdMatParam(key) {
+  gAddedMatStdKeys.delete(key);
+  buildMatGrid();
+}
+
+function getFileIcon(filename) {
+  const ext = filename.split('.').pop().toLowerCase();
+  const icons = {
+    'pdf': '📕', 'doc': '📘', 'docx': '📘', 'xls': '📗', 'xlsx': '📗',
+    'png': '🖼️', 'jpg': '🖼️', 'jpeg': '🖼️', 'gif': '🖼️', 'bmp': '🖼️',
+    'dwg': '📐', 'dxf': '📐', 'txt': '📄', 'log': '📄',
+  };
+  return icons[ext] || '📄';
+}
+
+function formatFileSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function renderAttachList() {
+  const list = document.getElementById('attachList');
+  const empty = document.getElementById('attachEmpty');
+  if (gAttachments.length === 0) {
+    list.innerHTML = '';
+    list.appendChild(empty);
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  list.innerHTML = gAttachments.map((att, i) => `
+    <div class="attach-item" data-index="${i}">
+      <span class="attach-icon">${getFileIcon(att.name)}</span>
+      <div class="attach-info">
+        <div class="attach-name" title="${att.name}">${att.name}</div>
+        <div class="attach-meta">${formatFileSize(att.size || 0)}</div>
+      </div>
+      <button class="attach-remove" onclick="removeAttach(${i})" title="删除">✕ 删除</button>
+    </div>`).join('');
+}
+
+async function handleAttachSelect(input) {
+  if (!input.files || input.files.length === 0) return;
+  const files = Array.from(input.files);
+  for (const file of files) {
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const r = await fetch('/api/orders/upload-attachment', { method: 'POST', body: formData });
+      const json = await r.json();
+      if (json.code === 0) {
+        gAttachments.push(json.data);
+      } else {
+        showMsg('上传失败：' + (json.message || file.name), 'error');
+      }
+    } catch (e) {
+      showMsg('上传异常：' + e.message, 'error');
+    }
+  }
+  renderAttachList();
+  input.value = '';
+}
+
+function removeAttach(index) {
+  if (index >= 0 && index < gAttachments.length) {
+    gAttachments.splice(index, 1);
+    renderAttachList();
+  }
+}
+
+function toggleSection(header) {
+  header.classList.toggle('open');
+  const body = header.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+function toggleSkirt() {
+  const hasSkirt = document.querySelector('input[name="hasSkirt"]:checked').value;
+  const fields = document.getElementById('skirtFields');
+  if (hasSkirt === '有') {
+    fields.classList.add('show');
+  } else {
+    fields.classList.remove('show');
+    ['裙边宽度', '裙边类型', '裙边板厚', '裙边材质', '裙边高度'].forEach(k => {
+      const el = document.getElementById(k);
+      if (el) el.value = '';
+    });
+  }
+}
+
+function markFilled(el) {
+  const val = el.value && el.value.trim();
+  if (el.tagName === 'SELECT') {
+    el.classList.toggle('has-val', !!val);
+  } else {
+    el.classList.toggle('has-val', !!val);
+  }
+}
+
+function showMsg(text, type) {
+  const box = document.getElementById('msgBox');
+  box.textContent = text;
+  box.className = 'msg ' + type;
+  box.style.display = 'block';
+  if (type === 'success') {
+    setTimeout(() => { box.style.display = 'none'; }, 4000);
+  }
+}
+
+function showLoading(show) {
+  document.getElementById('loadingOverlay').classList.toggle('show', show);
+  document.getElementById('submitBtn').disabled = show;
+  document.getElementById('submitBtn2').disabled = show;
+}
+
+const DIM_GROUPS = {
+  '宽度类': [],
+  '厚度/直径': [],
+  '间距类': [],
+  '长度类': [],
+  '数量类': [],
+  '挡板类': [],
+  '链板类': [],
+  '裙边类': [],
+};
+
+const MAT_GROUPS = {
+  '材质类': [],
+};
+
+async function loadStandardFields() {
+  try {
+    const r = await fetch('/api/orders/standard-fields');
+    const json = await r.json();
+    if (json.code === 0) {
+      gStandardDimFields = json.data.dim_fields || [];
+      gStandardMatFields = json.data.mat_fields || [];
+    }
+  } catch (e) {
+    console.warn('加载标准参数字典失败', e);
+  }
+}
+
+function getDimFallback(productType) {
+  return [
+    { key: '总宽', label: '总宽', unit: 'mm', required: true, group: '宽度类' },
+    { key: '网带宽度', label: '网带宽度', unit: 'mm', required: true, group: '宽度类' },
+    { key: '钢丝直径', label: '钢丝直径', unit: 'mm', required: true, group: '厚度/直径' },
+    { key: '螺距', label: '螺距', unit: 'mm', group: '间距类' },
+    { key: '曲轴直径', label: '曲轴直径', unit: 'mm', group: '厚度/直径' },
+    { key: '穿杆直径', label: '穿杆直径', unit: 'mm', group: '厚度/直径' },
+    { key: '主轴直径', label: '主轴直径', unit: 'mm', group: '厚度/直径' },
+    { key: '主齿轮直径', label: '主齿轮直径', unit: 'mm', group: '厚度/直径' },
+    { key: '辅助轮直径', label: '辅助轮直径', unit: 'mm', group: '厚度/直径' },
+    { key: '加强筋直径', label: '加强筋直径', unit: 'mm', group: '厚度/直径' },
+    { key: '链条直径', label: '链条直径', unit: 'mm', group: '厚度/直径' },
+    { key: '加强链片厚度', label: '加强链片厚度', unit: 'mm', group: '厚度/直径' },
+    { key: '链条厚度', label: '链条厚度', unit: 'mm', group: '厚度/直径' },
+    { key: '链板板厚', label: '链板板厚', unit: 'mm', group: '厚度/直径' },
+    { key: '链板网孔直径', label: '链板网孔直径', unit: 'mm', group: '厚度/直径' },
+    { key: '网带节距', label: '网带节距', unit: 'mm', group: '间距类' },
+    { key: '加强筋间距', label: '加强筋间距', unit: 'mm', group: '间距类' },
+    { key: '链条距', label: '链条距', unit: 'mm', group: '间距类' },
+    { key: '穿杆距', label: '穿杆距', unit: 'mm', group: '间距类' },
+    { key: '中心距', label: '中心距', unit: 'mm', group: '间距类' },
+    { key: '加强垫片布置', label: '加强垫片布置', unit: 'mm', group: '间距类' },
+    { key: '扣间隙', label: '扣间隙', unit: 'mm', group: '间距类' },
+    { key: '节距', label: '节距', unit: 'mm', group: '间距类' },
+    { key: '目数', label: '目数', unit: '目', group: '间距类' },
+    { key: '网孔尺寸', label: '网孔尺寸', unit: 'mm', group: '间距类' },
+    { key: '总长度', label: '总长度', unit: 'mm', required: true, group: '长度类' },
+    { key: '折边长度', label: '折边长度', unit: 'mm', group: '长度类' },
+    { key: '单段长度', label: '单段长度', unit: 'm', group: '长度类' },
+    { key: '网带段数', label: '网带段数', unit: '段', group: '数量类' },
+    { key: '网带排数', label: '网带排数', unit: '条', group: '数量类' },
+    { key: '加强筋数量', label: '加强筋数量', unit: '条', group: '数量类' },
+    { key: '主齿轮齿数', label: '主齿轮齿数', unit: '齿', group: '数量类' },
+    { key: '主齿轮数量', label: '主齿轮数量', unit: '套', group: '数量类' },
+    { key: '辅助齿轮齿数', label: '辅助齿轮齿数', unit: '齿', group: '数量类' },
+    { key: '辅助轮数量', label: '辅助轮数量', unit: '个', group: '数量类' },
+    { key: '横杆数量', label: '横杆数量', unit: '根', group: '数量类' },
+    { key: '挡板高度', label: '挡板高度', unit: 'mm', group: '挡板类' },
+    { key: '挡板厚度', label: '挡板厚度', unit: 'mm', group: '挡板类' },
+    { key: '链板网孔规格', label: '链板网孔规格', unit: 'mm', group: '链板类' },
+  ];
+}
+
+function getMatFallback(productType) {
+  return [
+    { key: '曲轴材质', label: '曲轴材质', group: '材质类' },
+    { key: '网丝材质', label: '网丝材质', group: '材质类' },
+    { key: '穿杆材质', label: '穿杆材质', group: '材质类' },
+    { key: '链条材质', label: '链条材质', group: '材质类' },
+    { key: '主齿轮材质', label: '主齿轮材质', group: '材质类' },
+    { key: '挡板材质', label: '挡板材质', group: '材质类' },
+    { key: '辅助轮材质', label: '辅助轮材质', group: '材质类' },
+    { key: '加强筋材质', label: '加强筋材质', group: '材质类' },
+    { key: '链板材质', label: '链板材质', group: '材质类' },
+  ];
+}
+
+function buildDimGrid() {
+  const grid = document.getElementById('dimGrid');
+  grid.innerHTML = '';
+
+  for (const [gname, glist] of Object.entries(DIM_GROUPS)) {
+    if (glist.length === 0) continue;
+    const glabel = document.createElement('div');
+    glabel.className = 'group-label';
+    glabel.textContent = gname;
+    grid.appendChild(glabel);
+
+    glist.forEach((fd, idx) => {
+      const item = document.createElement('div');
+      item.className = 'param-item';
+      item.style.cursor = 'pointer';
+      item.onclick = function(e) {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+        const allItems = Array.from(grid.querySelectorAll('.param-item'));
+        selectDimItem(allItems.indexOf(item));
+      };
+      const reqStar = fd.required ? ' <span class="req">*</span>' : '';
+      item.innerHTML = `
+        <label>${fd.label}${reqStar}</label>
+        <div class="input-wrap">
+          <input type="number"
+            id="dim_${fd.key}"
+            data-key="${fd.key}"
+            min="0" step="${fd.unit === 'm' ? '0.1' : '0.01'}"
+            placeholder="${fd.unit || ''}"
+            oninput="markFilled(this)">
+          ${fd.unit ? `<span class="unit-tag">${fd.unit}</span>` : ''}
+        </div>`;
+      grid.appendChild(item);
+    });
+  }
+
+  if (gAddedDimStdKeys.size > 0) {
+    const glabel = document.createElement('div');
+    glabel.className = 'group-label';
+    glabel.textContent = '已添加参数';
+    grid.appendChild(glabel);
+
+    gAddedDimStdKeys.forEach(key => {
+      const fd = gStandardDimFields.find(f => f.key === key);
+      if (!fd) return;
+      const item = document.createElement('div');
+      item.className = 'param-item';
+      item.style.cssText = 'border-left: 3px solid #27ae60; background: #f0faf4;';
+      item.innerHTML = `
+        <label style="color:#27ae60;">${fd.label}</label>
+        <div class="input-wrap">
+          <input type="number"
+            id="dim_${fd.key}"
+            data-key="${fd.key}"
+            min="0" step="${fd.unit === 'm' ? '0.1' : '0.01'}"
+            placeholder="${fd.unit || ''}"
+            oninput="markFilled(this)">
+          ${fd.unit ? `<span class="unit-tag">${fd.unit}</span>` : ''}
+          <button onclick="removeStdDimParam('${fd.key}')" title="移除此参数" style="background:none;border:none;color:#e74c3c;cursor:pointer;font-size:14px;padding:0 4px;margin-left:4px;">✕</button>
+        </div>`;
+      grid.appendChild(item);
+    });
+  }
+}
+
+function buildMatGrid() {
+  const grid = document.getElementById('matGrid');
+  grid.innerHTML = '';
+
+  for (const [gname, glist] of Object.entries(MAT_GROUPS)) {
+    if (glist.length === 0) continue;
+    const glabel = document.createElement('div');
+    glabel.className = 'group-label';
+    glabel.textContent = gname;
+    grid.appendChild(glabel);
+
+    glist.forEach(fd => {
+      const item = document.createElement('div');
+      item.className = 'param-item';
+      item.style.cursor = 'pointer';
+      item.onclick = function(e) {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+        const allItems = Array.from(grid.querySelectorAll('.param-item'));
+        selectMatItem(allItems.indexOf(item));
+      };
+      item.innerHTML = `
+        <label>${fd.label}</label>
+        <select id="mat_${fd.key}" data-key="${fd.key}" onchange="markFilled(this)">
+          <option value="">-- 选择 --</option>
+        </select>`;
+      grid.appendChild(item);
+
+      const sel = item.querySelector('select');
+      gMaterialOpts.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m;
+        opt.textContent = m;
+        sel.appendChild(opt);
+      });
+    });
+  }
+
+  const surfaceItem = document.createElement('div');
+  surfaceItem.className = 'param-item';
+  surfaceItem.innerHTML = `
+    <label>材质（整体）</label>
+    <select id="material_sel" onchange="markFilled(this)">
+      <option value="">-- 选择 --</option>
+    </select>`;
+  grid.appendChild(surfaceItem);
+  const matSel = surfaceItem.querySelector('select');
+  gMaterialOpts.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m;
+    opt.textContent = m;
+    matSel.appendChild(opt);
+  });
+
+  const skirtMatSel = document.getElementById('裙边材质');
+  if (skirtMatSel) {
+    gMaterialOpts.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m;
+      opt.textContent = m;
+      skirtMatSel.appendChild(opt);
+    });
+  }
+
+  if (gAddedMatStdKeys.size > 0) {
+    const glabel = document.createElement('div');
+    glabel.className = 'group-label';
+    glabel.textContent = '已添加参数';
+    grid.appendChild(glabel);
+
+    gAddedMatStdKeys.forEach(key => {
+      const fd = gStandardMatFields.find(f => f.key === key);
+      if (!fd) return;
+      const item = document.createElement('div');
+      item.className = 'param-item';
+      item.style.cssText = 'border-left: 3px solid #27ae60; background: #f0faf4;';
+      item.innerHTML = `
+        <label style="color:#27ae60;">${fd.label}</label>
+        <select id="mat_${fd.key}" data-key="${fd.key}" onchange="markFilled(this)">
+          <option value="">-- 选择 --</option>
+        </select>
+        <button onclick="removeStdMatParam('${fd.key}')" title="移除此参数" style="background:none;border:none;color:#e74c3c;cursor:pointer;font-size:14px;padding:0 4px;">✕</button>`;
+      grid.appendChild(item);
+      const sel = item.querySelector('select');
+      gMaterialOpts.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m;
+        opt.textContent = m;
+        sel.appendChild(opt);
+      });
+    });
+  }
+}
+
+function buildSurfaceOpts() {
+  const sel = document.getElementById('表面处理');
+  gSurfaceOpts.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s;
+    opt.textContent = s;
+    sel.appendChild(opt);
+  });
+}
+
+async function loadProductTypes(loadDefaultParams = true) {
+  try {
+    const r = await fetch('/api/orders/product-types');
+    const json = await r.json();
+    if (json.code === 0 && json.data && json.data.length > 0) {
+      gProductTypes = json.data;
+      const sel = document.getElementById('productType');
+      sel.innerHTML = '<option value="">-- 选择产品类型 --</option>';
+      gProductTypes.forEach(pt => {
+        const opt = document.createElement('option');
+        opt.value = pt;
+        opt.textContent = pt;
+        sel.appendChild(opt);
+      });
+      if (loadDefaultParams && gProductTypes.includes('冷冻螺旋网')) {
+        sel.value = '冷冻螺旋网';
+        await loadParams('冷冻螺旋网');
+      }
+    }
+  } catch (e) {
+    showMsg('加载产品类型失败：' + e.message, 'error');
+  }
+}
+
+async function loadParams(productType) {
+  if (!productType) return;
+  gCurrentProductType = productType;
+  gAddedDimStdKeys.clear();
+  gAddedMatStdKeys.clear();
+
+  if (gStandardDimFields.length === 0) {
+    await loadStandardFields();
+  }
+
+  const body = { dim_fields: [], mat_fields: [], common_fields: [] };
+
+  if (gProductTypes.length > 0) {
+    try {
+      const r = await fetch(`/api/orders/product-params/${encodeURIComponent(productType)}`);
+      const json = await r.json();
+      if (json.code === 0 && json.data) {
+        const d = json.data;
+        gDimFields = d.dim_fields || [];
+        gMatFields = d.mat_fields || [];
+        gSurfaceOpts = d.surface_opts || [];
+        gMaterialOpts = d.material_opts || [];
+        if (gMatFields.length < 10 && gMatFields.length > 0) {
+          const apiKeys = new Set(gMatFields.map(f => f.key));
+          const fallback = getMatFallback(gCurrentProductType);
+          fallback.forEach(fd => { if (!apiKeys.has(fd.key)) gMatFields.push(fd); });
+        }
+        if (gDimFields.length < 10 && gDimFields.length > 0) {
+          const apiKeys = new Set(gDimFields.map(f => f.key));
+          const fallback = getDimFallback(gCurrentProductType);
+          fallback.forEach(fd => { if (!apiKeys.has(fd.key)) gDimFields.push(fd); });
+          console.log(`补充了 ${fallback.length - gDimFields.length + apiKeys.size} 个维度字段`);
+        }
+      }
+    } catch (e) {
+      console.warn('加载参数失败，使用默认模板', e);
+    }
+  }
+
+  if (gDimFields.length === 0) {
+    gDimFields = getDimFallback(productType);
+  }
+
+  if (gMatFields.length === 0) {
+    gMatFields = getMatFallback(productType);
+  }
+
+  if (gSurfaceOpts.length === 0) {
+    gSurfaceOpts = ['无处理', '镀锌', '抛光', '钝化', '喷漆', '电泳', '磷化', '其他'];
+  }
+
+  if (gMaterialOpts.length === 0) {
+    gMaterialOpts = ['304不锈钢', '316不锈钢', '316L不锈钢', '310S不锈钢', '201不锈钢', '碳钢镀锌', '铝合金', '铜合金', '钛合金', '其他'];
+  }
+
+  Object.keys(DIM_GROUPS).forEach(k => DIM_GROUPS[k] = []);
+  gDimFields.forEach(fd => {
+    const g = fd.group || '其他';
+    if (!DIM_GROUPS[g]) DIM_GROUPS[g] = [];
+    DIM_GROUPS[g].push(fd);
+  });
+
+  Object.keys(MAT_GROUPS).forEach(k => MAT_GROUPS[k] = []);
+  gMatFields.forEach(fd => {
+    const g = fd.group || '材质类';
+    if (!MAT_GROUPS[g]) MAT_GROUPS[g] = [];
+    MAT_GROUPS[g].push(fd);
+  });
+
+  buildDimGrid();
+  buildMatGrid();
+  buildSurfaceOpts();
+}
+
+function calcMaterials() {
+  const pt = document.getElementById('productType').value;
+  if (!pt) {
+    document.getElementById('materialList').innerHTML = '<div style="color:#e74c3c;font-size:13px;padding:8px 0;">请先选择产品类型</div>';
+    return;
+  }
+
+  document.getElementById('materialLoading').style.display = 'block';
+  document.getElementById('materialList').innerHTML = '';
+  document.getElementById('calcBtn').disabled = true;
+
+  const data = {
+    product_type: pt,
+    quantity: parseFloat(document.getElementById('quantity').value) || 0,
+    customer_name: document.getElementById('customer_name').value.trim(),
+    unit: document.getElementById('unit').value,
+    unit_price: parseFloat(document.getElementById('unit_price').value) || 0,
+  };
+
+  gDimFields.forEach(fd => {
+    const el = document.getElementById('dim_' + fd.key);
+    if (el && el.value.trim()) {
+      const v = parseFloat(el.value);
+      if (!isNaN(v)) data[fd.key] = v;
+    }
+  });
+  gAddedDimStdKeys.forEach(key => {
+    const el = document.getElementById('dim_' + key);
+    if (el && el.value.trim()) {
+      const v = parseFloat(el.value);
+      if (!isNaN(v)) data[key] = v;
+    }
+  });
+
+  gMatFields.forEach(fd => {
+    const el = document.getElementById('mat_' + fd.key);
+    if (el && el.value) data[fd.key] = el.value;
+  });
+  gAddedMatStdKeys.forEach(key => {
+    const el = document.getElementById('mat_' + key);
+    if (el && el.value) data[key] = el.value;
+  });
+
+  const matSel = document.getElementById('material_sel');
+  if (matSel && matSel.value) data.material = matSel.value;
+
+  document.querySelectorAll('#sec-mat select[data-key]').forEach(sel => {
+    if (sel.value) data[sel.dataset.key] = sel.value;
+  });
+
+  document.querySelectorAll('#sec-skirt select, #sec-skirt input').forEach(el => {
+    if (el.value && el.id) data[el.id] = parseFloat(el.value) || el.value;
+  });
+
+  const surfaceSel = document.getElementById('表面处理');
+  if (surfaceSel && surfaceSel.value) data.surface_treatment = surfaceSel.value;
+
+  const skirtRadios = document.querySelectorAll('input[name="hasSkirt"]');
+  skirtRadios.forEach(r => { if (r.checked) data['hasSkirt'] = r.value; });
+
+  fetch('/api/orders/preview-materials', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+  .then(r => r.json())
+  .then(json => {
+    document.getElementById('materialLoading').style.display = 'none';
+    document.getElementById('calcBtn').disabled = false;
+    if (json.code !== 0) {
+      document.getElementById('materialList').innerHTML = `<div style="color:#e74c3c;font-size:13px;padding:8px 0;">预览失败：${json.message || '未知错误'}</div>`;
+      return;
+    }
+    const mats = json.data.materials || [];
+    if (mats.length === 0) {
+      document.getElementById('materialList').innerHTML = '<div style="color:#aaa;font-size:13px;padding:8px 0;">暂无匹配物料规则，请检查材质参数是否填写<' + '/div>';
+      return;
+    }
+    let html = `<table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead>
+        <tr style="background:#f8f9fc;">
+          <th style="padding:8px 12px;text-align:left;border-bottom:2px solid #eef0f5;">物料名称</th>
+          <th style="padding:8px 12px;text-align:right;border-bottom:2px solid #eef0f5;">数量</th>
+          <th style="padding:8px 12px;text-align:right;border-bottom:2px solid #eef0f5;">规格</th>
+          <th style="padding:8px 12px;text-align:center;border-bottom:2px solid #eef0f5;">状态</th>
+          <th style="padding:8px 12px;text-align:left;border-bottom:2px solid #eef0f5;">缺失参数</th>
+        </tr>
+      </thead>
+      <tbody>`;
+    mats.forEach(m => {
+      const hasQty = m.qty_value != null && m.qty_value !== '';
+      const hasSpec = m.spec_value && m.spec_value !== 'None';
+      const missing = (m.missing_params || []).join(', ');
+      const statusColor = hasQty ? '#27ae60' : '#f39c12';
+      const statusText = hasQty ? '✓ 完整' : '⚠ 参数不全';
+      html += `<tr style="border-bottom:1px solid #f0f0f0;">
+        <td style="padding:8px 12px;">${m.material_name || '—'}</td>
+        <td style="padding:8px 12px;text-align:right;font-weight:600;">${hasQty ? m.qty_value : '—'} ${m.qty_unit || ''}</td>
+        <td style="padding:8px 12px;text-align:right;">${hasSpec ? m.spec_value + (m.spec_unit || '') : '—'}</td>
+        <td style="padding:8px 12px;text-align:center;"><span style="background:${statusColor}22;color:${statusColor};padding:2px 8px;border-radius:10px;font-size:12px;">${statusText}</span></td>
+        <td style="padding:8px 12px;font-size:12px;color:#e74c3c;">${missing || '—'}</td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    html += `<div style="margin-top:10px;padding:8px 12px;background:#f8f9fc;border-radius:4px;font-size:12px;color:#7f8c8d;">共 ${mats.length} 种物料（来自物料规则库自动计算）</div>`;
+    document.getElementById('materialList').innerHTML = html;
+  })
+  .catch(e => {
+    console.error('[物料预览] 异常:', e.message, e.stack);
+    document.getElementById('materialLoading').style.display = 'none';
+    document.getElementById('calcBtn').disabled = false;
+    document.getElementById('materialList').innerHTML = `<div style="color:#e74c3c;font-size:13px;padding:8px 0;">预览失败：${e.message}</div>`;
+  });
+}
+
+function validateForm() {
+  clearValidationErrors();
+  const errors = [];
+  const errorFields = [];
+
+  const pt = document.getElementById('productType').value;
+  if (!pt) { errors.push('请选择产品类型'); errorFields.push('productType'); }
+
+  const cn = document.getElementById('customer_name').value.trim();
+  if (!cn) { errors.push('客户名称不能为空'); errorFields.push('customer_name'); }
+
+  const qty = document.getElementById('quantity').value.trim();
+  if (!qty || isNaN(parseFloat(qty)) || parseFloat(qty) <= 0) {
+    errors.push('数量必须大于0');
+    errorFields.push('quantity');
+  }
+
+  const reqDimFields = gDimFields.filter(f => f.required);
+  reqDimFields.forEach(fd => {
+    const el = document.getElementById('dim_' + fd.key);
+    if (el) {
+      const val = el.value.trim();
+      if (!val) { errors.push(`${fd.label}不能为空`); errorFields.push('dim_' + fd.key); }
+    }
+  });
+
+  gAddedDimStdKeys.forEach(key => {
+    const fd = gStandardDimFields.find(f => f.key === key);
+    if (fd && fd.required) {
+      const el = document.getElementById('dim_' + key);
+      if (el) {
+        const val = el.value.trim();
+        if (!val) { errors.push(`${fd.label}不能为空`); errorFields.push('dim_' + key); }
+      }
+    }
+  });
+
+  errorFields.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.classList.add('error-field');
+      el.style.borderColor = '#e74c3c';
+    }
+  });
+
+  return errors;
+}
+
+function clearValidationErrors() {
+   document.querySelectorAll('.error-field').forEach(el => {
+     el.classList.remove('error-field');
+     el.style.borderColor = '';
+   });
+ }
+
+ function filterDimParams(query) {
+   const q = query.trim().toLowerCase();
+   const grid = document.getElementById('dimGrid');
+   const groups = grid.querySelectorAll('.group-label');
+   const items = grid.querySelectorAll('.param-item');
+   if (!q) {
+     groups.forEach(g => g.style.display = '');
+     items.forEach(i => i.style.display = '');
+     return;
+   }
+   groups.forEach(g => g.style.display = 'none');
+   items.forEach(item => {
+     const label = item.querySelector('label');
+     if (!label) { item.style.display = 'none'; return; }
+     const text = label.textContent.toLowerCase();
+     const id = item.querySelector('input, select');
+    const key = id ? (id.id || '').toLowerCase() : '';
+     item.style.display = (text.includes(q) || key.includes(q)) ? '' : 'none';
+   });
+ }
+
+ function filterMatParams(query) {
+   const q = query.trim().toLowerCase();
+   const grid = document.getElementById('matGrid');
+   const groups = grid.querySelectorAll('.group-label');
+   const items = grid.querySelectorAll('.param-item');
+   if (!q) {
+     groups.forEach(g => g.style.display = '');
+     items.forEach(i => i.style.display = '');
+     return;
+   }
+   groups.forEach(g => g.style.display = 'none');
+   items.forEach(item => {
+     const label = item.querySelector('label');
+     if (!label) { item.style.display = 'none'; return; }
+     const text = label.textContent.toLowerCase();
+     const id = item.querySelector('input, select');
+     const key = id ? (id.id || '').toLowerCase() : '';
+     item.style.display = (text.includes(q) || key.includes(q)) ? '' : 'none';
+   });
+ }
+
+async function submitOrder() {
+  const errors = validateForm();
+  if (errors.length > 0) {
+    showMsg(errors[0], 'error');
+    const firstErr = document.querySelector('.error-field');
+    if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+  showLoading(true);
+  const data = buildSubmitData();
+  try {
+    const r = await fetch('/api/orders/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const json = await r.json();
+    if (json.code === 0) {
+      showMsg(`订单 ${json.data.order_no} 创建成功！`, 'success');
+      setTimeout(() => { window.location.href = '/orders'; }, 1500);
+    } else {
+      showMsg(json.message || '创建失败', 'error');
+    }
+  } catch (e) {
+    showMsg('提交失败：' + e.message, 'error');
+  } finally {
+    showLoading(false);
+  }
+}
+
+document.getElementById('productType').addEventListener('change', async function() {
+  await loadParams(this.value);
+});
+
+if (requireAuth()) {
+  initPage();
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "version": "1.0",
+  "processes": {
+    "编织": {"default_qty": 1000, "unit": "米", "requires_material": true},
+    "穿轴": {"default_qty": 500, "unit": "根", "requires_material": true},
+    "焊接": {"default_qty": 200, "unit": "个", "requires_material": false},
+    "打磨": {"default_qty": 500, "unit": "米", "requires_material": false},
+    "表面处理": {"default_qty": 1000, "unit": "米", "requires_material": false}
+  }
+}

@@ -1,0 +1,27 @@
+# Prometheus 告警规则
+groups:
+  - name: steelbelt
+    rules:
+      - alert: OrderBacklog
+        expr: gateway_requests_total > 50
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "订单积压告警"
+          description: "当前积压订单 {{ $value }} 单，超过阈值50"
+
+      - alert: DBConnectionPoolHigh
+        expr: mysql_global_status_threads_connected / mysql_global_variables_max_connections > 0.8
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: "数据库连接池告警"
+          description: "连接池使用率 {{ $value }}%，超过80%"
+
+      - alert: CircuitBreakerOpen
+        expr: circuit_breaker_state{state="open"} == 1
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: "熔断器打开"
+          description: "{{ $labels.name }} 熔断器已打开超过5分钟"

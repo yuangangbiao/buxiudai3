@@ -1,0 +1,70 @@
+> import logging
+> from typing import Dict, List, Optional, Tuple, Union
+  
+- logger = logging.getLogger(__name__)
+  
+  
+> def find_by_id(
+>     table: str,
+>     id_value: Union[int, str],
+>     id_column: str = "id",
+>     columns: str = "*",
+> ) -> Tuple[str, tuple]:
+>     sql = f"SELECT {columns} FROM {table} WHERE {id_column} = %s"
+>     return sql, (id_value,)
+  
+  
+> def find_by_column(
+>     table: str,
+>     column: str,
+>     value,
+>     columns: str = "*",
+> ) -> Tuple[str, tuple]:
+>     sql = f"SELECT {columns} FROM {table} WHERE {column} = %s"
+>     return sql, (value,)
+  
+  
+> def find_all_by_column(
+>     table: str,
+>     column: str,
+>     value,
+>     columns: str = "*",
+>     order_by: Optional[str] = None,
+>     extra_conditions: str = "",
+> ) -> Tuple[str, tuple]:
+>     sql = f"SELECT {columns} FROM {table} WHERE {column} = %s"
+>     if extra_conditions:
+>         sql += f" AND {extra_conditions}"
+>     if order_by:
+>         sql += f" ORDER BY {order_by}"
+>     return sql, (value,)
+  
+  
+> def aggregate(
+>     table: str,
+>     expressions: str,
+>     where_column: Optional[str] = None,
+>     where_value=None,
+>     extra_conditions: str = "",
+> ) -> Tuple[str, tuple]:
+!     sql = f"SELECT {expressions} FROM {table}"
+!     params: list = []
+!     conditions: list = []
+!     if where_column is not None:
+!         conditions.append(f"{where_column} = %s")
+!         params.append(where_value)
+!     if extra_conditions:
+!         conditions.append(extra_conditions)
+!     if conditions:
+!         sql += " WHERE " + " AND ".join(conditions)
+!     return sql, tuple(params)
+  
+  
+> def upsert_select(
+>     table: str,
+>     key_column: str,
+>     key_value: str,
+>     columns: str = "id",
+> ) -> Tuple[str, tuple]:
+!     sql = f"SELECT {columns} FROM {table} WHERE {key_column} = %s"
+!     return sql, (key_value,)

@@ -1,0 +1,21 @@
+{
+  "backup_time": "20260620_231843",
+  "table": "process_sub_steps",
+  "total_records": 28027,
+  "condition": [
+    "operator LIKE 'stress-%%'",
+    "operator LIKE '8008-stress-%%'",
+    "operator LIKE '5008-stress-%%'",
+    "operator LIKE '5srv-%%'",
+    "operator LIKE 'dup-test-%%'",
+    "operator LIKE '8008-test-%%'",
+    "operator LIKE 'E2E%%'",
+    "operator LIKE '4服务%%'",
+    "operator LIKE '5008-100-%%'",
+    "operator LIKE '跨服务%%'",
+    "operator = '小明'",
+    "operator = 'X-2'",
+    "operator = '' OR operator IS NULL"
+  ],
+  "file": "d:\\yuan\\不锈钢网带跟单3.0\\data\\backup\\process_sub_steps_test_data_20260620_231843.csv"
+}

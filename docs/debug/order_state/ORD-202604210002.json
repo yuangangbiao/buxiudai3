@@ -1,0 +1,273 @@
+{
+  "code": 0,
+  "data": {
+    "flow_production": [],
+    "flow_steps": [],
+    "material_tasks": [],
+    "order_no": "ORD-202604210002",
+    "other_tasks": [
+      {
+        "created_at": "2026-06-10T15:10:12",
+        "data_type": "process_task",
+        "id": "PKG-ABD5A2A6A9CD",
+        "operator_name": "",
+        "planned_qty": 0,
+        "related_process": "",
+        "status": "pending",
+        "target_operator": "",
+        "title": "ORD-202604210002 - 焊接输送带(P13)"
+      },
+      {
+        "created_at": "2026-06-10T15:10:12",
+        "data_type": "process_task",
+        "id": "PKG-AA775E01ED97",
+        "operator_name": "",
+        "planned_qty": 0,
+        "related_process": "",
+        "status": "pending",
+        "target_operator": "小明",
+        "title": "ORD-202604210002 - 输送带组装穿杆(P09)"
+      },
+      {
+        "created_at": "2026-06-10T15:10:12",
+        "data_type": "process_task",
+        "id": "PKG-AF194C64A7C5",
+        "operator_name": "",
+        "planned_qty": 50,
+        "related_process": "",
+        "status": "completed",
+        "target_operator": "苑岗彪",
+        "title": "ORD-202604210002 - 编制右旋(P07)"
+      },
+      {
+        "created_at": "2026-06-10T15:10:12",
+        "data_type": "process_task",
+        "id": "PKG-6F0FC4527293",
+        "operator_name": "",
+        "planned_qty": 0,
+        "related_process": "",
+        "status": "pending",
+        "target_operator": "",
+        "title": "ORD-202604210002 - 安装链条(P10)"
+      },
+      {
+        "created_at": "2026-06-10T15:10:12",
+        "data_type": "process_task",
+        "id": "PKG-5E050A39EBEA",
+        "operator_name": "",
+        "planned_qty": 100,
+        "related_process": "",
+        "status": "completed",
+        "target_operator": "苑岗彪",
+        "title": "ORD-202604210002 - 编制左旋(P06)"
+      },
+      {
+        "created_at": "2026-06-10T15:10:12",
+        "data_type": "process_task",
+        "id": "PKG-5B0118D304F3",
+        "operator_name": "",
+        "planned_qty": 0,
+        "related_process": "",
+        "status": "pending",
+        "target_operator": "",
+        "title": "ORD-202604210002 - 表面处理(P14)"
+      },
+      {
+        "created_at": "2026-06-10T15:10:12",
+        "data_type": "process_task",
+        "id": "PKG-4E53869E2BB8",
+        "operator_name": "",
+        "planned_qty": 0,
+        "related_process": "",
+        "status": "pending",
+        "target_operator": "",
+        "title": "ORD-202604210002 - 整形校直(P12)"
+      },
+      {
+        "created_at": "2026-06-10T15:10:12",
+        "data_type": "process_task",
+        "id": "PKG-1F63F786D1EE",
+        "operator_name": "",
+        "planned_qty": 132,
+        "related_process": "",
+        "status": "completed",
+        "target_operator": "苑岗彪",
+        "title": "ORD-202604210002 - 原材料准备(P01)"
+      },
+      {
+        "created_at": "2026-06-10T15:10:12",
+        "data_type": "process_task",
+        "id": "PKG-2F6B74A48D7B",
+        "operator_name": "",
+        "planned_qty": 0,
+        "related_process": "",
+        "status": "pending",
+        "target_operator": "",
+        "title": "ORD-202604210002 - 质量检验(P15)"
+      },
+      {
+        "created_at": "2026-06-10T15:10:12",
+        "data_type": "process_task",
+        "id": "PKG-30A0BA652338",
+        "operator_name": "",
+        "planned_qty": 0,
+        "related_process": "",
+        "status": "pending",
+        "target_operator": "",
+        "title": "ORD-202604210002 - 包装入库(P16)"
+      }
+    ],
+    "outsource_tasks": [],
+    "process": {
+      "completed_at": null,
+      "completed_by": "",
+      "completed_task_count": 0,
+      "content": {},
+      "created_at": "2026-05-31T23:04:47",
+      "created_by": "",
+      "current_step": 2,
+      "customer_group": "",
+      "customer_name": "",
+      "data_locked": 0,
+      "delivery_date": "2026-04-24",
+      "flow_type": "production",
+      "id": "63f6880e",
+      "last_reverted_at": "2026-06-08T18:33:58",
+      "order_no": "ORD-202604210002",
+      "plan_end": "2026-07-03",
+      "plan_start": "2026-05-31",
+      "priority": "high",
+      "process_type": "production",
+      "prod_id": 50,
+      "product_name": "冷冻螺旋网",
+      "qc_required": 0,
+      "qc_trigger_reason": "",
+      "quantity": 100.0,
+      "source": "desktop_schedule",
+      "status": "in_production",
+      "steps": [
+        {
+          "name": "工单发布",
+          "role": "计划部",
+          "status_key": "published"
+        },
+        {
+          "name": "排产制定",
+          "role": "生产部",
+          "status_key": "scheduled"
+        },
+        {
+          "name": "排产确认",
+          "role": "计划部",
+          "status_key": "confirmed"
+        },
+        {
+          "name": "生产执行",
+          "role": "生产部",
+          "status_key": "in_production"
+        },
+        {
+          "name": "质检审核",
+          "parallel": true,
+          "role": "质检部",
+          "status_key": "qc_passed"
+        },
+        {
+          "name": "报工完成",
+          "role": "生产部",
+          "status_key": "reported"
+        },
+        {
+          "name": "完工入库",
+          "role": "仓库",
+          "status_key": "completed"
+        },
+        {
+          "name": "发货",
+          "role": "仓库",
+          "status_key": "shipped"
+        }
+      ],
+      "task_count": 0,
+      "template_id": null,
+      "unit": "米",
+      "updated_at": "2026-06-08T18:33:58",
+      "work_order_no": ""
+    },
+    "process_tasks": [],
+    "product_name": "",
+    "quality_tasks": [
+      {
+        "created_at": "2026-06-02T20:03:07",
+        "data_type": "quality_task",
+        "id": "QA-ORD-202604210002-B3820C",
+        "operator_name": "",
+        "planned_qty": "",
+        "related_process": "",
+        "status": "pending",
+        "target_operator": "YuanGangBiao",
+        "title": "质检任务: 首检 - ORD-202604210002"
+      },
+      {
+        "created_at": "2026-06-02T20:02:14",
+        "data_type": "quality_task",
+        "id": "QA-ORD-202604210002-78327E",
+        "operator_name": "",
+        "planned_qty": "",
+        "related_process": "",
+        "status": "pending",
+        "target_operator": "YuanGangBiao",
+        "title": "质检任务: 首检 - ORD-202604210002"
+      }
+    ],
+    "quantity": 0,
+    "repair_tasks": [],
+    "stats": {
+      "completed_tasks": 0,
+      "total_tasks": 12
+    },
+    "status": "pending",
+    "steps": [
+      {
+        "name": "工单发布",
+        "role": "计划部",
+        "status": "completed"
+      },
+      {
+        "name": "排产制定",
+        "role": "生产部",
+        "status": "completed"
+      },
+      {
+        "name": "排产确认",
+        "role": "计划部",
+        "status": "active"
+      },
+      {
+        "name": "生产执行",
+        "role": "生产部",
+        "status": "pending"
+      },
+      {
+        "name": "质检审核",
+        "role": "质检部",
+        "status": "pending"
+      },
+      {
+        "name": "报工完成",
+        "role": "生产部",
+        "status": "pending"
+      },
+      {
+        "name": "完工入库",
+        "role": "仓库",
+        "status": "pending"
+      },
+      {
+        "name": "发货",
+        "role": "仓库",
+        "status": "pending"
+      }
+    ]
+  }
+}

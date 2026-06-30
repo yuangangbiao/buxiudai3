@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>发货管理 - 不锈钢网带跟单系统</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Microsoft YaHei", sans-serif; background: #f5f6fa; color: #2c3e50; }
+  .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .navbar h1 { font-size: 18px; }
+  .toolbar { background: #fff; padding: 14px 24px; display: flex; gap: 10px; align-items: center; border-bottom: 1px solid #e1e4e8; flex-wrap: wrap; }
+  .toolbar select, .toolbar input { padding: 7px 12px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 13px; }
+  .toolbar select:focus, .toolbar input:focus { outline: none; border-color: #667eea; }
+  .btn { padding: 7px 14px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 5px; }
+  .btn-primary { background: #667eea; color: #fff; }
+  .btn-primary:hover { background: #5569d6; }
+  .btn-success { background: #27ae60; color: #fff; }
+  .btn-success:hover { background: #219653; }
+  .btn-warning { background: #e67e22; color: #fff; }
+  .btn-warning:hover { background: #d35400; }
+  .btn-danger { background: #e74c3c; color: #fff; }
+  .btn-danger:hover { background: #c0392b; }
+  .btn-secondary { background: #95a5a6; color: #fff; }
+  .btn-secondary:hover { background: #7f8c8d; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .summary { padding: 10px 24px; color: #888; font-size: 13px; }
+  table { width: 100%; border-collapse: collapse; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  th { background: #f8f9fa; padding: 10px 14px; text-align: left; font-weight: 500; color: #555; border-bottom: 2px solid #e1e4e8; font-size: 13px; white-space: nowrap; cursor: pointer; user-select: none; }
+  th:hover { background: #f0f2f8; }
+  td { padding: 10px 14px; border-bottom: 1px solid #f0f0f0; font-size: 13px; vertical-align: middle; }
+  tr:hover { background: #f8f9fa; cursor: pointer; }
+  tr.selected { background: #eef2ff; }
+  .status-tag { padding: 2px 8px; border-radius: 10px; font-size: 11px; color: #fff; white-space: nowrap; }
+  .status-待发货 { background: #95a5a6; }
+  .status-已发货 { background: #3498db; }
+  .status-在途中 { background: #e67e22; }
+  .status-已签收 { background: #27ae60; }
+  .status-异常 { background: #e74c3c; }
+  .table-wrap { background: #fff; margin: 12px 24px; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .col-check { width: 30px; text-align: center; }
+  .empty { text-align: center; padding: 60px 20px; color: #95a5a6; font-size: 14px; }
+  .msg-box { padding: 12px 24px; margin: 12px 24px; border-radius: 4px; font-size: 13px; display: none; }
+  .msg-error { background: #fdecea; border: 1px solid #f5c6cb; color: #c0392b; }
+  .msg-success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+  .msg-info { background: #e8f4fd; border: 1px solid #b8daff; color: #0c5460; }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; align-items: center; justify-content: center; }
+  .modal-overlay.show { display: flex; }
+  .modal-box { background: #fff; border-radius: 8px; padding: 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); max-height: 90vh; overflow-y: auto; }
+  .modal-box.modal-wide { min-width: 500px; max-width: 650px; }
+  .modal-box.modal-xl { min-width: 700px; max-width: 900px; }
+  .modal-title { font-size: 15px; font-weight: 600; margin-bottom: 16px; color: #2c3e50; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+  .modal-cancel { padding: 8px 16px; border: 1px solid #dcdfe6; background: #fff; border-radius: 4px; cursor: pointer; font-size: 13px; }
+  .modal-cancel:hover { background: #f5f5f5; }
+  .modal-confirm { padding: 8px 16px; border: none; background: #667eea; color: #fff; border-radius: 4px; cursor: pointer; font-size: 13px; }
+  .modal-confirm:hover { background: #5569d6; }
+  .modal-confirm:disabled { opacity: 0.5; cursor: not-allowed; }
+  .form-group { margin-bottom: 14px; }
+  .form-label { display: block; font-size: 13px; color: #555; margin-bottom: 5px; font-weight: 500; }
+  .form-control { width: 100%; padding: 8px 12px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 13px; }
+  .form-control:focus { outline: none; border-color: #667eea; }
+  .form-control[readonly] { background: #f5f7fa; color: #999; }
+  .form-row { display: flex; gap: 12px; }
+  .form-row .form-group { flex: 1; }
+  .detail-section { background: #f8f9fa; border-radius: 6px; padding: 14px 16px; margin-bottom: 12px; }
+  .detail-section h4 { font-size: 13px; color: #667eea; margin-bottom: 8px; font-weight: 600; }
+  .detail-row { display: flex; padding: 4px 0; font-size: 13px; }
+  .detail-label { color: #888; min-width: 80px; }
+  .detail-value { color: #2c3e50; font-weight: 500; }
+  .detail-highlight { color: #e67e22; font-weight: 600; }
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .sort-arrow { font-size: 10px; color: #667eea; }
+  .context-menu { position: fixed; background: #fff; border: 1px solid #e1e4e8; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); z-index: 2000; min-width: 160px; overflow: hidden; display: none; }
+  .context-menu.show { display: block; }
+  .context-item { padding: 9px 16px; font-size: 13px; cursor: pointer; color: #2c3e50; }
+  .context-item:hover { background: #f0f4ff; color: #667eea; }
+  .context-item.danger { color: #e74c3c; }
+  .context-item.danger:hover { background: #fdecea; }
+  .context-sep { border-top: 1px solid #f0f0f0; margin: 4px 0; }
+  .tracking-item { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; display: flex; gap: 12px; }
+  .tracking-item:last-child { border-bottom: none; }
+  .tracking-time { min-width: 140px; color: #888; font-size: 12px; }
+  .tracking-content { flex: 1; color: #2c3e50; font-size: 13px; }
+  .tracking-status { color: #27ae60; font-weight: 500; }
+  .tracking-current { color: #667eea; font-weight: 600; }
+  .tab-bar { display: flex; gap: 4px; border-bottom: 2px solid #e1e4e8; margin-bottom: 16px; }
+  .tab-item { padding: 8px 20px; cursor: pointer; font-size: 13px; color: #888; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+  .tab-item:hover { color: #667eea; }
+  .tab-item.active { color: #667eea; border-bottom-color: #667eea; font-weight: 500; }
+  .company-item { display: flex; align-items: center; padding: 10px 12px; border-bottom: 1px solid #f0f0f0; }
+  .company-item:hover { background: #f8f9fa; }
+  .company-name { flex: 1; font-weight: 500; }
+  .company-code { color: #888; font-size: 12px; margin-left: 12px; }
+  .company-actions { display: flex; gap: 8px; }
+  .batch-toolbar {
+    background: #fff3e0; padding: 8px 16px; display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid #ffcc80; margin: 0 24px 0; border-radius: 4px;
+  }
+  .batch-toolbar .sel-info { font-size: 13px; color: #e65100; font-weight: 500; }
+</style>
+</head>
+<body>
+<div id="appNav"></div>
+<script src="/static/js/shared.js"></script>
+<script>renderNav('shipment_admin', '🚚 发货管理');</script>
+
+<div class="toolbar">
+  <select id="statusFilter" onchange="loadShipments()">
+    <option value="">全部状态</option>
+    <option value="待发货">待发货</option>
+    <option value="已发货">已发货</option>
+    <option value="在途中">在途中</option>
+    <option value="已签收">已签收</option>
+  </select>
+  <select id="logisticsFilter" onchange="loadShipments()">
+    <option value="">全部物流</option>
+  </select>
+  <input type="text" id="keywordInput" placeholder="🔍 发货单号 / 订单号 / 收件人 / 运单号..." style="min-width:240px;" onkeydown="if(event.key==='Enter')loadShipments()">
+  <button class="btn btn-primary" onclick="loadShipments()">🔄 刷新</button>
+  <button class="btn btn-success" onclick="openNewShipment()">➕ 新建发货</button>
+  <button class="btn btn-secondary" onclick="openLogisticsCompany()">🏢 物流公司</button>
+  <button class="btn btn-secondary" onclick="openFinishedGoods()">📦 成品库</button>
+  <button class="btn btn-secondary" onclick="logout()">退出</button>
+</div>
+
+<div id="msgBox" class="msg-box" style="display:none;"></div>
+<div id="batchToolbar" class="batch-toolbar" style="display:none;">
+  <span class="sel-info">已选择 <b id="shipSelCount">0</b> 项</span>
+  <button class="btn btn-danger btn-sm" onclick="batchDeleteShipments()">🗑️ 批量删除</button>
+  <button class="btn btn-secondary btn-sm" onclick="cancelBatchShip()">取消选择</button>
+</div>
+<div class="summary" id="summary">加载中...</div>
+
+<div class="table-wrap">
+  <table>
+    <thead id="tableHead"></thead>
+    <tbody id="shipmentsTbody"><tr><td colspan="10" class="empty">加载中...</td></tr></tbody>
+  </table>
+</div>
+
+<div id="contextMenu" class="context-menu">
+  <div class="context-item" onclick="ctxViewDetail()">🔍 查看详情</div>
+  <div class="context-item" onclick="ctxEditShipment()">✏️ 编辑信息</div>
+  <div class="context-item" onclick="ctxViewTracking()">📍 查看轨迹</div>
+  <div class="context-sep"></div>
+  <div class="context-item" onclick="ctxChangeStatus('已发货')">🚚 标记发货</div>
+  <div class="context-item" onclick="ctxChangeStatus('已签收')">✅ 标记签收</div>
+  <div class="context-sep"></div>
+  <div class="context-item danger" onclick="ctxDeleteShipment()">🗑 删除记录</div>
+</div>
+
+<!-- 新建发货单：选择订单 -->
+<div class="modal-overlay" id="selectOrderModal">
+  <div class="modal-box modal-xl">
+    <div class="modal-title">📋 选择订单（可发货）</div>
+    <div style="margin-bottom:12px;color:#888;font-size:13px;">请选择要发货的订单</div>
+    <input type="text" id="orderSearchInput" placeholder="🔍 搜索订单号 / 客户..." style="width:100%;padding:8px 12px;border:1px solid #dcdfe6;border-radius:4px;font-size:13px;margin-bottom:12px;" oninput="filterOrderList()">
+    <div style="max-height:400px;overflow-y:auto;border:1px solid #e1e4e8;border-radius:4px;">
+      <table style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr style="background:#f8f9fa;">
+            <th style="padding:8px 12px;text-align:left;font-size:12px;color:#555;">订单号</th>
+            <th style="padding:8px 12px;text-align:left;font-size:12px;color:#555;">客户</th>
+            <th style="padding:8px 12px;text-align:left;font-size:12px;color:#555;">产品类型</th>
+            <th style="padding:8px 12px;text-align:center;font-size:12px;color:#555;">数量</th>
+            <th style="padding:8px 12px;text-align:center;font-size:12px;color:#555;">金额</th>
+            <th style="padding:8px 12px;text-align:center;font-size:12px;color:#555;">交期</th>
+          </tr>
+        </thead>
+        <tbody id="orderListTbody"><tr><td colspan="6" style="padding:20px;text-align:center;color:#888;">加载中...</td></tr></tbody>
+      </table>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('selectOrderModal')">取消</button>
+      <button class="modal-confirm" id="selectOrderConfirmBtn" onclick="confirmSelectOrder()" disabled>确认选择</button>
+    </div>
+  </div>
+</div>
+
+<!-- 新建/编辑发货表单 -->
+<div class="modal-overlay" id="shipmentFormModal">
+  <div class="modal-box modal-wide">
+    <div class="modal-title" id="shipmentFormTitle">➕ 新建发货单</div>
+    <div id="shipmentFormContent"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('shipmentFormModal')">取消</button>
+      <button class="modal-confirm" id="shipmentFormBtn" onclick="submitShipmentForm()">确认创建</button>
+    </div>
+  </div>
+</div>
+
+<!-- 发货单详情 -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal-box modal-xl">
+    <div class="modal-title" id="detailTitle">📋 发货单详情</div>
+    <div id="detailContent" style="max-height:70vh;overflow-y:auto;"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('detailModal')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- 物流轨迹 -->
+<div class="modal-overlay" id="trackingModal">
+  <div class="modal-box modal-xl">
+    <div class="modal-title" id="trackingTitle">📍 物流轨迹</div>
+    <div id="trackingContent" style="max-height:60vh;overflow-y:auto;"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('trackingModal')">关闭</button>
+      <button class="btn btn-primary" onclick="refreshTracking()">🔄 刷新轨迹</button>
+    </div>
+  </div>
+</div>
+
+<!-- 物流公司管理 -->
+<div class="modal-overlay" id="logisticsModal">
+  <div class="modal-box modal-wide">
+    <div class="modal-title">🏢 物流公司管理</div>
+    <div class="tab-bar">
+      <div class="tab-item active" onclick="switchLogisticsTab('list')">公司列表</div>
+      <div class="tab-item" onclick="switchLogisticsTab('add')">添加公司</div>
+    </div>
+    <div id="logisticsListPanel">
+      <div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="color:#888;font-size:13px;">共 <strong id="companyCount">0</strong> 家物流公司</span>
+        <button class="btn btn-primary" style="padding:5px 12px;font-size:12px;" onclick="switchLogisticsTab('add')">➕ 添加</button>
+      </div>
+      <div id="companyList" style="border:1px solid #e1e4e8;border-radius:4px;"></div>
+    </div>
+    <div id="logisticsAddPanel" style="display:none;">
+      <div class="form-group">
+        <label class="form-label">公司名称 *</label>
+        <input class="form-control" id="lcName" placeholder="如：顺丰速运">
+      </div>
+      <div class="form-group">
+        <label class="form-label">公司代码 *</label>
+        <input class="form-control" id="lcCode" placeholder="如：SF">
+      </div>
+      <div class="form-group">
+        <label class="form-label">联系电话</label>
+        <input class="form-control" id="lcPhone" placeholder="可选">
+      </div>
+      <div class="form-group">
+        <label class="form-label">备注</label>
+        <input class="form-control" id="lcRemark" placeholder="可选">
+      </div>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="switchLogisticsTab('list')">返回列表</button>
+        <button class="modal-confirm" id="lcSaveBtn" onclick="saveLogisticsCompany()">保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 成品库列表 -->
+<div class="modal-overlay" id="finishedGoodsModal">
+  <div class="modal-box modal-xl">
+    <div class="modal-title">📦 成品库（已入库待发货）</div>
+    <div style="margin-bottom:12px;color:#888;font-size:13px;">以下订单已完成生产，等待发货</div>
+    <div id="finishedGoodsContent" style="max-height:60vh;overflow-y:auto;"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('finishedGoodsModal')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let shipmentsData = [];
+let ordersData = [];
+let logisticsCompanies = [];
+let currentSort = { col: 'shipment_no', reverse: true };
+let selectedShipment = null;
+let selectedOrder = null;
+let editingShipmentId = null;
+let editingCompanyId = null;
+let currentTrackingId = null;
+
+const COLUMNS = [
+  { key: 'check', label: '', cls: 'col-check', noSort: true },
+  { key: 'shipment_no', label: '发货单号', cls: 'col-wo' },
+  { key: 'order_no', label: '订单号', cls: 'col-order' },
+  { key: 'receiver_name', label: '收件人', cls: 'col-customer' },
+  { key: 'receiver_phone', label: '联系电话', cls: 'col-phone' },
+  { key: 'logistics_company', label: '物流公司', cls: 'col-logistics' },
+  { key: 'tracking_no', label: '运单号', cls: 'col-tracking' },
+  { key: 'shipped_at', label: '发货时间', cls: 'col-date' },
+  { key: 'status', label: '状态', cls: 'col-status', fmt: statusTag },
+  { key: 'actions', label: '操作', cls: 'col-actions', noSort: true },
+];
+
+function statusTag(v) {
+  if (!v) return '-';
+  return `<span class="status-tag status-${escapeHtml(v)}">${escapeHtml(v)}</span>`;
+}
+
+function actionBtns(row) {
+  let html = `<button class="btn btn-primary" style="padding:4px 10px;font-size:12px;" onclick="ctxEditShipment()">编辑</button>`;
+  html += ` <button class="btn btn-secondary" style="padding:4px 10px;font-size:12px;" onclick="ctxViewTracking()">轨迹</button>`;
+  return html;
+}
+
+function renderTableHead() {
+  const th = document.getElementById('tableHead');
+  th.innerHTML = `<tr>${COLUMNS.map(c => {
+    const arrow = currentSort.col === c.key ? (currentSort.reverse ? ' ▼' : ' ▲') : '';
+    const cls = c.cls || '';
+    return `<th class="${cls}" onclick="${c.noSort ? '' : `sortBy('${c.key}')`}">${escapeHtml(c.label)}${arrow}</th>`;
+  }).join('')}</tr>`;
+}
+
+function sortBy(col) {
+  if (currentSort.col === col) {
+    currentSort.reverse = !currentSort.reverse;
+  } else {
+    currentSort.col = col;
+    currentSort.reverse = false;
+  }
+  renderTable();
+}
+
+function renderTable() {
+  renderTableHead();
+  const tbody = document.getElementById('shipmentsTbody');
+  if (!shipmentsData.length) {
+    tbody.innerHTML = '<tr><td colspan="9" class="empty">暂无发货记录</td></tr>';
+    return;
+  }
+  const kw = document.getElementById('keywordInput').value.trim().toLowerCase();
+  const statusFilter = document.getElementById('statusFilter').value;
+  const logisticsFilter = document.getElementById('logisticsFilter').value;
+  let data = shipmentsData;
+  if (kw) {
+    data = data.filter(s =>
+      (s.shipment_no || '').toLowerCase().includes(kw) ||
+      (s.order_no || '').toLowerCase().includes(kw) ||
+      (s.receiver_name || '').toLowerCase().includes(kw) ||
+      (s.tracking_no || '').toLowerCase().includes(kw) ||
+      (s.receiver_address || '').toLowerCase().includes(kw)
+    );
+  }
+  if (statusFilter) {
+    data = data.filter(s => s.status === statusFilter);
+  }
+  if (logisticsFilter) {
+    data = data.filter(s => s.logistics_company === logisticsFilter);
+  }
+  tbody.innerHTML = data.map(s => {
+    const vals = COLUMNS.map(c => {
+      if (c.key === 'check') return `<input type="checkbox" class="ship-check" value="${s.id}" onchange="updateShipBatchUI()">`;
+      if (c.key === 'actions') return actionBtns(s);
+      if (c.key === 'status') return c.fmt ? c.fmt(s.status) : escapeHtml(s.status || '-');
+      return escapeHtml(s[c.key] || '-');
+    });
+    return `<tr data-id="${s.id}" onclick="onRowClick(event,${s.id})" oncontextmenu="onRightClick(event,${s.id})">${vals.map(v => `<td>${v}</td>`).join('')}</tr>`;
+  }).join('');
+  document.getElementById('summary').textContent = `共 ${data.length} 条发货记录`;
+}
+
+function onRowClick(e, id) {
+  if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
+  document.querySelectorAll('tr.selected').forEach(r => r.classList.remove('selected'));
+  const row = document.querySelector(`tr[data-id="${id}"]`);
+  if (row) row.classList.add('selected');
+  selectedShipment = shipmentsData.find(s => s.id === id);
+}
+
+function onRightClick(e, id) {
+  e.preventDefault();
+  selectedShipment = shipmentsData.find(s => s.id === id);
+  if (!selectedShipment) return;
+  const menu = document.getElementById('contextMenu');
+  menu.style.left = Math.min(e.clientX, window.innerWidth - 170) + 'px';
+  menu.style.top = Math.min(e.clientY, window.innerHeight - 250) + 'px';
+  menu.classList.add('show');
+}
+
+document.addEventListener('click', () => {
+  document.getElementById('contextMenu').classList.remove('show');
+});
+
+function ctxViewDetail() { if (selectedShipment) viewDetail(selectedShipment); }
+function ctxEditShipment() { if (selectedShipment) openEditShipment(selectedShipment); }
+function ctxViewTracking() { if (selectedShipment) viewTracking(selectedShipment); }
+
+async function ctxChangeStatus(newStatus) {
+  if (!selectedShipment) return;
+  try {
+    const [data, code] = await apiFetchJSON(`/api/shipment/${selectedShipment.id}/status`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus })
+    });
+    if (code === 200 && data.code === 0) {
+      showMsg(`状态已更新为「${newStatus}」`, 'success');
+      loadShipments();
+    } else {
+      showMsg(data.message || '状态更新失败', 'error');
+    }
+  } catch (e) {
+    showMsg('状态更新失败: ' + e.message, 'error');
+  }
+}
+
+async function ctxDeleteShipment() {
+  if (!selectedShipment) return;
+  if (!confirm(`确认删除发货单「${selectedShipment.shipment_no}」？`)) return;
+  try {
+    const [data, code] = await apiFetchJSON(`/api/shipment/${selectedShipment.id}`, {
+      method: 'DELETE'
+    });
+    if (code === 200 && data.code === 0) {
+      showMsg('删除成功', 'success');
+      loadShipments();
+    } else {
+      showMsg(data.message || '删除失败', 'error');
+    }
+  } catch (e) {
+    showMsg('删除失败: ' + e.message, 'error');
+  }
+}
+
+async function loadShipments() {
+  try {
+    const [data, code] = await apiFetchJSON('/api/shipment/admin-list');
+    if (code === 200 && data.code === 0) {
+      shipmentsData = data.data || [];
+      renderTable();
+      updateLogisticsFilter();
+    } else {
+      showMsg(data.message || '加载失败', 'error');
+    }
+  } catch (e) {
+    showMsg('网络错误: ' + e.message, 'error');
+  }
+}
+
+async function loadLogisticsCompanies() {
+  try {
+    const [data, code] = await apiFetchJSON('/api/shipment/company/list');
+    if (code === 200 && data.code === 0) {
+      logisticsCompanies = data.data || [];
+      updateLogisticsFilter();
+    }
+  } catch (e) {
+    console.error('加载物流公司失败', e);
+  }
+}
+
+function updateLogisticsFilter() {
+  const select = document.getElementById('logisticsFilter');
+  const current = select.value;
+  select.innerHTML = '<option value="">全部物流</option>';
+  logisticsCompanies.forEach(c => {
+    select.innerHTML += `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`;
+  });
+  select.value = current;
+}
+
+async function apiFetchJSON(url, options = {}) {
+  const r = await apiFetch(url, options);
+  if (!r) return [null, 0];
+  const d = await r.json();
+  return [d, r.status];
+}
+
+function showMsg(msg, type = 'info') {
+  const box = document.getElementById('msgBox');
+  box.textContent = msg;
+  box.className = 'msg-box msg-' + type;
+  box.style.display = 'block';
+  if (box._t) clearTimeout(box._t);
+  box._t = setTimeout(() => { box.style.display = 'none'; }, 5000);
+}
+
+async function openNewShipment() {
+  try {
+    const [data, code] = await apiFetchJSON('/api/shipment/finished-goods');
+    if (code !== 200 || data.code !== 0) {
+      showMsg('加载成品库失败', 'error');
+      return;
+    }
+    ordersData = data.data || [];
+    if (!ordersData.length) {
+      showMsg('暂无可发货的成品', 'info');
+      return;
+    }
+    renderOrderList(ordersData);
+    selectedOrder = null;
+    document.getElementById('selectOrderConfirmBtn').disabled = true;
+    openModal('selectOrderModal');
+  } catch (e) {
+    showMsg('加载成品库失败: ' + e.message, 'error');
+  }
+}
+
+function renderOrderList(orders) {
+  const tbody = document.getElementById('orderListTbody');
+  if (!orders.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="padding:20px;text-align:center;color:#888;">没有可发货的订单</td></tr>';
+    return;
+  }
+  tbody.innerHTML = orders.map(o => `
+    <tr class="order-select-row" data-id="${o.id}" onclick="selectOrder(${o.id})" style="cursor:pointer;">
+      <td style="padding:8px 12px;font-size:12px;">${escapeHtml(o.order_no)}</td>
+      <td style="padding:8px 12px;font-size:12px;">${escapeHtml(o.customer_name || o.customer_group || '-')}</td>
+      <td style="padding:8px 12px;font-size:12px;">${escapeHtml(o.product_type || '-')}</td>
+      <td style="padding:8px 12px;font-size:12px;text-align:center;">${o.quantity || '-'}</td>
+      <td style="padding:8px 12px;font-size:12px;text-align:center;">${o.total_amount ? '¥' + Number(o.total_amount).toLocaleString() : '-'}</td>
+      <td style="padding:8px 12px;font-size:12px;text-align:center;">${escapeHtml(o.delivery_date || '-')}</td>
+    </tr>
+  `).join('');
+}
+
+function filterOrderList() {
+  const kw = document.getElementById('orderSearchInput').value.trim().toLowerCase();
+  if (!kw) {
+    renderOrderList(ordersData);
+    return;
+  }
+  const filtered = ordersData.filter(o =>
+    (o.order_no || '').toLowerCase().includes(kw) ||
+    (o.customer_name || '').toLowerCase().includes(kw)
+  );
+  renderOrderList(filtered);
+}
+
+function selectOrder(id) {
+  document.querySelectorAll('.order-select-row').forEach(r => r.style.background = '');
+  const row = document.querySelector(`.order-select-row[data-id="${id}"]`);
+  if (row) row.style.background = '#eef2ff';
+  selectedOrder = ordersData.find(o => o.id === id);
+  document.getElementById('selectOrderConfirmBtn').disabled = !selectedOrder;
+}
+
+async function confirmSelectOrder() {
+  if (!selectedOrder) return;
+  closeModal('selectOrderModal');
+  editingShipmentId = null;
+  document.getElementById('shipmentFormTitle').textContent = `➕ 新建发货单 — ${escapeHtml(selectedOrder.order_no)}`;
+  document.getElementById('shipmentFormContent').innerHTML = buildShipmentForm(selectedOrder, null);
+  document.getElementById('shipmentFormBtn').textContent = '确认创建';
+  openModal('shipmentFormModal');
+}
+
+function buildShipmentForm(order, existing) {
+  const logisticsOptions = logisticsCompanies.map(c =>
+    `<option value="${escapeHtml(c.name)}" ${existing && existing.logistics_company === c.name ? 'selected' : ''}>${escapeHtml(c.name)}</option>`
+  ).join('');
+  return `
+    <div class="detail-section">
+      <h4>订单信息</h4>
+      <div class="detail-row"><span class="detail-label">订单号</span><span class="detail-value">${escapeHtml(order.order_no)}</span></div>
+      <div class="detail-row"><span class="detail-label">客户</span><span class="detail-value">${escapeHtml(order.customer_name || order.customer_group || '-')}</span></div>
+      <div class="detail-row"><span class="detail-label">产品类型</span><span class="detail-value">${escapeHtml(order.product_type || '-')}</span></div>
+      <div class="detail-row"><span class="detail-label">数量</span><span class="detail-value detail-highlight">${order.quantity || '-'} ${order.unit || '米'}</span></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">收件人姓名 *</label>
+      <input class="form-control" id="sfReceiverName" value="${existing ? escapeHtml(existing.receiver_name || '') : escapeHtml(order.customer_name || '')}" placeholder="请输入收件人姓名">
+    </div>
+    <div class="form-group">
+      <label class="form-label">联系电话 *</label>
+      <input class="form-control" id="sfReceiverPhone" value="${existing ? escapeHtml(existing.receiver_phone || '') : escapeHtml(order.customer_phone || '')}" placeholder="请输入联系电话">
+    </div>
+    <div class="form-group">
+      <label class="form-label">收件地址 *</label>
+      <input class="form-control" id="sfReceiverAddress" value="${existing ? escapeHtml(existing.receiver_address || '') : escapeHtml(order.customer_address || '')}" placeholder="请输入详细地址">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">物流公司 *</label>
+        <select class="form-control" id="sfLogistics">
+          <option value="">请选择</option>
+          ${logisticsOptions}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">运单号</label>
+        <input class="form-control" id="sfTrackingNo" value="${existing ? escapeHtml(existing.tracking_no || '') : ''}" placeholder="请输入运单号">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">仓库</label>
+      <input class="form-control" id="sfWarehouse" value="${existing ? escapeHtml(existing.warehouse || '') : ''}" placeholder="仓库名称">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">运费(¥)</label>
+        <input class="form-control" id="sfFreight" type="number" step="0.01" value="${existing ? (existing.freight || 0) : 0}" placeholder="0.00">
+      </div>
+      <div class="form-group">
+        <label class="form-label">发货备注</label>
+        <input class="form-control" id="sfShipRemark" value="${existing ? escapeHtml(existing.ship_remark || '') : ''}" placeholder="发货备注">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">收货备注</label>
+      <textarea class="form-control" id="sfReceiverRemark" rows="2" placeholder="收货备注">${existing ? escapeHtml(existing.receiver_remark || '') : ''}</textarea>
+    </div>
+  `;
+}
+
+async function openEditShipment(shipment) {
+  try {
+    const [data, code] = await apiFetchJSON(`/api/shipment/${shipment.id}`);
+    if (code !== 200 || data.code !== 0) {
+      showMsg('获取发货单详情失败', 'error');
+      return;
+    }
+    const s = data.data;
+    editingShipmentId = s.id;
+    document.getElementById('shipmentFormTitle').textContent = `✏️ 编辑发货单 — ${escapeHtml(s.shipment_no)}`;
+    const fakeOrder = {
+      order_no: s.order_no,
+      customer_name: s.receiver_name,
+      customer_phone: s.receiver_phone,
+      customer_address: s.receiver_address,
+      product_type: s.product_type || '-',
+      quantity: s.quantity || '-',
+      unit: '米'
+    };
+    document.getElementById('shipmentFormContent').innerHTML = buildShipmentForm(fakeOrder, s);
+    document.getElementById('shipmentFormBtn').textContent = '保存修改';
+    openModal('shipmentFormModal');
+  } catch (e) {
+    showMsg('获取发货单详情失败: ' + e.message, 'error');
+  }
+}
+
+async function submitShipmentForm() {
+  const receiverName = document.getElementById('sfReceiverName').value.trim();
+  const receiverPhone = document.getElementById('sfReceiverPhone').value.trim();
+  const receiverAddress = document.getElementById('sfReceiverAddress').value.trim();
+  const logisticsCompany = document.getElementById('sfLogistics').value;
+  const trackingNo = document.getElementById('sfTrackingNo').value.trim();
+  const warehouse = document.getElementById('sfWarehouse').value.trim();
+  const freight = parseFloat(document.getElementById('sfFreight').value) || 0;
+  const shipRemark = document.getElementById('sfShipRemark').value.trim();
+  const receiverRemark = document.getElementById('sfReceiverRemark').value.trim();
+
+  if (!receiverName || !receiverPhone || !receiverAddress) {
+    showMsg('请填写收件人信息', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('shipmentFormBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 保存中...';
+
+  try {
+    const payload = {
+      receiver_name: receiverName,
+      receiver_phone: receiverPhone,
+      receiver_address: receiverAddress,
+      logistics_company: logisticsCompany,
+      tracking_no: trackingNo,
+      warehouse: warehouse,
+      freight: freight,
+      ship_remark: shipRemark,
+      receiver_remark: receiverRemark
+    };
+
+    let url, method;
+    if (editingShipmentId) {
+      url = `/api/shipment/${editingShipmentId}`;
+      method = 'PUT';
+    } else {
+      url = '/api/shipment/add';
+      method = 'POST';
+      payload.order_no = selectedOrder.order_no;
+      payload.order_id = selectedOrder.id;
+    }
+
+    const [data, code] = await apiFetchJSON(url, {
+      method: method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (code === 200 && data.code === 0) {
+      closeModal('shipmentFormModal');
+      showMsg(editingShipmentId ? '修改成功' : '创建成功', 'success');
+      loadShipments();
+    } else {
+      showMsg(data.message || '保存失败', 'error');
+    }
+  } catch (e) {
+    showMsg('保存失败: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = editingShipmentId ? '保存修改' : '确认创建';
+  }
+}
+
+function viewDetail(shipment) {
+  document.getElementById('detailTitle').textContent = `📋 ${escapeHtml(shipment.shipment_no)}`;
+  document.getElementById('detailContent').innerHTML = `
+    <div class="detail-section"><h4>基本信息</h4>
+      <div class="detail-row"><span class="detail-label">发货单号</span><span class="detail-value">${escapeHtml(shipment.shipment_no)}</span></div>
+      <div class="detail-row"><span class="detail-label">状态</span><span class="detail-value">${statusTag(shipment.status)}</span></div>
+      <div class="detail-row"><span class="detail-label">创建时间</span><span class="detail-value">${escapeHtml(shipment.created_at || '-')}</span></div>
+      <div class="detail-row"><span class="detail-label">发货时间</span><span class="detail-value">${escapeHtml(shipment.shipped_at || '-')}</span></div>
+    </div>
+    <div class="detail-section"><h4>订单信息</h4>
+      <div class="detail-row"><span class="detail-label">订单号</span><span class="detail-value">${escapeHtml(shipment.order_no || '-')}</span></div>
+      <div class="detail-row"><span class="detail-label">产品类型</span><span class="detail-value">${escapeHtml(shipment.product_type || '-')}</span></div>
+      <div class="detail-row"><span class="detail-label">数量</span><span class="detail-value detail-highlight">${shipment.quantity || '-'} ${shipment.unit || '米'}</span></div>
+    </div>
+    <div class="detail-section"><h4>收件信息</h4>
+      <div class="detail-row"><span class="detail-label">收件人</span><span class="detail-value">${escapeHtml(shipment.receiver_name || '-')}</span></div>
+      <div class="detail-row"><span class="detail-label">电话</span><span class="detail-value">${escapeHtml(shipment.receiver_phone || '-')}</span></div>
+      <div class="detail-row"><span class="detail-label">地址</span><span class="detail-value">${escapeHtml(shipment.receiver_address || '-')}</span></div>
+    </div>
+    <div class="detail-section"><h4>物流信息</h4>
+      <div class="detail-row"><span class="detail-label">仓库</span><span class="detail-value">${escapeHtml(shipment.warehouse || '-')}</span></div>
+      <div class="detail-row"><span class="detail-label">运费</span><span class="detail-value detail-highlight">¥${shipment.freight || 0}</span></div>
+      <div class="detail-row"><span class="detail-label">物流公司</span><span class="detail-value">${escapeHtml(shipment.logistics_company || '-')}</span></div>
+      <div class="detail-row"><span class="detail-label">运单号</span><span class="detail-value detail-highlight">${escapeHtml(shipment.tracking_no || '-')}</span></div>
+    </div>
+    ${(shipment.ship_remark || shipment.receiver_remark) ? `
+    <div class="detail-section"><h4>备注信息</h4>
+      ${shipment.ship_remark ? `<div class="detail-row"><span class="detail-label">发货备注</span><span class="detail-value">${escapeHtml(shipment.ship_remark)}</span></div>` : ''}
+      ${shipment.receiver_remark ? `<div class="detail-row"><span class="detail-label">收货备注</span><span class="detail-value">${escapeHtml(shipment.receiver_remark)}</span></div>` : ''}
+    </div>` : ''}
+  `;
+  openModal('detailModal');
+}
+
+async function viewTracking(shipment) {
+  if (!shipment.tracking_no) {
+    showMsg('暂无运单号，无法查询轨迹', 'info');
+    return;
+  }
+  currentTrackingId = shipment.id;
+  document.getElementById('trackingTitle').textContent = `📍 物流轨迹 — ${escapeHtml(shipment.tracking_no)}`;
+  document.getElementById('trackingContent').innerHTML = '<div style="padding:30px;text-align:center;color:#888;">加载中...</div>';
+  openModal('trackingModal');
+  await loadTracking(shipment.id);
+}
+
+async function loadTracking(shipmentId) {
+  try {
+    const [data, code] = await apiFetchJSON(`/api/shipment/track/${shipmentId}`);
+    if (code === 200 && data.code === 0) {
+      renderTracking(data.data || []);
+    } else {
+      document.getElementById('trackingContent').innerHTML = '<div style="padding:30px;text-align:center;color:#888;">暂无轨迹信息</div>';
+    }
+  } catch (e) {
+    document.getElementById('trackingContent').innerHTML = '<div style="padding:30px;text-align:center;color:#e74c3c;">加载失败: ' + escapeHtml(e.message) + '</div>';
+  }
+}
+
+function renderTracking(trackingList) {
+  const container = document.getElementById('trackingContent');
+  if (!trackingList.length) {
+    container.innerHTML = '<div style="padding:30px;text-align:center;color:#888;">暂无轨迹信息</div>';
+    return;
+  }
+  container.innerHTML = trackingList.map((t, i) => `
+    <div class="tracking-item ${i === 0 ? 'tracking-current' : ''}">
+      <div class="tracking-time">${escapeHtml(t.time || t.created_at || '-')}</div>
+      <div class="tracking-content">
+        <div class="${i === 0 ? 'tracking-status' : ''}">${escapeHtml(t.status || t.message || '-')}</div>
+        ${t.location ? `<div style="color:#888;font-size:12px;margin-top:4px;">${escapeHtml(t.location)}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+async function refreshTracking() {
+  if (currentTrackingId) {
+    await loadTracking(currentTrackingId);
+    showMsg('轨迹已刷新', 'success');
+  }
+}
+
+function openLogisticsCompany() {
+  editingCompanyId = null;
+  document.getElementById('lcName').value = '';
+  document.getElementById('lcCode').value = '';
+  document.getElementById('lcPhone').value = '';
+  document.getElementById('lcRemark').value = '';
+  switchLogisticsTab('list');
+  loadCompanyList();
+  openModal('logisticsModal');
+}
+
+function switchLogisticsTab(tab) {
+  document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+  if (tab === 'list') {
+    document.querySelector('.tab-item:nth-child(1)').classList.add('active');
+    document.getElementById('logisticsListPanel').style.display = 'block';
+    document.getElementById('logisticsAddPanel').style.display = 'none';
+  } else {
+    document.querySelector('.tab-item:nth-child(2)').classList.add('active');
+    document.getElementById('logisticsListPanel').style.display = 'none';
+    document.getElementById('logisticsAddPanel').style.display = 'block';
+    document.getElementById('lcName').focus();
+  }
+}
+
+async function loadCompanyList() {
+  try {
+    const [data, code] = await apiFetchJSON('/api/shipment/company/list');
+    if (code === 200 && data.code === 0) {
+      const companies = data.data || [];
+      document.getElementById('companyCount').textContent = companies.length;
+      const list = document.getElementById('companyList');
+      if (!companies.length) {
+        list.innerHTML = '<div style="padding:20px;text-align:center;color:#888;">暂无物流公司</div>';
+        return;
+      }
+      list.innerHTML = companies.map(c => `
+        <div class="company-item">
+          <span class="company-name">${escapeHtml(c.name)}</span>
+          <span class="company-code">${escapeHtml(c.code || '-')}</span>
+          <span class="company-actions">
+            <button class="btn btn-secondary" style="padding:4px 10px;font-size:12px;" onclick="editCompany(${c.id})">编辑</button>
+            <button class="btn btn-danger" style="padding:4px 10px;font-size:12px;" onclick="deleteCompany(${c.id},'${escapeHtml(c.name)}')">删除</button>
+          </span>
+        </div>
+      `).join('');
+    }
+  } catch (e) {
+    showMsg('加载物流公司失败: ' + e.message, 'error');
+  }
+}
+
+function editCompany(id) {
+  const company = logisticsCompanies.find(c => c.id === id);
+  if (!company) return;
+  editingCompanyId = id;
+  document.getElementById('lcName').value = company.name || '';
+  document.getElementById('lcCode').value = company.code || '';
+  document.getElementById('lcPhone').value = company.phone || '';
+  document.getElementById('lcRemark').value = company.remark || '';
+  switchLogisticsTab('add');
+}
+
+async function saveLogisticsCompany() {
+  const name = document.getElementById('lcName').value.trim();
+  const code = document.getElementById('lcCode').value.trim();
+  const phone = document.getElementById('lcPhone').value.trim();
+  const remark = document.getElementById('lcRemark').value.trim();
+
+  if (!name || !code) {
+    showMsg('请填写公司名称和代码', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('lcSaveBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>';
+
+  try {
+    const payload = { name, code, phone, remark };
+    let url, method;
+    if (editingCompanyId) {
+      url = `/api/shipment/company/${editingCompanyId}`;
+      method = 'PUT';
+    } else {
+      url = '/api/shipment/company';
+      method = 'POST';
+    }
+    const [data, code2] = await apiFetchJSON(url, {
+      method: method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (code2 === 200 && data.code === 0) {
+      showMsg(editingCompanyId ? '修改成功' : '添加成功', 'success');
+      loadLogisticsCompanies();
+      switchLogisticsTab('list');
+    } else {
+      showMsg(data.message || '保存失败', 'error');
+    }
+  } catch (e) {
+    showMsg('保存失败: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '保存';
+  }
+}
+
+async function deleteCompany(id, name) {
+  if (!confirm(`确认删除物流公司「${name}」？`)) return;
+  try {
+    const [data, code] = await apiFetchJSON(`/api/shipment/company/${id}`, {
+      method: 'DELETE'
+    });
+    if (code === 200 && data.code === 0) {
+      showMsg('删除成功', 'success');
+      loadLogisticsCompanies();
+      loadCompanyList();
+    } else {
+      showMsg(data.message || '删除失败', 'error');
+    }
+  } catch (e) {
+    showMsg('删除失败: ' + e.message, 'error');
+  }
+}
+
+async function openFinishedGoods() {
+  try {
+    const [data, code] = await apiFetchJSON('/api/shipment/finished-goods');
+    if (code !== 200 || data.code !== 0) {
+      showMsg('加载成品库失败', 'error');
+      return;
+    }
+    const goods = data.data || [];
+    const container = document.getElementById('finishedGoodsContent');
+    if (!goods.length) {
+      container.innerHTML = '<div style="padding:30px;text-align:center;color:#888;">暂无待发货的成品</div>';
+    } else {
+      container.innerHTML = `
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr style="background:#f8f9fa;">
+              <th style="padding:8px 12px;text-align:left;font-size:12px;color:#555;">订单号</th>
+              <th style="padding:8px 12px;text-align:left;font-size:12px;color:#555;">客户</th>
+              <th style="padding:8px 12px;text-align:left;font-size:12px;color:#555;">产品类型</th>
+              <th style="padding:8px 12px;text-align:center;font-size:12px;color:#555;">数量</th>
+              <th style="padding:8px 12px;text-align:center;font-size:12px;color:#555;">交期</th>
+              <th style="padding:8px 12px;text-align:center;font-size:12px;color:#555;">入库时间</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${goods.map(o => `
+              <tr style="border-bottom:1px solid #f0f0f0;">
+                <td style="padding:8px 12px;font-size:12px;">${escapeHtml(o.order_no)}</td>
+                <td style="padding:8px 12px;font-size:12px;">${escapeHtml(o.customer_name || o.customer_group || '-')}</td>
+                <td style="padding:8px 12px;font-size:12px;">${escapeHtml(o.product_type || '-')}</td>
+                <td style="padding:8px 12px;font-size:12px;text-align:center;">${o.quantity || '-'}</td>
+                <td style="padding:8px 12px;font-size:12px;text-align:center;">${escapeHtml(o.delivery_date || '-')}</td>
+                <td style="padding:8px 12px;font-size:12px;text-align:center;">${escapeHtml(o.finished_at || o.updated_at || '-')}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+    openModal('finishedGoodsModal');
+  } catch (e) {
+    showMsg('加载成品库失败: ' + e.message, 'error');
+  }
+}
+
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('show'); });
+});
+
+document.getElementById('selectOrderConfirmBtn').addEventListener('click', confirmSelectOrder);
+
+if (!requireAuth()) ;
+else {
+  loadLogisticsCompanies();
+  loadShipments();
+}
+
+function updateShipBatchUI() {
+  const checked = document.querySelectorAll('.ship-check:checked');
+  const toolbar = document.getElementById('batchToolbar');
+  const selCount = document.getElementById('shipSelCount');
+  if (checked.length > 0) {
+    toolbar.style.display = 'flex';
+    selCount.textContent = checked.length;
+  } else {
+    toolbar.style.display = 'none';
+  }
+}
+
+function cancelBatchShip() {
+  document.querySelectorAll('.ship-check').forEach(c => c.checked = false);
+  updateShipBatchUI();
+}
+
+async function batchDeleteShipments() {
+  const checked = [...document.querySelectorAll('.ship-check:checked')];
+  if (checked.length === 0) { showMsg('请选择要删除的发货单', 'error'); return; }
+  if (!confirm(`确定删除选中的 ${checked.length} 个发货单？此操作不可恢复！`)) return;
+
+  const ids = checked.map(c => c.value);
+  let success = 0, failed = 0;
+  for (const id of ids) {
+    try {
+      const [data, code] = await apiFetchJSON(`/api/shipment/${id}`, { method: 'DELETE' });
+      if (code === 200 && data.code === 0) success++;
+      else failed++;
+    } catch(e) { failed++; }
+  }
+
+  showMsg(`删除完成：成功 ${success} 个${failed ? '，失败 ' + failed + ' 个' : ''}`, failed > 0 ? 'error' : 'success');
+  cancelBatchShip();
+  loadShipments();
+}
+</script>
+</body>
+</html>

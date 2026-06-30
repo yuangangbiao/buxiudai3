@@ -1,0 +1,37 @@
+2026-06-22 23:51:47,110 [INFO] db_config:17 [DB] 已加载环境变量文件: D:\yuan\不锈钢网带跟单3.0\.env
+2026-06-22 23:51:47,702 [INFO] desktop_web:1418 桌面 Web 启动: http://0.0.0.0:5001 (代理 http://127.0.0.1:5003)
+ * Serving Flask app 'server'
+ * Debug mode: off
+2026-06-22 23:51:47,743 [INFO] werkzeug:97 [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://192.168.1.13:5001
+2026-06-22 23:51:47,743 [INFO] werkzeug:97 [33mPress CTRL+C to quit[0m
+2026-06-22 23:51:54,399 [INFO] werkzeug:97 127.0.0.1 - - [22/Jun/2026 23:51:54] "GET /login HTTP/1.1" 200 -
+2026-06-22 23:51:54,442 [INFO] werkzeug:97 127.0.0.1 - - [22/Jun/2026 23:51:54] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2026-06-22 23:51:54,553 [INFO] werkzeug:97 127.0.0.1 - - [22/Jun/2026 23:51:54] "POST /api/login HTTP/1.1" 200 -
+2026-06-22 23:51:54,564 [INFO] werkzeug:97 127.0.0.1 - - [22/Jun/2026 23:51:54] "GET /orders HTTP/1.1" 200 -
+2026-06-22 23:51:54,572 [INFO] werkzeug:97 127.0.0.1 - - [22/Jun/2026 23:51:54] "GET /static/js/shared.js HTTP/1.1" 200 -
+2026-06-22 23:51:54,581 [INFO] werkzeug:97 127.0.0.1 - - [22/Jun/2026 23:51:54] "GET /api/orders/list?limit=500&status_filter=all HTTP/1.1" 200 -
+2026-06-22 23:51:54,597 [INFO] werkzeug:97 127.0.0.1 - - [22/Jun/2026 23:51:54] "GET /api/orders/list?limit=500&status_filter=all HTTP/1.1" 200 -
+2026-06-22 23:51:54,627 [INFO] werkzeug:97 127.0.0.1 - - [22/Jun/2026 23:51:54] "GET /operators HTTP/1.1" 200 -
+2026-06-22 23:51:54,650 [INFO] werkzeug:97 127.0.0.1 - - [22/Jun/2026 23:51:54] "[36mGET /static/js/shared.js HTTP/1.1[0m" 304 -
+2026-06-22 23:51:54,659 [INFO] werkzeug:97 127.0.0.1 - - [22/Jun/2026 23:51:54] "GET /api/enterprise/structure HTTP/1.1" 200 -
+2026-06-22 23:51:54,660 [INFO] werkzeug:97 127.0.0.1 - - [22/Jun/2026 23:51:54] "GET /api/operators/list?page=1&page_size=20 HTTP/1.1" 200 -
+2026-06-22 23:51:54,675 [INFO] werkzeug:97 127.0.0.1 - - [22/Jun/2026 23:51:54] "GET /api/operators/list?page=1&page_size=20 HTTP/1.1" 200 -
+2026-06-22 23:51:59,305 [INFO] werkzeug:97 127.0.0.1 - - [22/Jun/2026 23:51:59] "POST /api/operators HTTP/1.1" 200 -
+2026-06-22 23:51:59,346 [INFO] werkzeug:97 127.0.0.1 - - [22/Jun/2026 23:51:59] "GET /api/operators/list?page=1&page_size=20 HTTP/1.1" 200 -
+2026-06-22 23:52:02,454 [INFO] werkzeug:97 127.0.0.1 - - [22/Jun/2026 23:52:02] "GET /api/operators/list?page=1&page_size=5 HTTP/1.1" 200 -
+2026-06-22 23:52:02,517 [INFO] werkzeug:97 127.0.0.1 - - [22/Jun/2026 23:52:02] "GET /api/operators/list?page=1&page_size=20&department=生产部 HTTP/1.1" 200 -
+2026-06-22 23:52:04,766 [INFO] utils.excel_service:394 [Excel模板] 操作员 → D:\yuan\不锈钢网带跟单3.0\exports\操作员导入模板.xlsx
+2026-06-22 23:52:04,771 [INFO] werkzeug:97 127.0.0.1 - - [22/Jun/2026 23:52:04] "GET /api/operators/template HTTP/1.1" 200 -
+2026-06-22 23:52:04,793 [INFO] core.db:95 [DB] 连接池初始化: max=10
+2026-06-22 23:52:04,927 [INFO] utils.excel_service:373 [Excel导出] 操作员 20 条 → D:\yuan\不锈钢网带跟单3.0\exports\操作员导出_20260622_235204.xlsx
+2026-06-22 23:52:04,932 [INFO] werkzeug:97 127.0.0.1 - - [22/Jun/2026 23:52:04] "GET /api/operators/export HTTP/1.1" 200 -
+2026-06-22 23:52:05,548 [INFO] werkzeug:97 127.0.0.1 - - [22/Jun/2026 23:52:05] "DELETE /api/operators/eui_1782143518211 HTTP/1.1" 200 -
+2026-06-22 23:52:05,591 [INFO] werkzeug:97 127.0.0.1 - - [22/Jun/2026 23:52:05] "GET /api/operators/list?page=1&page_size=20&department=生产部 HTTP/1.1" 200 -
+2026-06-22 23:52:07,628 [INFO] werkzeug:97 127.0.0.1 - - [22/Jun/2026 23:52:07] "GET /api/enterprise/operators HTTP/1.1" 200 -
+2026-06-22 23:52:07,636 [INFO] werkzeug:97 127.0.0.1 - - [22/Jun/2026 23:52:07] "GET /orders HTTP/1.1" 200 -
+2026-06-22 23:52:07,645 [INFO] werkzeug:97 127.0.0.1 - - [22/Jun/2026 23:52:07] "[36mGET /static/js/shared.js HTTP/1.1[0m" 304 -
+2026-06-22 23:52:07,678 [INFO] werkzeug:97 127.0.0.1 - - [22/Jun/2026 23:52:07] "GET /api/orders/list?limit=500&status_filter=all HTTP/1.1" 200 -
+2026-06-22 23:52:07,710 [INFO] werkzeug:97 127.0.0.1 - - [22/Jun/2026 23:52:07] "GET /api/orders/list?limit=500&status_filter=all HTTP/1.1" 200 -

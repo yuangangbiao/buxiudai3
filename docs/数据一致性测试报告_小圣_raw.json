@@ -1,0 +1,264 @@
+{
+  "start_time": "2026-06-23T13:50:59",
+  "end_time": "2026-06-23T13:51:02",
+  "duration_sec": 3.107477,
+  "pid_5001": "25768",
+  "pid_5003": "25784",
+  "mysql": "127.0.0.1:3306",
+  "business_db": "steel_belt",
+  "dispatch_db": "container_center",
+  "results": {
+    "字段持久化": {
+      "pass": 17,
+      "fail": 1,
+      "cases": [
+        {
+          "name": "字段存在性: warehouse",
+          "pass": true,
+          "detail": "DB 类型=varchar NULL=YES",
+          "time": "2026-06-23T13:51:00"
+        },
+        {
+          "name": "字段存在性: freight",
+          "pass": true,
+          "detail": "DB 类型=decimal NULL=YES",
+          "time": "2026-06-23T13:51:00"
+        },
+        {
+          "name": "字段存在性: ship_remark",
+          "pass": true,
+          "detail": "DB 类型=text NULL=YES",
+          "time": "2026-06-23T13:51:00"
+        },
+        {
+          "name": "字段存在性: receiver_remark",
+          "pass": true,
+          "detail": "DB 类型=text NULL=YES",
+          "time": "2026-06-23T13:51:00"
+        },
+        {
+          "name": "5001 创建发货 API 健康度",
+          "pass": false,
+          "detail": "❌ HTTP=500 code=500 msg=name 'random' is not defined 【Bug 根因】5001 server.py 行 3144 使用 random.randint 但顶部未 import random → 5001 创建发货实际不可用",
+          "time": "2026-06-23T13:51:00"
+        },
+        {
+          "name": "SQL INSERT 4 字段",
+          "pass": true,
+          "detail": "插入 id=51",
+          "time": "2026-06-23T13:51:00"
+        },
+        {
+          "name": "DB 记录存在",
+          "pass": true,
+          "detail": "已查到 id=51",
+          "time": "2026-06-23T13:51:00"
+        },
+        {
+          "name": "持久化验证: warehouse",
+          "pass": true,
+          "detail": "API 提交='主仓-A1' DB 实际='主仓-A1'",
+          "time": "2026-06-23T13:51:00"
+        },
+        {
+          "name": "持久化验证: freight",
+          "pass": true,
+          "detail": "API 提交=88.5 DB 实际=88.5 (类型 Decimal)",
+          "time": "2026-06-23T13:51:00"
+        },
+        {
+          "name": "持久化验证: ship_remark",
+          "pass": true,
+          "detail": "API 提交='小圣测试_发货备注_长文本_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX' DB 实际='小圣测试_发货备注_长文本_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'",
+          "time": "2026-06-23T13:51:00"
+        },
+        {
+          "name": "持久化验证: receiver_remark",
+          "pass": true,
+          "detail": "API 提交='小圣测试_收货备注_长文本_YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY' DB 实际='小圣测试_收货备注_长文本_YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'",
+          "time": "2026-06-23T13:51:00"
+        },
+        {
+          "name": "freight 字段类型",
+          "pass": true,
+          "detail": "freight=88.50 (python float 转换=88.5)",
+          "time": "2026-06-23T13:51:00"
+        },
+        {
+          "name": "ship_remark 长文本",
+          "pass": true,
+          "detail": "提交长度=214 DB 实际=214",
+          "time": "2026-06-23T13:51:00"
+        },
+        {
+          "name": "receiver_remark 长文本",
+          "pass": true,
+          "detail": "提交长度=214 DB 实际=214",
+          "time": "2026-06-23T13:51:00"
+        },
+        {
+          "name": "更新验证: warehouse",
+          "pass": true,
+          "detail": "更新='更新后-仓库B' DB 实际='更新后-仓库B'",
+          "time": "2026-06-23T13:51:00"
+        },
+        {
+          "name": "更新验证: freight",
+          "pass": true,
+          "detail": "更新=199.99 DB 实际=199.99",
+          "time": "2026-06-23T13:51:00"
+        },
+        {
+          "name": "更新验证: ship_remark",
+          "pass": true,
+          "detail": "更新='更新后_发货备注' DB 实际='更新后_发货备注'",
+          "time": "2026-06-23T13:51:00"
+        },
+        {
+          "name": "更新验证: receiver_remark",
+          "pass": true,
+          "detail": "更新='更新后_收货备注' DB 实际='更新后_收货备注'",
+          "time": "2026-06-23T13:51:00"
+        }
+      ]
+    },
+    "状态机": {
+      "pass": 3,
+      "fail": 3,
+      "cases": [
+        {
+          "name": "准备测试工序",
+          "pass": true,
+          "detail": "id=371 初始 status='待开始' planned_qty=0",
+          "time": "2026-06-23T13:51:00"
+        },
+        {
+          "name": "工序 PENDING→IN_PROGRESS",
+          "pass": false,
+          "detail": "API code=0 DB status='待开始' start_time=None",
+          "time": "2026-06-23T13:51:00"
+        },
+        {
+          "name": "工序 IN_PROGRESS→COMPLETED",
+          "pass": false,
+          "detail": "API code=0 DB status='待开始' end_time=None",
+          "time": "2026-06-23T13:51:00"
+        },
+        {
+          "name": "工序 COMPLETED→PENDING (reset)",
+          "pass": true,
+          "detail": "API code=0 DB status='待开始' end_time=None",
+          "time": "2026-06-23T13:51:00"
+        },
+        {
+          "name": "非法跃迁: 重复 start",
+          "pass": true,
+          "detail": "第二次 start: API code=400 msg=工序状态无法变更为开始 DB status='待开始'",
+          "time": "2026-06-23T13:51:00"
+        },
+        {
+          "name": "质检 待检→合格",
+          "pass": false,
+          "detail": "API code=0 DB result='待检' inspector=''",
+          "time": "2026-06-23T13:51:00"
+        }
+      ]
+    },
+    "跨系统同步": {
+      "pass": 4,
+      "fail": 5,
+      "cases": [
+        {
+          "name": "SYNC_BRIDGE_URL 配置",
+          "pass": false,
+          "detail": "❌ 环境变量和 .env 文件都未配置 SYNC_BRIDGE_URL",
+          "time": "2026-06-23T13:51:00"
+        },
+        {
+          "name": "准备测试工序",
+          "pass": true,
+          "detail": "id=371 初始 status='待开始'",
+          "time": "2026-06-23T13:51:00"
+        },
+        {
+          "name": "5003 队列有新增: sync_log",
+          "pass": false,
+          "detail": "基线=12 触发后=12 Δ=0 (5001 触发了 4 个工序 API 但 sync_log 无变化)",
+          "time": "2026-06-23T13:51:02"
+        },
+        {
+          "name": "5003 队列有新增: sync_logs",
+          "pass": false,
+          "detail": "基线=369 触发后=369 Δ=0 (5001 触发了 4 个工序 API 但 sync_logs 无变化)",
+          "time": "2026-06-23T13:51:02"
+        },
+        {
+          "name": "5003 队列有新增: report_queue",
+          "pass": false,
+          "detail": "基线=82 触发后=82 Δ=0 (5001 触发了 4 个工序 API 但 report_queue 无变化)",
+          "time": "2026-06-23T13:51:02"
+        },
+        {
+          "name": "5003 队列有新增: sync_queue",
+          "pass": false,
+          "detail": "基线=25 触发后=25 Δ=0 (5001 触发了 4 个工序 API 但 sync_queue 无变化)",
+          "time": "2026-06-23T13:51:02"
+        },
+        {
+          "name": "5003 日志探针: log_5003_out.txt",
+          "pass": true,
+          "detail": "文件大小=0 含 \"sync\"=0 行 修改时间=2026-05-15T08:35:21",
+          "time": "2026-06-23T13:51:02"
+        },
+        {
+          "name": "5003 日志探针: log_5003_err.txt",
+          "pass": true,
+          "detail": "文件大小=0 含 \"sync\"=0 行 修改时间=2026-05-15T08:35:21",
+          "time": "2026-06-23T13:51:02"
+        },
+        {
+          "name": "5003 日志探针: _t3.out",
+          "pass": true,
+          "detail": "文件大小=876 含 \"sync\"=0 行 修改时间=2026-06-06T17:18:19",
+          "time": "2026-06-23T13:51:02"
+        }
+      ]
+    },
+    "并发安全": {
+      "pass": 2,
+      "fail": 2,
+      "cases": [
+        {
+          "name": "准备测试工序",
+          "pass": true,
+          "detail": "id=371 初始 completed_qty=1.0 planned_qty=10 (重置)",
+          "time": "2026-06-23T13:51:02"
+        },
+        {
+          "name": "总报工数 vs 计划数（无超额）",
+          "pass": false,
+          "detail": "期望=16.0 DB实际=16.0 计划数=10 Δ=+0.000 ✅ 无超额",
+          "time": "2026-06-23T13:51:02"
+        },
+        {
+          "name": "并发请求全部成功",
+          "pass": true,
+          "detail": "5 线程全部 API code=0 (SELECT FOR UPDATE 锁粒度小, 串行化生效)",
+          "time": "2026-06-23T13:51:02"
+        },
+        {
+          "name": "无负库存 + 在计划内",
+          "pass": false,
+          "detail": "completed=16 planned=10 status=已完成 ❌ 异常",
+          "time": "2026-06-23T13:51:02"
+        }
+      ]
+    }
+  },
+  "summary": {
+    "total_pass": 26,
+    "total_fail": 11,
+    "total": 37,
+    "rate_pct": 70.27
+  }
+}

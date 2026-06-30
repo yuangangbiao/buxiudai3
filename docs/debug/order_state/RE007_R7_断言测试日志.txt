@@ -1,0 +1,48 @@
+============================================================
+RE-007 R7 中文 status 文本断言
+============================================================
+
+[Phase 1: API 文本断言]
+  ORD-202604210004: order='已派单' zh=True proc_zh=True mat_zh=True flow_zh=True types_zh=True -> PASS
+  ORD-202605020001: order='已完成' zh=True proc_zh=True mat_zh=True flow_zh=True types_zh=True -> PASS
+  ORD-202604210002: order='待开始' zh=True proc_zh=True mat_zh=True flow_zh=True types_zh=True -> PASS
+  ORD-202605010001: order='已完成' zh=True proc_zh=True mat_zh=True flow_zh=True types_zh=True -> PASS
+
+[Phase 2: 渲染文本断言]
+
+  [工单] ORD-202604210004
+    ✓ material: 2 badges all ZH
+    ✓ process: 9 badges all ZH
+    ✓ flow: 2 badges all ZH
+    ✓ quality: 0 badges all ZH
+    ✓ repair: 0 badges all ZH
+    ✓ outsource: 0 badges all ZH
+
+  [工单] ORD-202605020001
+    ✓ material: 0 badges all ZH
+    ✓ process: 16 badges all ZH
+    ✓ flow: 2 badges all ZH
+    ✓ quality: 0 badges all ZH
+    ✓ repair: 0 badges all ZH
+    ✓ outsource: 0 badges all ZH
+
+  [工单] ORD-202604210002
+    ✓ material: 0 badges all ZH
+    ✓ process: 9 badges all ZH
+    ✓ flow: 1 badges all ZH
+    ✓ quality: 2 badges all ZH
+    ✓ repair: 0 badges all ZH
+    ✓ outsource: 0 badges all ZH
+
+  [工单] ORD-202605010001
+    ✓ material: 2 badges all ZH
+    ✓ process: 9 badges all ZH
+    ✓ flow: 9 badges all ZH
+    ✓ quality: 0 badges all ZH
+    ✓ repair: 0 badges all ZH
+    ✓ outsource: 0 badges all ZH
+
+============================================================
+结果: PASS ✓(4 工单 API + 4 工单 × 6 tab 渲染断言全过)
+截图: C:\Windows\Temp\R7_shots
+============================================================

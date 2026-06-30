@@ -1,0 +1,1403 @@
+  # -*- coding: utf-8 -*-
+> """
+> 错误编码定义
+> 所有错误编码的常量定义和数据结构"""
+  
+  # ============================================================================
+  # 第〇部分：精简业务错误码（Team Lead 指定新增，顶部优先定义）
+  # ============================================================================
+  
+> class ErrorCode:
+>     def __init__(self, code, message, domain, severity, http_status=500):
+>         self.code, self.message, self.domain, self.severity, self.http_status = code, message, domain, severity, http_status
+  
+> class ErrorDomain:
+>     ORDER = "order"
+>     PRODUCTION = "production"
+>     QUALITY = "quality"
+>     SYSTEM = "system"
+>     AUTH = "auth"
+  
+> class ErrorSeverity:
+>     CRITICAL = "critical"
+>     ERROR = "error"
+>     WARNING = "warning"
+  
+> ERRORS = {
+>     "ORDER_NOT_FOUND": ErrorCode("E1001", "订单不存在", ErrorDomain.ORDER, ErrorSeverity.ERROR, 404),
+>     "ORDER_STATUS_INVALID": ErrorCode("E1002", "状态无效", ErrorDomain.ORDER, ErrorSeverity.ERROR, 400),
+>     "VALIDATION_FAILED": ErrorCode("E2001", "校验失败", ErrorDomain.SYSTEM, ErrorSeverity.ERROR, 400),
+>     "DATABASE_ERROR": ErrorCode("E3001", "数据库错误", ErrorDomain.SYSTEM, ErrorSeverity.CRITICAL, 500),
+> }
+  
+> """
+> 错误编码定义
+> 所有错误编码的常量定义和数据结构
+  
+> 包含两套错误码体系:
+> 1. 原有 ERROR_CODES (dataclass 格式) — 向后兼容，供 error_handler / error_lookup_view 使用
+> 2. 新增 ERRORS (StructuredErrorCode 格式) — 结构化错误码，支持领域/严重级别/HTTP状态码
+> """
+  
+> from dataclasses import dataclass
+> from typing import Optional, List, Dict
+  
+  
+  # ============================================================================
+  # 第一部分：结构化错误码框架（新增）
+  # ============================================================================
+  
+> class ErrorCode:
+>     """统一错误码（轻量级，用于业务层）
+  
+>     Attributes:
+>         code: 错误码编号（如 E1001）
+>         message: 人类可读的错误描述
+>         domain: 错误领域（ErrorDomain 常量）
+>         severity: 严重级别（ErrorSeverity 常量）
+>         http_status: 对应的 HTTP 状态码
+>     """
+  
+>     def __init__(self, code: str, message: str, domain: str, severity: str, http_status: int = 500):
+>         self.code = code
+>         self.message = message
+>         self.domain = domain
+>         self.severity = severity
+>         self.http_status = http_status
+  
+-     def __str__(self) -> str:
+-         return f"[{self.code}] {self.message}"
+  
+-     def __repr__(self) -> str:
+-         return (
+-             f"ErrorCode(code={self.code!r}, domain={self.domain!r}, "
+-             f"severity={self.severity!r}, http_status={self.http_status})"
+-         )
+  
+>     def to_dict(self) -> dict:
+>         """转换为字典"""
+>         return {
+>             "code": self.code,
+>             "message": self.message,
+>             "domain": self.domain,
+>             "severity": self.severity,
+>             "http_status": self.http_status,
+>         }
+  
+  
+> class ErrorDomain:
+>     """错误领域分类"""
+>     ORDER = "order"           # 订单领域
+>     PRODUCTION = "production"  # 生产领域
+>     QUALITY = "quality"        # 质量领域
+>     INVENTORY = "inventory"    # 库存领域
+>     SYSTEM = "system"          # 系统级
+>     AUTH = "auth"              # 认证与安全
+  
+  
+> class ErrorSeverity:
+>     """错误严重级别"""
+>     CRITICAL = "critical"   # 系统级故障，需立即处理
+>     ERROR = "error"          # 业务错误，可重试或人工介入
+>     WARNING = "warning"      # 可恢复的警告
+  
+  
+> class StructuredErrorCode:
+>     """
+>     统一结构化错误码
+  
+>     Attributes:
+>         code: 错误码编号 (如 E0101)
+>         message: 人类可读的错误描述
+>         domain: 错误领域 (ErrorDomain 常量)
+>         severity: 严重级别 (ErrorSeverity 常量)
+>         http_status: 对应的 HTTP 状态码
+>         cause: 原因分析
+>         solution: 解决方案
+>     """
+  
+>     def __init__(
+>         self,
+>         code: str,
+>         message: str,
+>         domain: str,
+>         severity: str,
+>         http_status: int = 500,
+>         cause: str = "",
+>         solution: str = "",
+>     ):
+>         self.code = code
+>         self.message = message
+>         self.domain = domain
+>         self.severity = severity
+>         self.http_status = http_status
+>         self.cause = cause
+>         self.solution = solution
+  
+-     def __str__(self) -> str:
+-         return f"[{self.code}] {self.message}"
+  
+-     def __repr__(self) -> str:
+-         return (
+-             f"StructuredErrorCode(code={self.code!r}, domain={self.domain!r}, "
+-             f"severity={self.severity!r}, http_status={self.http_status})"
+-         )
+  
+>     def to_dict(self) -> dict:
+>         """转换为字典"""
+>         return {
+>             "code": self.code,
+>             "message": self.message,
+>             "domain": self.domain,
+>             "severity": self.severity,
+>             "http_status": self.http_status,
+>             "cause": self.cause,
+>             "solution": self.solution,
+>         }
+  
+  
+  # ============================================================================
+  # 第二部分：结构化错误码定义（覆盖原有的 39 个错误码）
+  # ============================================================================
+  
+> ERRORS: Dict[str, StructuredErrorCode] = {
+      # ── 系统语法/编码错误 (SYS) → SYSTEM ──
+>     "ERR_SYS_001": StructuredErrorCode(
+>         code="E0001",
+>         message="文件编码非UTF-8，Python无法解析",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.CRITICAL,
+>         http_status=500,
+>         cause="文件保存时未指定UTF-8编码，或文件被其他程序修改了编码",
+>         solution="在文件首行添加 # -*- coding: utf-8 -*-；使用IDE将文件另存为UTF-8编码；统一IDE默认编码为UTF-8",
+>     ),
+>     "ERR_SYS_002": StructuredErrorCode(
+>         code="E0002",
+>         message="文件包含无效Unicode字符",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.CRITICAL,
+>         http_status=500,
+>         cause="文件可能被损坏，或使用了Windows记事本等工具修改",
+>         solution="删除文件重新创建；使用专业编辑器清除无效字符；避免使用记事本编辑代码",
+>     ),
+>     "ERR_SYS_003": StructuredErrorCode(
+>         code="E0003",
+>         message="字符串引号未正确闭合",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.CRITICAL,
+>         http_status=500,
+>         cause="引号不配对（中文引号被误用为英文引号）",
+>         solution="检查引号配对，特别注意中文单引号和英文单引号；使用IDE的括号匹配功能检查",
+>     ),
+>     "ERR_SYS_004": StructuredErrorCode(
+>         code="E0004",
+>         message="代码缩进不一致",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.CRITICAL,
+>         http_status=500,
+>         cause="混合使用Tab和空格，或if/else/for块缩进错误",
+>         solution="统一使用4空格缩进；在IDE中设置Tab转换为空格；使用 python -m py_compile file.py 检查语法",
+>     ),
+>     "ERR_SYS_005": StructuredErrorCode(
+>         code="E0005",
+>         message="Python代码存在语法错误",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.CRITICAL,
+>         http_status=500,
+>         cause="代码语法不符合Python规范",
+>         solution="检查错误行的语法；确认括号、引号等配对正确；查阅Python语法文档",
+>     ),
+>     "ERR_SYS_006": StructuredErrorCode(
+>         code="E0006",
+>         message="使用的名称在当前作用域未定义",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.CRITICAL,
+>         http_status=500,
+>         cause="变量、函数或类名称拼写错误或未导入",
+>         solution="检查名称拼写是否正确；确认已正确导入模块；检查是否在正确的模块/类中",
+>     ),
+  
+      # ── 数据库错误 (DB) → SYSTEM ──
+>     "ERR_DB_001": StructuredErrorCode(
+>         code="E0101",
+>         message="无法连接到MySQL服务器",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.CRITICAL,
+>         http_status=500,
+>         cause="MySQL服务未启动、网络不通、端口错误",
+>         solution="确认MySQL服务正在运行；检查host和port配置；检查防火墙设置",
+>     ),
+>     "ERR_DB_002": StructuredErrorCode(
+>         code="E0102",
+>         message="用户名或密码错误",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.CRITICAL,
+>         http_status=500,
+>         cause="密码为空或配置错误",
+>         solution="在.env文件中配置正确的MYSQL_PASSWORD；确认用户名root的密码正确；通过系统设置->数据库连接配置",
+>     ),
+>     "ERR_DB_003": StructuredErrorCode(
+>         code="E0103",
+>         message="指定的数据库不存在",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.CRITICAL,
+>         http_status=500,
+>         cause="数据库未创建或名称错误",
+>         solution="创建数据库 steel_belt；检查DB_NAME配置",
+>     ),
+>     "ERR_DB_004": StructuredErrorCode(
+>         code="E0104",
+>         message="执行的SQL语句语法错误",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.ERROR,
+>         http_status=500,
+>         cause="SQL语句拼写错误或语法不规范",
+>         solution="检查SQL语句语法；确认表名和字段名正确；查看MySQL错误文档",
+>     ),
+>     "ERR_DB_005": StructuredErrorCode(
+>         code="E0105",
+>         message="操作的数据库表不存在",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.ERROR,
+>         http_status=500,
+>         cause="表未创建或表名拼写错误",
+>         solution="执行数据库初始化脚本；检查表名拼写；确认数据库已正确初始化",
+>     ),
+>     "ERR_DB_006": StructuredErrorCode(
+>         code="E0106",
+>         message="操作的数据库字段不存在",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.ERROR,
+>         http_status=500,
+>         cause="字段未创建或字段名拼写错误",
+>         solution="检查字段名拼写；执行数据库迁移脚本；确认数据库schema正确",
+>     ),
+>     "ERR_DB_007": StructuredErrorCode(
+>         code="E0107",
+>         message="数据库连接池已满，无法获取新连接",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.ERROR,
+>         http_status=500,
+>         cause="高并发或连接未正确释放",
+>         solution="增加MYSQL_POOL_SIZE配置；检查代码是否正确关闭连接；使用连接池监控工具检查泄漏",
+>     ),
+>     "ERR_DB_008": StructuredErrorCode(
+>         code="E0108",
+>         message="与MySQL服务器的连接意外断开",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.ERROR,
+>         http_status=500,
+>         cause="服务器超时、网络问题或服务器崩溃",
+>         solution="检查网络稳定性；增加超时配置；检查MySQL服务器状态",
+>     ),
+>     "ERR_DB_009": StructuredErrorCode(
+>         code="E0109",
+>         message="BLOB类型字段不能有默认值",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.WARNING,
+>         http_status=500,
+>         cause="MySQL配置或版本问题",
+>         solution="移除BLOB字段的默认值；修改SQL模式；升级MySQL版本",
+>     ),
+  
+      # ── 模块/导入错误 (INT) → SYSTEM ──
+>     "ERR_INT_001": StructuredErrorCode(
+>         code="E0201",
+>         message="Python模块或包不存在",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.CRITICAL,
+>         http_status=500,
+>         cause="sys.path配置错误或模块文件不存在",
+>         solution="检查sys.path是否包含模块所在目录；确认__init__.py文件存在；检查模块文件名拼写",
+>     ),
+>     "ERR_INT_002": StructuredErrorCode(
+>         code="E0202",
+>         message="无法从模块导入指定名称",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.CRITICAL,
+>         http_status=500,
+>         cause="config.py中未定义该名称，或导入顺序错误",
+>         solution="检查config.py中是否导出该名称；检查是否存在循环导入；确认拼写正确",
+>     ),
+>     "ERR_INT_003": StructuredErrorCode(
+>         code="E0203",
+>         message="模块之间存在循环依赖",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.ERROR,
+>         http_status=500,
+>         cause="A导入B，B又导入A",
+>         solution="重构代码消除循环依赖；使用延迟导入；将共享导入移到独立模块",
+>     ),
+>     "ERR_INT_004": StructuredErrorCode(
+>         code="E0204",
+>         message="必需的Python包未安装",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.CRITICAL,
+>         http_status=500,
+>         cause="缺少依赖或虚拟环境问题",
+>         solution="pip install 安装缺失的包；检查requirements.txt；确认使用正确的虚拟环境",
+>     ),
+  
+      # ── 安全错误 (SEC) → AUTH ──
+>     "ERR_SEC_001": StructuredErrorCode(
+>         code="E0301",
+>         message="代码中包含硬编码密码",
+>         domain=ErrorDomain.AUTH,
+>         severity=ErrorSeverity.CRITICAL,
+>         http_status=500,
+>         cause="直接在代码中写入密码",
+>         solution="将密码移到.env文件；使用os.getenv()读取；确保.env文件在.gitignore中",
+>     ),
+>     "ERR_SEC_002": StructuredErrorCode(
+>         code="E0302",
+>         message="代码中包含硬编码API密钥",
+>         domain=ErrorDomain.AUTH,
+>         severity=ErrorSeverity.CRITICAL,
+>         http_status=500,
+>         cause="直接在代码中写入API密钥",
+>         solution="将API密钥移到.env文件；使用os.getenv()读取；轮换泄露的API密钥",
+>     ),
+>     "ERR_SEC_003": StructuredErrorCode(
+>         code="E0303",
+>         message="SQL语句存在注入漏洞",
+>         domain=ErrorDomain.AUTH,
+>         severity=ErrorSeverity.CRITICAL,
+>         http_status=500,
+>         cause="用户输入直接拼接到SQL语句",
+>         solution="使用参数化查询；对用户输入进行验证；使用ORM框架",
+>     ),
+>     "ERR_SEC_004": StructuredErrorCode(
+>         code="E0304",
+>         message="使用eval执行用户输入存在安全风险",
+>         domain=ErrorDomain.AUTH,
+>         severity=ErrorSeverity.CRITICAL,
+>         http_status=500,
+>         cause="用户输入被直接传递给eval执行",
+>         solution="避免使用eval；使用安全的表达式解析器；对输入进行严格验证",
+>     ),
+  
+      # ── 数据校验错误 (VAL) → SYSTEM ──
+>     "ERR_VAL_001": StructuredErrorCode(
+>         code="E0401",
+>         message="无法将字符串转换为浮点数",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.ERROR,
+>         http_status=400,
+>         cause="传入的值不是合法的数字格式",
+>         solution="添加try-except保护；使用safe_float函数；在前端进行输入校验",
+>     ),
+>     "ERR_VAL_002": StructuredErrorCode(
+>         code="E0402",
+>         message="无法将字符串转换为整数",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.ERROR,
+>         http_status=400,
+>         cause="传入的值不是合法的整数格式",
+>         solution="添加try-except保护；使用safe_int函数；在前端进行输入校验",
+>     ),
+>     "ERR_VAL_003": StructuredErrorCode(
+>         code="E0403",
+>         message="无法解析JSON格式数据",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.WARNING,
+>         http_status=400,
+>         cause="JSON字符串格式不正确",
+>         solution="检查JSON语法；确保引号为英文引号；使用JSON验证工具检查",
+>     ),
+>     "ERR_VAL_004": StructuredErrorCode(
+>         code="E0404",
+>         message="无法解析日期字符串",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.WARNING,
+>         http_status=400,
+>         cause="日期格式不符合预期",
+>         solution="使用正确的日期格式；添加日期解析异常处理；在UI层进行日期格式验证",
+>     ),
+>     "ERR_VAL_005": StructuredErrorCode(
+>         code="E0405",
+>         message="必填字段未提供值",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.WARNING,
+>         http_status=400,
+>         cause="表单验证失败或API参数缺失",
+>         solution="检查必填字段；添加前端验证；提供清晰的错误提示",
+>     ),
+  
+      # ── 业务错误 (BIZ) → ORDER ──
+>     "ERR_BIZ_001": StructuredErrorCode(
+>         code="E0501",
+>         message="操作员未指定",
+>         domain=ErrorDomain.ORDER,
+>         severity=ErrorSeverity.WARNING,
+>         http_status=400,
+>         cause="记录操作日志时未传递operator参数",
+>         solution="添加operator参数到函数定义；从上下文获取当前用户；默认使用'系统'作为操作员",
+>     ),
+>     "ERR_BIZ_002": StructuredErrorCode(
+>         code="E0502",
+>         message="操作违反业务规则",
+>         domain=ErrorDomain.ORDER,
+>         severity=ErrorSeverity.WARNING,
+>         http_status=400,
+>         cause="业务规则校验未通过",
+>         solution="检查业务规则配置；确认数据符合业务要求；查看具体规则说明",
+>     ),
+>     "ERR_BIZ_003": StructuredErrorCode(
+>         code="E0503",
+>         message="订单当前状态不允许此操作",
+>         domain=ErrorDomain.ORDER,
+>         severity=ErrorSeverity.WARNING,
+>         http_status=400,
+>         cause="操作与订单状态不匹配",
+>         solution="检查订单当前状态；确认操作是否符合状态流转；查看订单状态机配置",
+>     ),
+>     "ERR_BIZ_004": StructuredErrorCode(
+>         code="E0504",
+>         message="未找到匹配的物料计算规则",
+>         domain=ErrorDomain.ORDER,
+>         severity=ErrorSeverity.WARNING,
+>         http_status=400,
+>         cause="产品类型对应的物料规则未配置",
+>         solution="配置产品类型的物料规则；检查规则是否启用；查看物料规则配置界面",
+>     ),
+  
+      # ── 资源错误 (RES) → SYSTEM ──
+>     "ERR_RES_001": StructuredErrorCode(
+>         code="E0601",
+>         message="尝试使用已关闭的cursor",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.ERROR,
+>         http_status=500,
+>         cause="cursor被重复关闭或在关闭后继续使用",
+>         solution="检查cursor生命周期管理；使用try-finally确保正确关闭；每次操作后重新获取cursor",
+>     ),
+>     "ERR_RES_002": StructuredErrorCode(
+>         code="E0602",
+>         message="指定的文件不存在",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.WARNING,
+>         http_status=404,
+>         cause="文件路径错误或文件被删除",
+>         solution="检查文件路径是否正确；确认文件存在；检查文件权限",
+>     ),
+>     "ERR_RES_003": StructuredErrorCode(
+>         code="E0603",
+>         message="没有权限访问指定资源",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.WARNING,
+>         http_status=403,
+>         cause="文件权限或系统权限不足",
+>         solution="检查文件权限；以管理员身份运行；修改访问控制配置",
+>     ),
+>     "ERR_RES_004": StructuredErrorCode(
+>         code="E0604",
+>         message="系统内存不足以完成操作",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.ERROR,
+>         http_status=500,
+>         cause="处理了过大的数据集或内存泄漏",
+>         solution="减少处理的数据量；增加系统虚拟内存；检查内存泄漏",
+>     ),
+  
+      # ── 网络错误 (NET) → SYSTEM ──
+>     "ERR_NET_001": StructuredErrorCode(
+>         code="E0701",
+>         message="无法建立网络连接",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.ERROR,
+>         http_status=500,
+>         cause="网络不可用、DNS解析失败或目标服务器无响应",
+>         solution="检查网络连接；确认目标地址正确；检查防火墙和代理设置",
+>     ),
+>     "ERR_NET_002": StructuredErrorCode(
+>         code="E0702",
+>         message="HTTP请求超时",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.WARNING,
+>         http_status=408,
+>         cause="服务器响应过慢或网络延迟",
+>         solution="增加超时时间配置；检查服务器状态；重试请求",
+>     ),
+>     "ERR_NET_003": StructuredErrorCode(
+>         code="E0703",
+>         message="API返回了错误状态码",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.WARNING,
+>         http_status=502,
+>         cause="服务器端处理失败或请求格式错误",
+>         solution="检查请求参数；查看API文档；联系API提供商支持",
+>     ),
+  
+      # ── 订单领域业务错误码 (E1001-E1099) → ORDER ──
+>     "ORDER_NOT_FOUND": ErrorCode(
+>         code="E1001",
+>         message="订单未找到",
+>         domain=ErrorDomain.ORDER,
+>         severity=ErrorSeverity.ERROR,
+>         http_status=404,
+>     ),
+>     "ORDER_CREATE_FAILED": ErrorCode(
+>         code="E1002",
+>         message="订单创建失败",
+>         domain=ErrorDomain.ORDER,
+>         severity=ErrorSeverity.ERROR,
+>         http_status=500,
+>     ),
+>     "ORDER_UPDATE_FAILED": ErrorCode(
+>         code="E1003",
+>         message="订单更新失败",
+>         domain=ErrorDomain.ORDER,
+>         severity=ErrorSeverity.ERROR,
+>         http_status=500,
+>     ),
+>     "ORDER_DELETE_FAILED": ErrorCode(
+>         code="E1004",
+>         message="订单删除失败",
+>         domain=ErrorDomain.ORDER,
+>         severity=ErrorSeverity.ERROR,
+>         http_status=500,
+>     ),
+>     "ORDER_STATUS_INVALID": ErrorCode(
+>         code="E1005",
+>         message="订单当前状态不允许此操作",
+>         domain=ErrorDomain.ORDER,
+>         severity=ErrorSeverity.WARNING,
+>         http_status=400,
+>     ),
+>     "ORDER_DUPLICATE": ErrorCode(
+>         code="E1006",
+>         message="订单已存在（重复订单号）",
+>         domain=ErrorDomain.ORDER,
+>         severity=ErrorSeverity.WARNING,
+>         http_status=409,
+>     ),
+  
+      # ── 生产领域业务错误码 (E1101-E1199) → PRODUCTION ──
+>     "PRODUCTION_TASK_NOT_FOUND": ErrorCode(
+>         code="E1101",
+>         message="生产任务未找到",
+>         domain=ErrorDomain.PRODUCTION,
+>         severity=ErrorSeverity.ERROR,
+>         http_status=404,
+>     ),
+>     "PRODUCTION_TASK_CREATE_FAILED": ErrorCode(
+>         code="E1102",
+>         message="生产任务创建失败",
+>         domain=ErrorDomain.PRODUCTION,
+>         severity=ErrorSeverity.ERROR,
+>         http_status=500,
+>     ),
+>     "PRODUCTION_TASK_UPDATE_FAILED": ErrorCode(
+>         code="E1103",
+>         message="生产任务更新失败",
+>         domain=ErrorDomain.PRODUCTION,
+>         severity=ErrorSeverity.ERROR,
+>         http_status=500,
+>     ),
+>     "PRODUCTION_SCHEDULE_CONFLICT": ErrorCode(
+>         code="E1104",
+>         message="生产排期冲突",
+>         domain=ErrorDomain.PRODUCTION,
+>         severity=ErrorSeverity.WARNING,
+>         http_status=409,
+>     ),
+>     "MATERIAL_RULE_NOT_FOUND": ErrorCode(
+>         code="E1105",
+>         message="未找到匹配的物料计算规则",
+>         domain=ErrorDomain.PRODUCTION,
+>         severity=ErrorSeverity.WARNING,
+>         http_status=400,
+>     ),
+  
+      # ── 质量领域业务错误码 (E1201-E1299) → QUALITY ──
+>     "QUALITY_CHECK_NOT_FOUND": ErrorCode(
+>         code="E1201",
+>         message="质检记录未找到",
+>         domain=ErrorDomain.QUALITY,
+>         severity=ErrorSeverity.ERROR,
+>         http_status=404,
+>     ),
+>     "QUALITY_CHECK_CREATE_FAILED": ErrorCode(
+>         code="E1202",
+>         message="质检记录创建失败",
+>         domain=ErrorDomain.QUALITY,
+>         severity=ErrorSeverity.ERROR,
+>         http_status=500,
+>     ),
+>     "QUALITY_STANDARD_NOT_MET": ErrorCode(
+>         code="E1203",
+>         message="产品质量不达标",
+>         domain=ErrorDomain.QUALITY,
+>         severity=ErrorSeverity.WARNING,
+>         http_status=400,
+>     ),
+>     "QUALITY_REPORT_GENERATE_FAILED": ErrorCode(
+>         code="E1204",
+>         message="质检报告生成失败",
+>         domain=ErrorDomain.QUALITY,
+>         severity=ErrorSeverity.ERROR,
+>         http_status=500,
+>     ),
+  
+      # ── 库存领域业务错误码 (E1301-E1399) → INVENTORY ──
+>     "INVENTORY_NOT_FOUND": ErrorCode(
+>         code="E1301",
+>         message="库存记录未找到",
+>         domain=ErrorDomain.INVENTORY,
+>         severity=ErrorSeverity.ERROR,
+>         http_status=404,
+>     ),
+>     "INVENTORY_INSUFFICIENT": ErrorCode(
+>         code="E1302",
+>         message="库存不足",
+>         domain=ErrorDomain.INVENTORY,
+>         severity=ErrorSeverity.WARNING,
+>         http_status=400,
+>     ),
+>     "INVENTORY_UPDATE_FAILED": ErrorCode(
+>         code="E1303",
+>         message="库存更新失败",
+>         domain=ErrorDomain.INVENTORY,
+>         severity=ErrorSeverity.ERROR,
+>         http_status=500,
+>     ),
+>     "INVENTORY_WAREHOUSE_FULL": ErrorCode(
+>         code="E1304",
+>         message="仓库容量已满",
+>         domain=ErrorDomain.INVENTORY,
+>         severity=ErrorSeverity.WARNING,
+>         http_status=400,
+>     ),
+  
+      # ── 认证领域业务错误码 (E1401-E1499) → AUTH ──
+>     "AUTH_LOGIN_FAILED": ErrorCode(
+>         code="E1401",
+>         message="登录失败，用户名或密码错误",
+>         domain=ErrorDomain.AUTH,
+>         severity=ErrorSeverity.WARNING,
+>         http_status=401,
+>     ),
+>     "AUTH_TOKEN_EXPIRED": ErrorCode(
+>         code="E1402",
+>         message="登录凭证已过期",
+>         domain=ErrorDomain.AUTH,
+>         severity=ErrorSeverity.WARNING,
+>         http_status=401,
+>     ),
+>     "AUTH_PERMISSION_DENIED": ErrorCode(
+>         code="E1403",
+>         message="权限不足，无法执行此操作",
+>         domain=ErrorDomain.AUTH,
+>         severity=ErrorSeverity.ERROR,
+>         http_status=403,
+>     ),
+>     "AUTH_ACCOUNT_LOCKED": ErrorCode(
+>         code="E1404",
+>         message="账户已被锁定",
+>         domain=ErrorDomain.AUTH,
+>         severity=ErrorSeverity.ERROR,
+>         http_status=423,
+>     ),
+  
+      # ── 通用系统/校验错误码（Team Lead 指定新增）──
+>     "VALIDATION_FAILED": ErrorCode(
+>         code="E2001",
+>         message="校验失败",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.ERROR,
+>         http_status=400,
+>     ),
+>     "DATABASE_ERROR": ErrorCode(
+>         code="E3001",
+>         message="数据库错误",
+>         domain=ErrorDomain.SYSTEM,
+>         severity=ErrorSeverity.CRITICAL,
+>         http_status=500,
+>     ),
+> }
+  
+  
+  # ============================================================================
+  # 第三部分：结构化错误码查询函数（新增）
+  # ============================================================================
+  
+> def get_error(code_key: str) -> Optional[StructuredErrorCode]:
+>     """根据错误键获取结构化错误码"""
+>     return ERRORS.get(code_key)
+  
+  
+> def get_error_by_e_code(e_code: str) -> Optional[StructuredErrorCode]:
+>     """根据 E 编号（如 E0101）查找结构化错误码"""
+>     for err in ERRORS.values():
+>         if err.code == e_code:
+>             return err
+>     return None
+  
+  
+> def get_errors_by_domain(domain: str) -> List[StructuredErrorCode]:
+>     """获取指定领域的所有错误码"""
+>     return [e for e in ERRORS.values() if e.domain == domain]
+  
+  
+> def get_errors_by_severity_new(severity: str) -> List[StructuredErrorCode]:
+>     """获取指定严重级别的所有错误码"""
+>     return [e for e in ERRORS.values() if e.severity == severity]
+  
+  
+> def get_all_errors() -> Dict[str, StructuredErrorCode]:
+>     """获取所有结构化错误码"""
+>     return ERRORS
+  
+  
+> def get_error_count() -> int:
+>     """返回结构化错误码总数"""
+>     return len(ERRORS)
+  
+  
+> def get_errors_summary() -> dict:
+>     """获取结构化错误码体系摘要，按领域和严重级别统计"""
+>     summary: Dict[str, Dict[str, int]] = {}
+>     for err in ERRORS.values():
+>         summary.setdefault(err.domain, {}).setdefault(err.severity, 0)
+>         summary[err.domain][err.severity] += 1
+>     return summary
+  
+  
+  # ============================================================================
+  # 第四部分：原有 ERROR_CODES（完全保留，向后兼容）
+  # ============================================================================
+  
+> @dataclass
+> class ErrorCode:
+>     """错误编码数据类（原有 dataclass，保持兼容）"""
+>     code: str
+>     name: str
+>     message: str
+>     cause: str
+>     solution: str
+>     severity: str
+>     example: Optional[str] = None
+>     related_codes: Optional[List[str]] = None
+  
+  
+> ERROR_CODES = {
+>     "ERR-SYS-001": ErrorCode(
+>         code="ERR-SYS-001",
+>         name="Non-UTF-8编码错误",
+>         message="文件编码非UTF-8，Python无法解析",
+>         cause="文件保存时未指定UTF-8编码，或文件被其他程序修改了编码",
+>         solution="1. 在文件首行添加 # -*- coding: utf-8 -*-\n"
+>                  "2. 使用IDE将文件另存为UTF-8编码\n"
+>                  "3. 统一IDE默认编码为UTF-8",
+>         severity="CRITICAL",
+>         example="SyntaxError: Non-UTF-8 code starting with '\\xe5' on line 3"
+>     ),
+>     "ERR-SYS-002": ErrorCode(
+>         code="ERR-SYS-002",
+>         name="无效字符错误",
+>         message="文件包含无效Unicode字符",
+>         cause="文件可能被损坏，或使用了Windows记事本等工具修改",
+>         solution="1. 删除文件重新创建\n"
+>                  "2. 使用专业编辑器清除无效字符\n"
+>                  "3. 避免使用记事本编辑代码",
+>         severity="CRITICAL",
+>         example="SyntaxError: invalid character '?' (U+FFFD)"
+>     ),
+>     "ERR-SYS-003": ErrorCode(
+>         code="ERR-SYS-003",
+>         name="未终止字符串",
+>         message="字符串引号未正确闭合",
+>         cause="引号不配对（中文引号被误用为英文引号）",
+>         solution="1. 检查引号配对，特别注意中文单引号和英文单引号\n"
+>                  "2. 使用IDE的括号匹配功能检查",
+>         severity="CRITICAL",
+>         example="SyntaxError: unterminated string literal (detected at line 355)"
+>     ),
+>     "ERR-SYS-004": ErrorCode(
+>         code="ERR-SYS-004",
+>         name="缩进错误",
+>         message="代码缩进不一致",
+>         cause="混合使用Tab和空格，或if/else/for块缩进错误",
+>         solution="1. 统一使用4空格缩进\n"
+>                  "2. 在IDE中设置Tab转换为空格\n"
+>                  "3. 使用 python -m py_compile file.py 检查语法",
+>         severity="CRITICAL",
+>         example="IndentationError: unexpected indent"
+>     ),
+>     "ERR-SYS-005": ErrorCode(
+>         code="ERR-SYS-005",
+>         name="语法错误",
+>         message="Python代码存在语法错误",
+>         cause="代码语法不符合Python规范",
+>         solution="1. 检查错误行的语法\n"
+>                  "2. 确认括号、引号等配对正确\n"
+>                  "3. 查阅Python语法文档",
+>         severity="CRITICAL",
+>         example="SyntaxError: invalid syntax"
+>     ),
+>     "ERR-SYS-006": ErrorCode(
+>         code="ERR-SYS-006",
+>         name="名称未定义",
+>         message="使用的名称在当前作用域未定义",
+>         cause="变量、函数或类名称拼写错误或未导入",
+>         solution="1. 检查名称拼写是否正确\n"
+>                  "2. 确认已正确导入模块\n"
+>                  "3. 检查是否在正确的模块/类中",
+>         severity="HIGH",
+>         example="NameError: name 'operator' is not defined"
+>     ),
+  
+>     "ERR-DB-001": ErrorCode(
+>         code="ERR-DB-001",
+>         name="数据库连接失败",
+>         message="无法连接到MySQL服务器",
+>         cause="MySQL服务未启动、网络不通、端口错误",
+>         solution="1. 确认MySQL服务正在运行\n"
+>                  "2. 检查host和port配置\n"
+>                  "3. 检查防火墙设置",
+>         severity="CRITICAL",
+>         example="Can't connect to MySQL server on 'localhost'"
+>     ),
+>     "ERR-DB-002": ErrorCode(
+>         code="ERR-DB-002",
+>         name="数据库访问被拒绝",
+>         message="用户名或密码错误",
+>         cause="密码为空或配置错误",
+>         solution="1. 在.env文件中配置正确的MYSQL_PASSWORD\n"
+>                  "2. 确认用户名root的密码正确\n"
+>                  "3. 通过系统设置->数据库连接 配置",
+>         severity="CRITICAL",
+>         example="Access denied for user 'root'@'localhost' (using password: NO)"
+>     ),
+>     "ERR-DB-003": ErrorCode(
+>         code="ERR-DB-003",
+>         name="数据库不存在",
+>         message="指定的数据库不存在",
+>         cause="数据库未创建或名称错误",
+>         solution="1. 创建数据库 steel_belt\n"
+>                  "2. 检查DB_NAME配置",
+>         severity="CRITICAL",
+>         example="Unknown database 'steel_belt'"
+>     ),
+>     "ERR-DB-004": ErrorCode(
+>         code="ERR-DB-004",
+>         name="SQL语法错误",
+>         message="执行的SQL语句语法错误",
+>         cause="SQL语句拼写错误或语法不规范",
+>         solution="1. 检查SQL语句语法\n"
+>                  "2. 确认表名和字段名正确\n"
+>                  "3. 查看MySQL错误文档",
+>         severity="HIGH",
+>         example="You have an error in your SQL syntax"
+>     ),
+>     "ERR-DB-005": ErrorCode(
+>         code="ERR-DB-005",
+>         name="表不存在",
+>         message="操作的数据库表不存在",
+>         cause="表未创建或表名拼写错误",
+>         solution="1. 执行数据库初始化脚本\n"
+>                  "2. 检查表名拼写\n"
+>                  "3. 确认数据库已正确初始化",
+>         severity="HIGH",
+>         example="Table 'xxx' doesn't exist"
+>     ),
+>     "ERR-DB-006": ErrorCode(
+>         code="ERR-DB-006",
+>         name="字段不存在",
+>         message="操作的数据库字段不存在",
+>         cause="字段未创建或字段名拼写错误",
+>         solution="1. 检查字段名拼写\n"
+>                  "2. 执行数据库迁移脚本\n"
+>                  "3. 确认数据库schema正确",
+>         severity="HIGH",
+>         example="Unknown column 'xxx' in 'field list'"
+>     ),
+>     "ERR-DB-007": ErrorCode(
+>         code="ERR-DB-007",
+>         name="连接池耗尽",
+>         message="数据库连接池已满，无法获取新连接",
+>         cause="高并发或连接未正确释放",
+>         solution="1. 增加MYSQL_POOL_SIZE配置\n"
+>                  "2. 检查代码是否正确关闭连接\n"
+>                  "3. 使用连接池监控工具检查泄漏",
+>         severity="HIGH",
+>         example="pool exhausted|Too many connections"
+>     ),
+>     "ERR-DB-008": ErrorCode(
+>         code="ERR-DB-008",
+>         name="MySQL连接丢失",
+>         message="与MySQL服务器的连接意外断开",
+>         cause="服务器超时、网络问题或服务器崩溃",
+>         solution="1. 检查网络稳定性\n"
+>                  "2. 增加超时配置\n"
+>                  "3. 检查MySQL服务器状态",
+>         severity="HIGH",
+>         example="Lost connection to MySQL server during query"
+>     ),
+>     "ERR-DB-009": ErrorCode(
+>         code="ERR-DB-009",
+>         name="BLOB字段默认值错误",
+>         message="BLOB类型字段不能有默认值",
+>         cause="MySQL配置或版本问题",
+>         solution="1. 移除BLOB字段的默认值\n"
+>                  "2. 修改SQL模式\n"
+>                  "3. 升级MySQL版本",
+>         severity="MEDIUM",
+>         example="BLOB/text can't have a default value"
+>     ),
+  
+>     "ERR-INT-001": ErrorCode(
+>         code="ERR-INT-001",
+>         name="模块未找到",
+>         message="Python模块或包不存在",
+>         cause="sys.path配置错误或模块文件不存在",
+>         solution="1. 检查sys.path是否包含模块所在目录\n"
+>                  "2. 确认__init__.py文件存在\n"
+>                  "3. 检查模块文件名拼写",
+>         severity="CRITICAL",
+>         example="ModuleNotFoundError: No module named 'views.dialogs'"
+>     ),
+>     "ERR-INT-002": ErrorCode(
+>         code="ERR-INT-002",
+>         name="导入失败",
+>         message="无法从模块导入指定名称",
+>         cause="config.py中未定义该名称，或导入顺序错误",
+>         solution="1. 检查config.py中是否导出该名称\n"
+>                  "2. 检查是否存在循环导入\n"
+>                  "3. 确认拼写正确",
+>         severity="CRITICAL",
+>         example="ImportError: cannot import name 'DB_PATH' from 'config'"
+>     ),
+>     "ERR-INT-003": ErrorCode(
+>         code="ERR-INT-003",
+>         name="循环导入",
+>         message="模块之间存在循环依赖",
+>         cause="A导入B，B又导入A",
+>         solution="1. 重构代码消除循环依赖\n"
+>                  "2. 使用延迟导入\n"
+>                  "3. 将共享导入移到独立模块",
+>         severity="HIGH",
+>         example="ImportError: cannot import name 'xxx' from partially initialized module"
+>     ),
+>     "ERR-INT-004": ErrorCode(
+>         code="ERR-INT-004",
+>         name="包未安装",
+>         message="必需的Python包未安装",
+>         cause="缺少依赖或虚拟环境问题",
+>         solution="1. pip install 安装缺失的包\n"
+>                  "2. 检查requirements.txt\n"
+>                  "3. 确认使用正确的虚拟环境",
+>         severity="CRITICAL",
+>         example="ModuleNotFoundError: No module named 'xxx'"
+>     ),
+  
+>     "ERR-SEC-001": ErrorCode(
+>         code="ERR-SEC-001",
+>         name="硬编码密码",
+>         message="代码中包含硬编码密码",
+>         cause="直接在代码中写入密码",
+>         solution="1. 将密码移到.env文件\n"
+>                  "2. 使用os.getenv()读取\n"
+>                  "3. 确保.env文件在.gitignore中",
+>         severity="CRITICAL",
+>         example='password": os.getenv("PASSWORD", "your_password_here")'
+>     ),
+>     "ERR-SEC-002": ErrorCode(
+>         code="ERR-SEC-002",
+>         name="API密钥泄露",
+>         message="代码中包含硬编码API密钥",
+>         cause="直接在代码中写入API密钥",
+>         solution="1. 将API密钥移到.env文件\n"
+>                  "2. 使用os.getenv()读取\n"
+>                  "3. 轮换泄露的API密钥",
+>         severity="CRITICAL",
+>         example='api_key": os.getenv("API_KEY", "your_api_key_here")'
+>     ),
+>     "ERR-SEC-003": ErrorCode(
+>         code="ERR-SEC-003",
+>         name="SQL注入风险",
+>         message="SQL语句存在注入漏洞",
+>         cause="用户输入直接拼接到SQL语句",
+>         solution="1. 使用参数化查询\n"
+>                  "2. 对用户输入进行验证\n"
+>                  "3. 使用ORM框架",
+>         severity="CRITICAL",
+>         example="SQL injection vulnerability detected"
+>     ),
+>     "ERR-SEC-004": ErrorCode(
+>         code="ERR-SEC-004",
+>         name="代码注入风险",
+>         message="使用eval执行用户输入存在安全风险",
+>         cause="用户输入被直接传递给eval执行",
+>         solution="1. 避免使用eval\n"
+>                  "2. 使用安全的表达式解析器\n"
+>                  "3. 对输入进行严格验证",
+>         severity="CRITICAL",
+>         example="eval() security risk: user input passed to eval"
+>     ),
+  
+>     "ERR-VAL-001": ErrorCode(
+>         code="ERR-VAL-001",
+>         name="类型转换失败-浮点数",
+>         message="无法将字符串转换为浮点数",
+>         cause="传入的值不是合法的数字格式",
+>         solution="1. 添加try-except保护\n"
+>                  "2. 使用safe_float函数\n"
+>                  "3. 在前端进行输入校验",
+>         severity="HIGH",
+>         example="invalid literal for float(): 'abc'"
+>     ),
+>     "ERR-VAL-002": ErrorCode(
+>         code="ERR-VAL-002",
+>         name="类型转换失败-整数",
+>         message="无法将字符串转换为整数",
+>         cause="传入的值不是合法的整数格式",
+>         solution="1. 添加try-except保护\n"
+>                  "2. 使用safe_int函数\n"
+>                  "3. 在前端进行输入校验",
+>         severity="HIGH",
+>         example="invalid literal for int(): 'abc'"
+>     ),
+>     "ERR-VAL-003": ErrorCode(
+>         code="ERR-VAL-003",
+>         name="JSON解析失败",
+>         message="无法解析JSON格式数据",
+>         cause="JSON字符串格式不正确",
+>         solution="1. 检查JSON语法\n"
+>                  "2. 确保引号为英文引号\n"
+>                  "3. 使用JSON验证工具检查",
+>         severity="MEDIUM",
+>         example="JSONDecodeError: Expecting value"
+>     ),
+>     "ERR-VAL-004": ErrorCode(
+>         code="ERR-VAL-004",
+>         name="日期格式错误",
+>         message="无法解析日期字符串",
+>         cause="日期格式不符合预期",
+>         solution="1. 使用正确的日期格式\n"
+>                  "2. 添加日期解析异常处理\n"
+>                  "3. 在UI层进行日期格式验证",
+>         severity="MEDIUM",
+>         example="ValueError: time data 'abc' does not match format '%Y-%m-%d'"
+>     ),
+>     "ERR-VAL-005": ErrorCode(
+>         code="ERR-VAL-005",
+>         name="必填字段为空",
+>         message="必填字段未提供值",
+>         cause="表单验证失败或API参数缺失",
+>         solution="1. 检查必填字段\n"
+>                  "2. 添加前端验证\n"
+>                  "3. 提供清晰的错误提示",
+>         severity="MEDIUM",
+>         example="Required field 'customer_name' is empty"
+>     ),
+  
+>     "ERR-BIZ-001": ErrorCode(
+>         code="ERR-BIZ-001",
+>         name="操作员未指定",
+>         message="operator变量未定义",
+>         cause="记录操作日志时未传递operator参数",
+>         solution="1. 添加operator参数到函数定义\n"
+>                  "2. 从上下文获取当前用户\n"
+>                  "3. 默认使用'系统'作为操作员",
+>         severity="MEDIUM",
+>         example="NameError: name 'operator' is not defined"
+>     ),
+>     "ERR-BIZ-002": ErrorCode(
+>         code="ERR-BIZ-002",
+>         name="业务规则验证失败",
+>         message="操作违反业务规则",
+>         cause="业务规则校验未通过",
+>         solution="1. 检查业务规则配置\n"
+>                  "2. 确认数据符合业务要求\n"
+>                  "3. 查看具体规则说明",
+>         severity="MEDIUM",
+>         example="Business rule validation failed: quantity must be positive"
+>     ),
+>     "ERR-BIZ-003": ErrorCode(
+>         code="ERR-BIZ-003",
+>         name="订单状态错误",
+>         message="订单当前状态不允许此操作",
+>         cause="操作与订单状态不匹配",
+>         solution="1. 检查订单当前状态\n"
+>                  "2. 确认操作是否符合状态流转\n"
+>                  "3. 查看订单状态机配置",
+>         severity="MEDIUM",
+>         example="Order status '已完成' does not allow operation '修改'"
+>     ),
+>     "ERR-BIZ-004": ErrorCode(
+>         code="ERR-BIZ-004",
+>         name="物料规则未找到",
+>         message="未找到匹配的物料计算规则",
+>         cause="产品类型对应的物料规则未配置",
+>         solution="1. 配置产品类型的物料规则\n"
+>                  "2. 检查规则是否启用\n"
+>                  "3. 查看物料规则配置界面",
+>         severity="MEDIUM",
+>         example="No material rule found for product type '眼镜网带'"
+>     ),
+  
+>     "ERR-RES-001": ErrorCode(
+>         code="ERR-RES-001",
+>         name="Cursor已关闭",
+>         message="尝试使用已关闭的cursor",
+>         cause="cursor被重复关闭或在关闭后继续使用",
+>         solution="1. 检查cursor生命周期管理\n"
+>                  "2. 使用try-finally确保正确关闭\n"
+>                  "3. 每次操作后重新获取cursor",
+>         severity="HIGH",
+>         example="InterfaceError: cursor is closed"
+>     ),
+>     "ERR-RES-002": ErrorCode(
+>         code="ERR-RES-002",
+>         name="文件未找到",
+>         message="指定的文件不存在",
+>         cause="文件路径错误或文件被删除",
+>         solution="1. 检查文件路径是否正确\n"
+>                  "2. 确认文件存在\n"
+>                  "3. 检查文件权限",
+>         severity="MEDIUM",
+>         example="FileNotFoundError: [Errno 2] No such file or directory"
+>     ),
+>     "ERR-RES-003": ErrorCode(
+>         code="ERR-RES-003",
+>         name="资源访问被拒绝",
+>         message="没有权限访问指定资源",
+>         cause="文件权限或系统权限不足",
+>         solution="1. 检查文件权限\n"
+>                  "2. 以管理员身份运行\n"
+>                  "3. 修改访问控制配置",
+>         severity="MEDIUM",
+>         example="PermissionError: [Errno 13] Permission denied"
+>     ),
+>     "ERR-RES-004": ErrorCode(
+>         code="ERR-RES-004",
+>         name="内存不足",
+>         message="系统内存不足以完成操作",
+>         cause="处理了过大的数据集或内存泄漏",
+>         solution="1. 减少处理的数据量\n"
+>                  "2. 增加系统虚拟内存\n"
+>                  "3. 检查内存泄漏",
+>         severity="HIGH",
+>         example="MemoryError: out of memory"
+>     ),
+  
+>     "ERR-NET-001": ErrorCode(
+>         code="ERR-NET-001",
+>         name="网络连接失败",
+>         message="无法建立网络连接",
+>         cause="网络不可用、DNS解析失败或目标服务器无响应",
+>         solution="1. 检查网络连接\n"
+>                  "2. 确认目标地址正确\n"
+>                  "3. 检查防火墙和代理设置",
+>         severity="HIGH",
+>         example="ConnectionError: Failed to establish a new connection"
+>     ),
+>     "ERR-NET-002": ErrorCode(
+>         code="ERR-NET-002",
+>         name="HTTP请求超时",
+>         message="HTTP请求超时",
+>         cause="服务器响应过慢或网络延迟",
+>         solution="1. 增加超时时间配置\n"
+>                  "2. 检查服务器状态\n"
+>                  "3. 重试请求",
+>         severity="MEDIUM",
+>         example="requests.exceptions.Timeout: Connection timeout"
+>     ),
+>     "ERR-NET-003": ErrorCode(
+>         code="ERR-NET-003",
+>         name="API响应错误",
+>         message="API返回了错误状态码",
+>         cause="服务器端处理失败或请求格式错误",
+>         solution="1. 检查请求参数\n"
+>                  "2. 查看API文档\n"
+>                  "3. 联系API提供商支持",
+>         severity="MEDIUM",
+>         example="HTTP 500: Internal Server Error"
+>     ),
+> }
+  
+  
+  # ============================================================================
+  # 第五部分：原有查询函数（完全保留，向后兼容）
+  # ============================================================================
+  
+> def get_error_info(code: str) -> Optional[ErrorCode]:
+>     """根据错误编码获取错误信息"""
+>     return ERROR_CODES.get(code)
+  
+  
+> def get_all_error_codes() -> List[str]:
+>     """获取所有错误编码列表"""
+>     return list(ERROR_CODES.keys())
+  
+  
+> def get_errors_by_severity(severity: str) -> List[ErrorCode]:
+>     """获取指定严重程度的所有错误"""
+>     return [e for e in ERROR_CODES.values() if e.severity == severity]
+  
+  
+> def format_error_for_display(code: str, original_error: str = None) -> str:
+>     """格式化错误信息用于显示给用户"""
+>     error_info = get_error_info(code)
+>     if not error_info:
+>         return f"未知错误编码: {code}\n原始错误: {original_error}"
+  
+>     msg_lines = [
+>         f"错误编码: {code}",
+>         f"错误名称: {error_info.name}",
+>         f"严重程度: {error_info.severity}",
+>         "",
+>         "【错误描述】",
+>         error_info.message,
+>         "",
+>         "【原因分析】",
+>         error_info.cause,
+>         "",
+>         "【解决方案】",
+>         error_info.solution,
+>     ]
+  
+>     if error_info.example:
+>         msg_lines.extend([
+>             "",
+>             "【错误示例】",
+>             error_info.example
+>         ])
+  
+>     msg_lines.extend([
+>         "",
+>         "【查看详细文档】代码审查报告/错误代码分类目录.md"
+>     ])
+  
+>     max_len = max(len(line) for line in msg_lines)
+>     separator = "=" * min(max_len, 60)
+  
+>     result = f"\n{separator}\n"
+>     for line in msg_lines:
+>         result += line + "\n"
+>     result += separator + "\n"
+  
+>     return result
+  
+  
+> def get_error_summary() -> str:
+>     """获取错误编码体系摘要"""
+>     summary = "错误编码体系摘要\n"
+>     summary += "=" * 40 + "\n\n"
+  
+>     categories = {
+>         "CRITICAL": [],
+>         "HIGH": [],
+>         "MEDIUM": []
+>     }
+  
+>     for code, error in ERROR_CODES.items():
+>         if error.severity in categories:
+>             categories[error.severity].append(f"  {code}: {error.name}")
+  
+>     summary += "[CRITICAL] 严重错误:\n"
+>     summary += "\n".join(categories["CRITICAL"]) + "\n\n"
+  
+>     summary += "[HIGH] 高风险错误:\n"
+>     summary += "\n".join(categories["HIGH"]) + "\n\n"
+  
+>     summary += "[MEDIUM] 中等风险错误:\n"
+>     summary += "\n".join(categories["MEDIUM"]) + "\n"
+  
+>     return summary
+  
+  
+  # ============================================================================
+  # 第六部分：向后兼容层 — 模块级别别名
+  # 原有 import 语句如 `from core.error_codes import format_error_for_display` 不受影响
+  # 以下别名支持新的 `from core.error_codes import ERRORS, ERR_SYS_001` 等用法
+  # ============================================================================
+  
+> ERR_SYS_001 = ERRORS["ERR_SYS_001"]
+> ERR_SYS_002 = ERRORS["ERR_SYS_002"]
+> ERR_SYS_003 = ERRORS["ERR_SYS_003"]
+> ERR_SYS_004 = ERRORS["ERR_SYS_004"]
+> ERR_SYS_005 = ERRORS["ERR_SYS_005"]
+> ERR_SYS_006 = ERRORS["ERR_SYS_006"]
+  
+> ERR_DB_001 = ERRORS["ERR_DB_001"]
+> ERR_DB_002 = ERRORS["ERR_DB_002"]
+> ERR_DB_003 = ERRORS["ERR_DB_003"]
+> ERR_DB_004 = ERRORS["ERR_DB_004"]
+> ERR_DB_005 = ERRORS["ERR_DB_005"]
+> ERR_DB_006 = ERRORS["ERR_DB_006"]
+> ERR_DB_007 = ERRORS["ERR_DB_007"]
+> ERR_DB_008 = ERRORS["ERR_DB_008"]
+> ERR_DB_009 = ERRORS["ERR_DB_009"]
+  
+> ERR_INT_001 = ERRORS["ERR_INT_001"]
+> ERR_INT_002 = ERRORS["ERR_INT_002"]
+> ERR_INT_003 = ERRORS["ERR_INT_003"]
+> ERR_INT_004 = ERRORS["ERR_INT_004"]
+  
+> ERR_SEC_001 = ERRORS["ERR_SEC_001"]
+> ERR_SEC_002 = ERRORS["ERR_SEC_002"]
+> ERR_SEC_003 = ERRORS["ERR_SEC_003"]
+> ERR_SEC_004 = ERRORS["ERR_SEC_004"]
+  
+> ERR_VAL_001 = ERRORS["ERR_VAL_001"]
+> ERR_VAL_002 = ERRORS["ERR_VAL_002"]
+> ERR_VAL_003 = ERRORS["ERR_VAL_003"]
+> ERR_VAL_004 = ERRORS["ERR_VAL_004"]
+> ERR_VAL_005 = ERRORS["ERR_VAL_005"]
+  
+> ERR_BIZ_001 = ERRORS["ERR_BIZ_001"]
+> ERR_BIZ_002 = ERRORS["ERR_BIZ_002"]
+> ERR_BIZ_003 = ERRORS["ERR_BIZ_003"]
+> ERR_BIZ_004 = ERRORS["ERR_BIZ_004"]
+  
+> ERR_RES_001 = ERRORS["ERR_RES_001"]
+> ERR_RES_002 = ERRORS["ERR_RES_002"]
+> ERR_RES_003 = ERRORS["ERR_RES_003"]
+> ERR_RES_004 = ERRORS["ERR_RES_004"]
+  
+> ERR_NET_001 = ERRORS["ERR_NET_001"]
+> ERR_NET_002 = ERRORS["ERR_NET_002"]
+> ERR_NET_003 = ERRORS["ERR_NET_003"]
+  
+  # ============================================================================
+  # 第七部分：业务领域错误码向后兼容别名（新增）
+  # ============================================================================
+  
+  # ── 订单领域 ──
+> ORDER_NOT_FOUND = ERRORS["ORDER_NOT_FOUND"]
+> ORDER_CREATE_FAILED = ERRORS["ORDER_CREATE_FAILED"]
+> ORDER_UPDATE_FAILED = ERRORS["ORDER_UPDATE_FAILED"]
+> ORDER_DELETE_FAILED = ERRORS["ORDER_DELETE_FAILED"]
+> ORDER_STATUS_INVALID = ERRORS["ORDER_STATUS_INVALID"]
+> ORDER_DUPLICATE = ERRORS["ORDER_DUPLICATE"]
+  
+  # ── 生产领域 ──
+> PRODUCTION_TASK_NOT_FOUND = ERRORS["PRODUCTION_TASK_NOT_FOUND"]
+> PRODUCTION_TASK_CREATE_FAILED = ERRORS["PRODUCTION_TASK_CREATE_FAILED"]
+> PRODUCTION_TASK_UPDATE_FAILED = ERRORS["PRODUCTION_TASK_UPDATE_FAILED"]
+> PRODUCTION_SCHEDULE_CONFLICT = ERRORS["PRODUCTION_SCHEDULE_CONFLICT"]
+> MATERIAL_RULE_NOT_FOUND = ERRORS["MATERIAL_RULE_NOT_FOUND"]
+  
+  # ── 质量领域 ──
+> QUALITY_CHECK_NOT_FOUND = ERRORS["QUALITY_CHECK_NOT_FOUND"]
+> QUALITY_CHECK_CREATE_FAILED = ERRORS["QUALITY_CHECK_CREATE_FAILED"]
+> QUALITY_STANDARD_NOT_MET = ERRORS["QUALITY_STANDARD_NOT_MET"]
+> QUALITY_REPORT_GENERATE_FAILED = ERRORS["QUALITY_REPORT_GENERATE_FAILED"]
+  
+  # ── 库存领域 ──
+> INVENTORY_NOT_FOUND = ERRORS["INVENTORY_NOT_FOUND"]
+> INVENTORY_INSUFFICIENT = ERRORS["INVENTORY_INSUFFICIENT"]
+> INVENTORY_UPDATE_FAILED = ERRORS["INVENTORY_UPDATE_FAILED"]
+> INVENTORY_WAREHOUSE_FULL = ERRORS["INVENTORY_WAREHOUSE_FULL"]
+  
+  # ── 认证领域 ──
+> AUTH_LOGIN_FAILED = ERRORS["AUTH_LOGIN_FAILED"]
+> AUTH_TOKEN_EXPIRED = ERRORS["AUTH_TOKEN_EXPIRED"]
+> AUTH_PERMISSION_DENIED = ERRORS["AUTH_PERMISSION_DENIED"]
+> AUTH_ACCOUNT_LOCKED = ERRORS["AUTH_ACCOUNT_LOCKED"]
+  
+  # ── 通用系统/校验领域（Team Lead 指定新增向后兼容）──
+> VALIDATION_FAILED = ERRORS["VALIDATION_FAILED"]
+> DATABASE_ERROR = ERRORS["DATABASE_ERROR"]

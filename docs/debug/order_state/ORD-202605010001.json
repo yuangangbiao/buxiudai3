@@ -1,0 +1,363 @@
+{
+  "code": 0,
+  "data": {
+    "flow_production": [],
+    "flow_steps": [
+      {
+        "created_at": "2026-05-31T22:05:38",
+        "data_type": "flow_step",
+        "id": "3bb51081",
+        "operator_name": "",
+        "planned_qty": "",
+        "related_process": "",
+        "status": "distributed",
+        "target_operator": "YuanGangBiao",
+        "title": "冷冻螺旋网-生产执行"
+      },
+      {
+        "created_at": "2026-05-31T22:05:38",
+        "data_type": "flow_step",
+        "id": "2f9ba05e",
+        "operator_name": "",
+        "planned_qty": "",
+        "related_process": "",
+        "status": "distributed",
+        "target_operator": "YuanGangBiao",
+        "title": "冷冻螺旋网-报工完成"
+      },
+      {
+        "created_at": "2026-05-31T22:05:38",
+        "data_type": "flow_step",
+        "id": "0dd0bec1",
+        "operator_name": "",
+        "planned_qty": "",
+        "related_process": "",
+        "status": "distributed",
+        "target_operator": "YuanGangBiao",
+        "title": "冷冻螺旋网-完工入库"
+      },
+      {
+        "created_at": "2026-05-31T22:05:38",
+        "data_type": "flow_step",
+        "id": "d5ec268d",
+        "operator_name": "",
+        "planned_qty": "",
+        "related_process": "",
+        "status": "distributed",
+        "target_operator": "YuanGangBiao",
+        "title": "冷冻螺旋网-排产制定"
+      },
+      {
+        "created_at": "2026-05-31T22:05:38",
+        "data_type": "flow_step",
+        "id": "88367229",
+        "operator_name": "",
+        "planned_qty": "",
+        "related_process": "",
+        "status": "distributed",
+        "target_operator": "YuanGangBiao",
+        "title": "冷冻螺旋网-排产确认"
+      },
+      {
+        "created_at": "2026-05-31T22:05:38",
+        "data_type": "flow_step",
+        "id": "77122e2d",
+        "operator_name": "",
+        "planned_qty": "",
+        "related_process": "",
+        "status": "distributed",
+        "target_operator": "YuanGangBiao",
+        "title": "冷冻螺旋网-发货"
+      },
+      {
+        "created_at": "2026-05-31T22:05:38",
+        "data_type": "flow_step",
+        "id": "68840c8e",
+        "operator_name": "",
+        "planned_qty": "",
+        "related_process": "",
+        "status": "distributed",
+        "target_operator": "YuanGangBiao",
+        "title": "冷冻螺旋网-工单发布"
+      }
+    ],
+    "material_tasks": [
+      {
+        "created_at": "2026-06-01T00:41:22",
+        "data_type": "material_request",
+        "id": "6165232F",
+        "operator_name": "OP001",
+        "planned_qty": "2000.00",
+        "related_process": "备料-304不锈钢链条",
+        "status": "material_confirmed",
+        "target_operator": "OP001",
+        "title": "ORD-202605010001 - 备料-304不锈钢链条"
+      },
+      {
+        "created_at": "2026-06-01T00:41:17",
+        "data_type": "material_request",
+        "id": "C79D9086",
+        "operator_name": "OP001",
+        "planned_qty": "150.00",
+        "related_process": "备料-304不锈钢穿杆",
+        "status": "material_confirmed",
+        "target_operator": "OP001",
+        "title": "ORD-202605010001 - 备料-304不锈钢穿杆"
+      }
+    ],
+    "order_no": "ORD-202605010001",
+    "other_tasks": [
+      {
+        "created_at": "2026-06-10T15:10:12",
+        "data_type": "process_task",
+        "id": "PKG-90C78D23B2E1",
+        "operator_name": "",
+        "planned_qty": 1000,
+        "related_process": "",
+        "status": "completed",
+        "target_operator": "",
+        "title": "ORD-202605010001 - 表面处理(P14)"
+      },
+      {
+        "created_at": "2026-06-10T15:10:12",
+        "data_type": "process_task",
+        "id": "PKG-AE3B07C0AE22",
+        "operator_name": "",
+        "planned_qty": 29528,
+        "related_process": "",
+        "status": "completed",
+        "target_operator": "",
+        "title": "ORD-202605010001 - 编制右旋(P07)"
+      },
+      {
+        "created_at": "2026-06-10T15:10:12",
+        "data_type": "process_task",
+        "id": "PKG-B998CDC0E29A",
+        "operator_name": "",
+        "planned_qty": 1000,
+        "related_process": "",
+        "status": "completed",
+        "target_operator": "",
+        "title": "ORD-202605010001 - 包装入库(P16)"
+      },
+      {
+        "created_at": "2026-06-10T15:10:12",
+        "data_type": "process_task",
+        "id": "PKG-928A083C8301",
+        "operator_name": "",
+        "planned_qty": 1000,
+        "related_process": "",
+        "status": "completed",
+        "target_operator": "小明",
+        "title": "ORD-202605010001 - 输送带组装穿杆(P09)"
+      },
+      {
+        "created_at": "2026-06-10T15:10:12",
+        "data_type": "process_task",
+        "id": "PKG-AE744F52FD25",
+        "operator_name": "",
+        "planned_qty": 1000,
+        "related_process": "",
+        "status": "completed",
+        "target_operator": "",
+        "title": "ORD-202605010001 - 质量检验(P15)"
+      },
+      {
+        "created_at": "2026-06-10T15:10:12",
+        "data_type": "process_task",
+        "id": "PKG-0472C311E96B",
+        "operator_name": "",
+        "planned_qty": 1000,
+        "related_process": "",
+        "status": "completed",
+        "target_operator": "",
+        "title": "ORD-202605010001 - 安装链条(P10)"
+      },
+      {
+        "created_at": "2026-06-10T15:10:12",
+        "data_type": "process_task",
+        "id": "PKG-0E3CEB844AAD",
+        "operator_name": "",
+        "planned_qty": 1000,
+        "related_process": "",
+        "status": "completed",
+        "target_operator": "",
+        "title": "ORD-202605010001 - 整形校直(P12)"
+      },
+      {
+        "created_at": "2026-06-10T15:10:12",
+        "data_type": "process_task",
+        "id": "PKG-160DF64B199B",
+        "operator_name": "",
+        "planned_qty": 29528,
+        "related_process": "",
+        "status": "completed",
+        "target_operator": "",
+        "title": "ORD-202605010001 - 编制左旋(P06)"
+      },
+      {
+        "created_at": "2026-06-10T15:10:12",
+        "data_type": "process_task",
+        "id": "PKG-322550D74EE9",
+        "operator_name": "",
+        "planned_qty": 0,
+        "related_process": "",
+        "status": "pending",
+        "target_operator": "小明",
+        "title": "ORD-202605010001 - 原材料准备(P01)"
+      },
+      {
+        "created_at": "2026-06-10T15:10:12",
+        "data_type": "process_task",
+        "id": "PKG-FD87FBDBB365",
+        "operator_name": "",
+        "planned_qty": 1000,
+        "related_process": "",
+        "status": "completed",
+        "target_operator": "",
+        "title": "ORD-202605010001 - 焊接输送带(P13)"
+      }
+    ],
+    "outsource_tasks": [],
+    "process": {
+      "completed_at": null,
+      "completed_by": null,
+      "completed_task_count": 0,
+      "content": null,
+      "created_at": "2026-05-30T16:22:40",
+      "created_by": null,
+      "current_step": 2,
+      "customer_group": null,
+      "customer_name": "",
+      "data_locked": 0,
+      "delivery_date": "2026-05-01",
+      "flow_type": "production",
+      "id": "6f1c69d9",
+      "last_reverted_at": null,
+      "order_no": "ORD-202605010001",
+      "plan_end": "2026-06-27",
+      "plan_start": "2026-06-03",
+      "priority": "high",
+      "process_type": "production",
+      "prod_id": null,
+      "product_name": "冷冻螺旋网",
+      "qc_required": 0,
+      "qc_trigger_reason": "",
+      "quantity": 1000.0,
+      "source": "desktop_schedule",
+      "status": "in_production",
+      "steps": [
+        {
+          "name": "工单发布",
+          "role": "计划部",
+          "status_key": "published"
+        },
+        {
+          "name": "排产制定",
+          "role": "生产部",
+          "status_key": "scheduled"
+        },
+        {
+          "name": "排产确认",
+          "role": "计划部",
+          "status_key": "confirmed"
+        },
+        {
+          "name": "生产执行",
+          "role": "生产部",
+          "status_key": "in_production"
+        },
+        {
+          "name": "质检审核",
+          "parallel": true,
+          "role": "质检部",
+          "status_key": "qc_passed"
+        },
+        {
+          "name": "报工完成",
+          "role": "生产部",
+          "status_key": "reported"
+        },
+        {
+          "name": "完工入库",
+          "role": "仓库",
+          "status_key": "completed"
+        },
+        {
+          "name": "发货",
+          "role": "仓库",
+          "status_key": "shipped"
+        }
+      ],
+      "task_count": 0,
+      "template_id": null,
+      "unit": "米",
+      "updated_at": "2026-06-03T19:11:47",
+      "work_order_no": null
+    },
+    "process_tasks": [],
+    "product_name": "",
+    "quality_tasks": [
+      {
+        "created_at": "2026-05-31T22:05:38",
+        "data_type": "quality_task",
+        "id": "80e608a5",
+        "operator_name": "",
+        "planned_qty": "",
+        "related_process": "",
+        "status": "distributed",
+        "target_operator": "YuanGangBiao",
+        "title": "冷冻螺旋网-质检审核"
+      }
+    ],
+    "quantity": 1000,
+    "repair_tasks": [],
+    "stats": {
+      "completed_tasks": 0,
+      "total_tasks": 20
+    },
+    "status": "completed",
+    "steps": [
+      {
+        "name": "工单发布",
+        "role": "计划部",
+        "status": "completed"
+      },
+      {
+        "name": "排产制定",
+        "role": "生产部",
+        "status": "completed"
+      },
+      {
+        "name": "排产确认",
+        "role": "计划部",
+        "status": "active"
+      },
+      {
+        "name": "生产执行",
+        "role": "生产部",
+        "status": "pending"
+      },
+      {
+        "name": "质检审核",
+        "role": "质检部",
+        "status": "pending"
+      },
+      {
+        "name": "报工完成",
+        "role": "生产部",
+        "status": "pending"
+      },
+      {
+        "name": "完工入库",
+        "role": "仓库",
+        "status": "pending"
+      },
+      {
+        "name": "发货",
+        "role": "仓库",
+        "status": "pending"
+      }
+    ]
+  }
+}

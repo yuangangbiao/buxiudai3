@@ -1,0 +1,10 @@
+{
+  "title": "SteelBelt 3.0 运维仪表盘",
+  "panels": [
+    {"title": "订单量趋势", "type": "graph", "targets": [{"expr": "rate(gateway_requests_total[5m])"}]},
+    {"title": "报工量", "type": "stat", "targets": [{"expr": "report_callback_total"}]},
+    {"title": "P99延迟", "type": "graph", "targets": [{"expr": "histogram_quantile(0.99, order_create_duration_seconds)"}]},
+    {"title": "错误率", "type": "graph", "targets": [{"expr": "rate(gateway_errors_total[5m])"}]},
+    {"title": "库存预警", "type": "table", "targets": [{"expr": "inventory_alert_count"}]}
+  ]
+}

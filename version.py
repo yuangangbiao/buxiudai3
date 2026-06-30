@@ -1,0 +1,2 @@
+VERSION = "3.0"
+BUILD_DATE = "2026-05-26"

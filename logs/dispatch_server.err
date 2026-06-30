@@ -1,0 +1,56 @@
+23:53:45 [INFO] db_config:17 [DB] 已加载环境变量文件: D:\yuan\不锈钢网带跟单3.0\.env
+23:53:46 [WARNING] integration.wechat_notifier:26 [DEPRECATED] integration/wechat_notifier.py 已弃用，请迁移到 services/notifier.py
+23:53:46 [WARNING] integration.wechat_notifier:43 [DEPRECATED] WeChatNotifier(integration) 已弃用，请使用 services.notifier.WeChatNotifier
+23:53:46 [INFO] storage.mysql_storage:152 [MySQLStorage] 接口契约校验通过 (38 个方法)
+23:53:46 [INFO] storage.mysql_storage:378 [F16 T16.3] enterprise_structure 已 F6 P9 DROP, 数据源 = data/enterprise_structure.json
+23:53:46 [WARNING] storage.mysql_storage:118 [MySQLStorage] 迁移列 data_packages.idx_pkg_process_code 失败: (1061, "Duplicate key name 'idx_pkg_process_code'")
+23:53:46 [INFO] container_center_v5:881 [ContainerCenter] 存储后端接口契约校验通过 (34 个方法)
+23:53:46 [WARNING] dispatch_center._core:918 [操作员预加载] 无用户数据
+23:53:46 [INFO] dispatch_server:97 [调度中心] schedule_bp (/api/schedule) + workorder_bp (/api/workorder) 已注册
+23:53:46 [INFO] dispatch_server:105 [调度中心] sync_bp (/api/sync/*) 已注册, 共 16 端点本地化
+23:53:46 [INFO] wechat_work_bot_bp:649 [WeChatBot BP] 模块已初始化
+23:53:46 [INFO] dispatch_server:114 [调度中心] 企业微信机器人蓝图已注册
+23:53:46 [INFO] dispatch_server:122 [调度中心] 系统配置蓝图已注册: /api/config-center
+23:53:46 [INFO] container_center.services.alert_engine:704 [AlertEngine] 已启动, 间隔60s, 低频检查间隔300s
+23:53:46 [INFO] dispatch_center._core:5088 [DispatchCenter] CostChecker[1] 启动, 间隔 3600秒
+23:53:46 [INFO] dispatch_center._core:5100 [DispatchCenter] CostChecker[1] 线程已启动
+23:53:46 [INFO] dispatch_server:743 [启动] 后台调度引擎已启动
+23:53:46 [INFO] dispatch_server:779 [日志清理] 弹性线程已启动, 间隔 21600s
+23:53:46 [INFO] dispatch_server:851 [CloudPoller] 线程已启动, 轮询间隔 10s
+23:53:47 [INFO] db.steelbelt_pool:24 [SteelBeltPool] 连接池已创建
+23:53:47 [INFO] dispatch_server:710 [F1自检] operation_logs.direction 列已存在, 跳过
+23:53:47 [INFO] core.db:95 [DB] 连接池初始化: max=10
+23:53:47 [INFO] dispatch_center._core:6727 [Outbox] 消费者已启动，间隔=15s
+23:53:47 [INFO] dispatch_server:136 [调度中心] Outbox消费者已启动
+23:53:47 [INFO] cloud_poller:115 [CloudPoller] 游标恢复: cloud_cursor.txt -> 79
+23:53:47 [INFO] cloud_poller:434 [轮询] 启动，动态间隔 5s(空闲)/5s(忙碌)，线程池=4workers，云端: http://124.223.57.82:5006
+23:53:47 [INFO] cloud_poller:438 [云端] 轮询循环已启动，间隔5s，云端: http://124.223.57.82:5006
+23:53:47 [INFO] cloud_poller:518 [轮询] 已启动
+23:53:47 [INFO] cloud_poller:519 [云端] 轮询线程已启动，目标: http://124.223.57.82:5006/api/poll
+23:53:47 [INFO] dispatch_server:971 [调度中心] OpenAI SDK 云端轮询已启动
+23:53:47 [INFO] dispatch_server:975 ==================================================
+23:53:47 [INFO] dispatch_server:976   调度中心服务器启动
+23:53:47 [INFO] dispatch_server:977   地址: http://0.0.0.0:5003
+23:53:47 [INFO] dispatch_server:978   页面: http://0.0.0.0:5003/api/dispatch-center/
+23:53:47 [INFO] dispatch_server:979   CONTAINER_CENTER_URL: http://127.0.0.1:5002
+23:53:47 [INFO] dispatch_server:980   企业架构缓存: D:\yuan\不锈钢网带跟单3.0\mobile_api_ai\data\enterprise_structure.json
+23:53:47 [INFO] dispatch_server:981 ==================================================
+23:53:47 [INFO] cloud_poller:207 [轮询] 获取消息 0 条，游标=79，累计 0
+23:53:47 [INFO] waitress:449 Serving on http://0.0.0.0:5003
+23:53:52 [INFO] cloud_poller:207 [轮询] 获取消息 0 条，游标=79，累计 0
+23:53:57 [INFO] cloud_poller:207 [轮询] 获取消息 0 条，游标=79，累计 0
+23:54:02 [INFO] cloud_poller:207 [轮询] 获取消息 0 条，游标=79，累计 0
+23:54:07 [INFO] cloud_poller:207 [轮询] 获取消息 0 条，游标=79，累计 0
+23:54:12 [INFO] cloud_poller:207 [轮询] 获取消息 0 条，游标=79，累计 0
+23:54:12 [INFO] cloud_poller:214 [云端] 轮询正常（无新消息），游标=79
+23:54:17 [INFO] cloud_poller:207 [轮询] 获取消息 0 条，游标=79，累计 0
+23:54:22 [INFO] cloud_poller:207 [轮询] 获取消息 0 条，游标=79，累计 0
+23:54:27 [INFO] cloud_poller:207 [轮询] 获取消息 0 条，游标=79，累计 0
+23:54:33 [INFO] cloud_poller:207 [轮询] 获取消息 0 条，游标=79，累计 0
+23:54:38 [INFO] cloud_poller:207 [轮询] 获取消息 0 条，游标=79，累计 0
+23:54:43 [INFO] cloud_poller:207 [轮询] 获取消息 0 条，游标=79，累计 0
+23:54:43 [INFO] cloud_poller:214 [云端] 轮询正常（无新消息），游标=79
+23:54:48 [INFO] cloud_poller:207 [轮询] 获取消息 0 条，游标=79，累计 0
+23:54:53 [INFO] cloud_poller:207 [轮询] 获取消息 0 条，游标=79，累计 0
+23:54:58 [INFO] cloud_poller:207 [轮询] 获取消息 0 条，游标=79，累计 0
+23:55:03 [INFO] cloud_poller:207 [轮询] 获取消息 0 条，游标=79，累计 0
