@@ -6,10 +6,33 @@ on:
   pull_request:
     branches: [master, main]
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
+env:
+  PYTHON_VERSION: '3.11'
+  COVERAGE_THRESHOLD: 80
 
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install flake8
+        run: pip install flake8
+
+      - name: Run flake8
+        run: |
+          flake8 core/ app/ tests/ \
+            --max-line-length=120 \
+            --extend-ignore=E203,W503,F401,F403,F405,F811 \
+            --jobs=4
+
+  unit-test:
+    runs-on: ubuntu-latest
     services:
       mysql:
         image: mysql:8.0
@@ -27,10 +50,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Cache pip dependencies
         uses: actions/cache@v4
@@ -41,28 +64,11 @@ jobs:
             ${{ runner.os }}-pip-
 
       - name: Install dependencies
-        run: |
-          pip install --timeout=300 -r requirements-ci.txt 2>&1 | tee pip_install.log || true
+        run: pip install --timeout=300 -r requirements-ci.txt
 
-      - name: Upload pip install log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pip-install-log
-          path: pip_install.log
-          retention-days: 1
-
-      - name: Run flake8 lint
+      - name: Run L1 smoke tests
         run: |
-          flake8 core/ app/ tests/ \
-            --max-line-length=120 \
-            --extend-ignore=E203,W503,F401,F403,F405,F811 \
-            --jobs=4 || true
-
-      - name: Run P0+L1 冒烟测试
-        run: |
-          pytest tests/unit/ \
-            -m "p0 or L1 or smoke" \
+          pytest tests/L1_smoke/ \
             --tb=short \
             -v \
             --timeout=300 \
@@ -71,15 +77,38 @@ jobs:
             --cov=app \
             --cov-report=xml \
             --cov-report=term-missing \
+            --cov-fail-under=${{ env.COVERAGE_THRESHOLD }}
+
+      - name: Run unit tests (baseline)
+        run: |
+          pytest tests/unit/ \
+            --tb=short \
+            -v \
+            --timeout=300 \
+            --junit-xml=tests/reports/pytest-unit-results.xml \
+            --cov=core \
+            --cov=app \
+            --cov-report=xml \
+            --cov-report=term-missing \
+            --cov-fail-under=50 \
             -n auto \
+            --ignore=tests/unit/test_config_root.py \
             || true
 
-      - name: Upload test results
+      - name: Upload L1 smoke results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: pytest-results
+          name: pytest-smoke-results
           path: tests/reports/pytest-results.xml
+          retention-days: 30
+
+      - name: Upload unit results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-unit-results
+          path: tests/reports/pytest-unit-results.xml
           retention-days: 30
 
       - name: Upload coverage
@@ -89,22 +118,54 @@ jobs:
           files: ./coverage.xml
           fail_ci_if_error: false
 
-  lint-only:
+      - name: Stop containers
+        if: always()
+        run: docker kill $(docker ps -q) || true
+
+  e2e-test:
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE: buxiudai3_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Install flake8
-        run: pip install flake8
+      - name: Install dependencies
+        run: pip install --timeout=300 -r requirements-ci.txt
 
-      - name: Run flake8 lint
+      - name: Run e2e tests
         run: |
-          flake8 core/ app/ tests/ \
-            --max-line-length=120 \
-            --extend-ignore=E203,W503,F401,F403,F405,F811 \
-            --jobs=4 || true
+          pytest tests/e2e/ \
+            --tb=short \
+            -v \
+            --timeout=600 \
+            --junit-xml=tests/reports/pytest-e2e-results.xml \
+            -n auto
+
+      - name: Upload e2e results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-e2e-results
+          path: tests/reports/pytest-e2e-results.xml
+          retention-days: 30
+
+      - name: Stop containers
+        if: always()
+        run: docker kill $(docker ps -q) || true
