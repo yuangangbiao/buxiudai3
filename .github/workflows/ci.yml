@@ -36,22 +36,13 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements-ci.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libffi-dev libssl-dev build-essential
-
-      - name: Install Rust (for cryptography)
-        uses: dtolnay/rust-toolchain@stable
-
       - name: Install dependencies
         run: |
-          pip install --timeout=300 -r requirements.txt
-          pip install pytest-timeout pytest-xdist
+          pip install --timeout=300 -r requirements-ci.txt
 
       - name: Run flake8 lint
         run: |
