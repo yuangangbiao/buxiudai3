@@ -29,11 +29,12 @@
 
 | # | 待办项 | 依赖 | 状态 |
 |---|--------|------|------|
-| 7 | GitHub仓库创建 + Actions启用 + Secrets配置 | 人工确认 | ⏳ 待执行 |
-| 8 | pytest baseline采集（`--collect-baseline`） | 依赖7 | ⏳ 待执行 |
-| 9 | BUG-P0-001 生产环境验证测试 | 依赖4 | ⏳ 待执行 |
-| 13 | BUG-P0-003 Phase 2 T3a：`_core.py` 跨数据库池验证 | 依赖11 | ⏳ 待验证 |
-| 14 | BUG-P0-003 Phase 2 T3b：`db/steelbelt_pool.py` 迁移 | 依赖13 | ⏳ 待迁移 |
+| 7 | GitHub Actions CI/CD | 2026-06-30 确认：workflow存在+已触发（5次失败，需修复） | ✅ CI配置已修复（lint路径/coverage阈值/L1-smoke覆盖） |
+| 8 | pytest baseline采集 | 2026-06-30 确认：L1 smoke 106/106通过 | ✅ 已完成 |
+| 9 | BUG-P0-001 生产验证 | 2026-06-30 确认：后门代码已删除（standalone:96-104） | ✅ 已完成 |
+| 13 | `_core.py` 跨库池验证 | Round 2 悲观审计确认：2380行已接入_db_pools | ✅ 已完成 |
+| 14 | `steelbelt_pool.py` 迁移 | Round 4 db_compat.py路由重构已消除重复池 | ✅ 已完成 |
+| CI-SECRET | MYSQL_ROOT_PASSWORD GitHub Secret | 2026-06-30 确认：HTTP 401未授权 | ⚠️ 需人工配置 |
 
 ---
 
