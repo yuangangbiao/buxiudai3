@@ -110,9 +110,15 @@ class ConnectionPool:
                 except Exception:
                     pass
         # 池空，创建新连接
-        config = self._config.copy()
-        raw = pymysql.connect(**config)
-        return PooledConnection(self, raw)
+        # [BUG-P0-003 Fix] 使用统一连接池，避免连接泄漏
+        try:
+            from core._db_pools import get_steel_belt_connection
+            raw = get_steel_belt_connection(autocommit=False)
+            return PooledConnection(self, raw)
+        except Exception:
+            config = self._config.copy()
+            raw = pymysql.connect(**config)
+            return PooledConnection(self, raw)
 
     def return_connection(self, raw_conn):
         """归还连接"""
