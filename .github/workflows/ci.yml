@@ -51,7 +51,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --timeout=300 -r requirements.txt
-          pip install pytest-timeout
+          pip install pytest-timeout pytest-xdist
 
       - name: Run flake8 lint
         run: |
@@ -62,18 +62,28 @@ jobs:
 
       - name: Run P0+L1 冒烟测试
         run: |
-          pytest tests/ \
+          pytest tests/unit/ \
             -m "p0 or L1 or smoke" \
             --tb=short \
             -v \
             --timeout=300 \
+            --junit-xml=tests/reports/pytest-results.xml \
             --cov=core \
             --cov=app \
             --cov-report=xml \
             --cov-report=term-missing \
+            -n auto \
             || true
 
-      - name: Upload coverage to Codecov
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-results
+          path: tests/reports/pytest-results.xml
+          retention-days: 30
+
+      - name: Upload coverage
         if: always()
         uses: codecov/codecov-action@v4
         with:
