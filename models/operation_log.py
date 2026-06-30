@@ -1,0 +1,279 @@
+# -*- coding: utf-8 -*-
+"""
+操作日志模型 - 记录物料收集、报工、质检等信息
+日志保留周期：订单完成后180天
+"""
+import logging
+from models.database import get_connection
+from datetime import datetime, timedelta
+
+logger = logging.getLogger(__name__)
+
+class OperationLogDAO:
+    """操作日志数据访问对象"""
+    
+    # 日志保留天数（订单完成后180天）
+    RETENTION_DAYS = 180
+    
+    @staticmethod
+    def create(order_id, order_no, module, action, operator, details=None):
+        """
+        创建操作日志
+        
+        :param order_id: 订单ID
+        :param order_no: 订单编号
+        :param module: 模块名称（material_prep, process, inspection, production等）
+        :param action: 操作类型
+        :param operator: 操作人
+        :param details: 操作详情
+        """
+        conn = get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute("""
+                INSERT INTO operation_logs (order_id, order_no, module, action, operator, details, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (order_id, order_no, module, action, operator, details, datetime.now()))
+            conn.commit()
+            return True
+        except Exception as e:
+            logger.error(f"[OperationLog] 创建日志失败: {e}")
+            conn.rollback()
+            return False
+        finally:
+            cursor.close()
+            conn.close()
+    
+    @staticmethod
+    def get_by_order_id(order_id):
+        """获取指定订单的所有操作日志"""
+        conn = get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute("""
+                SELECT * FROM operation_logs 
+                WHERE order_id = %s 
+                ORDER BY created_at DESC
+            """, (order_id,))
+            return cursor.fetchall()
+        except Exception as e:
+            logger.error(f"[OperationLog] 查询日志失败: {e}")
+            return []
+        finally:
+            cursor.close()
+            conn.close()
+    
+    @staticmethod
+    def get_by_module(module, limit=100):
+        """获取指定模块的操作日志"""
+        conn = get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute("""
+                SELECT * FROM operation_logs 
+                WHERE module = %s 
+                ORDER BY created_at DESC 
+                LIMIT %s
+            """, (module, limit))
+            return cursor.fetchall()
+        except Exception as e:
+            logger.error(f"[OperationLog] 查询日志失败: {e}")
+            return []
+        finally:
+            cursor.close()
+            conn.close()
+    
+    @staticmethod
+    def get_by_action(action, limit=100):
+        """获取指定操作类型的日志"""
+        conn = get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute("""
+                SELECT * FROM operation_logs 
+                WHERE action = %s 
+                ORDER BY created_at DESC 
+                LIMIT %s
+            """, (action, limit))
+            return cursor.fetchall()
+        except Exception as e:
+            logger.error(f"[OperationLog] 查询日志失败: {e}")
+            return []
+        finally:
+            cursor.close()
+            conn.close()
+    
+    @staticmethod
+    def get_recent(limit=100):
+        """获取最近的操作日志"""
+        conn = get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute("""
+                SELECT * FROM operation_logs 
+                ORDER BY created_at DESC 
+                LIMIT %s
+            """, (limit,))
+            return cursor.fetchall()
+        except Exception as e:
+            logger.error(f"[OperationLog] 查询日志失败: {e}")
+            return []
+        finally:
+            cursor.close()
+            conn.close()
+    
+    @staticmethod
+    def search(keyword, limit=100):
+        """搜索日志（按订单号、操作人、详情）"""
+        conn = get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute("""
+                SELECT * FROM operation_logs 
+                WHERE order_no LIKE %s OR operator LIKE %s OR details LIKE %s
+                ORDER BY created_at DESC 
+                LIMIT %s
+            """, (f"%{keyword}%", f"%{keyword}%", f"%{keyword}%", limit))
+            return cursor.fetchall()
+        except Exception as e:
+            logger.error(f"[OperationLog] 搜索日志失败: {e}")
+            return []
+        finally:
+            cursor.close()
+            conn.close()
+    
+    @staticmethod
+    def clean_expired_logs():
+        """清理过期日志（订单完成后超过180天的日志）"""
+        conn = get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute("""
+                SELECT id FROM orders WHERE status = '已完成'
+            """)
+            completed_orders = cursor.fetchall()
+            
+            deleted_count = 0
+            for order in completed_orders:
+                order_id = order['id']
+                
+                cursor.execute("""
+                    SELECT updated_at FROM orders WHERE id = %s
+                """, (order_id,))
+                result = cursor.fetchone()
+                if not result:
+                    continue
+                
+                completed_at = result['updated_at']
+                if isinstance(completed_at, str):
+                    completed_at = datetime.strptime(completed_at, "%Y-%m-%d %H:%M:%S")
+                
+                expire_date = completed_at + timedelta(days=OperationLogDAO.RETENTION_DAYS)
+                
+                if datetime.now() > expire_date:
+                    cursor.execute("""
+                        DELETE FROM operation_logs WHERE order_id = %s
+                    """, (order_id,))
+                    deleted_count += cursor.rowcount
+            
+            conn.commit()
+            logger.info(f"[OperationLog] 清理过期日志完成，共删除 {deleted_count} 条记录")
+            return deleted_count
+        except Exception as e:
+            logger.error(f"[OperationLog] 清理过期日志失败: {e}")
+            conn.rollback()
+            return 0
+        finally:
+            cursor.close()
+            conn.close()
+    
+    @staticmethod
+    def count_by_module():
+        """按模块统计日志数量"""
+        conn = get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute("""
+                SELECT module, COUNT(*) as count 
+                FROM operation_logs 
+                GROUP BY module 
+                ORDER BY count DESC
+            """)
+            return cursor.fetchall()
+        except Exception as e:
+            logger.error(f"[OperationLog] 统计失败: {e}")
+            return []
+        finally:
+            cursor.close()
+            conn.close()
+
+# 模块名称常量
+LOG_MODULE = {
+    "MATERIAL_PREP": "物料准备",
+    "PROCESS": "报工管理",
+    "INSPECTION": "质量检验",
+    "PRODUCTION": "生产排产",
+    "ORDER": "订单管理",
+    "INVENTORY": "库存管理",
+}
+
+# 操作类型常量
+LOG_ACTION = {
+    # 物料准备操作
+    "MAT_ADD": "添加物料",
+    "MAT_EDIT": "编辑物料",
+    "MAT_DELETE": "删除物料",
+    "MAT_PREPARE": "物料入库",
+    "MAT_LOCK": "锁定物料",
+    "MAT_UNLOCK": "解锁物料",
+    "MAT_AUTO_GENERATE": "自动生成物料",
+    
+    # 报工操作
+    "PROC_START": "开始工序",
+    "PROC_COMPLETE": "完成工序",
+    "PROC_UPDATE": "更新进度",
+    "PROC_SKIP": "跳过工序",
+    "PROC_REDO": "重做工序",
+    
+    # 质检操作
+    "INSP_CREATE": "创建质检记录",
+    "INSP_APPROVE": "质检通过",
+    "INSP_REJECT": "质检不合格",
+    "INSP_REVIEW": "复检",
+    
+    # 生产操作
+    "PROD_CREATE": "创建工单",
+    "PROD_UPDATE": "更新工单",
+    "PROD_START": "开始生产",
+    "PROD_COMPLETE": "完成生产",
+    
+    # 订单操作
+    "ORD_CREATE": "创建订单",
+    "ORD_UPDATE": "修改订单",
+    "ORD_CONFIRM": "确认订单",
+    "ORD_CANCEL": "取消订单",
+    "ORD_COMPLETE": "完成订单",
+}
+
+def log_operation(order_id, order_no, module_key, action_key, operator="系统", details=None):
+    """
+    记录操作日志（便捷函数）
+    
+    :param order_id: 订单ID
+    :param order_no: 订单编号
+    :param module_key: 模块键（如 'MATERIAL_PREP', 'PROCESS'）
+    :param action_key: 操作类型键（如 'MAT_ADD', 'PROC_START'）
+    :param operator: 操作人（默认系统）
+    :param details: 操作详情
+    """
+    module = LOG_MODULE.get(module_key, module_key)
+    action = LOG_ACTION.get(action_key, action_key)
+    OperationLogDAO.create(order_id, order_no, module, action, operator, details)

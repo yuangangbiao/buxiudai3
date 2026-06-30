@@ -1,0 +1,106 @@
+# -*- coding: utf-8 -*-
+"""
+通用工具函数
+"""
+import re
+from datetime import datetime, date
+
+
+def validate_number(value, allow_empty=True, min_val=None, max_val=None) -> tuple:
+    """验证数字输入，返回 (is_valid, converted_value, error_msg)"""
+    if not value or str(value).strip() == "":
+        if allow_empty:
+            return True, None, ""
+        return False, None, "此字段不能为空"
+    try:
+        num = float(str(value).strip())
+        if min_val is not None and num < min_val:
+            return False, None, f"值不能小于 {min_val}"
+        if max_val is not None and num > max_val:
+            return False, None, f"值不能大于 {max_val}"
+        return True, num, ""
+    except ValueError:
+        return False, None, "请输入有效数字"
+
+
+def validate_date(value, allow_empty=True) -> tuple:
+    """验证日期格式 YYYY-MM-DD"""
+    if not value or str(value).strip() == "":
+        if allow_empty:
+            return True, "", ""
+        return False, "", "日期不能为空"
+    formats = ["%Y-%m-%d", "%Y/%m/%d", "%Y.%m.%d"]
+    for fmt in formats:
+        try:
+            dt = datetime.strptime(str(value).strip(), fmt)
+            return True, dt.strftime("%Y-%m-%d"), ""
+        except ValueError:
+            continue
+    return False, "", "日期格式应为 YYYY-MM-DD"
+
+
+def format_date(date_str: str, default="") -> str:
+    """格式化日期显示"""
+    if not date_str:
+        return default
+    try:
+        dt = datetime.strptime(date_str[:10], "%Y-%m-%d")
+        return dt.strftime("%Y-%m-%d")
+    except Exception:
+        return date_str
+
+
+def days_until(date_str: str) -> int:
+    """计算距离指定日期的天数，负数表示已过期"""
+    if not date_str:
+        return 999
+    try:
+        target = datetime.strptime(date_str[:10], "%Y-%m-%d").date()
+        return (target - date.today()).days
+    except Exception:
+        return 999
+
+
+def get_urgency_color(date_str: str) -> str:
+    """根据交期返回紧急程度颜色"""
+    days = days_until(date_str)
+    if days < 0:
+        return "#F44336"    # 红色：已超期
+    elif days <= 3:
+        return "#FF5722"    # 深橙：紧急
+    elif days <= 7:
+        return "#FF9800"    # 橙色：临近
+    else:
+        return "#4CAF50"    # 绿色：充裕
+
+
+def format_amount(amount) -> str:
+    """格式化金额"""
+    if amount is None:
+        return "0.00"
+    return f"{float(amount):,.2f}"
+
+
+def format_spec(order: dict) -> str:
+    """格式化网带规格摘要（从固定字段和 extra_params 合并读取）"""
+    parts = []
+    ep = order.get("extra_params", {})
+    def get(k):
+        return order.get(k) or (ep.get(k) if isinstance(ep, dict) else None)
+
+    if get("width") or get("总宽"):
+        parts.append(f"宽{get('width') or get('总宽')}mm")
+    if get("length") or get("网带段数"):
+        parts.append(f"长{get('length') or get('网带段数')}m")
+    if get("wire_diameter") or get("钢丝直径"):
+        parts.append(f"丝径{get('wire_diameter') or get('钢丝直径')}mm")
+    if get("mesh_size") or get("网带节距"):
+        parts.append(f"节距{get('mesh_size') or get('网带节距')}mm")
+    return " | ".join(parts) if parts else "规格待填"
+
+
+def truncate_text(text: str, max_len: int = 20) -> str:
+    """截断过长文本"""
+    if not text:
+        return ""
+    return text if len(text) <= max_len else text[:max_len-1] + "…"

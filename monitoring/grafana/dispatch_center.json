@@ -1,0 +1,175 @@
+{
+  "title": "Dispatch Center (5003)",
+  "uid": "dispatch-center",
+  "tags": ["dispatch", "core", "v3.7.3"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "15s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "instance",
+        "type": "query",
+        "datasource": "Prometheus",
+        "query": "label_values(dispatch_center_request_total, instance)",
+        "current": {"selected": false, "text": "All", "value": "$__all"}
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "QPS (请求/秒)",
+      "type": "graph",
+      "datasource": "Prometheus",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "targets": [
+        {
+          "expr": "sum(rate(dispatch_center_request_total{instance=~\"$instance\"}[5m])) by (method)",
+          "legendFormat": "{{method}}",
+          "refId": "A"
+        }
+      ],
+      "yaxes": [
+        {"format": "ops", "label": "QPS"},
+        {"format": "short"}
+      ]
+    },
+    {
+      "id": 2,
+      "title": "P95 响应延迟 (秒)",
+      "type": "graph",
+      "datasource": "Prometheus",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(dispatch_center_request_latency_seconds_bucket{instance=~\"$instance\"}[5m])) by (le, method))",
+          "legendFormat": "{{method}} P95",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(dispatch_center_request_latency_seconds_bucket{instance=~\"$instance\"}[5m])) by (le, method))",
+          "legendFormat": "{{method}} P99",
+          "refId": "B"
+        }
+      ],
+      "yaxes": [
+        {"format": "s", "label": "延迟"},
+        {"format": "short"}
+      ]
+    },
+    {
+      "id": 3,
+      "title": "错误率 (%)",
+      "type": "graph",
+      "datasource": "Prometheus",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "targets": [
+        {
+          "expr": "sum(rate(dispatch_center_request_total{status=~\"5..\"}[5m])) / sum(rate(dispatch_center_request_total[5m])) * 100",
+          "legendFormat": "5xx 错误率",
+          "refId": "A"
+        }
+      ],
+      "yaxes": [
+        {"format": "percent", "label": "错误率", "max": 100, "min": 0},
+        {"format": "short"}
+      ]
+    },
+    {
+      "id": 4,
+      "title": "DLQ 队列大小",
+      "type": "graph",
+      "datasource": "Prometheus",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "targets": [
+        {
+          "expr": "dispatch_center_dlq_queue_size",
+          "legendFormat": "队列长度",
+          "refId": "A"
+        }
+      ],
+      "yaxes": [
+        {"format": "short", "label": "消息数"},
+        {"format": "short"}
+      ]
+    },
+    {
+      "id": 5,
+      "title": "DLQ 重试结果 (次/分)",
+      "type": "graph",
+      "datasource": "Prometheus",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+      "targets": [
+        {
+          "expr": "sum(rate(dispatch_center_dlq_retries_total[5m])) by (result)",
+          "legendFormat": "{{result}}",
+          "refId": "A"
+        }
+      ],
+      "yaxes": [
+        {"format": "ops", "label": "重试/分"},
+        {"format": "short"}
+      ]
+    },
+    {
+      "id": 6,
+      "title": "业务事件 (次/分)",
+      "type": "graph",
+      "datasource": "Prometheus",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+      "targets": [
+        {
+          "expr": "sum(rate(dispatch_center_business_events_total[5m])) by (event_type)",
+          "legendFormat": "{{event_type}}",
+          "refId": "A"
+        }
+      ],
+      "yaxes": [
+        {"format": "ops", "label": "事件/分"},
+        {"format": "short"}
+      ]
+    },
+    {
+      "id": 7,
+      "title": "DB 连接池",
+      "type": "graph",
+      "datasource": "Prometheus",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
+      "targets": [
+        {
+          "expr": "dispatch_center_db_pool_size",
+          "legendFormat": "{{state}}",
+          "refId": "A"
+        }
+      ],
+      "yaxes": [
+        {"format": "short", "label": "连接数"},
+        {"format": "short"}
+      ]
+    },
+    {
+      "id": 8,
+      "title": "缓存命中率 (%)",
+      "type": "graph",
+      "datasource": "Prometheus",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
+      "targets": [
+        {
+          "expr": "sum(rate(dispatch_center_cache_total{result=\"hit\"}[5m])) by (cache_name) / sum(rate(dispatch_center_cache_total[5m])) by (cache_name) * 100",
+          "legendFormat": "{{cache_name}}",
+          "refId": "A"
+        }
+      ],
+      "yaxes": [
+        {"format": "percent", "label": "命中率", "max": 100, "min": 0},
+        {"format": "short"}
+      ]
+    }
+  ]
+}

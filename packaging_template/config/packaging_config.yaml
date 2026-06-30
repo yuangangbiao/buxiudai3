@@ -1,0 +1,82 @@
+project:
+  name: "不锈钢网带跟单 3.0"
+  name_en: "SteelBeltOrderTracking3.0"
+  version: "3.0.0"
+  name_exe: "不锈钢网带跟单系统v3.0.exe"
+
+paths:
+  source_dir: "."     # 项目根 D:\yuan\gbd3.0
+  main_entry: "main.py"
+  dist_dir: "dist"
+  build_dir: "build"
+  spec_dir: "specs"
+
+# 数据文件:扩展名匹配自动扫描进包
+data_files:
+  extensions:
+    - ".json"
+    - ".db"
+    - ".txt"
+  include_env: true  # .env 一起打包
+
+# 显式声明的隐藏导入(基础 + gbd3.0 项目常见)
+hidden_imports:
+  base_modules:
+    - tkinter
+    - tkinter.ttk
+    - tkinter.messagebox
+    - tkinter.filedialog
+    - pymysql
+    - sqlite3
+    - cryptography
+    - requests
+    - dotenv
+    - pathlib
+    - json
+    - logging
+    - datetime
+    - threading
+    - PIL
+    - PIL.Image
+    - PIL.ImageTk
+  # 自动发现的缺失模块(打包失败时 build.py 自动追加)
+  auto_discovered: []
+
+# 排除(避免引入大依赖)
+excludes:
+  modules:
+    - matplotlib
+    - numpy
+    - pandas
+    - cv2
+    - torch
+    - tensorflow
+
+# 构建选项
+build:
+  console: false      # 不显示控制台(桌面应用)
+  upx: true           # 启用 UPX 压缩
+  clean: true         # 打包前清理 dist/ build/
+  icon: null          # 图标路径(留空用默认)
+
+# 忽略目录和文件(打包时不扫)
+ignore_patterns:
+  dirs:
+    - __pycache__
+    - .git
+    - .vscode
+    - backups
+    - dist
+    - build
+    - build_package
+    - packaging_template
+    - venv
+    - .workbuddy
+    - .task
+    - docs
+  files:
+    - "*.log"
+    - "*.pyc"
+    - "*.pyo"
+    - "junit*.xml"
+    - "record*.json"

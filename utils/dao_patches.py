@@ -1,0 +1,342 @@
+# -*- coding: utf-8 -*-
+"""
+DAO 层优化补丁
+第二阶段：DAO 全面分页化
+"""
+import os
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from models.database import get_connection
+from utils.pagination import Pager, cached, invalidate_cache, get_cache, set_cache
+from constants import OrderStatus
+
+class OptimizedOrderDAO:
+    """优化后的订单 DAO，支持分页和缓存"""
+
+    @staticmethod
+    def get_all(filters: dict = None, page: int = 1, page_size: int = 100) -> dict:
+        """获取订单列表，支持分页"""
+        conn = get_connection()
+        try:
+            base_sql = "SELECT * FROM orders WHERE 1=1"
+            count_sql = "SELECT COUNT(*) FROM orders WHERE 1=1"
+            params = []
+
+            # 默认排除归档数据
+            if "is_archived" not in (filters or {}):
+                base_sql += " AND COALESCE(is_archived, 0) = 0"
+                count_sql += " AND COALESCE(is_archived, 0) = 0"
+
+            if filters:
+                if filters.get("status") and filters["status"] != "全部":
+                    base_sql += " AND status=%s"
+                    count_sql += " AND status=%s"
+                    params.append(filters["status"])
+                if filters.get("customer_name"):
+                    base_sql += " AND customer_name LIKE %s"
+                    count_sql += " AND customer_name LIKE %s"
+                    params.append(f"%{filters['customer_name']}%")
+                if filters.get("keyword"):
+                    kw = f"%{filters['keyword']}%"
+                    base_sql += """ AND (
+                        order_no LIKE %s OR customer_name LIKE %s OR
+                        product_type LIKE %s OR material LIKE %s
+                    )"""
+                    count_sql += """ AND (
+                        order_no LIKE %s OR customer_name LIKE %s OR
+                        product_type LIKE %s OR material LIKE %s
+                    )"""
+                    params.extend([kw, kw, kw, kw])
+
+            base_sql += " ORDER BY created_at DESC"
+
+            cursor = conn.cursor()
+
+            cursor.execute(count_sql, params)
+            total = cursor.fetchone()[0]
+
+            pager = Pager(total=total, page=page, page_size=page_size)
+
+            paginated_sql = base_sql + f" LIMIT {pager.limit} OFFSET {pager.offset}"
+
+            cursor.execute(paginated_sql, params)
+            rows = cursor.fetchall()
+            cursor.close()
+
+            return {
+                "data": [dict(r) for r in rows],
+                "pager": pager.to_dict(),
+                "total": total,
+            }
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_kanban_stats() -> dict:
+        """获取看板统计数据（带缓存，60秒）"""
+        cache_key = "stats:orders:kanban"
+        cached_data = get_cache(cache_key)
+        if cached_data:
+            return cached_data
+
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+
+            stats = {}
+
+            cursor.execute("""
+                SELECT status, COUNT(*) as cnt
+                FROM orders
+                WHERE COALESCE(is_archived, 0) = 0
+                GROUP BY status
+            """)
+            for row in cursor.fetchall():
+                stats[row[0]] = row[1]
+
+            stats.setdefault(OrderStatus.PENDING.value, 0)
+            stats.setdefault(OrderStatus.CONFIRMED.value, 0)
+            stats.setdefault(OrderStatus.SCHEDULED.value, 0)
+            stats.setdefault(OrderStatus.PRODUCTION.value, 0)
+            stats.setdefault(OrderStatus.QC.value, 0)
+            stats.setdefault(OrderStatus.FINISHED.value, 0)
+            stats.setdefault(OrderStatus.SHIPPED.value, 0)
+
+            cursor.close()
+
+            result = {
+                "total": sum(stats.values()),
+                "pending": stats.get(OrderStatus.PENDING.value, 0),
+                "confirmed": stats.get(OrderStatus.CONFIRMED.value, 0),
+                "scheduled": stats.get(OrderStatus.SCHEDULED.value, 0),
+                "in_production": stats.get(OrderStatus.PRODUCTION.value, 0),
+                "in_quality": stats.get(OrderStatus.QC.value, 0),
+                "completed": stats.get(OrderStatus.FINISHED.value, 0),
+                "shipped": stats.get(OrderStatus.SHIPPED.value, 0),
+            }
+
+            set_cache(cache_key, result, ttl=60)
+            return result
+        finally:
+            conn.close()
+
+    @staticmethod
+    def invalidate_stats():
+        """使统计缓存失效"""
+        invalidate_cache("stats:orders:kanban")
+
+
+class OptimizedProductionDAO:
+    """优化后的生产工单 DAO"""
+
+    @staticmethod
+    def get_by_order_ids(order_ids: list, page: int = 1, page_size: int = 100) -> dict:
+        """批量获取生产工单，支持分页"""
+        if not order_ids:
+            return {"data": [], "pager": Pager(0).to_dict(), "total": 0}
+
+        conn = get_connection()
+        try:
+            placeholders = ','.join(['%s'] * len(order_ids))
+
+            count_sql = f"""
+                SELECT COUNT(*) FROM production_orders
+                WHERE order_id IN ({placeholders})
+            """
+            base_sql = f"""
+                SELECT * FROM production_orders
+                WHERE order_id IN ({placeholders})
+                ORDER BY created_at DESC
+            """
+
+            cursor = conn.cursor()
+
+            cursor.execute(count_sql, order_ids)
+            total = cursor.fetchone()[0]
+
+            pager = Pager(total=total, page=page, page_size=page_size)
+
+            paginated_sql = base_sql + f" LIMIT {pager.limit} OFFSET {pager.offset}"
+
+            cursor.execute(paginated_sql, order_ids)
+            rows = cursor.fetchall()
+            cursor.close()
+
+            return {
+                "data": [dict(r) for r in rows],
+                "pager": pager.to_dict(),
+                "total": total,
+            }
+        finally:
+            conn.close()
+
+
+class OptimizedQualityDAO:
+    """优化后的质检 DAO"""
+
+    @staticmethod
+    def get_all(filters: dict = None, page: int = 1, page_size: int = 100) -> dict:
+        """获取质检记录，支持分页"""
+        conn = get_connection()
+        try:
+            base_sql = """
+                SELECT q.*, o.order_no, o.customer_name, o.product_type
+                FROM quality_records q
+                JOIN orders o ON q.order_id = o.id
+                WHERE 1=1
+            """
+            count_sql = """
+                SELECT COUNT(*) FROM quality_records q
+                JOIN orders o ON q.order_id = o.id
+                WHERE 1=1
+            """
+            params = []
+
+            if filters:
+                if filters.get("status") and filters["status"] != "全部":
+                    base_sql += " AND q.status=%s"
+                    count_sql += " AND q.status=%s"
+                    params.append(filters["status"])
+                if filters.get("keyword"):
+                    kw = f"%{filters['keyword']}%"
+                    base_sql += " AND (o.order_no LIKE %s OR o.customer_name LIKE %s)"
+                    count_sql += " AND (o.order_no LIKE %s OR o.customer_name LIKE %s)"
+                    params.extend([kw, kw])
+
+            base_sql += " ORDER BY q.created_at DESC"
+
+            cursor = conn.cursor()
+
+            cursor.execute(count_sql, params)
+            total = cursor.fetchone()[0]
+
+            pager = Pager(total=total, page=page, page_size=page_size)
+
+            paginated_sql = base_sql + f" LIMIT {pager.limit} OFFSET {pager.offset}"
+
+            cursor.execute(paginated_sql, params)
+            rows = cursor.fetchall()
+            cursor.close()
+
+            return {
+                "data": [dict(r) for r in rows],
+                "pager": pager.to_dict(),
+                "total": total,
+            }
+        finally:
+            conn.close()
+
+
+class OptimizedShipmentDAO:
+    """优化后的发货 DAO"""
+
+    @staticmethod
+    def get_all(filters: dict = None, page: int = 1, page_size: int = 100) -> dict:
+        """获取发货记录，支持分页"""
+        conn = get_connection()
+        try:
+            base_sql = """
+                SELECT s.*, o.order_no, o.customer_name, o.product_type
+                FROM shipments s
+                JOIN orders o ON s.order_id = o.id
+                WHERE 1=1
+            """
+            count_sql = """
+                SELECT COUNT(*) FROM shipments s
+                JOIN orders o ON s.order_id = o.id
+                WHERE 1=1
+            """
+            params = []
+
+            if filters:
+                if filters.get("status") and filters["status"] != "全部":
+                    base_sql += " AND s.status=%s"
+                    count_sql += " AND s.status=%s"
+                    params.append(filters["status"])
+                if filters.get("keyword"):
+                    kw = f"%{filters['keyword']}%"
+                    base_sql += " AND (o.order_no LIKE %s OR o.customer_name LIKE %s OR s.shipment_no LIKE %s)"
+                    count_sql += " AND (o.order_no LIKE %s OR o.customer_name LIKE %s OR s.shipment_no LIKE %s)"
+                    params.extend([kw, kw, kw])
+
+            base_sql += " ORDER BY s.created_at DESC"
+
+            cursor = conn.cursor()
+
+            cursor.execute(count_sql, params)
+            total = cursor.fetchone()[0]
+
+            pager = Pager(total=total, page=page, page_size=page_size)
+
+            paginated_sql = base_sql + f" LIMIT {pager.limit} OFFSET {pager.offset}"
+
+            cursor.execute(paginated_sql, params)
+            rows = cursor.fetchall()
+            cursor.close()
+
+            return {
+                "data": [dict(r) for r in rows],
+                "pager": pager.to_dict(),
+                "total": total,
+            }
+        finally:
+            conn.close()
+
+
+class OptimizedProcessDAO:
+    """优化后的工序 DAO"""
+
+    @staticmethod
+    def get_by_production(production_id: int, page: int = 1, page_size: int = 100) -> dict:
+        """获取工序记录，支持分页"""
+        conn = get_connection()
+        try:
+            count_sql = """
+                SELECT COUNT(*) FROM process_records
+                WHERE production_id=%s
+            """
+            base_sql = """
+                SELECT * FROM process_records
+                WHERE production_id=%s
+                ORDER BY process_seq ASC
+            """
+
+            cursor = conn.cursor()
+
+            cursor.execute(count_sql, (production_id,))
+            total = cursor.fetchone()[0]
+
+            pager = Pager(total=total, page=page, page_size=page_size)
+
+            paginated_sql = base_sql + f" LIMIT {pager.limit} OFFSET {pager.offset}"
+
+            cursor.execute(paginated_sql, (production_id,))
+            rows = cursor.fetchall()
+            cursor.close()
+
+            return {
+                "data": [dict(r) for r in rows],
+                "pager": pager.to_dict(),
+                "total": total,
+            }
+        finally:
+            conn.close()
+
+
+def apply_dao_patches():
+    """应用 DAO 补丁，替换原方法"""
+    from models import order, production, quality, shipment, process
+
+    order.OrderDAO.get_all_paginated = OptimizedOrderDAO.get_all
+    order.OrderDAO.get_kanban_stats_optimized = OptimizedOrderDAO.get_kanban_stats
+    order.OrderDAO.invalidate_stats = OptimizedOrderDAO.invalidate_stats
+
+    production.ProductionDAO.get_by_order_ids_paginated = OptimizedProductionDAO.get_by_order_ids
+
+    quality.QualityDAO.get_all_paginated = OptimizedQualityDAO.get_all
+
+    shipment.ShipmentDAO.get_all_paginated = OptimizedShipmentDAO.get_all
+
+    process.ProcessDAO.get_by_production_paginated = OptimizedProcessDAO.get_by_production
+

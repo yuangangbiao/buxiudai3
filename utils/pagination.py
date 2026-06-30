@@ -1,0 +1,208 @@
+# -*- coding: utf-8 -*-
+"""
+分页与缓存工具模块
+第二阶段：DAO 全面分页化支持
+第四阶段：热点数据内存缓存
+"""
+import time
+from threading import Lock
+from typing import Any, Callable, Optional
+from functools import wraps
+
+class CacheItem:
+    """缓存项"""
+
+    def __init__(self, value: Any, ttl: float):
+        self.value = value
+        self.expires_at = time.time() + ttl if ttl > 0 else float('inf')
+
+    def is_expired(self) -> bool:
+        return time.time() > self.expires_at
+
+class MemoryCache:
+    """线程安全的内存缓存"""
+
+    def __init__(self):
+        self._cache = {}
+        self._lock = Lock()
+
+    def get(self, key: str) -> Optional[Any]:
+        """获取缓存值"""
+        with self._lock:
+            item = self._cache.get(key)
+            if item is None:
+                return None
+            if item.is_expired():
+                del self._cache[key]
+                return None
+            return item.value
+
+    def set(self, key: str, value: Any, ttl: float = 60) -> None:
+        """设置缓存值，ttl 单位为秒"""
+        with self._lock:
+            self._cache[key] = CacheItem(value, ttl)
+
+    def delete(self, key: str) -> None:
+        """删除缓存"""
+        with self._lock:
+            if key in self._cache:
+                del self._cache[key]
+
+    def clear(self) -> None:
+        """清空所有缓存"""
+        with self._lock:
+            self._cache.clear()
+
+    def cleanup_expired(self) -> int:
+        """清理过期缓存，返回清理数量"""
+        count = 0
+        with self._lock:
+            expired_keys = [k for k, v in self._cache.items() if v.is_expired()]
+            for k in expired_keys:
+                del self._cache[k]
+                count += 1
+        return count
+
+# 全局缓存实例
+_cache = MemoryCache()
+
+def cached(ttl: float = 60, key_prefix: str = ""):
+    """缓存装饰器
+
+    Args:
+        ttl: 缓存过期时间（秒）
+        key_prefix: 缓存键前缀
+    """
+    def decorator(func: Callable) -> Callable:
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            cache_key = f"{key_prefix}:{func.__name__}:{str(args)}:{str(kwargs)}"
+            result = _cache.get(cache_key)
+            if result is not None:
+                return result
+            result = func(*args, **kwargs)
+            _cache.set(cache_key, result, ttl)
+            return result
+        return wrapper
+    return decorator
+
+def get_cache(key: str) -> Optional[Any]:
+    """获取缓存"""
+    return _cache.get(key)
+
+def set_cache(key: str, value: Any, ttl: float = 60) -> None:
+    """设置缓存"""
+    _cache.set(key, value, ttl)
+
+def invalidate_cache(key: str) -> None:
+    """使缓存失效"""
+    _cache.delete(key)
+
+def clear_all_cache() -> None:
+    """清空所有缓存"""
+    _cache.clear()
+
+
+class Pager:
+    """分页工具类"""
+
+    DEFAULT_PAGE_SIZE = 100
+    MAX_PAGE_SIZE = 1000
+
+    def __init__(self, total: int, page: int = 1, page_size: int = DEFAULT_PAGE_SIZE):
+        self.total = max(0, total)
+        self.page = max(1, page)
+        self.page_size = min(max(1, page_size), self.MAX_PAGE_SIZE)
+
+    @property
+    def offset(self) -> int:
+        """计算偏移量"""
+        return (self.page - 1) * self.page_size
+
+    @property
+    def limit(self) -> int:
+        """返回 limit 值"""
+        return self.page_size
+
+    @property
+    def total_pages(self) -> int:
+        """总页数"""
+        if self.total == 0:
+            return 0
+        return (self.total + self.page_size - 1) // self.page_size
+
+    @property
+    def has_next(self) -> bool:
+        """是否有下一页"""
+        return self.page < self.total_pages
+
+    @property
+    def has_prev(self) -> bool:
+        """是否有上一页"""
+        return self.page > 1
+
+    def to_dict(self) -> dict:
+        """转换为字典"""
+        return {
+            "total": self.total,
+            "page": self.page,
+            "page_size": self.page_size,
+            "total_pages": self.total_pages,
+            "has_next": self.has_next,
+            "has_prev": self.has_prev,
+            "offset": self.offset,
+            "limit": self.limit,
+        }
+
+
+def paginate_query(sql: str, count_sql: str, conn, params: list = None,
+                   page: int = 1, page_size: int = Pager.DEFAULT_PAGE_SIZE) -> dict:
+    """执行分页查询
+
+    Args:
+        sql: 查询 SQL（需包含 LIMIT 和 OFFSET 占位符 :limit :offset）
+        count_sql: 统计总数的 SQL
+        conn: 数据库连接
+        params: 查询参数
+        page: 页码
+        page_size: 每页数量
+
+    Returns:
+        包含 data（数据列表）、pager（分页信息）、total（总数）的字典
+    """
+    if params is None:
+        params = []
+
+    pager = Pager(total=0, page=page, page_size=page_size)
+
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute(count_sql, params)
+        row = cursor.fetchone()
+        total = row[0] if row else 0
+        pager = Pager(total=total, page=page, page_size=page_size)
+
+        paginated_sql = sql.replace(":limit", str(pager.limit)).replace(":offset", str(pager.offset))
+        cursor.execute(paginated_sql, params)
+        rows = cursor.fetchall()
+
+        return {
+            "data": [dict(r) if hasattr(r, 'keys') else r for r in rows],
+            "pager": pager.to_dict(),
+            "total": total,
+        }
+    finally:
+        cursor.close()
+
+
+def get_common_cache_keys() -> dict:
+    """返回常用缓存键前缀"""
+    return {
+        "product_types": "dict:product_types",
+        "process_templates": "dict:process_templates",
+        "material_densities": "dict:material_densities",
+        "material_rules": "dict:material_rules",
+        "order_stats": "stats:orders",
+        "production_stats": "stats:production",
+    }

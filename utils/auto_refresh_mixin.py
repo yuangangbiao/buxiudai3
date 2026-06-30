@@ -1,0 +1,42 @@
+import logging
+
+logger = logging.getLogger("auto_refresh")
+
+
+class AutoRefreshMixin:
+    AUTO_REFRESH_INTERVAL = 300000
+
+    def _start_auto_refresh(self):
+        if not hasattr(self, '_refresh_job'):
+            self._refresh_job = None
+        if self._refresh_job is None:
+            self._schedule_refresh()
+
+    def _stop_auto_refresh(self):
+        job = getattr(self, '_refresh_job', None)
+        if job:
+            try:
+                self.after_cancel(job)
+            except Exception:
+                pass
+            self._refresh_job = None
+
+    def _schedule_refresh(self):
+        self._refresh_job = self.after(
+            self.AUTO_REFRESH_INTERVAL, self._do_auto_refresh
+        )
+
+    def _do_auto_refresh(self):
+        try:
+            self._refresh_data()
+        except Exception as e:
+            logger.error(f"\u81ea\u52a8\u5237\u65b0\u5931\u8d25: {e}")
+        finally:
+            self._schedule_refresh()
+
+    def _refresh_data(self):
+        if hasattr(self, 'load_data') and callable(self.load_data):
+            self.load_data()
+
+    def _sync_status(self):
+        self._refresh_data()

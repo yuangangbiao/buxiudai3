@@ -1,0 +1,5029 @@
+{
+  "generated_at": "2026-06-21T13:50:20.478735",
+  "total": 500,
+  "results": [
+    {
+      "file": "mobile_api_ai/api_validators.py",
+      "line": 14,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/order/create'",
+      "cache_used": [
+        "import cache"
+      ],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 104,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/favicon.ico",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 109,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/mobile_login.html",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 113,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/login'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 193,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/orders/full-status/<order_no>'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 253,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/orders/full-status-list'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 302,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/all-process-tasks'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 515,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/process-tasks/by-order/<order_no>'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 545,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/process_sub_step'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 698,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/process_sub_step/withdraw'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 761,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/process_sub_step/history'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 774,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/report_record/list'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 817,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/report_record/update'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 918,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/report_record/withdraw'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 985,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/report_record/history_full'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 1012,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/quality_record/list'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 1063,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/quality_record/update'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 1149,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/quality_record/withdraw'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 1228,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/quality_record/history_full'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 1256,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/material_record/list'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 1306,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/material_record/update'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 1389,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/material_record/withdraw'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 1439,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/material_record/history_full'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 1466,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/outsource_record/list'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 1506,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/outsource_record/update'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 1547,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/outsource_record/withdraw'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 1565,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/outsource_record/history_full'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 1587,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/repair_record/list'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 1625,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/repair_record/create'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 1655,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/repair_record/update'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 1693,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/repair_record/withdraw'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 1712,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/schedule_record/list'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 1752,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/schedule_record/update'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 1792,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/schedule_record/withdraw'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 1810,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/schedule_record/history_full'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 1862,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/health",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 1961,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/tasks'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 2010,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/material/confirm'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 2050,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/material/arrived'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 2067,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/material/delivered'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 2084,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/material/requirements'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 2134,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/material/<pkg_id>'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 2161,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/material/return'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 2198,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/material/replenish'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 2238,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/warehousing/pending'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 2250,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/warehousing/confirm'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 2270,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 2275,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/scanner",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 2280,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/wechat/pool/report'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 2382,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/sync-queue/list'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/app.py",
+      "line": 2417,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/sync-queue/retry'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/cloud_relay.py",
+      "line": 111,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/wechat/hook'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/cloud_relay.py",
+      "line": 136,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/wechat/hook'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/cloud_relay.py",
+      "line": 157,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/queue/poll'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/cloud_relay.py",
+      "line": 174,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/queue/ack'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/cloud_relay.py",
+      "line": 194,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/queue/status'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/cloud_relay.py",
+      "line": 205,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/wechat/send'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/cloud_relay.py",
+      "line": 240,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/stats/push'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/cloud_relay.py",
+      "line": 314,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/health",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/cloud_router_service.py",
+      "line": 216,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/wechat/send'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/cloud_router_service.py",
+      "line": 239,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/send'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/cloud_router_service.py",
+      "line": 271,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/health'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/container_api_server.py",
+      "line": 93,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/health",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/container_api_server.py",
+      "line": 97,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/health",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/container_api_server.py",
+      "line": 107,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/status",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/container_api_server.py",
+      "line": 120,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/version",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/container_api_server.py",
+      "line": 130,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/container_api_server.py",
+      "line": 138,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/auth/login'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_api_server.py",
+      "line": 168,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/auth/verify'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/container_api_server.py",
+      "line": 175,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/tasks'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/container_api_server.py",
+      "line": 219,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/tasks/dispatch'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_api_server.py",
+      "line": 236,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/tasks/<task_id>'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/container_api_server.py",
+      "line": 246,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/tasks/<task_id>/start'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_api_server.py",
+      "line": 258,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/tasks/<task_id>/complete'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_api_server.py",
+      "line": 270,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/ai/speech-to-report'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_api_server.py",
+      "line": 327,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/ai/chat'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_api_server.py",
+      "line": 369,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/pool/status'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/container_api_server.py",
+      "line": 381,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/operators'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/container_api_server.py",
+      "line": 388,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/dispatch'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_api_server.py",
+      "line": 434,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/internal/publish'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_api_server.py",
+      "line": 474,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/publish-tasks'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_api_server.py",
+      "line": 500,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/schedule/publish'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 776,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/enterprise/structure'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 818,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/enterprise/structure'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 953,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/process_sub_steps/<order_no>/<process_code>'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 1155,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/health",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 1178,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 1182,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/dashboard",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 1189,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/callback'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 1229,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/health",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 1240,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/status",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 1254,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/operators'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 1322,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/v4/operators'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 1327,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/v4/work_order'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 1377,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/favicon.ico",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 1381,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/process_names'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 1399,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/process_departments'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 1408,
+      "methods": [
+        "PUT",
+        "POST"
+      ],
+      "rule": "/api/process_departments/<process_code>'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 1419,
+      "methods": [
+        "DELETE"
+      ],
+      "rule": "/api/process_departments/<process_code>'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 1429,
+      "methods": [
+        "DELETE"
+      ],
+      "rule": "/api/process_names/<process_name>'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 1473,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/dispatch'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 1474,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/wechat/dispatch'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 1776,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/schedule/publish'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 2095,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/auth/login'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 2125,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/auth/verify'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 2132,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/pool/status'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 2138,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/processes'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 2150,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/processes/<record_id>'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 2158,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/processes'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 2191,
+      "methods": [
+        "PUT"
+      ],
+      "rule": "/api/processes/<record_id>'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 2208,
+      "methods": [
+        "PUT"
+      ],
+      "rule": "/api/processes/<record_id>/status'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 2226,
+      "methods": [
+        "PUT"
+      ],
+      "rule": "/api/processes/<record_id>/template'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 2243,
+      "methods": [
+        "PUT"
+      ],
+      "rule": "/api/processes/<record_id>/step'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 2257,
+      "methods": [
+        "PUT"
+      ],
+      "rule": "/api/processes/<record_id>/tasks'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 2271,
+      "methods": [
+        "DELETE"
+      ],
+      "rule": "/api/processes/<record_id>'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 2280,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/processes/by-order/<order_no>'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 2297,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/orders/full-status/<order_no>'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 2473,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/orders/full-status-list'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 2565,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/orders/<order_no>'",
+      "cache_used": [
+        "_mirror_auth_warn_cache"
+      ],
+      "category": "cached"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 2650,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/process_sub_steps/mirror'",
+      "cache_used": [
+        "Redis cache",
+        "_mirror_auth_warn_cache"
+      ],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 2732,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/tasks'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 2789,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/tasks/<task_id>'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 2797,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/tasks/<task_id>/acknowledge'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 2810,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/tasks/unacknowledged'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 2823,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/tasks/<task_id>/complete'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 2886,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/internal/publish'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 3011,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/internal/config/deploy'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 3054,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/internal/config/versions/<config_name>'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 3072,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/internal/config/rollback'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 3138,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/outsource/records'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 3151,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/outsource/records/<record_id>'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 3164,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/internal/outsource/publish'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 3227,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/outsource/records/<record_id>/feedback'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 3246,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/outsource/records/<record_id>/complete'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 3271,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/outsource/records/<record_id>/receive'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 3296,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/outsource/config'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 3309,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/outsource/config'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 3318,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/wechat/get_access_token'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 3376,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/process_sub_step'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 3515,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/process_sub_steps/<order_no>'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 3527,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/process_sub_step_summary/<order_no>'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 3731,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/process_sub_step/summary_by_order/<order_no>'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 3750,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/scan-info'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 3881,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/flow-type/<product_type_id>'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 3887,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/flow-map/sync'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 3897,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/sub-step/rollback'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 3946,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/sub-step/audit/<order_no>'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 3955,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/sub-step/repair-mysql'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 4035,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/material/create'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 4068,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/material/list'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 4083,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/material/confirm'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 4139,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/material/arrived'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 4162,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/material/delivered'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/container_center_api.py",
+      "line": 4186,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/material/<pkg_id>'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/face_server.py",
+      "line": 32,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/face_server.py",
+      "line": 36,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/models/<path:filename>",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/face_server.py",
+      "line": 40,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/wasm/<path:filename>",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_api_server.py",
+      "line": 301,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "rule": "/login'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_api_server.py",
+      "line": 343,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/logout",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_api_server.py",
+      "line": 349,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_api_server.py",
+      "line": 360,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/csrf-token'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_api_server.py",
+      "line": 379,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/health'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/standalone_dispatch_server.py",
+      "line": 81,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/login'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/standalone_dispatch_server.py",
+      "line": 189,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/favicon.ico",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/standalone_dispatch_server.py",
+      "line": 193,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/standalone_dispatch_server.py",
+      "line": 199,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/enterprise/structure'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/standalone_dispatch_server.py",
+      "line": 208,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/sync-queue/list'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/standalone_dispatch_server.py",
+      "line": 244,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/sync-queue/retry'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/standalone_dispatch_server.py",
+      "line": 288,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/enterprise/structure'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/standalone_dispatch_server.py",
+      "line": 313,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/health",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/standalone_dispatch_server.py",
+      "line": 340,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/report_record/list'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/standalone_dispatch_server.py",
+      "line": 387,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/report_record/update'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/standalone_dispatch_server.py",
+      "line": 484,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/report_record/withdraw'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/standalone_dispatch_server.py",
+      "line": 550,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/report_record/history_full'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/standalone_dispatch_server.py",
+      "line": 579,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/outsource_record/list'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/standalone_dispatch_server.py",
+      "line": 627,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/outsource_record/update'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/standalone_dispatch_server.py",
+      "line": 668,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/outsource_record/withdraw'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/standalone_dispatch_server.py",
+      "line": 705,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/outsource_record/history_full'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/standalone_dispatch_server.py",
+      "line": 731,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/quality_record/list'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/standalone_dispatch_server.py",
+      "line": 772,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/material_record/list'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/standalone_dispatch_server.py",
+      "line": 816,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/workorder'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/standalone_dispatch_server.py",
+      "line": 831,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/production-orders'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/standalone_dispatch_server.py",
+      "line": 835,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/outsource-records'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/standalone_dispatch_server.py",
+      "line": 851,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/status'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/standalone_dispatch_server.py",
+      "line": 1189,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/dispatch-center/report-submitted'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/sync_bridge_server.py",
+      "line": 81,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/health",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/sync_bridge_server.py",
+      "line": 99,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/health",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/wechat_cloud.py",
+      "line": 121,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "rule": "/api/wechat/hook'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/wechat_cloud.py",
+      "line": 211,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/wechat/callback'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/wechat_cloud.py",
+      "line": 256,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/forward'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/wechat_cloud.py",
+      "line": 320,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/queue/forward'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/wechat_cloud.py",
+      "line": 344,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/queue/poll'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/wechat_cloud.py",
+      "line": 358,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/poll'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/wechat_cloud.py",
+      "line": 363,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/queue/ack'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/wechat_cloud.py",
+      "line": 372,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/poll/ack'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/wechat_cloud.py",
+      "line": 378,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/response'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/wechat_cloud.py",
+      "line": 421,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/response/callback'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/wechat_cloud.py",
+      "line": 454,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/dead'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/wechat_cloud.py",
+      "line": 469,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/queue/status'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/wechat_cloud.py",
+      "line": 487,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/messages/outgoing'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/wechat_cloud.py",
+      "line": 510,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/messages/<msg_id>'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/wechat_cloud.py",
+      "line": 528,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/messages/retry'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/wechat_cloud.py",
+      "line": 573,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/messages/stats'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/wechat_cloud.py",
+      "line": 590,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/wechat/send'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/wechat_cloud.py",
+      "line": 627,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/wechat/send_text'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/wechat_cloud.py",
+      "line": 635,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/wechat/proxy_send'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/wechat_cloud.py",
+      "line": 695,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/logs'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/wechat_cloud.py",
+      "line": 717,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/backup/status'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/wechat_cloud.py",
+      "line": 832,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "rule": "/cloud/org/enterprise_structure'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/wechat_cloud.py",
+      "line": 890,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/wechat/users'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/wechat_cloud.py",
+      "line": 891,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/wechat/contacts'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/wechat_cloud.py",
+      "line": 977,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/wechat/user/<user_id>'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/wechat_cloud.py",
+      "line": 1008,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/wechat/user/<user_id>/name'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/wechat_cloud.py",
+      "line": 1049,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/health'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 186,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/favicon.ico",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 192,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/models/<path:filename>",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 196,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/wasm/<path:filename>",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 514,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 521,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/<path:filename>",
+      "cache_used": [
+        "Redis cache",
+        "Redis cache (alias)"
+      ],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 631,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/sync/task'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 785,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/sync/report'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 981,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/sync/report/actual'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 1055,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/sync/status'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 1066,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/sync/health/detailed'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 1092,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/sync/validate/input'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 1138,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/sync/delivery-date-change'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 1194,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/sync/drift/check'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 1230,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/sync/data/fingerprint'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 1261,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/sync/circuit/status'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 1302,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/sync/circuit/reset'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 1321,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/sync/queue/status'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 1354,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/sync/queue/stats'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 1385,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/sync/tasks'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 1421,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/sync/tasks/<task_id>'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 1438,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/sync/task/<order_no>/status'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 1507,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/sync/outsource/publish'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 1566,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "rule": "/api/wechat/hook'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 2151,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/sync/reports'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 2202,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/logs/operations'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 2203,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/sync/logs'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 2250,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/logs/stats'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 2269,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/wechat/departments'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 2286,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/wechat/users'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 2319,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/wechat/user/<user_id>'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 2348,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/health",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 2357,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/poll'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 2376,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/cloud/status",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 2420,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/cloud/send'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 2469,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/wechat/proxy_send'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 2529,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/wechat/send'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 2578,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/wechat/status",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 2687,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/sync/report/wechat'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 2898,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/sync/report/confirm'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/wechat_server.py",
+      "line": 3025,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/sync/report/requests'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/wecom_auth.py",
+      "line": 19,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/login'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/ai.py",
+      "line": 112,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/speech-to-report'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/ai.py",
+      "line": 150,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/image-analysis'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/ai.py",
+      "line": 167,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/chat'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/ai.py",
+      "line": 240,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/chat/history'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/approval.py",
+      "line": 15,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/pending'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/approval.py",
+      "line": 24,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/<int:approval_id>/approve'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/approval.py",
+      "line": 33,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/<int:approval_id>/reject'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/approval.py",
+      "line": 48,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/history'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/auth.py",
+      "line": 99,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/login'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/auth.py",
+      "line": 142,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/verify'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/auth.py",
+      "line": 158,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/info'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/cost.py",
+      "line": 16,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/orders'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/api/cost.py",
+      "line": 33,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/orders/<order_no>'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/api/cost.py",
+      "line": 42,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/orders/<order_no>/calculate'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/cost.py",
+      "line": 56,
+      "methods": [
+        "PUT"
+      ],
+      "rule": "/orders/<order_no>/revenue'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/cost.py",
+      "line": 66,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/detail/<order_no>'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/api/cost.py",
+      "line": 73,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/detail'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/cost.py",
+      "line": 92,
+      "methods": [
+        "DELETE"
+      ],
+      "rule": "/detail/<int:detail_id>'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/cost.py",
+      "line": 100,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/summary'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/api/cost.py",
+      "line": 107,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/material-prices'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/api/cost.py",
+      "line": 114,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/material-prices'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/cost.py",
+      "line": 136,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/labor-prices'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/cost.py",
+      "line": 143,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/labor-prices'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/decorators.py",
+      "line": 33,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/submit'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/decorators.py",
+      "line": 70,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/update'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/decorators.py",
+      "line": 96,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/protected'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/decorators.py",
+      "line": 128,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/send'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/health.py",
+      "line": 10,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/health'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/api/legacy_routes.py",
+      "line": 119,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/dashboard'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/legacy_routes.py",
+      "line": 261,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "rule": "/api/scan-info'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/legacy_routes.py",
+      "line": 552,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/quality'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/legacy_routes.py",
+      "line": 586,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/quality'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/legacy_routes.py",
+      "line": 649,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/sub_step_records'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/legacy_routes.py",
+      "line": 713,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/production-orders'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/legacy_routes.py",
+      "line": 803,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/workers'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/legacy_routes.py",
+      "line": 840,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/attendance/<username>'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/legacy_routes.py",
+      "line": 863,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/attendance'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/legacy_routes.py",
+      "line": 883,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/attendance'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/legacy_routes.py",
+      "line": 920,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/login'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/message.py",
+      "line": 15,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/list'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/api/message.py",
+      "line": 29,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/unread-count'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/message.py",
+      "line": 35,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/<int:msg_id>/read'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/metrics_api.py",
+      "line": 12,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/stats'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/metrics_api.py",
+      "line": 19,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/reset'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/metrics_api.py",
+      "line": 26,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/health'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/api/process.py",
+      "line": 22,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/my-tasks'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/quality.py",
+      "line": 22,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/list'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/api/quality.py",
+      "line": 41,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/<int:order_id>/create'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/quality.py",
+      "line": 101,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/types'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/quality_inspection.py",
+      "line": 108,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/tasks'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/api/quality_inspection.py",
+      "line": 149,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/tasks/<order_no>'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/api/quality_inspection.py",
+      "line": 246,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/evaluate'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/quality_inspection.py",
+      "line": 259,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/submit'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/quality_inspection.py",
+      "line": 335,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/review'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/quality_inspection.py",
+      "line": 403,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/rework'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/quality_inspection.py",
+      "line": 447,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/versions/<order_no>'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/quality_inspection.py",
+      "line": 473,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/photos/upload'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/quality_inspection.py",
+      "line": 505,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/history'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/quality_inspection.py",
+      "line": 542,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/types'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/reports.py",
+      "line": 13,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/page",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/reports.py",
+      "line": 25,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/definitions'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/reports.py",
+      "line": 34,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/definitions/<report_id>'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/reports.py",
+      "line": 44,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/definitions'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/reports.py",
+      "line": 57,
+      "methods": [
+        "PUT"
+      ],
+      "rule": "/definitions/<report_id>'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/reports.py",
+      "line": 74,
+      "methods": [
+        "DELETE"
+      ],
+      "rule": "/definitions/<report_id>'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/reports.py",
+      "line": 84,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "rule": "/definitions/<report_id>/execute'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/reports.py",
+      "line": 101,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/profiles'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/reports.py",
+      "line": 109,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/profiles/<profile_id>'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/reports.py",
+      "line": 119,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/profiles'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/reports.py",
+      "line": 132,
+      "methods": [
+        "PUT"
+      ],
+      "rule": "/profiles/<profile_id>'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/reports.py",
+      "line": 149,
+      "methods": [
+        "DELETE"
+      ],
+      "rule": "/profiles/<profile_id>'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/reports.py",
+      "line": 161,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/schedules'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/reports.py",
+      "line": 170,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/schedules/<schedule_id>'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/reports.py",
+      "line": 180,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/schedules'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/reports.py",
+      "line": 193,
+      "methods": [
+        "PUT"
+      ],
+      "rule": "/schedules/<schedule_id>'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/reports.py",
+      "line": 210,
+      "methods": [
+        "DELETE"
+      ],
+      "rule": "/schedules/<schedule_id>'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/reports.py",
+      "line": 222,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/outputs'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/reports.py",
+      "line": 234,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/scheduler/status'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/api/reports.py",
+      "line": 243,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/scheduler/start'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/reports.py",
+      "line": 252,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/scheduler/stop'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/scan.py",
+      "line": 147,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/workorder/<order_no>'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/scan.py",
+      "line": 172,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/task'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/scan.py",
+      "line": 219,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/worker/<worker_id>'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/scan.py",
+      "line": 245,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/test/create-sample'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/api/stats.py",
+      "line": 16,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/dashboard'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/stats.py",
+      "line": 24,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/production'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/stats.py",
+      "line": 32,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/cost'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/stats.py",
+      "line": 40,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/worker'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/stats.py",
+      "line": 48,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/worker-stats'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/stats.py",
+      "line": 56,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/order-stats'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/api/stats.py",
+      "line": 78,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/report/<report_id>'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/stats.py",
+      "line": 89,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/report/<report_id>/export'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/swagger.py",
+      "line": 409,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/swagger.py",
+      "line": 415,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/openapi.json",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/api/swagger.py",
+      "line": 421,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/summary",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/deploy_output/wechat_cloud.py",
+      "line": 121,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "rule": "/api/wechat/hook'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/deploy_output/wechat_cloud.py",
+      "line": 211,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/wechat/callback'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/deploy_output/wechat_cloud.py",
+      "line": 256,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/forward'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/deploy_output/wechat_cloud.py",
+      "line": 320,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/queue/forward'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/deploy_output/wechat_cloud.py",
+      "line": 344,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/queue/poll'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/deploy_output/wechat_cloud.py",
+      "line": 358,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/poll'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/deploy_output/wechat_cloud.py",
+      "line": 363,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/queue/ack'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/deploy_output/wechat_cloud.py",
+      "line": 372,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/poll/ack'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/deploy_output/wechat_cloud.py",
+      "line": 378,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/response'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/deploy_output/wechat_cloud.py",
+      "line": 421,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/response/callback'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/deploy_output/wechat_cloud.py",
+      "line": 454,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/dead'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/deploy_output/wechat_cloud.py",
+      "line": 469,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/queue/status'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/deploy_output/wechat_cloud.py",
+      "line": 487,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/messages/outgoing'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/deploy_output/wechat_cloud.py",
+      "line": 510,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/messages/<msg_id>'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/deploy_output/wechat_cloud.py",
+      "line": 528,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/messages/retry'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/deploy_output/wechat_cloud.py",
+      "line": 573,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/messages/stats'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/deploy_output/wechat_cloud.py",
+      "line": 590,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/wechat/send'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/deploy_output/wechat_cloud.py",
+      "line": 627,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/wechat/send_text'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/deploy_output/wechat_cloud.py",
+      "line": 635,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/wechat/proxy_send'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/deploy_output/wechat_cloud.py",
+      "line": 695,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/logs'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/deploy_output/wechat_cloud.py",
+      "line": 717,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/backup/status'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/deploy_output/wechat_cloud.py",
+      "line": 832,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "rule": "/cloud/org/enterprise_structure'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/deploy_output/wechat_cloud.py",
+      "line": 890,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/wechat/users'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/deploy_output/wechat_cloud.py",
+      "line": 891,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/wechat/contacts'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/deploy_output/wechat_cloud.py",
+      "line": 977,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/wechat/user/<user_id>'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/deploy_output/wechat_cloud.py",
+      "line": 1008,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/wechat/user/<user_id>/name'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/deploy_output/wechat_cloud.py",
+      "line": 1049,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/health'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/face_checkin/__init__.py",
+      "line": 211,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/ip",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/face_checkin/__init__.py",
+      "line": 216,
+      "methods": [
+        "GET",
+        "PUT"
+      ],
+      "rule": "/api/config'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/face_checkin/__init__.py",
+      "line": 235,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/admin/login'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/face_checkin/__init__.py",
+      "line": 261,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/admin/check'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/face_checkin/__init__.py",
+      "line": 268,
+      "methods": [
+        "PUT"
+      ],
+      "rule": "/api/admin/password'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/face_checkin/__init__.py",
+      "line": 295,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/admin/users'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/face_checkin/__init__.py",
+      "line": 304,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/admin/users'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/face_checkin/__init__.py",
+      "line": 325,
+      "methods": [
+        "DELETE"
+      ],
+      "rule": "/api/admin/users'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/face_checkin/__init__.py",
+      "line": 349,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/drives",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/face_checkin/__init__.py",
+      "line": 360,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/list-dirs'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/face_checkin/__init__.py",
+      "line": 380,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/create-dir'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/face_checkin/__init__.py",
+      "line": 403,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/upload-photo'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/face_checkin/__init__.py",
+      "line": 429,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/enroll'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/face_checkin/__init__.py",
+      "line": 444,
+      "methods": [
+        "GET",
+        "DELETE"
+      ],
+      "rule": "/api/enrollments'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/face_checkin/__init__.py",
+      "line": 464,
+      "methods": [
+        "DELETE"
+      ],
+      "rule": "/api/enrollments/<name>'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/face_checkin/__init__.py",
+      "line": 472,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/enrollments/photo",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/face_checkin/__init__.py",
+      "line": 660,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/checkin'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/face_checkin/__init__.py",
+      "line": 695,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/checkins'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/face_checkin/__init__.py",
+      "line": 724,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/photos/<path:filename>",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/face_checkin/__init__.py",
+      "line": 747,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/export-checkins'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/face_checkin/__init__.py",
+      "line": 853,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "rule": "/api/scheduler'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/face_checkin/__init__.py",
+      "line": 889,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/send-attendance-to-cloud'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/face_checkin/__init__.py",
+      "line": 952,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/face_checkin/__init__.py",
+      "line": 957,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/admin/",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/face_checkin/__init__.py",
+      "line": 961,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/admin/<path:filename>",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/face_checkin/__init__.py",
+      "line": 973,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/app/",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/face_checkin/__init__.py",
+      "line": 978,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/app/<path:rest>",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/face_checkin/__init__.py",
+      "line": 983,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/assets/<path:filename>",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/face_checkin/__init__.py",
+      "line": 988,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/models/<path:filename>",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/face_checkin/__init__.py",
+      "line": 993,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/wasm/<path:filename>",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/admin_auth.py",
+      "line": 34,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/product/add'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/admin_auth.py",
+      "line": 94,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/settings'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/feature_flags.py",
+      "line": 120,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/stocktake/create'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/feature_flags.py",
+      "line": 155,
+      "methods": [
+        "GET"
+      ],
+      "rule": "...",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_api.py",
+      "line": 35,
+      "methods": [
+        "PATCH",
+        "DELETE"
+      ],
+      "rule": "/inventory/api/<entity>/<int:eid>'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_api.py",
+      "line": 43,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/alert/<int:aid>/resolve'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_api.py",
+      "line": 51,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/stock/adjust'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_api.py",
+      "line": 59,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/settings'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_api.py",
+      "line": 70,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/cleanup'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_api.py",
+      "line": 81,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/reports'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_api.py",
+      "line": 87,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/api/report/stock-trend'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_api.py",
+      "line": 96,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/api/report/io-flow'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_api.py",
+      "line": 105,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/api/report/top-low-stock'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_api.py",
+      "line": 114,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/api/report/category-distribution'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_api.py",
+      "line": 125,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/notifications'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_api.py",
+      "line": 131,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/api/notification/list'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_api.py",
+      "line": 144,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/api/notification/unread-count'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_api.py",
+      "line": 154,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/notification/<int:nid>/read'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_api.py",
+      "line": 162,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/notification/read-all'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_api.py",
+      "line": 170,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/notification/check-low-stock'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_api.py",
+      "line": 182,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/scanner'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_api.py",
+      "line": 191,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/api/import/template'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_api.py",
+      "line": 230,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/import/dry-run'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_api.py",
+      "line": 307,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/import/commit'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 46,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/dashboard'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 154,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/stock'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 184,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/api/stock/list'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 205,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/inbound'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 241,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/inbound/do'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 338,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/outbound'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 373,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/outbound/do'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 443,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/alerts'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 493,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/alert/<int:alert_id>/resolve'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 505,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/warehouses'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 525,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/warehouses/add', endpoint='wh_add_view",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 544,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/warehouses/edit/<int:wid>'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 556,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/warehouses/toggle/<int:wid>'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 569,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/warehouses/delete/<int:wid>', endpoint='warehouse_delete_page",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 587,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/categories'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 618,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/categories/add', endpoint='category_add_view",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 634,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/products/add', endpoint='product_add_simple",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 660,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/export'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 665,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/print/preview'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 699,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/base'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 744,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/base/<kind>/add', endpoint='base_add_page",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 774,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/settings'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 785,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/settings'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 810,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/batch'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 830,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/batch/do'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 939,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/api/inventory/alert'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 960,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/stocktake'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 966,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/stocktake/create'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 982,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/stocktake/<int:sid>/submit'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 996,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/stocktake/<int:sid>/adjust'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 1011,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/api/stocktake/list'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 1026,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/api/stocktake/<int:sid>/items'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 1040,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/transfer'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 1046,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/transfer/create'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 1065,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/transfer/<int:tid>/complete'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 1075,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/transfer/<int:tid>/cancel'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_core.py",
+      "line": 1087,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/api/transfer/list'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_data.py",
+      "line": 129,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/products'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_data.py",
+      "line": 133,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/api/product/list'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_data.py",
+      "line": 145,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/product/add'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_data.py",
+      "line": 190,
+      "methods": [
+        "DELETE"
+      ],
+      "rule": "/inventory/api/product/<int:pid>/delete'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_data.py",
+      "line": 200,
+      "methods": [
+        "PATCH"
+      ],
+      "rule": "/inventory/api/product/<int:pid>/update'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_data.py",
+      "line": 237,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/suppliers'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_data.py",
+      "line": 241,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/supplier/add'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_data.py",
+      "line": 273,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/category/add'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_data.py",
+      "line": 302,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/base/add'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_data.py",
+      "line": 411,
+      "methods": [
+        "DELETE"
+      ],
+      "rule": "/inventory/api/supplier/<int:eid>/delete'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_data.py",
+      "line": 417,
+      "methods": [
+        "DELETE"
+      ],
+      "rule": "/inventory/api/category/<int:eid>/delete'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_data.py",
+      "line": 423,
+      "methods": [
+        "DELETE"
+      ],
+      "rule": "/inventory/api/base/<int:eid>/delete'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_data.py",
+      "line": 429,
+      "methods": [
+        "DELETE"
+      ],
+      "rule": "/inventory/api/warehouse/<int:eid>/delete'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_data.py",
+      "line": 438,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/warehouse/add'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_data.py",
+      "line": 466,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/api/recycle-bin/list'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_data.py",
+      "line": 487,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/recycle-bin/<entity>/<int:eid>/restore'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_data.py",
+      "line": 496,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/recycle-bin'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_external.py",
+      "line": 25,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/dashboard'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_external.py",
+      "line": 47,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/alerts'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_external.py",
+      "line": 73,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/search'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_system.py",
+      "line": 40,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/backup'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_system.py",
+      "line": 65,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/backup/create'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_system.py",
+      "line": 125,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/api/backup/download/<filename>'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_system.py",
+      "line": 162,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/backup/delete'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_system.py",
+      "line": 194,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/backup/restore'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_system.py",
+      "line": 252,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/api/settings'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_system.py",
+      "line": 271,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/settings'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_system.py",
+      "line": 313,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/inventory/api/cleanup'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/inventory_web/routes_system.py",
+      "line": 354,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/inventory/api/system/info'",
+      "cache_used": [],
+      "category": "static_or_dynamic"
+    },
+    {
+      "file": "mobile_api_ai/scripts/cloud/cloud_group_bot_service.py",
+      "line": 84,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/send'",
+      "cache_used": [],
+      "category": "write"
+    },
+    {
+      "file": "mobile_api_ai/scripts/cloud/cloud_group_bot_service.py",
+      "line": 115,
+      "methods": [
+        "GET"
+      ],
+      "rule": "/api/health'",
+      "cache_used": [],
+      "category": "cacheable_get"
+    },
+    {
+      "file": "mobile_api_ai/scripts/cloud/cloud_group_bot_service.py",
+      "line": 155,
+      "methods": [
+        "POST"
+      ],
+      "rule": "/api/smartsheet/write'",
+      "cache_used": [],
+      "category": "write"
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+groups:
+  - name: dispatch_center_alerts
+    interval: 30s
+    rules:
+      # [v3.7.3] 性能告警规则
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(dispatch_center_request_total{status=~"5.."}[5m]))
+          / sum(rate(dispatch_center_request_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          service: dispatch_center
+        annotations:
+          summary: "5003 错误率过高"
+          description: "错误率 {{ $value | humanizePercentage }} 超过 5% 持续 5 分钟"
+
+      - alert: HighLatency
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(dispatch_center_request_latency_seconds_bucket[5m])) by (le)
+          ) > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: dispatch_center
+        annotations:
+          summary: "5003 P95 延迟过高"
+          description: "P95 延迟 {{ $value }}s 超过 2s 持续 5 分钟"
+
+      - alert: DLQQueueGrowing
+        expr: dispatch_center_dlq_queue_size > 100
+        for: 10m
+        labels:
+          severity: warning
+          service: dispatch_center
+        annotations:
+          summary: "5003 DLQ 队列积压"
+          description: "DLQ 队列长度 {{ $value }} 超过 100 持续 10 分钟"
+
+      - alert: DLQPoisonedMessages
+        expr: increase(dispatch_center_dlq_retries_total{result="poisoned"}[1h]) > 10
+        for: 5m
+        labels:
+          severity: critical
+          service: dispatch_center
+        annotations:
+          summary: "5003 DLQ poison 消息过多"
+          description: "1 小时内 {{ $value }} 条消息被标记为 poison"
+
+      - alert: DBPoolExhausted
+        expr: dispatch_center_db_pool_size{state="active"} / dispatch_center_db_pool_size{state="total"} > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          service: dispatch_center
+        annotations:
+          summary: "5003 DB 连接池接近耗尽"
+          description: "DB 连接池使用率 {{ $value | humanizePercentage }} 超过 90%"
+
+      - alert: LowCacheHitRate
+        expr: |
+          sum(rate(dispatch_center_cache_total{result="hit"}[10m]))
+          / sum(rate(dispatch_center_cache_total[10m])) < 0.5
+        for: 15m
+        labels:
+          severity: info
+          service: dispatch_center
+        annotations:
+          summary: "5003 缓存命中率偏低"
+          description: "缓存命中率 {{ $value | humanizePercentage }} 低于 50%"

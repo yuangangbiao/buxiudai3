@@ -1,0 +1,79 @@
+﻿
+============================================================
+  端到端测试: 桌面端→移动端 任务发布链路
+  时间戳: 2026-06-21 02:03:22
+  订单: ORD-0621020322 / 测试工序(P99)
+============================================================
+
+--- 测试1: 5002 容器中心连通性 ---
+
+--- 测试2: 生产工序发布 (task_type=report) ---
+
+--- 测试3: 质检任务发布 (task_type=quality) ---
+
+--- 测试4: 物料任务发布 (task_type=material) ---
+
+--- 测试5: 数据库落地验证 ---
+    process_sub_step: 测试工序 qty=20.00 status=pending operator=shengchan020322
+    material_record: 不锈钢网带 50目*1.0mm x50 status=pending
+
+--- 测试6: 移动端(5008) API可读性验证 ---
+    5008物料任务响应: {"code": 0, "data": {"tasks": [{"acknowledged_at": null, "actual_qty": 0, "arrival_date": null, "completed_at": null, "completed_qty": 0.0, "content": {"material": "不锈钢网带", "order_no": "ORD-2026042100
+    响应: {"code": 0, "data": {"tasks": [{"_table": "process_sub_steps", "completed_qty": 0.0, "created_at": "2026-06-21T02:03:23", "data_type": "P99", "data_type_orig": "process_task", "id": "2153A7C8", "opera
+    响应: {"code": 0, "data": {"tasks": [{"_table": "quality_records", "completed_qty": 0.0, "created_at": "2026-06-18T19:17:51", "data_type": "首检", "data_type_orig": "quality_task", "id": 81, "inspector": "苑岗彪
+
+============================================================
+  测试报告
+============================================================
+  ✅ PASS 5002 服务可用
+         status=200, code=0
+  ✅ PASS 发布API响应成功
+         task_id=2153A7C8
+  ✅ PASS 生产工序-返回task_id
+         task_id=2153A7C8
+  ✅ PASS 质检-API响应成功
+         task_id=FE4A3BE8
+  ✅ PASS 质检-返回task_id
+         task_id=FE4A3BE8
+  ✅ PASS 物料-API响应成功
+         task_id=6B5C8A0D
+  ✅ PASS 物料-返回task_id
+         task_id=6B5C8A0D
+  ✅ PASS process_sub_steps 写入记录数
+         process_sub_steps表找到1条（operator=shengchan020322）
+  ✅ PASS process_sub_steps 工序名匹配
+         "测试工序" vs "测试工序"
+  ✅ PASS process_sub_steps 数量匹配
+         20.00 >= 20
+  ✅ PASS material_records 写入记录数
+         material表找到1条（operator_id=wuliao020322）
+  ✅ PASS material_record 物料名称匹配
+         "不锈钢网带" vs "不锈钢网带"
+  ✅ PASS material_record 规格匹配
+         "50目*1.0mm" vs "50目*1.0mm"
+  ✅ PASS material_record 数量匹配
+         50 vs 50
+  ✅ PASS 5008物料任务API可访问
+         status=200
+  ✅ PASS 5008生产任务API可访问
+         status=200
+  ✅ PASS 5008质检任务API可访问
+         status=200
+
+  汇总: ✅ 17 PASS | ❌ 0 FAIL | 共 17 项
+
+  分析说明:
+  1. 5002 API 发布路径: 桌面端 → POST /api/internal/publish → 独立表
+     - production(生产): process_sub_steps ✅
+     - quality(质检): quality_records ✅
+     - material(物料): material_records ✅
+  2. 移动端读取路径: 5008 /api/tasks → 独立表
+     - scan_report 路由 → process_sub_steps ✅
+     - material 路由 → material_records ✅
+     - quality 路由 → quality_records ✅
+  3. 业务含义:
+     - 三种任务类型均写入独立表，不再依赖 data_packages
+     - material 类型通过 publish_task() 直写 material_records
+     - production 类型通过 save_package() 写入 process_sub_steps
+     - quality 类型通过 save_package() 写入 quality_records
+============================================================

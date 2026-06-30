@@ -1,0 +1,308 @@
+# -*- coding: utf-8 -*-
+"""
+工序记录数据模型 (DAO)
+"""
+import os
+from models.database import get_connection, log_status_change
+from constants import ProcessStatus, OrderStatus, ProductionStatus
+
+
+class ProcessDAO:
+
+    @staticmethod
+    def update_record(record_id: int, data: dict) -> bool:
+        """更新工序报工"""
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT status, order_id, production_id, start_time, end_time FROM process_records WHERE id=%s", (record_id,))
+        old = cursor.fetchone()
+        cursor.close()
+        old_status = old["status"] if old else None
+        order_id = old["order_id"] if old else None
+        production_id = old["production_id"] if old else None
+        old_start_time = old["start_time"] if old else None
+        old_end_time = old["end_time"] if old else None
+
+        new_status = data.get("status", old_status)
+
+        # 自动记录工序开始时间（第一次报工时）
+        start_time = old_start_time
+        if old_status in (None, ProcessStatus.PENDING.value) and new_status in (ProcessStatus.IN_PROGRESS.value, ProcessStatus.COMPLETED.value):
+            start_time = "NOW()"
+
+        # 自动记录工序结束时间（工序完成时）
+        end_time = old_end_time
+        if new_status == ProcessStatus.COMPLETED.value and old_status != ProcessStatus.COMPLETED.value:
+            end_time = "NOW()"
+
+        # 构建更新SQL
+        update_fields = [
+            "completed_qty=%s", "qualified_qty=%s", "worker=%s",
+            "work_hours=%s", "status=%s", "remark=%s",
+            "device_remark=%s", "record_date=NOW()"
+        ]
+        update_values = [
+            data.get("completed_qty", 0),
+            data.get("qualified_qty", 0),
+            data.get("worker", ""),
+            data.get("work_hours", 0),
+            new_status,
+            data.get("remark", ""),
+            data.get("device_remark", ""),
+        ]
+
+        # 添加时间字段更新
+        if start_time and not old_start_time:
+            update_fields.append("start_time=NOW()")
+        if end_time and not old_end_time:
+            update_fields.append("end_time=NOW()")
+
+        cursor = conn.cursor()
+        cursor.execute(f"""
+            UPDATE process_records SET {','.join(update_fields)}
+            WHERE id=%s
+        """, update_values + [record_id])
+        conn.commit()
+        cursor.close()
+
+        # 如果当前工序完成，检查是否所有工序都完成
+        if new_status == ProcessStatus.COMPLETED.value and production_id:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT COUNT(*) as cnt FROM process_records WHERE production_id=%s AND status != %s",
+                (production_id, ProcessStatus.COMPLETED.value)
+            )
+            unfinished = cursor.fetchone()
+            cursor.close()
+            if isinstance(unfinished, dict):
+                unfinished_cnt = unfinished.get("cnt", 0) or unfinished.get("COUNT(*)", 0)
+            else:
+                unfinished_cnt = unfinished[0] if unfinished else 0
+            if unfinished_cnt == 0:
+                # 所有工序完成，更新生产工单状态
+                cursor = conn.cursor()
+                cursor.execute(
+                    "UPDATE production_orders SET status=%s, actual_end=NOW(), updated_at=NOW() WHERE id=%s",
+                    (ProductionStatus.COMPLETED.value, production_id)
+                )
+                cursor.close()
+                # 更新订单状态
+                cursor = conn.cursor()
+                cursor.execute(
+                    "UPDATE orders SET status=%s, updated_at=NOW() WHERE id=%s",
+                    (OrderStatus.QC.value, order_id)
+                )
+                cursor.close()
+                conn.commit()
+                log_status_change("orders", order_id, OrderStatus.PRODUCTION.value, OrderStatus.QC.value, remark="工序全部完成")
+            else:
+                # 还有未完成工序，但当前工序已完成，需设置 actual_start
+                cursor = conn.cursor()
+                cursor.execute(
+                    "UPDATE production_orders SET status=%s, actual_start=COALESCE(actual_start, NOW()), updated_at=NOW() WHERE id=%s",
+                    (ProductionStatus.IN_PROGRESS.value, production_id)
+                )
+                cursor.close()
+                cursor = conn.cursor()
+                cursor.execute(
+                    "UPDATE orders SET status=%s, updated_at=NOW() WHERE id=%s AND status=%s",
+                    (OrderStatus.PRODUCTION.value, order_id, OrderStatus.SCHEDULED.value)
+                )
+                cursor.close()
+                conn.commit()
+        elif new_status == ProcessStatus.IN_PROGRESS.value:
+            # 第一次报工，更新生产工单为进行中
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE production_orders SET status=%s, actual_start=COALESCE(actual_start, NOW()), updated_at=NOW() WHERE id=%s",
+                (ProductionStatus.IN_PROGRESS.value, production_id)
+            )
+            cursor.close()
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE orders SET status=%s, updated_at=NOW() WHERE id=%s AND status=%s",
+                (OrderStatus.PRODUCTION.value, order_id, OrderStatus.SCHEDULED.value)
+            )
+            cursor.close()
+            conn.commit()
+
+        conn.close()
+        if new_status != old_status:
+            log_status_change("process_records", record_id, old_status, new_status)
+        return True
+
+    @staticmethod
+    def get_by_order(order_id: int) -> list:
+        """获取订单的工序记录列表"""
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT * FROM process_records WHERE order_id=%s ORDER BY process_seq ASC",
+                (order_id,)
+            )
+            rows = cursor.fetchall()
+            cursor.close()
+            return [dict(r) for r in rows]
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_by_production(production_id: int) -> list:
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT * FROM process_records WHERE production_id=%s ORDER BY process_seq ASC",
+                (production_id,)
+            )
+            rows = cursor.fetchall()
+            cursor.close()
+            return [dict(r) for r in rows]
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_progress(production_id: int) -> float:
+        """计算生产进度百分比"""
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT COUNT(*) as cnt FROM process_records WHERE production_id=%s",
+                (production_id,)
+            )
+            total_row = cursor.fetchone()
+            cursor.close()
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT COUNT(*) as cnt FROM process_records WHERE production_id=%s AND status=%s",
+                (production_id, ProcessStatus.COMPLETED.value)
+            )
+            done_row = cursor.fetchone()
+            cursor.close()
+            total = total_row[0] if total_row else 0
+            done = done_row[0] if done_row else 0
+            return (done / total * 100) if total > 0 else 0
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_worker_stats(date_from: str = None, date_to: str = None) -> list:
+        """工人工时统计"""
+        conn = get_connection()
+        try:
+            sql = """
+                SELECT worker, SUM(work_hours) as total_hours,
+                       SUM(completed_qty) as total_qty, COUNT(*) as task_count
+                FROM process_records
+                WHERE worker != '' AND worker IS NOT NULL
+            """
+            params = []
+            if date_from:
+                sql += " AND record_date >= %s"
+                params.append(date_from)
+            if date_to:
+                sql += " AND record_date <= %s"
+                params.append(date_to)
+            sql += " GROUP BY worker ORDER BY total_hours DESC"
+            cursor = conn.cursor()
+            cursor.execute(sql, params)
+            rows = cursor.fetchall()
+            cursor.close()
+            return [dict(r) for r in rows]
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_by_id(record_id: int) -> dict:
+        """根据ID获取工序记录"""
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT * FROM process_records WHERE id=%s",
+                (record_id,)
+            )
+            row = cursor.fetchone()
+            cursor.close()
+            return dict(row) if row else None
+        finally:
+            conn.close()
+
+    @staticmethod
+    def create(data: dict) -> int:
+        """创建工序记录，返回新记录ID"""
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            fields = []
+            values = []
+            placeholders = []
+            for k, v in data.items():
+                fields.append(k)
+                values.append(v)
+                placeholders.append("%s")
+            cursor.execute(
+                f"INSERT INTO process_records ({','.join(fields)}) VALUES ({','.join(placeholders)})",
+                values
+            )
+            conn.commit()
+            new_id = cursor.lastrowid
+            cursor.close()
+            return new_id
+        finally:
+            conn.close()
+
+    @staticmethod
+    def delete(record_id: int) -> bool:
+        """删除工序记录"""
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM process_records WHERE id=%s", (record_id,))
+            conn.commit()
+            affected = cursor.rowcount
+            cursor.close()
+            return affected > 0
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_today_completed(record_id: int) -> int:
+        """获取某工序今日完成量"""
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT completed_qty FROM process_records WHERE id=%s AND DATE(record_date) = DATE(NOW())",
+                (record_id,)
+            )
+            today = cursor.fetchone()
+            cursor.close()
+            return today['completed_qty'] if today else 0
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_today_completed_batch(record_ids: list) -> dict:
+        """批量获取今日完成量（优化N+1查询）"""
+        if not record_ids:
+            return {}
+        from datetime import datetime, timedelta
+        today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        tomorrow_start = today_start + timedelta(days=1)
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            placeholders = ','.join(['%s'] * len(record_ids))
+            cursor.execute(
+                f"""SELECT id, completed_qty FROM process_records
+                    WHERE id IN ({placeholders}) AND record_date >= %s AND record_date < %s""",
+                record_ids + [today_start.isoformat(), tomorrow_start.isoformat()]
+            )
+            rows = cursor.fetchall()
+            cursor.close()
+            return {row['id']: row['completed_qty'] for row in rows}
+        finally:
+            conn.close()

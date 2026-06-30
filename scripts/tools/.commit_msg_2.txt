@@ -1,0 +1,12 @@
+feat(dispatch-center): 新增 /configs/alert_rules 配置路由
+
+硬迁移补充：原 container_center/api/configs.py 中的 /configs/alert_rules
+配置路由随死代码包删除而消失。新增到 5003 端口接管。
+
+存储复用 DispatchContext.alert_engine.config_store (ConfigStore, SQLite)。
+AlertEngine 未初始化时返回空数据 (GET) 或 503 (PUT)。
+
+- 任务：F22 A6 补充
+- 类型：[逻辑]
+- 验收：路由 grep 确认 L9001 (GET) + L9024 (PUT) 存在
+- 关联：ContainerCenterClient.get_alert_rules / update_alert_rules

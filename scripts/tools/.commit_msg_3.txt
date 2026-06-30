@@ -1,0 +1,15 @@
+refactor(container-client): 告警 API 硬迁移到 5003 端口（不兜底依赖）
+
+修改 ContainerCenterClient 的 4 个告警方法：
+- get_alert_rules: 调用 5003 /api/dispatch-center/configs/alert_rules (GET)
+- update_alert_rules: 调用 5003 /api/dispatch-center/configs/alert_rules (PUT)
+- get_alert_list: 调用 5003 /api/dispatch-center/alerts (GET)
+- dismiss_alert: 调用 5003 /api/dispatch-center/alerts/<id>/dismiss (POST)
+
+**删除 try/except 兜底**：5003 不可用时直接抛异常，不静默回退到 5002 mock 数据。
+配置通过环境变量 DISPATCH_CENTER_URL 注入，默认 http://localhost:5003。
+
+- 任务：F22 行动项 3 (硬迁移)
+- 类型：[逻辑]
+- 验收：AST 验证 4 个 alert_* 方法均无 try/except 兜底
+- 关联：ARCHITECTURE_v3.6.md 9.5 节

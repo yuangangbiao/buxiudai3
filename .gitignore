@@ -94,12 +94,9 @@ traces/
 # node
 node_modules/
 
-# Mobile API
-mobile_api_ai/tests/
-mobile_api_ai/__pycache__/
-mobile_api_ai/venv/
-mobile_api_ai/.env
-mobile_api_ai/instance/
+# Mobile API - 内层 mobile-api-ai 子仓独立维护, 由 /mobile_api_ai/ 整目录排除
+# 详细背景见 docs/止血/FINAL_止血.md
+mobile_api_ai/
 
 # Misc
 *.bak

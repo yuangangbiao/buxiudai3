@@ -1,0 +1,14 @@
+fix(tools): 修 check_route_baseline.py 的 bp_name 匹配 bug + 建经验池
+
+A8 修复：check_route_baseline.py 路由提取时，bp_var（如 dispatch_center_bp）
+自动剥离 _bp/_blueprint 后缀再查 BP_PREFIXES。修复后 583 个路由全部带正确
+prefix（修复前仅 550 个，丢失 33 个 dispatch-center 路由）。
+
+A9 新建：.workbuddy/memory/lessons-pool.md 经验池。记录本次硬迁移踩的 5 个
+模式级坑 + 3 个项目级知识约定。🟡 模式级已达 5 条，建议合并到 add-feature
+Skill Phase 6.1 第 10+ 行。
+
+- 任务：F22 A8 + A9
+- 类型：[修复] + [知识]
+- 验收：脚本 10 个关键路由全部 OK；经验池含 5 模式级 + 3 知识级
+- 关联：F22 全套硬迁移 commits

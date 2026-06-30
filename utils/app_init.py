@@ -1,0 +1,239 @@
+# -*- coding: utf-8 -*-
+"""
+应用启动初始化模块
+第四阶段：热点数据缓存 + 归档机制
+"""
+import os
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from utils.pagination import set_cache, get_cache, clear_all_cache
+from models.database import get_connection
+
+def preload_dict_data():
+    """预加载字典表数据到缓存（启动时执行一次）"""
+    print("预加载字典数据...")
+
+    from models.product_type import ProductTypeDAO
+    from models.process import ProcessDAO
+    from models.material_rules import MaterialRulesDAO
+
+    try:
+        product_types = ProductTypeDAO.get_all()
+        set_cache("dict:product_types", product_types, ttl=3600)
+        print(f"  ✓ 产品类型: {len(product_types)} 条")
+    except Exception as e:
+        print(f"  ✗ 产品类型加载失败: {e}")
+
+    try:
+        process_templates = ProcessDAO.get_templates()
+        set_cache("dict:process_templates", process_templates, ttl=3600)
+        print(f"  ✓ 工序模板: {len(process_templates)} 条")
+    except Exception as e:
+        print(f"  ✗ 工序模板加载失败: {e}")
+
+    try:
+        material_rules = MaterialRulesDAO.get_all()
+        set_cache("dict:material_rules", material_rules, ttl=3600)
+        print(f"  ✓ 物料规则: {len(material_rules)} 条")
+    except Exception as e:
+        print(f"  ✗ 物料规则加载失败: {e}")
+
+    try:
+        densities = get_material_densities()
+        set_cache("dict:material_densities", densities, ttl=3600)
+        print(f"  ✓ 物料密度: {len(densities)} 条")
+    except Exception as e:
+        print(f"  ✗ 物料密度加载失败: {e}")
+
+    print("字典数据预加载完成")
+
+
+def get_material_densities() -> list:
+    """获取物料密度表"""
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT name, density FROM material_densities")
+        rows = cursor.fetchall()
+        cursor.close()
+        return [{"material": row['name'], "density": row['density']} for row in rows]
+    finally:
+        conn.close()
+
+
+def archive_old_orders(days: int = 365, dry_run: bool = True) -> dict:
+    """归档历史订单
+
+    Args:
+        days: 多少天前的订单将被归档
+        dry_run: True=只统计不执行，False=执行归档
+
+    Returns:
+        归档结果统计
+    """
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT DATE_SUB(NOW(), INTERVAL %s DAY)", (days,))
+        cutoff_date = cursor.fetchone()['DATE_SUB(NOW(), INTERVAL %s DAY)']
+
+        cursor.execute("""
+            SELECT COUNT(*) as cnt FROM orders
+            WHERE status IN ('已完成', '已发货', '已取消')
+            AND created_at < %s
+            AND COALESCE(is_archived, 0) = 0
+        """, (cutoff_date,))
+
+        row = cursor.fetchone()
+        count = row['cnt'] if row else 0
+
+        if dry_run:
+            return {"would_archive": count, "dry_run": True}
+
+        if count == 0:
+            return {"archived": 0, "dry_run": False}
+
+        cursor.execute("""
+            UPDATE orders
+            SET is_archived = 1
+            WHERE status IN ('已完成', '已发货', '已取消')
+            AND created_at < %s
+            AND COALESCE(is_archived, 0) = 0
+        """, (cutoff_date,))
+
+        conn.commit()
+        cursor.close()
+
+        return {"archived": count, "dry_run": False}
+    finally:
+        conn.close()
+
+
+def cleanup_old_logs(days: int = 730, table: str = "operator_logs") -> dict:
+    """清理历史日志
+
+    Args:
+        days: 保留天数
+        table: 日志表名
+
+    Returns:
+        清理结果统计
+    """
+    valid_tables = ["operator_logs", "status_logs", "material_history"]
+    if table not in valid_tables:
+        return {"error": f"无效的表名: {table}"}
+
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT DATE_SUB(NOW(), INTERVAL %s DAY)", (days,))
+        cutoff_date = cursor.fetchone()['DATE_SUB(NOW(), INTERVAL %s DAY)']
+
+        cursor.execute(f"""
+            SELECT COUNT(*) as cnt FROM {table}
+            WHERE created_at < %s
+        """, (cutoff_date,))
+
+        row = cursor.fetchone()
+        count = row['cnt'] if row else 0
+
+        if count == 0:
+            return {"deleted": 0}
+
+        cursor.execute(f"""
+            DELETE FROM {table}
+            WHERE created_at < %s
+        """, (cutoff_date,))
+
+        conn.commit()
+        cursor.close()
+
+        return {"deleted": count}
+    finally:
+        conn.close()
+
+
+def get_db_stats() -> dict:
+    """获取数据库统计信息"""
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        stats = {}
+
+        tables = ["orders", "production_orders", "process_records",
+                  "quality_records", "finished_goods", "shipments",
+                  "operator_logs", "status_logs"]
+
+        for table in tables:
+            try:
+                cursor.execute(f"SELECT COUNT(*) as cnt FROM {table}")
+                row = cursor.fetchone()
+                stats[table] = row['cnt'] if row else 0
+            except Exception:
+                stats[table] = 0
+
+        cursor.execute("""
+            SELECT COUNT(*) as cnt FROM orders
+            WHERE COALESCE(is_archived, 0) = 1
+        """)
+        row = cursor.fetchone()
+        stats["orders_archived"] = row['cnt'] if row else 0
+        stats["orders_active"] = stats.get("orders", 0) - stats["orders_archived"]
+
+        cursor.close()
+        return stats
+    finally:
+        conn.close()
+
+
+def init_app_cache():
+    """应用启动时的完整初始化"""
+    print("=" * 50)
+    print("应用初始化")
+    print("=" * 50)
+
+    print("\n1. 清理过期缓存...")
+    from utils.pagination import _cache
+    cleaned = _cache.cleanup_expired()
+    print(f"   清理了 {cleaned} 条过期缓存")
+
+    print("\n2. 预加载热点数据...")
+    preload_dict_data()
+
+    print("\n3. 数据库统计:")
+    stats = get_db_stats()
+    for table, count in stats.items():
+        print(f"   {table}: {count:,}")
+
+    print("\n初始化完成！")
+
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="数据库维护工具")
+    parser.add_argument("--init", action="store_true", help="初始化应用缓存")
+    parser.add_argument("--archive", type=int, default=0, help="归档多少天前的订单")
+    parser.add_argument("--cleanup", type=int, default=0, help="清理多少天前的日志")
+    parser.add_argument("--dry-run", action="store_true", help="仅统计不执行")
+    parser.add_argument("--stats", action="store_true", help="显示数据库统计")
+
+    args = parser.parse_args()
+
+    if args.init:
+        init_app_cache()
+    elif args.archive > 0:
+        result = archive_old_orders(days=args.archive, dry_run=args.dry_run)
+        print(result)
+    elif args.cleanup > 0:
+        result = cleanup_old_logs(days=args.cleanup)
+        print(result)
+    elif args.stats:
+        stats = get_db_stats()
+        for k, v in stats.items():
+            print(f"{k}: {v:,}")
+    else:
+        parser.print_help()

@@ -1,0 +1,446 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.14.3, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\python.exe
+metadata: {'Python': '3.14.3', 'Platform': 'Windows-11-10.0.22631-SP0', 'Packages': {'pytest': '9.0.3', 'pluggy': '1.6.0'}, 'Plugins': {'anyio': '4.12.1', 'cov': '7.1.0', 'html': '4.2.0', 'metadata': '3.1.1', 'mock': '3.15.1'}, 'CI': '1'}
+rootdir: D:\yuan\不锈钢网带跟单3.0
+configfile: pytest.ini (WARNING: ignoring pytest config in pyproject.toml!)
+plugins: anyio-4.12.1, cov-7.1.0, html-4.2.0, metadata-3.1.1, mock-3.15.1
+collecting ... collected 22 items
+
+tests/integration/test_schedule_publish.py::TestSchedulePublish::test_wechat_dispatch_no_operator_id PASSED [  4%]
+tests/integration/test_schedule_publish.py::TestSchedulePublish::test_schedule_publish_missing_fields PASSED [  9%]
+tests/integration/test_schedule_publish.py::TestSortCompatibility::test_mixed_datetime_string_sort PASSED [ 13%]
+tests/integration/test_schedule_publish.py::TestDeadLetterFlow::test_dead_letter_stays_on_failure PASSED [ 18%]
+tests/integration/test_schedule_publish.py::TestStorageReconnect::test_ensure_conn_recovers PASSED [ 22%]
+tests/integration/test_schedule_publish.py::TestStorageReconnect::test_table_method_exists PASSED [ 27%]
+tests/integration/test_schedule_publish.py::TestProcessCodePrefix::test_p_prefix_production PASSED [ 31%]
+tests/integration/test_schedule_publish.py::TestProcessCodePrefix::test_m_prefix_material PASSED [ 36%]
+tests/integration/test_schedule_publish.py::TestProcessCodePrefix::test_q_prefix_quality PASSED [ 40%]
+tests/integration/test_schedule_publish.py::TestProcessCodePrefix::test_x_prefix_outsource PASSED [ 45%]
+tests/integration/test_schedule_publish.py::TestProcessCodePrefix::test_sub_codes_unique PASSED [ 50%]
+tests/integration/test_schedule_publish.py::TestProcessCodePrefix::test_code_fits_varchar_10 PASSED [ 54%]
+tests/integration/test_schedule_publish.py::TestTaskDataCompleteness::test_process_task_fields PASSED [ 59%]
+tests/integration/test_schedule_publish.py::TestTaskDataCompleteness::test_material_task_fields PASSED [ 63%]
+tests/integration/test_schedule_publish.py::TestTaskDataCompleteness::test_quality_task_fields PASSED [ 68%]
+tests/integration/test_template_api.py::TestTemplateAPI::test_get_templates FAILED [ 72%]
+tests/integration/test_template_api.py::TestTemplateAPI::test_put_custom_template FAILED [ 77%]
+tests/integration/test_template_api.py::TestTemplateAPI::test_delete_custom_template FAILED [ 81%]
+tests/integration/test_template_api.py::TestTemplateAPI::test_delete_builtin_403 FAILED [ 86%]
+tests/integration/test_template_api.py::TestTemplateAPI::test_delete_builtin_owner_path FAILED [ 90%]
+tests/integration/test_template_api.py::TestVariables::test_list_variables FAILED [ 95%]
+tests/integration/test_template_api.py::TestServiceHealth::test_service_alive FAILED [100%]
+
+================================== FAILURES ===================================
+_____________________ TestTemplateAPI.test_get_templates ______________________
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connection.py:204: in _new_conn
+    sock = connection.create_connection(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\util\connection.py:85: in create_connection
+    raise err
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\util\connection.py:73: in create_connection
+    sock.connect(sa)
+E   ConnectionRefusedError: [WinError 10061] 由于目标计算机积极拒绝，无法连接。
+
+The above exception was the direct cause of the following exception:
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connectionpool.py:787: in urlopen
+    response = self._make_request(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connectionpool.py:493: in _make_request
+    conn.request(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connection.py:500: in request
+    self.endheaders()
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\http\client.py:1353: in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\http\client.py:1113: in _send_output
+    self.send(msg)
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\http\client.py:1057: in send
+    self.connect()
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connection.py:331: in connect
+    self.sock = self._new_conn()
+                ^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connection.py:219: in _new_conn
+    raise NewConnectionError(
+E   urllib3.exceptions.NewConnectionError: HTTPConnection(host='127.0.0.1', port=5003): Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。
+
+The above exception was the direct cause of the following exception:
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\adapters.py:696: in send
+    resp = conn.urlopen(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connectionpool.py:841: in urlopen
+    retries = retries.increment(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\util\retry.py:535: in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='127.0.0.1', port=5003): Max retries exceeded with url: /api/dispatch-center/templates (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5003): Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。"))
+
+During handling of the above exception, another exception occurred:
+tests\integration\test_template_api.py:15: in test_get_templates
+    r = requests.get(f'{BASE}/templates')
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\api.py:87: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\api.py:71: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\sessions.py:651: in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\sessions.py:784: in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\adapters.py:729: in send
+    raise ConnectionError(e, request=request)
+E   requests.exceptions.ConnectionError: HTTPConnectionPool(host='127.0.0.1', port=5003): Max retries exceeded with url: /api/dispatch-center/templates (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5003): Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。"))
+__________________ TestTemplateAPI.test_put_custom_template ___________________
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connection.py:204: in _new_conn
+    sock = connection.create_connection(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\util\connection.py:85: in create_connection
+    raise err
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\util\connection.py:73: in create_connection
+    sock.connect(sa)
+E   ConnectionRefusedError: [WinError 10061] 由于目标计算机积极拒绝，无法连接。
+
+The above exception was the direct cause of the following exception:
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connectionpool.py:787: in urlopen
+    response = self._make_request(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connectionpool.py:493: in _make_request
+    conn.request(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connection.py:500: in request
+    self.endheaders()
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\http\client.py:1353: in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\http\client.py:1113: in _send_output
+    self.send(msg)
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\http\client.py:1057: in send
+    self.connect()
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connection.py:331: in connect
+    self.sock = self._new_conn()
+                ^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connection.py:219: in _new_conn
+    raise NewConnectionError(
+E   urllib3.exceptions.NewConnectionError: HTTPConnection(host='127.0.0.1', port=5003): Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。
+
+The above exception was the direct cause of the following exception:
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\adapters.py:696: in send
+    resp = conn.urlopen(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connectionpool.py:841: in urlopen
+    retries = retries.increment(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\util\retry.py:535: in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='127.0.0.1', port=5003): Max retries exceeded with url: /api/dispatch-center/templates/test_qa_1781997135 (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5003): Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。"))
+
+During handling of the above exception, another exception occurred:
+tests\integration\test_template_api.py:23: in test_put_custom_template
+    r = requests.put(f'{BASE}/templates/{TEST_TEMPLATE_ID}', json={
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\api.py:151: in put
+    return request("put", url, data=data, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\api.py:71: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\sessions.py:651: in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\sessions.py:784: in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\adapters.py:729: in send
+    raise ConnectionError(e, request=request)
+E   requests.exceptions.ConnectionError: HTTPConnectionPool(host='127.0.0.1', port=5003): Max retries exceeded with url: /api/dispatch-center/templates/test_qa_1781997135 (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5003): Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。"))
+_________________ TestTemplateAPI.test_delete_custom_template _________________
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connection.py:204: in _new_conn
+    sock = connection.create_connection(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\util\connection.py:85: in create_connection
+    raise err
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\util\connection.py:73: in create_connection
+    sock.connect(sa)
+E   ConnectionRefusedError: [WinError 10061] 由于目标计算机积极拒绝，无法连接。
+
+The above exception was the direct cause of the following exception:
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connectionpool.py:787: in urlopen
+    response = self._make_request(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connectionpool.py:493: in _make_request
+    conn.request(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connection.py:500: in request
+    self.endheaders()
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\http\client.py:1353: in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\http\client.py:1113: in _send_output
+    self.send(msg)
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\http\client.py:1057: in send
+    self.connect()
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connection.py:331: in connect
+    self.sock = self._new_conn()
+                ^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connection.py:219: in _new_conn
+    raise NewConnectionError(
+E   urllib3.exceptions.NewConnectionError: HTTPConnection(host='127.0.0.1', port=5003): Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。
+
+The above exception was the direct cause of the following exception:
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\adapters.py:696: in send
+    resp = conn.urlopen(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connectionpool.py:841: in urlopen
+    retries = retries.increment(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\util\retry.py:535: in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='127.0.0.1', port=5003): Max retries exceeded with url: /api/dispatch-center/templates/test_qa_1781997135 (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5003): Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。"))
+
+During handling of the above exception, another exception occurred:
+tests\integration\test_template_api.py:31: in test_delete_custom_template
+    r = requests.delete(f'{BASE}/templates/{TEST_TEMPLATE_ID}')
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\api.py:180: in delete
+    return request("delete", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\api.py:71: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\sessions.py:651: in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\sessions.py:784: in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\adapters.py:729: in send
+    raise ConnectionError(e, request=request)
+E   requests.exceptions.ConnectionError: HTTPConnectionPool(host='127.0.0.1', port=5003): Max retries exceeded with url: /api/dispatch-center/templates/test_qa_1781997135 (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5003): Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。"))
+___________________ TestTemplateAPI.test_delete_builtin_403 ___________________
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connection.py:204: in _new_conn
+    sock = connection.create_connection(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\util\connection.py:85: in create_connection
+    raise err
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\util\connection.py:73: in create_connection
+    sock.connect(sa)
+E   ConnectionRefusedError: [WinError 10061] 由于目标计算机积极拒绝，无法连接。
+
+The above exception was the direct cause of the following exception:
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connectionpool.py:787: in urlopen
+    response = self._make_request(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connectionpool.py:493: in _make_request
+    conn.request(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connection.py:500: in request
+    self.endheaders()
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\http\client.py:1353: in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\http\client.py:1113: in _send_output
+    self.send(msg)
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\http\client.py:1057: in send
+    self.connect()
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connection.py:331: in connect
+    self.sock = self._new_conn()
+                ^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connection.py:219: in _new_conn
+    raise NewConnectionError(
+E   urllib3.exceptions.NewConnectionError: HTTPConnection(host='127.0.0.1', port=5003): Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。
+
+The above exception was the direct cause of the following exception:
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\adapters.py:696: in send
+    resp = conn.urlopen(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connectionpool.py:841: in urlopen
+    retries = retries.increment(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\util\retry.py:535: in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='127.0.0.1', port=5003): Max retries exceeded with url: /api/dispatch-center/templates/tmpl_task_assigned (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5003): Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。"))
+
+During handling of the above exception, another exception occurred:
+tests\integration\test_template_api.py:36: in test_delete_builtin_403
+    r = requests.delete(f'{BASE}/templates/tmpl_task_assigned')
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\api.py:180: in delete
+    return request("delete", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\api.py:71: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\sessions.py:651: in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\sessions.py:784: in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\adapters.py:729: in send
+    raise ConnectionError(e, request=request)
+E   requests.exceptions.ConnectionError: HTTPConnectionPool(host='127.0.0.1', port=5003): Max retries exceeded with url: /api/dispatch-center/templates/tmpl_task_assigned (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5003): Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。"))
+_______________ TestTemplateAPI.test_delete_builtin_owner_path ________________
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connection.py:204: in _new_conn
+    sock = connection.create_connection(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\util\connection.py:85: in create_connection
+    raise err
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\util\connection.py:73: in create_connection
+    sock.connect(sa)
+E   ConnectionRefusedError: [WinError 10061] 由于目标计算机积极拒绝，无法连接。
+
+The above exception was the direct cause of the following exception:
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connectionpool.py:787: in urlopen
+    response = self._make_request(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connectionpool.py:493: in _make_request
+    conn.request(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connection.py:500: in request
+    self.endheaders()
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\http\client.py:1353: in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\http\client.py:1113: in _send_output
+    self.send(msg)
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\http\client.py:1057: in send
+    self.connect()
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connection.py:331: in connect
+    self.sock = self._new_conn()
+                ^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connection.py:219: in _new_conn
+    raise NewConnectionError(
+E   urllib3.exceptions.NewConnectionError: HTTPConnection(host='127.0.0.1', port=5003): Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。
+
+The above exception was the direct cause of the following exception:
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\adapters.py:696: in send
+    resp = conn.urlopen(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connectionpool.py:841: in urlopen
+    retries = retries.increment(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\util\retry.py:535: in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='127.0.0.1', port=5003): Max retries exceeded with url: /api/dispatch-center/templates/tmpl_task_assigned (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5003): Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。"))
+
+During handling of the above exception, another exception occurred:
+tests\integration\test_template_api.py:42: in test_delete_builtin_owner_path
+    r = requests.delete(f'{BASE}/templates/{tid}')
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\api.py:180: in delete
+    return request("delete", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\api.py:71: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\sessions.py:651: in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\sessions.py:784: in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\adapters.py:729: in send
+    raise ConnectionError(e, request=request)
+E   requests.exceptions.ConnectionError: HTTPConnectionPool(host='127.0.0.1', port=5003): Max retries exceeded with url: /api/dispatch-center/templates/tmpl_task_assigned (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5003): Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。"))
+______________________ TestVariables.test_list_variables ______________________
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connection.py:204: in _new_conn
+    sock = connection.create_connection(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\util\connection.py:85: in create_connection
+    raise err
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\util\connection.py:73: in create_connection
+    sock.connect(sa)
+E   ConnectionRefusedError: [WinError 10061] 由于目标计算机积极拒绝，无法连接。
+
+The above exception was the direct cause of the following exception:
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connectionpool.py:787: in urlopen
+    response = self._make_request(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connectionpool.py:493: in _make_request
+    conn.request(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connection.py:500: in request
+    self.endheaders()
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\http\client.py:1353: in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\http\client.py:1113: in _send_output
+    self.send(msg)
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\http\client.py:1057: in send
+    self.connect()
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connection.py:331: in connect
+    self.sock = self._new_conn()
+                ^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connection.py:219: in _new_conn
+    raise NewConnectionError(
+E   urllib3.exceptions.NewConnectionError: HTTPConnection(host='127.0.0.1', port=5003): Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。
+
+The above exception was the direct cause of the following exception:
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\adapters.py:696: in send
+    resp = conn.urlopen(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connectionpool.py:841: in urlopen
+    retries = retries.increment(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\util\retry.py:535: in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='127.0.0.1', port=5003): Max retries exceeded with url: /api/dispatch-center/messages/templates/variables (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5003): Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。"))
+
+During handling of the above exception, another exception occurred:
+tests\integration\test_template_api.py:50: in test_list_variables
+    r = requests.get(f'{BASE}/messages/templates/variables')
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\api.py:87: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\api.py:71: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\sessions.py:651: in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\sessions.py:784: in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\adapters.py:729: in send
+    raise ConnectionError(e, request=request)
+E   requests.exceptions.ConnectionError: HTTPConnectionPool(host='127.0.0.1', port=5003): Max retries exceeded with url: /api/dispatch-center/messages/templates/variables (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5003): Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。"))
+____________________ TestServiceHealth.test_service_alive _____________________
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connection.py:204: in _new_conn
+    sock = connection.create_connection(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\util\connection.py:85: in create_connection
+    raise err
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\util\connection.py:73: in create_connection
+    sock.connect(sa)
+E   ConnectionRefusedError: [WinError 10061] 由于目标计算机积极拒绝，无法连接。
+
+The above exception was the direct cause of the following exception:
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connectionpool.py:787: in urlopen
+    response = self._make_request(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connectionpool.py:493: in _make_request
+    conn.request(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connection.py:500: in request
+    self.endheaders()
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\http\client.py:1353: in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\http\client.py:1113: in _send_output
+    self.send(msg)
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\http\client.py:1057: in send
+    self.connect()
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connection.py:331: in connect
+    self.sock = self._new_conn()
+                ^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connection.py:219: in _new_conn
+    raise NewConnectionError(
+E   urllib3.exceptions.NewConnectionError: HTTPConnection(host='127.0.0.1', port=5003): Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。
+
+The above exception was the direct cause of the following exception:
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\adapters.py:696: in send
+    resp = conn.urlopen(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connectionpool.py:841: in urlopen
+    retries = retries.increment(
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\util\retry.py:535: in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='127.0.0.1', port=5003): Max retries exceeded with url: /api/dispatch-center/templates (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5003): Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。"))
+
+During handling of the above exception, another exception occurred:
+tests\integration\test_template_api.py:61: in test_service_alive
+    r = requests.get(f'{BASE}/templates', timeout=5)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\api.py:87: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\api.py:71: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\sessions.py:651: in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\sessions.py:784: in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\lenovo\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\requests\adapters.py:729: in send
+    raise ConnectionError(e, request=request)
+E   requests.exceptions.ConnectionError: HTTPConnectionPool(host='127.0.0.1', port=5003): Max retries exceeded with url: /api/dispatch-center/templates (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5003): Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。"))
+=========================== short test summary info ===========================
+FAILED tests/integration/test_template_api.py::TestTemplateAPI::test_get_templates - requests.exceptions.ConnectionError: HTTPConnectionPool(host='127.0.0.1', port=5003): Max retries exceeded with url: /api/dispatch-center/templates (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5003): Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。"))
+FAILED tests/integration/test_template_api.py::TestTemplateAPI::test_put_custom_template - requests.exceptions.ConnectionError: HTTPConnectionPool(host='127.0.0.1', port=5003): Max retries exceeded with url: /api/dispatch-center/templates/test_qa_1781997135 (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5003): Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。"))
+FAILED tests/integration/test_template_api.py::TestTemplateAPI::test_delete_custom_template - requests.exceptions.ConnectionError: HTTPConnectionPool(host='127.0.0.1', port=5003): Max retries exceeded with url: /api/dispatch-center/templates/test_qa_1781997135 (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5003): Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。"))
+FAILED tests/integration/test_template_api.py::TestTemplateAPI::test_delete_builtin_403 - requests.exceptions.ConnectionError: HTTPConnectionPool(host='127.0.0.1', port=5003): Max retries exceeded with url: /api/dispatch-center/templates/tmpl_task_assigned (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5003): Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。"))
+FAILED tests/integration/test_template_api.py::TestTemplateAPI::test_delete_builtin_owner_path - requests.exceptions.ConnectionError: HTTPConnectionPool(host='127.0.0.1', port=5003): Max retries exceeded with url: /api/dispatch-center/templates/tmpl_task_assigned (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5003): Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。"))
+FAILED tests/integration/test_template_api.py::TestVariables::test_list_variables - requests.exceptions.ConnectionError: HTTPConnectionPool(host='127.0.0.1', port=5003): Max retries exceeded with url: /api/dispatch-center/messages/templates/variables (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5003): Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。"))
+FAILED tests/integration/test_template_api.py::TestServiceHealth::test_service_alive - requests.exceptions.ConnectionError: HTTPConnectionPool(host='127.0.0.1', port=5003): Max retries exceeded with url: /api/dispatch-center/templates (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5003): Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。"))
+================== 7 failed, 15 passed, 2 warnings in 18.17s ==================

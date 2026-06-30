@@ -1,0 +1,1285 @@
+# -*- coding: utf-8 -*-
+"""
+订单数据模型 (DAO)
+"""
+import os
+import json
+import logging
+from models.database import get_connection, generate_order_no, log_status_change
+from models.order_log import log_order_action
+from constants import OrderStatus
+
+logger = logging.getLogger(__name__)
+
+# 固定字段key集合（这些字段单独存储，不进 extra_params）
+# 注意：新表单使用中文key（如"表面处理方式"），这些会存入 extra_params
+# 仅用于兼容旧数据/直接编辑的情况
+FIXED_ORDER_KEYS = {
+    "order_no", "customer_name", "customer_phone", "customer_address", "customer_id",
+    "product_type", "material", "mesh_size", "wire_diameter", "width", "length",
+    "quantity", "unit", "unit_price", "total_amount", "surface_treatment",
+    "special_requirements", "delivery_date", "status", "remark", "product_remark",
+    "created_at", "updated_at",
+    # 新增业务字段
+    "customer_group", "salesperson", "contact_person", "priority_level",
+    "cancel_reason", "order_source", "payment_method", "invoice_type",
+    "invoice_status", "invoice_no",
+    # 审计字段
+    "is_deleted", "deleted_at", "deleted_by", "created_by", "updated_by", "version",
+}
+
+
+class OrderDAO:
+    """订单数据访问对象"""
+
+    @staticmethod
+    def _build_extra_params(data: dict) -> str:
+        """从data中提取非固定字段，序列化为JSON字符串"""
+        fixed = FIXED_ORDER_KEYS | {"attachments"}
+        extra = {k: v for k, v in data.items() if k not in fixed and v}
+        return json.dumps(extra, ensure_ascii=False) if extra else ""
+
+    @staticmethod
+    def create(data: dict) -> int:
+        """新建订单，返回新订单ID"""
+        conn = get_connection()
+        try:
+            order_no = data.get("order_no") or generate_order_no()
+            qty = float(data.get("quantity", 1) or 0)
+            price_str = data.get("unit_price", "0") or "0"
+            price = float(price_str) if price_str else 0
+            total = qty * price
+            # 提取自定义扩展字段
+            extra_params = OrderDAO._build_extra_params(data)
+
+            cursor = conn.cursor()
+            delivery_date = data.get("delivery_date")
+            if delivery_date == "":
+                delivery_date = None
+            cursor.execute("""
+                INSERT INTO orders (
+                    order_no, customer_name, customer_phone, customer_address, customer_group,
+                    product_type, material, mesh_size, wire_diameter, width, length,
+                    quantity, unit, unit_price, total_amount, surface_treatment,
+                    special_requirements, delivery_date, status, remark, product_remark, extra_params
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                order_no,
+                data.get("customer_name", ""),
+                data.get("customer_phone", ""),
+                data.get("customer_address", ""),
+                data.get("customer_group", ""),
+                data.get("product_type", ""),
+                data.get("material", "") or "",  # 防止 None 触发 NOT NULL 约束
+                data.get("mesh_size"),
+                data.get("wire_diameter"),
+                data.get("width"),
+                data.get("length"),
+                qty,
+                data.get("unit", "米"),
+                price,
+                total,
+                data.get("surface_treatment", ""),
+                data.get("special_requirements", ""),
+                delivery_date,
+                data.get("status", OrderStatus.PENDING.value),
+                data.get("remark", ""),
+                data.get("product_remark", ""),
+                extra_params,
+            ))
+            new_id = cursor.lastrowid
+            conn.commit()
+            cursor.close()
+            log_status_change("orders", new_id, None, OrderStatus.PENDING.value, operator="系统")
+            log_order_action(new_id, order_no, "CREATE", "系统", f"新建订单: {order_no}")
+            return new_id
+        finally:
+            conn.close()
+
+    @staticmethod
+    def update(order_id: int, data: dict, operator: str = "系统") -> bool:
+        """更新订单信息"""
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT status FROM orders WHERE id=%s", (order_id,))
+            old = cursor.fetchone()
+            old_status = old['status'] if old and 'status' in old else None
+            cursor.close()
+
+            qty = float(data.get("quantity", 1) or 0)
+            price_str = data.get("unit_price", "0") or "0"
+            price = float(price_str) if price_str else 0
+            total = qty * price
+            extra_params = OrderDAO._build_extra_params(data)
+
+            delivery_date = data.get("delivery_date")
+            if delivery_date == "":
+                delivery_date = None
+
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE orders SET
+                    customer_name=%s, customer_phone=%s, customer_address=%s,
+                    product_type=%s, material=%s, mesh_size=%s, wire_diameter=%s,
+                    width=%s, length=%s, quantity=%s, unit=%s, unit_price=%s, total_amount=%s,
+                    surface_treatment=%s, special_requirements=%s, delivery_date=%s,
+                    status=%s, remark=%s, product_remark=%s, extra_params=%s,
+                    updated_at=NOW()
+                WHERE id=%s
+            """, (
+                data.get("customer_name", ""),
+                data.get("customer_phone", ""),
+                data.get("customer_address", ""),
+                data.get("product_type", ""),
+                data.get("material", ""),
+                data.get("mesh_size"),
+                data.get("wire_diameter"),
+                data.get("width"),
+                data.get("length"),
+                qty,
+                data.get("unit", "米"),
+                price,
+                total,
+                data.get("surface_treatment", ""),
+                data.get("special_requirements", ""),
+                delivery_date,
+                data.get("status", old_status),
+                data.get("remark", ""),
+                data.get("product_remark", ""),
+                extra_params,
+                order_id
+            ))
+            cursor.close()
+
+            cursor = conn.cursor()
+            cursor.execute("SELECT order_no FROM orders WHERE id=%s", (order_id,))
+            order_row = cursor.fetchone()
+            order_no = order_row['order_no'] if order_row else "未知"
+
+            new_status = data.get("status")
+            if new_status and new_status != old_status:
+                log_status_change("orders", order_id, old_status, new_status)
+                log_order_action(order_id, order_no, "UPDATE", operator, f"状态变更: {old_status} -> {new_status}")
+            else:
+                log_order_action(order_id, order_no, "UPDATE", operator, "修改订单信息")
+
+            cursor.close()
+            conn.commit()
+            return True
+        except Exception as e:
+            import traceback
+            logger.error(f"[ERROR] OrderDAO.update failed: {type(e).__name__}: {e}")
+            traceback.print_exc()
+            if conn:
+                conn.rollback()
+            return False
+        finally:
+            if cursor:
+                try:
+                    cursor.close()
+                except Exception:
+                    pass
+            if conn:
+                try:
+                    conn.close()
+                except Exception:
+                    pass
+
+    @staticmethod
+    def update_status(order_id: int, new_status: str, operator: str = "系统") -> bool:
+        """更新订单状态"""
+        if not order_id:
+            logger.error(f"[ERROR] update_status called with invalid order_id: {order_id}")
+            return False
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT status FROM orders WHERE id=%s", (order_id,))
+            old = cursor.fetchone()
+            old_status = old['status'] if old and 'status' in old else None
+            if old is None:
+                logger.error(f"[ERROR] Order not found with id: {order_id}")
+                cursor.close()
+                return False
+            cursor.close()
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE orders SET status=%s, updated_at=NOW() WHERE id=%s",
+                (new_status, order_id)
+            )
+            affected = cursor.rowcount
+            
+            cursor.execute("SELECT order_no FROM orders WHERE id=%s", (order_id,))
+            order_row = cursor.fetchone()
+            order_no = order_row['order_no'] if order_row else "未知"
+            
+            conn.commit()
+            cursor.close()
+            log_status_change("orders", order_id, old_status, new_status, operator)
+            
+            action_map = {
+                "待确认": "CREATE",
+                "待排产": "CONFIRM",
+                "待发布": "PUBLISH",
+                "已发布": "PUBLISHED",
+                "已排产": "SCHEDULE",
+                "生产中": "PRODUCE",
+                "已完成": "COMPLETE",
+                "已发货": "SHIP",
+                "已归档": "ARCHIVE",
+                "已取消": "CANCEL",
+            }
+            action_key = action_map.get(new_status, "UPDATE")
+            log_order_action(order_id, order_no, action_key, operator, f"状态变更: {old_status} -> {new_status}")
+            return True
+        except Exception as e:
+            import traceback
+            logger.error(f"[ERROR] update_status failed: {type(e).__name__}: {e}")
+            traceback.print_exc()
+            return False
+        finally:
+            conn.close()
+
+    @staticmethod
+    def delete(order_id: int) -> bool:
+        """删除订单（逻辑删除：改为已取消）"""
+        return OrderDAO.update_status(order_id, OrderStatus.CANCELLED.value)
+
+    @staticmethod
+    def _parse_extra_params(order: dict) -> dict:
+        """解析订单的 extra_params 字段（JSON字符串 → dict）"""
+        raw = order.get("extra_params", "")
+        if raw:
+            try:
+                parsed = json.loads(raw)
+                order["extra_params"] = parsed
+                # 展开到外层，方便 order.get("总宽") 等直接读取
+                for k, v in parsed.items():
+                    if k not in order or not order.get(k):
+                        order[k] = v
+            except (json.JSONDecodeError, TypeError):
+                order["extra_params"] = {}
+        else:
+            order["extra_params"] = {}
+        return order
+
+    @staticmethod
+    def get_unscheduled() -> list:
+        """获取未排产的订单列表（已确认但尚未创建生产工单的订单）"""
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT o.* FROM orders o
+                WHERE o.is_deleted = 0
+                AND COALESCE(o.is_archived, 0) = 0
+                AND o.status IN (%s, %s)
+                AND o.id NOT IN (
+                    SELECT DISTINCT po.order_id
+                    FROM production_orders po
+                    WHERE po.status NOT IN ('已取消')
+                )
+                ORDER BY o.created_at DESC
+            """, (OrderStatus.CONFIRMED.value, OrderStatus.PENDING_PUBLISH.value))
+            rows = cursor.fetchall()
+            cursor.close()
+            return [OrderDAO._parse_extra_params(dict(r)) for r in rows]
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_by_id(order_id: int) -> dict:
+        """根据ID获取订单"""
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM orders WHERE id=%s AND is_deleted = 0", (order_id,))
+            row = cursor.fetchone()
+            cursor.close()
+            return OrderDAO._parse_extra_params(dict(row)) if row else None
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_all(filters: dict = None) -> list:
+        """获取订单列表，支持筛选（已废弃，请使用 get_all_paginated）"""
+        conn = get_connection()
+        try:
+            sql = "SELECT * FROM orders WHERE is_deleted = 0"
+            params = []
+
+            # 默认排除已完成、已归档、已取消订单（除非明确筛选）
+            if not filters or (filters and not filters.get("status")):
+                sql += " AND status NOT IN ('已完成', '已归档', '已取消')"
+
+            if filters:
+                if filters.get("status") and filters["status"] != "全部":
+                    sql += " AND status=%s"
+                    params.append(filters["status"])
+                if filters.get("customer_name"):
+                    sql += " AND customer_name LIKE %s"
+                    params.append(f"%{filters['customer_name']}%")
+                if filters.get("product_type") and filters["product_type"] != "全部":
+                    sql += " AND product_type=%s"
+                    params.append(filters["product_type"])
+                if filters.get("date_from"):
+                    sql += " AND delivery_date >= %s"
+                    params.append(filters["date_from"])
+                if filters.get("date_to"):
+                    sql += " AND delivery_date <= %s"
+                    params.append(filters["date_to"])
+                if filters.get("keyword"):
+                    kw = f"%{filters['keyword']}%"
+                    sql += """ AND (
+                        order_no LIKE %s OR
+                        customer_name LIKE %s OR
+                        product_type LIKE %s OR
+                        material LIKE %s OR
+                        product_remark LIKE %s OR
+                        remark LIKE %s OR
+                        extra_params LIKE %s
+                    )"""
+                    params.extend([kw, kw, kw, kw, kw, kw, kw])
+
+            sql += " ORDER BY created_at DESC"
+            cursor = conn.cursor()
+            cursor.execute(sql, params)
+            rows = cursor.fetchall()
+            cursor.close()
+            return [OrderDAO._parse_extra_params(dict(r)) for r in rows]
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_recent_for_kanban(limit: int = 200) -> list:
+        """获取最近日期的订单（看板专用）- 按最新建立排序，排除已完成"""
+        conn = get_connection()
+        try:
+            sql = """SELECT * FROM orders
+                     WHERE is_deleted = 0
+                     AND status NOT IN ('已完成', '已归档', '已取消')
+                     AND created_at >= DATE_SUB(NOW(), INTERVAL 90 DAY)
+                     ORDER BY id DESC
+                     LIMIT %s"""
+            cursor = conn.cursor()
+            cursor.execute(sql, (limit,))
+            rows = cursor.fetchall()
+            cursor.close()
+            return [OrderDAO._parse_extra_params(dict(r)) for r in rows]
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_recent_for_list(limit: int = 200) -> list:
+        """获取最近日期的订单（订单管理列表专用）- 按最新建立排序"""
+        conn = get_connection()
+        try:
+            sql = """SELECT * FROM orders
+                     WHERE is_deleted = 0
+                     AND status NOT IN ('已完成', '已归档', '已取消')
+                     ORDER BY id DESC
+                     LIMIT %s"""
+            cursor = conn.cursor()
+            cursor.execute(sql, (limit,))
+            rows = cursor.fetchall()
+            cursor.close()
+            return [OrderDAO._parse_extra_params(dict(r)) for r in rows]
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_all_paginated(filters: dict = None, page: int = 1, page_size: int = 100,
+                          max_total: int = 10000) -> dict:
+        """获取订单列表（分页版本）
+
+        Args:
+            filters: 筛选条件
+            page: 页码（从1开始）
+            page_size: 每页数量
+            max_total: 最大返回总数（保护机制）
+
+        Returns:
+            {"data": [...], "total": int, "page": int, "page_size": int,
+             "total_pages": int, "has_next": bool, "has_prev": bool}
+        """
+        conn = get_connection()
+        try:
+            base_sql = """SELECT o.*, GROUP_CONCAT(DISTINCT po.order_no SEPARATOR ', ') as order_no
+                           FROM orders o
+                           LEFT JOIN production_orders po ON o.id = po.order_id
+                           WHERE o.is_deleted = 0 AND COALESCE(o.is_archived, 0) = 0 AND o.status != '已取消'"""
+            count_sql = """SELECT COUNT(DISTINCT o.id) FROM orders o
+                           LEFT JOIN production_orders po ON o.id = po.order_id
+                           WHERE o.is_deleted = 0 AND COALESCE(o.is_archived, 0) = 0 AND o.status != '已取消'"""
+            params = []
+
+            if filters:
+                if filters.get("status") and filters["status"] != "全部":
+                    base_sql += " AND o.status=%s"
+                    count_sql += " AND o.status=%s"
+                    params.append(filters["status"])
+                if filters.get("customer_name"):
+                    base_sql += " AND o.customer_name LIKE %s"
+                    count_sql += " AND o.customer_name LIKE %s"
+                    params.append(f"%{filters['customer_name']}%")
+                if filters.get("product_type") and filters["product_type"] != "全部":
+                    base_sql += " AND o.product_type=%s"
+                    count_sql += " AND o.product_type=%s"
+                    params.append(filters["product_type"])
+                if filters.get("date_from"):
+                    base_sql += " AND o.delivery_date >= %s"
+                    count_sql += " AND o.delivery_date >= %s"
+                    params.append(filters["date_from"])
+                if filters.get("date_to"):
+                    base_sql += " AND o.delivery_date <= %s"
+                    count_sql += " AND o.delivery_date <= %s"
+                    params.append(filters["date_to"])
+                if filters.get("keyword"):
+                    kw = f"%{filters['keyword']}%"
+                    base_sql += """ AND (
+                        o.order_no LIKE %s OR o.customer_name LIKE %s OR
+                        o.product_type LIKE %s OR o.material LIKE %s OR
+                        o.product_remark LIKE %s OR o.remark LIKE %s OR o.extra_params LIKE %s OR
+                        po.order_no LIKE %s
+                    )"""
+                    count_sql += """ AND (
+                        o.order_no LIKE %s OR o.customer_name LIKE %s OR
+                        o.product_type LIKE %s OR o.material LIKE %s OR
+                        o.product_remark LIKE %s OR o.remark LIKE %s OR o.extra_params LIKE %s OR
+                        po.order_no LIKE %s
+                    )"""
+                    params.extend([kw, kw, kw, kw, kw, kw, kw, kw])
+
+            base_sql += " GROUP BY o.id ORDER BY o.created_at DESC"
+
+            cursor = conn.cursor()
+
+            cursor.execute(count_sql, params)
+            count_row = cursor.fetchone()
+            if count_row:
+                if isinstance(count_row, dict):
+                    total = count_row.get('COUNT(*)', 0) or count_row.get('count(*)', 0) or 0
+                else:
+                    total = count_row[0] if count_row else 0
+            else:
+                total = 0
+            total = min(total, max_total)
+
+            page = max(1, page)
+            page_size = max(1, min(page_size, 1000))
+            offset = (page - 1) * page_size
+            total_pages = (total + page_size - 1) // page_size if total > 0 else 0
+
+            base_sql += f" LIMIT {page_size} OFFSET {offset}"
+
+            cursor.execute(base_sql, params)
+            rows = cursor.fetchall()
+            cursor.close()
+
+            return {
+                "data": [OrderDAO._parse_extra_params(dict(r)) for r in rows],
+                "total": total,
+                "page": page,
+                "page_size": page_size,
+                "total_pages": total_pages,
+                "has_next": page < total_pages,
+                "has_prev": page > 1,
+            }
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_kanban_stats() -> dict:
+        """获取看板统计数据"""
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute(
+                f"SELECT status, COUNT(*) as cnt FROM orders WHERE status != ? GROUP BY status",
+                (OrderStatus.CANCELLED.value,)
+            )
+            rows = cursor.fetchall()
+            cursor.close()
+            return {r[0]: r[1] for r in rows}
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_by_status(status: str) -> list:
+        """按状态获取订单列表"""
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT * FROM orders WHERE status=%s AND is_deleted = 0 ORDER BY delivery_date ASC, created_at DESC",
+                (status,)
+            )
+            rows = cursor.fetchall()
+            cursor.close()
+            return [dict(r) for r in rows]
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_process_records(order_id: int) -> list:
+        """获取订单工序记录"""
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT * FROM process_records WHERE order_id=%s ORDER BY process_seq ASC",
+                (order_id,)
+            )
+            rows = cursor.fetchall()
+            cursor.close()
+            return [dict(r) for r in rows]
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_quality_records(order_id: int) -> list:
+        """获取订单质检记录"""
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT * FROM quality_records WHERE order_id=%s ORDER BY record_date DESC",
+                (order_id,)
+            )
+            rows = cursor.fetchall()
+            cursor.close()
+            return [dict(r) for r in rows]
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_shipments(order_id: int) -> list:
+        """获取订单发货记录"""
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT * FROM shipments WHERE order_id=%s ORDER BY ship_date DESC",
+                (order_id,)
+            )
+            rows = cursor.fetchall()
+            cursor.close()
+            return [dict(r) for r in rows]
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_status_logs(order_id: int) -> list:
+        """获取订单状态变更日志"""
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute(
+                """SELECT * FROM status_logs
+                   WHERE table_name='orders' AND record_id=%s
+                   ORDER BY created_at DESC""",
+                (order_id,)
+            )
+            rows = cursor.fetchall()
+            cursor.close()
+            return [dict(r) for r in rows]
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_production_order(order_id: int) -> dict:
+        """获取生产工单"""
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT * FROM production_orders WHERE order_id=%s ORDER BY id DESC LIMIT 1",
+                (order_id,)
+            )
+            row = cursor.fetchone()
+            cursor.close()
+            return dict(row) if row else None
+        finally:
+            conn.close()
+
+    @staticmethod
+    def fuzzy_search(keyword: str, limit: int = 20) -> list:
+        """模糊搜索订单"""
+        conn = get_connection()
+        try:
+            kw = f"%{keyword}%"
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, order_no, customer_name, product_type, status, delivery_date
+                FROM orders
+                WHERE order_no LIKE %s OR customer_name LIKE %s OR product_type LIKE %s
+                OR material LIKE %s OR product_remark LIKE %s OR remark LIKE %s OR extra_params LIKE %s
+                ORDER BY created_at DESC
+                LIMIT %s
+            """, (kw, kw, kw, kw, kw, kw, kw, limit))
+            rows = cursor.fetchall()
+            cursor.close()
+            return [dict(r) for r in rows]
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_batch_order_statistics(order_ids: list) -> dict:
+        """
+        批量获取多个订单的统计数据（优化N+1查询问题）
+        
+        Args:
+            order_ids: 订单ID列表
+        
+        Returns:
+            dict: {order_id: statistics}
+        """
+        from constants import OrderStatus
+        from datetime import datetime
+        
+        if not order_ids:
+            return {}
+        
+        result = {order_id: {
+            "order_total_days": None,
+            "production_total_days": None,
+            "loss_rate": None,
+            "production_process": None,
+            "unit": None,
+        } for order_id in order_ids}
+        
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            
+            # 1. 批量获取订单基本信息
+            placeholders = ",".join(["%s"] * len(order_ids))
+            cursor.execute(f"""
+                SELECT id, unit, extra_params, surface_treatment
+                FROM orders 
+                WHERE id IN ({placeholders}) AND is_deleted = 0
+            """, tuple(order_ids))
+            
+            for row in cursor.fetchall():
+                order_id = row["id"]
+                result[order_id]["unit"] = row.get("unit", "米")
+                
+                extra = row.get("extra_params") or {}
+                if isinstance(extra, str):
+                    try:
+                        import json
+                        extra = json.loads(extra)
+                    except Exception:
+                        extra = {}
+                
+                if extra.get("生产工艺"):
+                    result[order_id]["production_process"] = extra.get("生产工艺")
+                elif row.get("surface_treatment"):
+                    result[order_id]["production_process"] = row.get("surface_treatment")
+            
+            # 2. 批量获取订单确认时间
+            cursor.execute(f"""
+                SELECT record_id, created_at 
+                FROM status_logs
+                WHERE table_name='orders' AND record_id IN ({placeholders}) 
+                  AND new_status IN (%s, %s)
+            """, tuple(order_ids) + (OrderStatus.CONFIRMED.value, "已确认"))
+            
+            confirmed_times = {}
+            for row in cursor.fetchall():
+                confirmed_times[row["record_id"]] = row["created_at"]
+            
+            # 3. 批量获取订单完成/发货时间
+            cursor.execute(f"""
+                SELECT record_id, created_at 
+                FROM status_logs
+                WHERE table_name='orders' AND record_id IN ({placeholders}) 
+                  AND new_status IN (%s, %s)
+                ORDER BY record_id, created_at DESC
+            """, tuple(order_ids) + (OrderStatus.FINISHED.value, OrderStatus.SHIPPED.value))
+            
+            completed_times = {}
+            last_order_id = None
+            for row in cursor.fetchall():
+                order_id = row["record_id"]
+                if order_id != last_order_id:
+                    completed_times[order_id] = row["created_at"]
+                    last_order_id = order_id
+            
+            # 计算订单总用时
+            for order_id in order_ids:
+                if order_id in confirmed_times and order_id in completed_times:
+                    start_time = confirmed_times[order_id]
+                    end_time = completed_times[order_id]
+                    if isinstance(start_time, str):
+                        start_time = datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S")
+                    if isinstance(end_time, str):
+                        end_time = datetime.strptime(end_time, "%Y-%m-%d %H:%M:%S")
+                    result[order_id]["order_total_days"] = (end_time - start_time).days
+            
+            # 4. 批量获取生产订单时间
+            cursor.execute(f"""
+                SELECT order_id, actual_start, actual_end 
+                FROM production_orders
+                WHERE order_id IN ({placeholders})
+                ORDER BY order_id, id DESC
+            """, tuple(order_ids))
+            
+            last_order_id = None
+            for row in cursor.fetchall():
+                order_id = row["order_id"]
+                if order_id != last_order_id:
+                    last_order_id = order_id
+                    actual_start = row.get("actual_start")
+                    actual_end = row.get("actual_end")
+                    if actual_start and actual_end:
+                        if isinstance(actual_start, str):
+                            actual_start = datetime.strptime(actual_start, "%Y-%m-%d %H:%M:%S")
+                        if isinstance(actual_end, str):
+                            actual_end = datetime.strptime(actual_end, "%Y-%m-%d %H:%M:%S")
+                        result[order_id]["production_total_days"] = (actual_end - actual_start).days
+            
+            # 5. 批量获取工序记录统计
+            cursor.execute(f"""
+                SELECT order_id, SUM(completed_qty) as total_completed, 
+                       SUM(qualified_qty) as total_qualified
+                FROM process_records
+                WHERE order_id IN ({placeholders})
+                GROUP BY order_id
+            """, tuple(order_ids))
+            
+            for row in cursor.fetchall():
+                order_id = row["order_id"]
+                total_completed = row.get("total_completed") or 0
+                total_qualified = row.get("total_qualified") or 0
+                if total_completed > 0:
+                    result[order_id]["loss_rate"] = round((total_completed - total_qualified) / total_completed * 100, 2)
+            
+            cursor.close()
+            return result
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_order_statistics(order_id: int) -> dict:
+        """
+        获取订单统计数据
+        返回：订单总用天数、生产总用天数、各工序用时、损耗率、生产工艺、计量单位等
+        """
+        from constants import OrderStatus, ShipmentStatus
+        from datetime import datetime
+
+        result = {
+            "order_total_days": None,
+            "production_total_days": None,
+            "process_times": [],
+            "loss_rate": None,
+            "production_process": None,
+            "unit": None,
+            "process_details": [],
+        }
+
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT * FROM orders WHERE id=%s AND is_deleted = 0", (order_id,))
+            order = cursor.fetchone()
+            if not order:
+                return result
+
+            result["unit"] = order.get("unit", "米")
+
+            extra = order.get("extra_params") or {}
+            if isinstance(extra, str):
+                try:
+                    extra = json.loads(extra)
+                except Exception:
+                    extra = {}
+            if extra.get("生产工艺"):
+                result["production_process"] = extra.get("生产工艺")
+            elif order.get("surface_treatment"):
+                result["production_process"] = order.get("surface_treatment")
+
+            cursor.execute("""
+                SELECT created_at FROM status_logs
+                WHERE table_name='orders' AND record_id=%s AND new_status IN (%s, %s)
+                ORDER BY created_at ASC LIMIT 1
+            """, (order_id, OrderStatus.CONFIRMED.value, "已确认"))
+            confirmed_log = cursor.fetchone()
+
+            cursor.execute("""
+                SELECT created_at FROM status_logs
+                WHERE table_name='orders' AND record_id=%s AND new_status IN (%s, %s)
+                ORDER BY created_at DESC LIMIT 1
+            """, (order_id, OrderStatus.FINISHED.value, OrderStatus.SHIPPED.value))
+            completed_log = cursor.fetchone()
+
+            if confirmed_log and completed_log:
+                start_time = confirmed_log["created_at"]
+                end_time = completed_log["created_at"]
+                if isinstance(start_time, str):
+                    start_time = datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S")
+                if isinstance(end_time, str):
+                    end_time = datetime.strptime(end_time, "%Y-%m-%d %H:%M:%S")
+                result["order_total_days"] = (end_time - start_time).days
+
+            cursor.execute("""
+                SELECT actual_start, actual_end, created_at FROM production_orders
+                WHERE order_id=%s ORDER BY id DESC LIMIT 1
+            """, (order_id,))
+            production = cursor.fetchone()
+
+            if production:
+                actual_start = production.get("actual_start")
+                actual_end = production.get("actual_end")
+                if actual_start and actual_end:
+                    if isinstance(actual_start, str):
+                        actual_start = datetime.strptime(actual_start, "%Y-%m-%d %H:%M:%S")
+                    if isinstance(actual_end, str):
+                        actual_end = datetime.strptime(actual_end, "%Y-%m-%d %H:%M:%S")
+                    result["production_total_days"] = (actual_end - actual_start).days
+
+            cursor.execute("""
+                SELECT process_name, start_time, end_time, completed_qty, qualified_qty,
+                       material_usage, planned_qty, status
+                FROM process_records
+                WHERE order_id=%s
+                ORDER BY process_seq, id
+            """, (order_id,))
+            processes = cursor.fetchall()
+
+            total_completed = 0
+            total_qualified = 0
+
+            for p in processes:
+                process_info = {
+                    "process_name": p.get("process_name", ""),
+                    "start_time": p.get("start_time"),
+                    "end_time": p.get("end_time"),
+                    "completed_qty": p.get("completed_qty", 0) or 0,
+                    "qualified_qty": p.get("qualified_qty", 0) or 0,
+                    "material_usage": p.get("material_usage", 0) or 0,
+                    "planned_qty": p.get("planned_qty", 0) or 0,
+                    "status": p.get("status", ""),
+                    "duration_days": None,
+                    "pass_rate": None,
+                    "loss_rate": None,
+                }
+
+                start = p.get("start_time")
+                end = p.get("end_time")
+                if start and end:
+                    if isinstance(start, str):
+                        start = datetime.strptime(start, "%Y-%m-%d %H:%M:%S")
+                    if isinstance(end, str):
+                        end = datetime.strptime(end, "%Y-%m-%d %H:%M:%S")
+                    process_info["duration_days"] = (end - start).days
+
+                completed = p.get("completed_qty", 0) or 0
+                qualified = p.get("qualified_qty", 0) or 0
+                if completed > 0:
+                    process_info["pass_rate"] = round(qualified / completed * 100, 2)
+                    process_info["loss_rate"] = round((completed - qualified) / completed * 100, 2)
+
+                total_completed += completed
+                total_qualified += qualified
+
+                result["process_times"].append(process_info)
+
+            if total_completed > 0:
+                result["loss_rate"] = round((total_completed - total_qualified) / total_completed * 100, 2)
+
+            result["process_details"] = result["process_times"]
+
+            cursor.close()
+            return result
+        finally:
+            conn.close()
+
+    @staticmethod
+    def batch_get_order_statistics(order_ids: list) -> dict:
+        """批量获取多个订单的统计指标，返回 {order_id: stats_dict}
+        
+        Args:
+            order_ids: 订单ID列表
+        
+        Returns:
+            dict: {order_id: {order_total_days, production_total_days, loss_rate, production_process, unit}}
+        """
+        if not order_ids:
+            return {}
+
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            placeholders = ','.join(['%s'] * len(order_ids))
+            sql = f"""
+                SELECT o.id, o.extra_params, o.unit,
+                    DATEDIFF(
+                        (SELECT created_at FROM status_logs
+                         WHERE table_name='orders' AND record_id=o.id
+                         AND new_status IN ('已完成','已发货','finished','shipped')
+                         ORDER BY created_at DESC LIMIT 1),
+                        (SELECT created_at FROM status_logs
+                         WHERE table_name='orders' AND record_id=o.id
+                         AND new_status IN ('已确认','confirmed')
+                         ORDER BY created_at ASC LIMIT 1)
+                    ) as order_total_days,
+                    (SELECT TIMESTAMPDIFF(DAY, po.actual_start, po.actual_end)
+                     FROM production_orders po WHERE po.order_id=o.id
+                     ORDER BY po.id DESC LIMIT 1) as production_total_days,
+                    (SELECT ROUND((SUM(completed_qty)-SUM(qualified_qty))/SUM(completed_qty)*100, 2)
+                     FROM process_records WHERE order_id=o.id AND completed_qty>0) as loss_rate
+                FROM orders o
+                WHERE o.id IN ({placeholders})
+            """
+            cursor.execute(sql, order_ids)
+            rows = cursor.fetchall()
+            cursor.close()
+
+            result = {}
+            for r in rows:
+                oid = r['id']
+                extra = r.get('extra_params') or {}
+                if isinstance(extra, str):
+                    try:
+                        extra = json.loads(extra)
+                    except Exception:
+                        extra = {}
+                prod_process = extra.get('生产工艺') or None
+                result[oid] = {
+                    "order_total_days": r.get('order_total_days'),
+                    "production_total_days": r.get('production_total_days'),
+                    "loss_rate": r.get('loss_rate'),
+                    "production_process": prod_process,
+                    "unit": r.get('unit', '米'),
+                    "process_times": [],
+                    "process_details": [],
+                }
+            return result
+        finally:
+            conn.close()
+
+    @staticmethod
+    def archive_orders(order_ids: list = None, days: int = 365, operator: str = "系统") -> dict:
+        """
+        归档订单
+
+        Args:
+            order_ids: 要归档的订单ID列表，None表示按时间条件自动选择
+            days: 仅当 order_ids 为 None 时生效，指定多少天前的订单将被归档
+            operator: 操作人
+
+        Returns:
+            dict: {"archived": 归档数量, "skipped": 跳过数量}
+        """
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+
+            if order_ids:
+                cursor.execute("""
+                    SELECT COUNT(*) as cnt FROM orders
+                    WHERE id IN (%s)
+                    AND COALESCE(is_archived, 0) = 0
+                """ % (",".join(["%s"] * len(order_ids))), order_ids)
+                count_row = cursor.fetchone()
+                count = count_row['cnt'] if isinstance(count_row, dict) else list(count_row)[0]
+
+                if count == 0:
+                    return {"archived": 0, "skipped": 0}
+
+                placeholders = ",".join(["%s"] * len(order_ids))
+                cursor.execute(f"""
+                    UPDATE orders
+                    SET is_archived = 1,
+                        archived_at = NOW(),
+                        archived_by = %s,
+                        original_status = status,
+                        status = '已归档'
+                    WHERE id IN ({placeholders})
+                    AND COALESCE(is_archived, 0) = 0
+                """, [operator] + order_ids)
+            else:
+                cursor.execute("SELECT DATE_SUB(NOW(), INTERVAL %s DAY) as cutoff_date", (days,))
+                cutoff_row = cursor.fetchone()
+                cutoff_date = cutoff_row['cutoff_date']
+
+                cursor.execute("""
+                    SELECT COUNT(*) as cnt FROM orders
+                    WHERE created_at < %s
+                    AND COALESCE(is_archived, 0) = 0
+                """, (cutoff_date,))
+                count_row = cursor.fetchone()
+                count = count_row['cnt'] if isinstance(count_row, dict) else list(count_row)[0]
+
+                if count == 0:
+                    return {"archived": 0, "skipped": 0}
+
+                cursor.execute("""
+                UPDATE orders
+                SET is_archived = 1,
+                    archived_at = NOW(),
+                    archived_by = %s,
+                    original_status = status,
+                    status = '已归档'
+                WHERE created_at < %s
+                AND COALESCE(is_archived, 0) = 0
+            """, (operator, cutoff_date))
+
+            conn.commit()
+            cursor.close()
+
+            return {"archived": count, "skipped": 0}
+        except Exception as e:
+            logger.error(f"归档订单失败: {e}")
+            conn.rollback()
+            return {"archived": 0, "skipped": 0, "error": str(e)}
+        finally:
+            conn.close()
+
+    @staticmethod
+    def unarchive_orders(order_ids: list) -> dict:
+        """
+        取消归档订单
+
+        Args:
+            order_ids: 要取消归档的订单ID列表
+
+        Returns:
+            dict: {"unarchived": 取消归档数量}
+        """
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+
+            placeholders = ",".join(["%s"] * len(order_ids))
+            cursor.execute(f"""
+                UPDATE orders
+                SET is_archived = 0,
+                    archived_at = NULL,
+                    archived_by = NULL,
+                    status = COALESCE(original_status, '待确认'),
+                    original_status = NULL
+                WHERE id IN ({placeholders})
+                AND is_archived = 1
+            """, order_ids)
+
+            unarchived = cursor.rowcount
+            conn.commit()
+            cursor.close()
+
+            return {"unarchived": unarchived}
+        except Exception as e:
+            logger.error(f"取消归档订单失败: {e}")
+            conn.rollback()
+            return {"unarchived": 0, "error": str(e)}
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_archived_orders(filters: dict = None) -> list:
+        """
+        查询已归档订单
+
+        Args:
+            filters: 筛选条件（支持 keyword, customer_name, product_type 等）
+
+        Returns:
+            list: 已归档订单列表
+        """
+        conn = get_connection()
+        try:
+            sql = "SELECT * FROM orders WHERE is_deleted = 0 AND is_archived = 1"
+            params = []
+
+            if filters:
+                if filters.get("keyword"):
+                    kw = f"%{filters['keyword']}%"
+                    sql += """ AND (
+                        order_no LIKE %s OR
+                        customer_name LIKE %s OR
+                        product_type LIKE %s OR
+                        material LIKE %s OR
+                        product_remark LIKE %s OR
+                        remark LIKE %s
+                    )"""
+                    params.extend([kw, kw, kw, kw, kw, kw])
+                if filters.get("customer_name"):
+                    sql += " AND customer_name LIKE %s"
+                    params.append(f"%{filters['customer_name']}%")
+                if filters.get("product_type"):
+                    sql += " AND product_type LIKE %s"
+                    params.append(f"%{filters['product_type']}%")
+
+            sql += " ORDER BY archived_at DESC"
+            cursor = conn.cursor()
+            cursor.execute(sql, params)
+            rows = cursor.fetchall()
+            cursor.close()
+            return [OrderDAO._parse_extra_params(dict(r)) for r in rows]
+        finally:
+            conn.close()
+
+    # ═══════════════════════════════════════════════════════════
+    # Dashboard 大屏专用统计方法
+    # ═══════════════════════════════════════════════════════════
+
+    @staticmethod
+    def get_dashboard_order_stats() -> dict:
+        """获取大屏订单统计数据，一次查询返回所有统计指标
+
+        Returns:
+            dict: {
+                'totalOrders': int, 'monthlyNew': int,
+                'statusDistribution': {status: count},
+                'producingOrders': int, 'readyToShip': int,
+                'overdueOrders': int, 'completionRate': float,
+                'completedCount': int
+            }
+        """
+        from datetime import datetime
+        conn = get_connection()
+        try:
+            month_start = datetime.now().replace(day=1).strftime('%Y-%m-%d')
+            today = datetime.now().strftime('%Y-%m-%d')
+            cursor = conn.cursor()
+
+            # 1. totalOrders
+            cursor.execute("SELECT COUNT(*) as total FROM orders")
+            total = cursor.fetchone()['total']
+
+            # 2. monthlyNew
+            cursor.execute(
+                "SELECT COUNT(*) as total FROM orders WHERE created_at >= %s",
+                (month_start,)
+            )
+            monthly_new = cursor.fetchone()['total']
+
+            # 3. statusDistribution
+            cursor.execute("SELECT status, COUNT(*) as count FROM orders GROUP BY status")
+            status_dist = {row['status']: row['count'] for row in cursor.fetchall()}
+
+            # 4. producingOrders
+            cursor.execute(
+                "SELECT COUNT(*) as count FROM orders WHERE TRIM(status) IN (%s, %s)",
+                (OrderStatus.PRODUCTION.value, OrderStatus.SCHEDULED.value)
+            )
+            producing = cursor.fetchone()['count']
+
+            # 5. readyToShip
+            cursor.execute(
+                "SELECT COUNT(*) as count FROM orders WHERE TRIM(status) = %s",
+                (OrderStatus.PENDING_SHIP.value,)
+            )
+            ready = cursor.fetchone()['count']
+
+            # 6. overdueOrders
+            cursor.execute(
+                "SELECT COUNT(*) as count FROM orders "
+                "WHERE delivery_date <= %s AND TRIM(status) NOT IN (%s, %s, %s)",
+                (today, OrderStatus.SHIPPED.value, OrderStatus.FINISHED.value, OrderStatus.CANCELLED.value)
+            )
+            overdue = cursor.fetchone()['count']
+
+            # 7. completedCount (for completion rate)
+            cursor.execute(
+                "SELECT COUNT(*) as total FROM orders WHERE TRIM(status) IN (%s, %s)",
+                (OrderStatus.SHIPPED.value, OrderStatus.FINISHED.value)
+            )
+            completed = cursor.fetchone()['total']
+
+            cursor.close()
+
+            return {
+                'totalOrders': total,
+                'monthlyNew': monthly_new,
+                'statusDistribution': status_dist,
+                'producingOrders': producing,
+                'readyToShip': ready,
+                'overdueOrders': overdue,
+                'completedCount': completed,
+                'completionRate': round(completed / total * 100, 1) if total > 0 else 0,
+            }
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_delivery_alert_orders(days_ahead: int = 7) -> list:
+        """获取即将到期/已逾期的订单（用于大屏告警）
+
+        Args:
+            days_ahead: 提前多少天预警（默认7天）
+
+        Returns:
+            list: [{'order_no', 'customer_name', 'delivery_date', 'status'}, ...]
+        """
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT o.order_no, o.customer_name, o.delivery_date, TRIM(o.status) as status "
+                "FROM orders o "
+                "WHERE o.delivery_date <= DATE_ADD(NOW(), INTERVAL %s DAY) "
+                "AND TRIM(o.status) NOT IN (%s, %s, %s) "
+                "ORDER BY o.delivery_date ASC",
+                (days_ahead, OrderStatus.SHIPPED.value, OrderStatus.FINISHED.value, OrderStatus.CANCELLED.value)
+            )
+            rows = cursor.fetchall()
+            cursor.close()
+            return [dict(r) for r in rows]
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_dashboard_order_list(limit: int = 20) -> list:
+        """获取大屏订单列表（v1版），排除已完成和已取消
+
+        Returns:
+            list: [{'order_no', 'customer_name', 'product_type', 'quantity', 'unit', 'status', 'delivery_date'}, ...]
+        """
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT o.order_no, o.customer_name, o.product_type, "
+                "o.quantity, o.unit, o.status, o.delivery_date "
+                "FROM orders o "
+                "WHERE o.status NOT IN (%s, %s) "
+                "ORDER BY "
+                "  CASE "
+                "    WHEN o.status = %s THEN 1 "
+                "    WHEN o.status = %s THEN 2 "
+                "    WHEN o.status = %s THEN 3 "
+                "    ELSE 4 "
+                "  END, "
+                "  o.delivery_date ASC "
+                "LIMIT %s",
+                (OrderStatus.FINISHED.value, OrderStatus.CANCELLED.value,
+                 OrderStatus.PRODUCTION.value, OrderStatus.QC.value, OrderStatus.PENDING_SHIP.value,
+                 limit)
+            )
+            rows = cursor.fetchall()
+            cursor.close()
+            return [dict(r) for r in rows]
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_province_data() -> list:
+        """获取省份分布原始数据（客户名称+地址）
+
+        Returns:
+            list: [{'customer_name': str, 'customer_address': str}, ...]
+        """
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT customer_name, customer_address FROM orders")
+            rows = cursor.fetchall()
+            cursor.close()
+            return [dict(r) for r in rows]
+        finally:
+            conn.close()

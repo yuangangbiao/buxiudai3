@@ -1,0 +1,1 @@
+import sys; [print(f'  [{i}] {p}') for i,p in enumerate(sys.path)]; import utils; print(f'utils: {utils.__file__}')

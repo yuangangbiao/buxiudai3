@@ -1,0 +1,15 @@
+chore(tools): 新增硬迁移验证脚本
+
+5 个 Phase 6/7 验证脚本：
+- verify_hard_migration.py: v1 验收（4 项检查）
+- verify_hard_migration_v2.py: v2 验收（8 项检查，含新增 alert_rules 路由）
+- static_check_alert_callers.py: AST 静态分析（无运行时依赖）
+- e2e_alert_pipeline.py: Mock session 模拟端到端验证
+- check_route_baseline.py: 路由基线对比（Phase 7 零回归）
+
+每个脚本支持单独运行，提供独立的硬迁移验证能力。
+
+- 任务：F22 A1
+- 类型：[工具]
+- 验收：verify_hard_migration_v2.py 8 项检查全部通过
+- 关联：F22 全套硬迁移 commits

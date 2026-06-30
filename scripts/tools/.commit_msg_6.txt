@@ -1,0 +1,10 @@
+test(integration): test_v4_alerts 改 404 验证测试
+
+硬迁移后 /api/v4/alerts mock 路由已删除（commit f663caf），
+原 test_v4_alerts_empty / test_v4_alerts_with_overdue 验证 mock 数据，
+已无意义。改为 test_v4_alerts_removed 验证目标路由返回 404。
+
+- 任务：F22 A5
+- 类型：[测试]
+- 验收：pytest collect 显示 test_v4_alerts_removed 已被识别
+- 关联：commit f663caf (mock 路由删除)

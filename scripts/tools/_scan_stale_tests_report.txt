@@ -1,0 +1,359 @@
+﻿======================================================================
+一、全仓库过期/异常后缀文件扫描
+======================================================================
+
+  后缀 .tmp: 2 个
+    [.tmp] x1
+    [mobile_api_ai] x1
+
+  后缀 .v6bak: 4 个
+    [models] x3
+    [constants.py.v6bak] x1
+
+  后缀 ,cover: 90 个
+    [utils] x26
+    [models] x23
+    [core] x22
+    ...还有 6 个目录
+
+  后缀 .bak: 3 个
+    [desktop\views] x1
+    [models] x1
+    [tests\unit\models] x1
+
+  后缀 .hash: 9 个
+    [mobile_api_ai] x3
+    [models] x2
+    [services] x2
+    ...还有 2 个目录
+
+过期文件总计: 108 个
+
+======================================================================
+二、测试目录分布统计
+======================================================================
+
+测试文件总数: 589
+
+按子目录分布 (Top 25):
+  [tests/unit/models] x63
+  [tests/unit/utils] x61
+  [tests/unit/core] x50
+  [mobile_api_ai/tests/unit] x47
+  [mobile_api_ai/tests/pre_release] x21
+  [tests/unit/services] x16
+  [mobile_api_ai/tests/integration] x9
+  [mobile_api_ai/tests/fixtures] x5
+  [tests/append_quality_rule_tests.py] x1
+  [tests/conftest.py] x1
+  [tests/conftest_category_hook.py] x1
+  [tests/e2e/conftest.py] x1
+  [tests/e2e/test_01_auth.py] x1
+  [tests/e2e/test_02_order.py] x1
+  [tests/e2e/test_03_process.py] x1
+  [tests/e2e/test_04_schedule.py] x1
+  [tests/e2e/test_05_workreport.py] x1
+  [tests/e2e/test_06_quality.py] x1
+  [tests/e2e/test_07_shipment.py] x1
+  [tests/e2e/test_08_cost.py] x1
+  [tests/e2e/test_09_sync.py] x1
+  [tests/e2e/test_10_concurrent.py] x1
+  [tests/e2e/test_11_metrics.py] x1
+  [tests/e2e/test_flows.py] x1
+  [tests/e2e/__init__.py] x1
+
+======================================================================
+三、可疑文件: 以下划线开头 (辅助/调试/写入器，非真正测试)
+======================================================================
+可疑文件数: 74
+  mobile_api_ai\tests\__init__.py
+  mobile_api_ai\tests\fixtures\__init__.py
+  mobile_api_ai\tests\fixtures\_test_cc.py
+  mobile_api_ai\tests\integration\__init__.py
+  mobile_api_ai\tests\pre_release\__init__.py
+  mobile_api_ai\tests\unit\__init__.py
+  mobile_api_ai\tests\unit\_syspath_runner.py
+  scripts\__init__.py
+  scripts\_add_created_at.py
+  scripts\_binary_search.py
+  scripts\_binary_search_pollution.py
+  scripts\_check_5008_pid.py
+  scripts\_check_env.py
+  scripts\_check_pid.py
+  scripts\_check_pytest.py
+  scripts\_check_schema.py
+  scripts\_clear_schema_cache.py
+  scripts\_collect_failures.py
+  scripts\_debug_check.py
+  scripts\_debug_db.py
+  scripts\_debug_db2.py
+  scripts\_debug_db3.py
+  scripts\_debug_import.py
+  scripts\_debug_match.py
+  scripts\_debug_material_insert.py
+  scripts\_debug_regex.py
+  scripts\_debug_schema.py
+  scripts\_debug_validator.py
+  scripts\_debug_validator2.py
+  scripts\_debug_validator3.py
+  scripts\_debug_validator4.py
+  scripts\_diag_report.py
+  scripts\_diag_scan.py
+  scripts\_find_pollution.py
+  scripts\_fix_validators.py
+  scripts\_inspect_pytest.py
+  scripts\_inventory_routes.py
+  scripts\_list_write_routes.py
+  scripts\_probe_login.py
+  scripts\_probe_operators.py
+  scripts\_probe_users.py
+  scripts\_probe_users_v2.py
+  scripts\_restart_5001.py
+  scripts\_restart_5002.py
+  scripts\_run_all_tests.py
+  scripts\_run_e2e.py
+  scripts\_run_e2e_v2.py
+  scripts\_start_5008.py
+  scripts\_test_all_types.py
+  scripts\_test_compile_verify.py
+  scripts\_test_final.py
+  scripts\_test_import_utils.py
+  scripts\_test_report.py
+  scripts\_test_report_api.py
+  scripts\_test_s3_gate.py
+  scripts\_test_s4_gate.py
+  scripts\_test_scan_metrics.py
+  scripts\_test_scan_report.py
+  scripts\_test_scan_report2.py
+  scripts\_test_syspath.py
+  scripts\_trigger_500.py
+  scripts\_verify_500_path.py
+  scripts\_verify_p0_token_e2e.py
+  scripts\_verify_process_metrics.py
+  scripts\tools\_scan_stale_tests.py
+  tests\_analyze_imports.py
+  tests\e2e\__init__.py
+  tests\modular\__init__.py
+  tests\unit\__init__.py
+  tests\unit\core\__init__.py
+  tests\unit\models\__init__.py
+  tests\unit\models\_run_native_coverage.py
+  tests\unit\models\_run_operator_full_cov.py
+  tests\unit\utils\_debug_fixture.py
+
+======================================================================
+四、阶段命名测试文件 (sprint/push/final/gap/batch/quick/depth/complete)
+======================================================================
+阶段命名文件数: 81
+
+按模式统计:
+  complete: 55 个
+  final_: 6 个
+  depth: 6 个
+  push_5: 3 个
+  sprint: 3 个
+  more: 2 个
+  push_4: 2 个
+  gap_filler: 1 个
+  bulk: 1 个
+  quick: 1 个
+  batch: 1 个
+
+======================================================================
+五、近似命名测试 (同名模块多版本)
+======================================================================
+重名/近似命名组数: 39
+
+  __init__ (11 个变体):
+    tests\e2e\__init__.py
+    tests\modular\__init__.py
+    tests\unit\core\__init__.py
+    tests\unit\models\__init__.py
+    tests\unit\__init__.py
+    mobile_api_ai\tests\fixtures\__init__.py
+    mobile_api_ai\tests\integration\__init__.py
+    mobile_api_ai\tests\pre_release\__init__.py
+    mobile_api_ai\tests\unit\__init__.py
+    mobile_api_ai\tests\__init__.py
+    scripts\__init__.py
+
+  conftest (4 个变体):
+    tests\conftest.py
+    tests\e2e\conftest.py
+    tests\unit\conftest.py
+    tests\unit\utils\conftest.py
+
+  test_auto_schema (2 个变体):
+    tests\unit\utils\test_auto_schema.py
+    mobile_api_ai\tests\unit\test_auto_schema.py
+
+  test_backup_manager (2 个变体):
+    tests\unit\utils\test_backup_manager.py
+    tests\unit\utils\test_backup_manager_complete.py
+
+  test_base_dao (2 个变体):
+    tests\unit\models\test_base_dao.py
+    tests\unit\models\test_base_dao_complete.py
+
+  test_base_service (2 个变体):
+    tests\unit\services\test_base_service.py
+    tests\unit\services\test_base_service_complete.py
+
+  test_circuit_breaker (2 个变体):
+    tests\unit\core\test_circuit_breaker.py
+    tests\unit\core\test_circuit_breaker_complete.py
+
+  test_common_queries (2 个变体):
+    tests\unit\core\test_common_queries.py
+    tests\unit\core\test_common_queries_complete.py
+
+  test_config (2 个变体):
+    tests\unit\core\test_config.py
+    tests\unit\models\database\test_config.py
+
+  test_copyable_widgets (2 个变体):
+    tests\unit\utils\test_copyable_widgets.py
+    tests\unit\utils\test_copyable_widgets_complete.py
+
+  test_dao_patches (2 个变体):
+    tests\unit\utils\test_dao_patches.py
+    tests\unit\utils\test_dao_patches_complete.py
+
+  test_data_type_contract (2 个变体):
+    tests\unit\utils\test_data_type_contract.py
+    tests\unit\utils\test_data_type_contract_complete.py
+
+  test_db (2 个变体):
+    tests\unit\core\test_db.py
+    tests\unit\core\test_db_complete.py
+
+  test_error_codes (2 个变体):
+    tests\unit\core\test_error_codes.py
+    tests\unit\core\test_error_codes_complete.py
+
+  test_error_handler (2 个变体):
+    tests\unit\core\test_error_handler.py
+    tests\unit\core\test_error_handler_complete.py
+
+  test_excel_utils (3 个变体):
+    tests\unit\utils\test_excel_utils.py
+    tests\unit\utils\test_excel_utils_complete.py
+    tests\unit\utils\test_excel_utils_gaps.py
+
+  test_feature_flags (2 个变体):
+    tests\unit\core\test_feature_flags.py
+    tests\unit\core\test_feature_flags_complete.py
+
+  test_helpers (2 个变体):
+    tests\unit\utils\test_helpers.py
+    tests\unit\utils\test_helpers_complete.py
+
+  test_i18n_zh (2 个变体):
+    tests\unit\utils\test_i18n_zh.py
+    tests\unit\utils\test_i18n_zh_complete.py
+
+  test_inventory (3 个变体):
+    tests\unit\models\test_inventory.py
+    tests\unit\models\test_inventory_complete.py
+    tests\unit\models\test_inventory_depth.py
+
+  test_inventory_notifier (2 个变体):
+    tests\unit\services\test_inventory_notifier_complete.py
+    tests\unit\services\test_inventory_notifier_gaps.py
+
+  test_log_scheduler (2 个变体):
+    tests\unit\utils\test_log_scheduler.py
+    tests\unit\utils\test_log_scheduler_complete.py
+
+  test_material_calculator (2 个变体):
+    tests\unit\utils\test_material_calculator.py
+    tests\unit\utils\test_material_calculator_complete.py
+
+  test_material_rules (2 个变体):
+    tests\unit\models\test_material_rules.py
+    tests\unit\models\test_material_rules_complete.py
+
+  test_operator (3 个变体):
+    tests\unit\models\test_operator.py
+    tests\unit\models\test_operator_complete.py
+    tests\unit\models\test_operator_depth.py
+
+  test_order (2 个变体):
+    tests\unit\models\test_order_complete.py
+    tests\unit\models\test_order_gaps.py
+
+  test_order_dao (2 个变体):
+    tests\unit\models\test_order_dao.py
+    tests\unit\models\test_order_dao_complete.py
+
+  test_order_service (2 个变体):
+    tests\unit\services\test_order_service.py
+    tests\unit\services\test_order_service_complete.py
+
+  test_order_templates (2 个变体):
+    tests\unit\utils\test_order_templates.py
+    tests\unit\utils\test_order_templates_complete.py
+
+  test_pagination (2 个变体):
+    tests\unit\utils\test_pagination.py
+    tests\unit\utils\test_pagination_complete.py
+
+  test_process (3 个变体):
+    tests\unit\models\test_process.py
+    tests\unit\models\test_process_complete.py
+    tests\unit\models\test_process_depth.py
+
+  test_process_api (2 个变体):
+    scripts\test_process_api.py
+    scripts\tools\test_process_api.py
+
+  test_process_service (2 个变体):
+    tests\unit\services\test_process_service.py
+    tests\unit\services\test_process_service_complete.py
+
+  test_production (2 个变体):
+    tests\unit\models\test_production.py
+    tests\unit\models\test_production_complete.py
+
+  test_production_stats (2 个变体):
+    tests\unit\models\test_production_stats.py
+    tests\unit\models\test_production_stats_depth.py
+
+  test_quality (3 个变体):
+    tests\unit\models\test_quality.py
+    tests\unit\models\test_quality_complete.py
+    tests\unit\models\test_quality_depth.py
+
+  test_query_cache (2 个变体):
+    tests\unit\utils\test_query_cache.py
+    tests\unit\utils\test_query_cache_complete.py
+
+  test_shipment (3 个变体):
+    tests\unit\models\test_shipment.py
+    tests\unit\models\test_shipment_complete.py
+    tests\unit\models\test_shipment_depth.py
+
+  test_validators (2 个变体):
+    tests\unit\utils\test_validators.py
+    tests\unit\utils\test_validators_complete.py
+
+======================================================================
+六、按测试类别分类
+======================================================================
+  其他(顶层或散落): 306
+  unit: 246
+  e2e: 17
+  integration: 11
+  modular: 9
+
+======================================================================
+七、scripts/ 散落的 test_*.py (非 unittest)
+======================================================================
+scripts/ 下 test_*.py 共 258 个
+  [scripts] x208
+  [scripts/tools] x38
+  [scripts/migrations] x10
+  [scripts/automation] x1
+  [scripts/__pre_tests__] x1
+
+=== 扫描完成 ===

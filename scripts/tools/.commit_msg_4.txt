@@ -1,0 +1,21 @@
+refactor(container-center): 删除 /api/v4/alerts mock 路由和死代码包
+
+硬迁移清理：
+1. 删除 container_center_api.py 中的 /api/v4/alerts mock 路由（约 50 行）
+   该路由仅返回 overdue_alert / no_tasks_alert 两条 mock 数据，从未被生产消费
+2. 删除 container_center/api/ 整个死代码包（7 文件）
+   - __init__.py: create_container_api_bp Blueprint 入口
+   - alerts.py: register_alert_routes (Blueprint 注册)
+   - app.py: 应用工厂
+   - configs.py: register_config_routes (含 /configs/alert_rules)
+   - documents.py: register_document_routes
+   - health.py: register_health_routes
+   - messages.py: register_message_routes
+   全文搜索确认：register_alert_routes、create_container_api_bp、register_*_routes 均为 0 引用
+
+**功能补全**：commit 2 已在 _core.py 新增 /configs/alert_rules 路由接管原 configs.py 的功能。
+
+- 任务：F22 行动项 3 (硬迁移清理)
+- 类型：[逻辑]
+- 验收：grep 0 命中；路由基线无删除；5003 路由完整
+- 关联：commit 2 (接管 configs/alert_rules)

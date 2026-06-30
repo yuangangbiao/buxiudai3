@@ -1,0 +1,121 @@
+﻿扫描测试文件总数: 592
+
+无 assert 的测试函数总数: 522
+  ✅ 含 pytest.skip (合法): 3
+  ✅ 含 raise (异常路径合法): 14
+  🔴 仅 print 无断言 (反模式): 72
+  ⚠️  其他 (空函数/可疑): 433
+
+======================================================================
+🔴 仅 print 无断言的反模式测试 (Top 50)
+======================================================================
+  [print-only] tests\e2e\test_01_auth.py :: test_99_auth_summary()
+  [print-only] tests\e2e\test_02_order.py :: test_99_order_summary()
+  [print-only] tests\e2e\test_03_process.py :: test_99_process_summary()
+  [print-only] tests\e2e\test_04_schedule.py :: test_99_schedule_summary()
+  [print-only] tests\e2e\test_05_workreport.py :: test_99_workreport_summary()
+  [print-only] tests\e2e\test_06_quality.py :: test_99_quality_summary()
+  [print-only] tests\e2e\test_07_shipment.py :: test_99_shipment_summary()
+  [print-only] tests\e2e\test_08_cost.py :: test_99_cost_summary()
+  [print-only] tests\e2e\test_09_sync.py :: test_99_sync_summary()
+  [print-only] tests\e2e\test_10_concurrent.py :: test_99_concurrent_summary()
+  [print-only] tests\e2e\test_11_metrics.py :: test_99_metrics_summary()
+  [print-only] tests\test_business_correctness.py :: test_5002_rate_limit_actually_blocks()
+  [print-only] mobile_api_ai\tests\integration\test_send_wechat.py :: test_send_response()
+  [print-only] mobile_api_ai\tests\unit\test_atomic_save_sub_step.py :: test_atomic_rollback_on_pkg_failure()
+  [print-only] scripts\test_5008_b3_b4_fixed.py :: test_login()
+  [print-only] scripts\test_5008_b3_b4_fixed.py :: test_attendance_checkin()
+  [print-only] scripts\test_5008_b3_b4_fixed.py :: test_work_report()
+  [print-only] scripts\test_5008_b3_b4_fixed.py :: test_key_endpoints()
+  [print-only] scripts\test_8008_5008_full.py :: test_8008()
+  [print-only] scripts\test_8008_5008_full.py :: test_5008()
+  [print-only] scripts\test_8008_5008_full.py :: test_5003()
+  [print-only] scripts\test_8008_5008_full.py :: test_5001()
+  [print-only] scripts\test_8008_5008_full.py :: test_sync_e2e()
+  [print-only] scripts\test_consistency_xiaosheng.py :: test_field_persistence()
+  [print-only] scripts\test_consistency_xiaosheng.py :: test_state_machine()
+  [print-only] scripts\test_consistency_xiaosheng.py :: test_sync_bridge()
+  [print-only] scripts\test_consistency_xiaosheng.py :: test_concurrency()
+  [print-only] scripts\test_data_source_direct_0620.py :: test_table()
+  [print-only] scripts\test_data_source_direct_0620.py :: test_process_sub_steps_completed_qty()
+  [print-only] scripts\test_data_source_direct_0620.py :: test_data_packages_status()
+  [print-only] scripts\test_full_ux.py :: test_page_loading()
+  [print-only] scripts\test_full_ux.py :: test_login_flow()
+  [print-only] scripts\test_full_ux.py :: test_material_admin()
+  [print-only] scripts\test_full_ux.py :: test_shipment_new_fields()
+  [print-only] scripts\test_full_ux.py :: test_production_batch_ops()
+  [print-only] scripts\test_full_ux.py :: test_quality_admin()
+  [print-only] scripts\test_full_ux.py :: test_process_admin()
+  [print-only] scripts\test_full_ux.py :: test_nav_menu()
+  [print-only] scripts\test_full_ux.py :: test_responsive_layout()
+  [print-only] scripts\test_independent_tables_sync_0620.py :: test_independent_tables()
+  [print-only] scripts\test_independent_tables_sync_0620.py :: test_completed_qty_sync()
+  [print-only] scripts\test_independent_tables_sync_0620.py :: test_data_packages_archived()
+  [print-only] scripts\test_independent_tables_sync_0620.py :: test_storage_methods()
+  [print-only] scripts\test_independent_tables_sync_0620.py :: test_task_type_mapping()
+  [print-only] scripts\test_main_software_sync_0620.py :: test_process_sub_steps()
+  [print-only] scripts\test_main_software_sync_0620.py :: test_process_records()
+  [print-only] scripts\test_main_software_sync_0620.py :: test_report_queue()
+  [print-only] scripts\test_main_software_sync_0620.py :: test_sync_consistency()
+  [print-only] scripts\test_main_software_sync_0620.py :: test_data_flow_diagram()
+  [print-only] scripts\test_mobile_desktop_sync_0620.py :: test_process_sub_steps_sync()
+  ...还有 22 个
+
+======================================================================
+🔴 反模式测试按文件分布
+======================================================================
+  12 个 - scripts\test_ux_xiaoxi.py
+  9 个 - scripts\test_full_ux.py
+  5 个 - scripts\test_8008_5008_full.py
+  5 个 - scripts\test_independent_tables_sync_0620.py
+  5 个 - scripts\test_main_software_sync_0620.py
+  5 个 - scripts\test_mobile_desktop_sync_0620.py
+  4 个 - scripts\test_5008_b3_b4_fixed.py
+  4 个 - scripts\test_consistency_xiaosheng.py
+  3 个 - scripts\test_data_source_direct_0620.py
+  3 个 - scripts\test_regression_api_0620.py
+  3 个 - scripts\test_security_xiaoyu.py
+  1 个 - tests\e2e\test_01_auth.py
+  1 个 - tests\e2e\test_02_order.py
+  1 个 - tests\e2e\test_03_process.py
+  1 个 - tests\e2e\test_04_schedule.py
+  1 个 - tests\e2e\test_05_workreport.py
+  1 个 - tests\e2e\test_06_quality.py
+  1 个 - tests\e2e\test_07_shipment.py
+  1 个 - tests\e2e\test_08_cost.py
+  1 个 - tests\e2e\test_09_sync.py
+
+======================================================================
+⚠️ 可疑 '其他' 类 (无 skip/raise/print 也没 assert) Top 30
+======================================================================
+  [other] tests\integration\test_schedule_publish.py :: test_mixed_datetime_string_sort()
+  [other] tests\integration\test_schedule_publish.py :: test_ensure_conn_recovers()
+  [other] tests\modular\test_auto_publish.py :: test_handle_production_confirmed_with_disabled()
+  [other] tests\modular\test_auto_publish.py :: test_handle_production_confirmed_with_missing_data()
+  [other] tests\modular\test_modular_config.py :: test_load_from_temp_config()
+  [other] tests\modular\test_publish_mode_manager.py :: test_set_mode_invalid()
+  [other] tests\unit\core\test_app.py :: test_ensure_audit_table_closes_connection()
+  [other] tests\unit\core\test_app.py :: test_register_default_handlers_publishable()
+  [other] tests\unit\core\test_app.py :: test_route()
+  [other] tests\unit\core\test_circuit_breaker_complete.py :: test_opens_after_threshold()
+  [other] tests\unit\core\test_cors_config_complete.py :: test_init_cors_with_env()
+  [other] tests\unit\core\test_cors_config_complete.py :: test_init_cors_with_default()
+  [other] tests\unit\core\test_cors_config_complete.py :: test_init_cors_rejects_wildcard()
+  [other] tests\unit\core\test_db.py :: test_return_full_pool_closes()
+  [other] tests\unit\core\test_db.py :: test_cursor_delegates()
+  [other] tests\unit\core\test_db.py :: test_commit_delegates()
+  [other] tests\unit\core\test_db.py :: test_rollback_delegates()
+  [other] tests\unit\core\test_db.py :: test_transaction_commits()
+  [other] tests\unit\core\test_db.py :: test_close_idempotent()
+  [other] tests\unit\core\test_error_handler.py :: test_log_error_to_db_db_failure_does_not_raise()
+  [other] tests\unit\core\test_error_handler_complete.py :: test_show_error_dialog_with_tkinter()
+  [other] tests\unit\core\test_error_handler_complete.py :: test_log_error_to_db_basic()
+  [other] tests\unit\core\test_event_bus.py :: test_unsubscribe_nonexistent_handler_does_not_raise()
+  [other] tests\unit\core\test_event_bus.py :: test_publish_no_handlers_does_not_raise()
+  [other] tests\unit\core\test_event_store.py :: test_append_commits_and_closes()
+  [other] tests\unit\core\test_final_gaps.py :: test_adjustment_zero_after_fix()
+  [other] tests\unit\core\test_logger.py :: test_log_manager_creates_log_dir()
+  [other] tests\unit\core\test_logger.py :: test_log_with_trace_supports_error_level()
+  [other] tests\unit\core\test_logger.py :: test_log_with_trace_default_level_is_info()
+  [other] tests\unit\core\test_process_code_custom.py :: test_register_empty_raises()
+  ...还有 403 个

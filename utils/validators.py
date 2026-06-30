@@ -1,0 +1,230 @@
+# -*- coding: utf-8 -*-
+"""
+统一数据校验层
+"""
+
+from typing import Any, List, Optional, Dict, Callable
+from datetime import datetime
+import re
+import numbers
+
+from core.exceptions import ValidationException
+
+
+class CommonValidators:
+    """通用校验器集合"""
+    
+    @staticmethod
+    def required(value: Any, field_name: str = "字段") -> Any:
+        """必填校验"""
+        if value is None or (isinstance(value, str) and not value.strip()):
+            raise ValidationException(f"{field_name}不能为空", field=field_name)
+        return value
+    
+    @staticmethod
+    def length(value: str, min_len: int = 0, max_len: int = None, field_name: str = "字段") -> str:
+        """长度校验"""
+        if not isinstance(value, str):
+            raise ValidationException(f"{field_name}必须是字符串", field=field_name)
+        length = len(value)
+        if length < min_len:
+            raise ValidationException(f"{field_name}长度不能少于{min_len}个字符", field=field_name)
+        if max_len and length > max_len:
+            raise ValidationException(f"{field_name}长度不能超过{max_len}个字符", field=field_name)
+        return value
+    
+    @staticmethod
+    def range(value: Any, min_val: float = None, max_val: float = None, field_name: str = "字段") -> float:
+        """数值范围校验"""
+        try:
+            num = float(value)
+        except (TypeError, ValueError):
+            raise ValidationException(f"{field_name}必须是数字", field=field_name)
+        
+        if min_val is not None and num < min_val:
+            raise ValidationException(f"{field_name}不能小于{min_val}", field=field_name)
+        if max_val is not None and num > max_val:
+            raise ValidationException(f"{field_name}不能大于{max_val}", field=field_name)
+        return num
+    
+    @staticmethod
+    def pattern(value: str, pattern: str, field_name: str = "字段") -> str:
+        """正则校验"""
+        if not re.match(pattern, str(value)):
+            raise ValidationException(f"{field_name}格式不正确", field=field_name)
+        return value
+    
+    @staticmethod
+    def choices(value: Any, choices: List[Any], field_name: str = "字段") -> Any:
+        """枚举校验"""
+        if value not in choices:
+            raise ValidationException(f"{field_name}必须是以下值之一: {', '.join(map(str, choices))}", field=field_name)
+        return value
+    
+    @staticmethod
+    def date_format(value: str, format_str: str = "%Y-%m-%d", field_name: str = "日期") -> str:
+        """日期格式校验"""
+        try:
+            datetime.strptime(value, format_str)
+        except ValueError:
+            raise ValidationException(f"{field_name}格式应为: {format_str}", field=field_name)
+        return value
+
+
+class OrderValidator:
+    """订单数据校验器"""
+    
+    @staticmethod
+    def validate_create(data: dict) -> dict:
+        """校验新建订单数据"""
+        errors = []
+        
+        # 必填字段
+        required_fields = ['customer_name', 'product_type']
+        for field in required_fields:
+            if not data.get(field):
+                errors.append(f"缺少必填字段: {field}")
+        
+        # 数量校验
+        if data.get('quantity'):
+            try:
+                qty = float(data['quantity'])
+                if qty <= 0:
+                    errors.append("数量必须大于0")
+            except ValueError:
+                errors.append("数量必须是数字")
+        
+        # 日期校验
+        if data.get('delivery_date'):
+            try:
+                datetime.strptime(data['delivery_date'], '%Y-%m-%d')
+            except ValueError:
+                errors.append("交货日期格式应为: YYYY-MM-DD")
+        
+        if errors:
+            raise ValidationException("; ".join(errors), details={'errors': errors})
+        
+        return data
+    
+    @staticmethod
+    def validate_update(data: dict) -> dict:
+        """校验更新订单数据"""
+        # 允许部分字段更新
+        allowed_fields = [
+            'customer_name', 'product_type', 'quantity', 'unit_price',
+            'delivery_date', 'priority', 'status', 'remark', 'extra_params'
+        ]
+        
+        # 过滤不允许的字段
+        validated = {k: v for k, v in data.items() if k in allowed_fields}
+        
+        return validated
+
+
+class ProcessValidator:
+    """工序数据校验器"""
+    
+    @staticmethod
+    def validate_report(data: dict) -> dict:
+        """校验工序报工数据"""
+        errors = []
+        
+        # 数量校验
+        if data.get('quantity'):
+            try:
+                qty = float(data['quantity'])
+                if qty < 0:
+                    errors.append("报工数量不能为负数")
+            except ValueError:
+                errors.append("报工数量必须是数字")
+        
+        # 合格率校验
+        if data.get('qualified_rate') is not None:
+            try:
+                rate = float(data['qualified_rate'])
+                if rate < 0 or rate > 100:
+                    errors.append("合格率必须在0-100之间")
+            except ValueError:
+                errors.append("合格率必须是数字")
+        
+        if errors:
+            raise ValidationException("; ".join(errors), details={'errors': errors})
+        
+        return data
+
+
+class InventoryValidator:
+    """库存数据校验器"""
+    
+    @staticmethod
+    def validate_adjustment(data: dict) -> dict:
+        """校验库存调整数据"""
+        errors = []
+        
+        # 调整数量校验
+        if data.get('adjustment') is not None:
+            try:
+                adj = float(data['adjustment'])
+                if adj == 0:
+                    errors.append("调整数量不能为0")
+            except ValueError:
+                errors.append("调整数量必须是数字")
+        
+        # 调整后数量校验
+        if data.get('current_quantity') is not None:
+            try:
+                qty = float(data['current_quantity'])
+                if qty < 0:
+                    errors.append("库存数量不能为负数")
+            except ValueError:
+                errors.append("库存数量必须是数字")
+        
+        if errors:
+            raise ValidationException("; ".join(errors), details={'errors': errors})
+        
+        return data
+
+
+class FormValidator:
+    """表单复合校验器"""
+    
+    def __init__(self):
+        self._rules = []
+    
+    def add_rule(self, field: str, *validators: Callable, required: bool = False) -> 'FormValidator':
+        """添加校验规则"""
+        self._rules.append({
+            'field': field,
+            'validators': validators,
+            'required': required
+        })
+        return self
+    
+    def validate(self, data: dict) -> dict:
+        """执行所有校验"""
+        validated = {}
+        errors = []
+        
+        for rule in self._rules:
+            field = rule['field']
+            value = data.get(field)
+            
+            # 必填检查
+            if rule['required']:
+                if value is None or (isinstance(value, str) and not value.strip()):
+                    errors.append(f"{field}不能为空")
+                    continue
+            
+            # 执行校验器
+            for validator in rule['validators']:
+                try:
+                    value = validator(value)
+                except ValidationException as e:
+                    errors.append(str(e))
+            
+            validated[field] = value
+        
+        if errors:
+            raise ValidationException("; ".join(errors), details={'errors': errors})
+        
+        return validated

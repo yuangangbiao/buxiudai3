@@ -1,0 +1,24 @@
+{
+  "server": {
+    "url": "http://localhost:8080",
+    "api_key": ""
+  },
+  "database": {
+    "host": "localhost",
+    "port": 3306,
+    "user": "root",
+    "password": "88888888",
+    "database": "inventory_db",
+    "charset": "utf8mb4",
+    "connect_timeout": 10,
+    "read_timeout": 30,
+    "write_timeout": 30
+  },
+  "container": {
+    "url": "http://localhost:5003"
+  },
+  "app": {
+    "title": "宁津晨圣输送机械有限公司库存管理系统 V3.0",
+    "theme": "default"
+  }
+}

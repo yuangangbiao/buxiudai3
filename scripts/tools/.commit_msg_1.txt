@@ -1,0 +1,15 @@
+refactor(alert-engine): 拆分 check_order_timeout_alerts 并扩展注释
+
+将原本合并实现的 check_order_timeout_alerts 拆分为两个独立方法：
+- check_overdue_task_alerts: 任务超时告警 (WARNING)
+- check_order_overdue_alerts: 订单逾期告警 (CRITICAL)
+
+原函数保留为向后兼容入口 (L432)，内部依次调用两个新方法。
+alert_engine.py:782 调用点已更新为直接调用拆分后的两个方法。
+
+头部注释从「6 类」更新为「11 项」，与 ARCHITECTURE_v3.6.md 第九章 9.2 节对齐。
+
+- 任务：F22 行动项 1 + 2
+- 类型：[逻辑]
+- 验收：AST 验证 AlertEngine.check_* 方法数=12，含 3 个相关方法
+- 关联：ARCHITECTURE_v3.6.md 9.2 节

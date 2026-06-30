@@ -1,0 +1,326 @@
+# -*- coding: utf-8 -*-
+"""
+订单服务层 - 封装订单业务逻辑
+
+阶段1：单例 + 委托模式，保持向后兼容。
+所有公开的 @classmethod 签名不变，内部委托给实例方法。
+"""
+
+from datetime import datetime
+from typing import Optional, List, Dict, Any
+import json
+import logging
+import threading
+import requests
+
+from models.database import get_connection, generate_order_no
+from models.order import OrderDAO
+from core.exceptions import ValidationException, NotFoundException
+from core.event_bus import EventBus, Events
+from core.config import BusinessConfig
+from services.audit_service import AuditService
+from utils.validators import OrderValidator
+from constants import OrderStatus
+
+logger = logging.getLogger(__name__)
+
+
+class OrderService:
+    """订单服务（单例 + 委托模式）"""
+
+    _instance: Optional["OrderService"] = None
+    _lock = threading.Lock()
+
+    # ================================================================
+    # 状态常量（不变）
+    # ================================================================
+    STATUS_DRAFT = OrderStatus.PENDING.value
+    STATUS_CONFIRMED = OrderStatus.CONFIRMED.value
+    STATUS_PENDING_PUBLISH = OrderStatus.PENDING_PUBLISH.value
+    STATUS_PUBLISHED = OrderStatus.PUBLISHED.value
+    STATUS_SCHEDULED = OrderStatus.SCHEDULED.value
+    STATUS_PRODUCING = OrderStatus.PRODUCTION.value
+    STATUS_QUALITY_CHECK = OrderStatus.QC.value
+    STATUS_SHIPPED = OrderStatus.SHIPPED.value
+    STATUS_COMPLETED = OrderStatus.FINISHED.value
+    STATUS_CANCELLED = OrderStatus.CANCELLED.value
+
+    STATUS_FLOW = {
+        STATUS_DRAFT: [STATUS_CONFIRMED, STATUS_CANCELLED],
+        STATUS_CONFIRMED: [STATUS_PENDING_PUBLISH, STATUS_CANCELLED],
+        STATUS_PENDING_PUBLISH: [STATUS_PUBLISHED, STATUS_CANCELLED],
+        STATUS_PUBLISHED: [STATUS_SCHEDULED, STATUS_CANCELLED],
+        STATUS_SCHEDULED: [STATUS_PRODUCING, STATUS_CANCELLED],
+        STATUS_PRODUCING: [STATUS_QUALITY_CHECK, STATUS_CANCELLED],
+        STATUS_QUALITY_CHECK: [STATUS_SHIPPED, STATUS_PRODUCING],
+        STATUS_SHIPPED: [STATUS_COMPLETED],
+        STATUS_COMPLETED: [],
+        STATUS_CANCELLED: [STATUS_DRAFT],
+    }
+
+    # ================================================================
+    # 单例 & 依赖注入
+    # ================================================================
+    def __init__(self, dao=None, audit_service=None, event_bus=None):
+        """初始化服务实例，支持依赖注入（用于测试/扩展）。
+
+        Args:
+            dao: 数据访问对象，默认 OrderDAO
+            audit_service: 审计服务，默认 AuditService
+            event_bus: 事件总线，默认 EventBus
+        """
+        self.dao = dao if dao is not None else OrderDAO
+        self.audit = audit_service if audit_service is not None else AuditService
+        self.events = event_bus if event_bus is not None else EventBus
+
+    @classmethod
+    def get_instance(cls) -> "OrderService":
+        """获取全局单例（线程安全）。"""
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = cls()
+        return cls._instance
+
+    # ================================================================
+    # 兼容层：@classmethod 委托给实例方法（签名完全不变）
+    # ================================================================
+
+    @classmethod
+    def create_order(cls, data: dict, operator: str = None) -> Dict[str, Any]:
+        """创建订单"""
+        return cls.get_instance()._create_order(data, operator)
+
+    @classmethod
+    def update_order(cls, order_id: int, data: dict, operator: str = None) -> bool:
+        """更新订单"""
+        return cls.get_instance()._update_order(order_id, data, operator)
+
+    @classmethod
+    def change_status(cls, order_id: int, new_status: str, operator: str = None) -> bool:
+        """变更订单状态"""
+        return cls.get_instance()._change_status(order_id, new_status, operator)
+
+    @classmethod
+    def delete_order(cls, order_id: int, operator: str = None) -> bool:
+        """删除订单"""
+        return cls.get_instance()._delete_order(order_id, operator)
+
+    @classmethod
+    def get_order_detail(cls, order_id: int) -> Optional[Dict[str, Any]]:
+        """获取订单详情"""
+        return cls.get_instance()._get_order_detail(order_id)
+
+    @classmethod
+    def get_order_history(cls, order_id: int) -> List[Dict[str, Any]]:
+        """获取订单变更历史"""
+        return cls.get_instance()._get_order_history(order_id)
+
+    @classmethod
+    def search_orders(cls, keyword: str) -> List[Dict[str, Any]]:
+        """搜索订单"""
+        return cls.get_instance()._search_orders(keyword)
+
+    # ================================================================
+    # 实例方法：实际业务逻辑
+    # ================================================================
+
+    def _create_order(self, data: dict, operator: str = None) -> Dict[str, Any]:
+        """[实例] 创建订单"""
+        # 1. 数据校验
+        OrderValidator.validate_create(data)
+
+        # 2. 生成订单号并检查唯一性
+        conn = get_connection()
+        try:
+            # 检查是否有重复订单（防止并发创建）
+            cur = conn.cursor()
+            cur.execute(
+                "SELECT id FROM orders WHERE order_no LIKE %s ORDER BY id DESC LIMIT 1",
+                (f"ORD-%",)
+            )
+
+            # 3. 生成订单号并保存订单
+            data['order_no'] = generate_order_no()
+            data['status'] = self.STATUS_DRAFT
+            data['created_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            order_id = self.dao.create(data)
+
+            # 4. 记录审计日志
+            self.audit.log(
+                action=self.audit.ACTION_CREATE,
+                entity_type=self.audit.ENTITY_ORDER,
+                entity_id=str(order_id),
+                after_data=data,
+                operator=operator,
+                remark=f"新建订单: {data['order_no']}"
+            )
+
+            # 5. 发布事件
+            self.events.publish(Events.ORDER_CREATED, {
+                'order_id': order_id,
+                'order_no': data['order_no'],
+                'data': data
+            })
+
+            return {'id': order_id, 'order_no': data['order_no'], **data}
+        finally:
+            conn.close()
+
+    def _update_order(self, order_id: int, data: dict, operator: str = None) -> bool:
+        """[实例] 更新订单"""
+        existing = self.dao.get_by_id(order_id)
+        if not existing:
+            raise NotFoundException("订单", str(order_id))
+
+        validated_data = OrderValidator.validate_update(data)
+        success = self.dao.update(order_id, validated_data)
+
+        if success:
+            self.audit.log(
+                action=self.audit.ACTION_UPDATE,
+                entity_type=self.audit.ENTITY_ORDER,
+                entity_id=str(order_id),
+                before_data=existing,
+                after_data=validated_data,
+                operator=operator
+            )
+            self.events.publish(Events.ORDER_UPDATED, {
+                'order_id': order_id,
+                'changes': validated_data
+            })
+            self._sync_delivery_date_to_dispatch(existing, validated_data, operator)
+
+        return success
+
+    def _change_status(self, order_id: int, new_status: str, operator: str = None) -> bool:
+        """[实例] 变更订单状态"""
+        existing = self.dao.get_by_id(order_id)
+        if not existing:
+            raise NotFoundException("订单", str(order_id))
+
+        current_status = existing.get('status')
+
+        if new_status not in self.STATUS_FLOW.get(current_status, []):
+            raise ValidationException(
+                f"状态流转无效: {current_status} -> {new_status}",
+                details={
+                    'current': current_status,
+                    'target': new_status,
+                    'allowed': self.STATUS_FLOW.get(current_status, [])
+                }
+            )
+
+        success = self.dao.update(order_id, {'status': new_status})
+
+        if success:
+            self.audit.log(
+                action=self.audit.ACTION_STATUS_CHANGE,
+                entity_type=self.audit.ENTITY_ORDER,
+                entity_id=str(order_id),
+                before_data={'status': current_status},
+                after_data={'status': new_status},
+                operator=operator,
+                remark=f"状态变更: {current_status} -> {new_status}"
+            )
+            self.events.publish(Events.ORDER_STATUS_CHANGED, {
+                'order_id': order_id,
+                'order_no': existing.get('order_no'),
+                'from_status': current_status,
+                'to_status': new_status
+            })
+
+        return success
+
+    def _delete_order(self, order_id: int, operator: str = None) -> bool:
+        """[实例] 删除订单"""
+        existing = self.dao.get_by_id(order_id)
+        if not existing:
+            raise NotFoundException("订单", str(order_id))
+
+        success = self.dao.delete(order_id)
+
+        if success:
+            self.audit.log(
+                action=self.audit.ACTION_DELETE,
+                entity_type=self.audit.ENTITY_ORDER,
+                entity_id=str(order_id),
+                before_data=existing,
+                operator=operator,
+                remark=f"删除订单: {existing.get('order_no')}"
+            )
+            self.events.publish(Events.ORDER_DELETED, {'order_id': order_id})
+
+        return success
+
+    def _get_order_detail(self, order_id: int) -> Optional[Dict[str, Any]]:
+        """[实例] 获取订单详情"""
+        order = self.dao.get_by_id(order_id)
+        if order and order.get('extra_params') and isinstance(order['extra_params'], str):
+            try:
+                order['extra_params'] = json.loads(order['extra_params'])
+            except Exception as e:
+                logger.error(
+                    "[get_order_detail] JSON解析失败: %s", e,
+                    exc_info=True,
+                    extra={"entity_type": "ORDER", "entity_id": str(order_id)}
+                )
+        return order
+
+    def _get_order_history(self, order_id: int) -> List[Dict[str, Any]]:
+        """[实例] 获取订单变更历史"""
+        return self.audit.get_entity_history(self.audit.ENTITY_ORDER, str(order_id))
+
+    def _search_orders(self, keyword: str) -> List[Dict[str, Any]]:
+        """[实例] 模糊搜索订单"""
+        return self.dao.fuzzy_search(keyword)
+
+    # ================================================================
+    # _sync_delivery_date_to_dispatch —— 保持不变
+    # ================================================================
+    @classmethod
+    def _sync_delivery_date_to_dispatch(cls, existing: dict, validated_data: dict, operator: str = None):
+        """异步同步交货日期变更到调度中心"""
+        new_delivery = validated_data.get('delivery_date')
+        old_delivery = existing.get('delivery_date')
+        if not new_delivery or new_delivery == old_delivery:
+            return
+        order_no = existing.get('order_no', '')
+        if not order_no:
+            return
+        mobile_url = BusinessConfig.MOBILE_API_URL
+        if not mobile_url:
+            return
+
+        def _do_sync():
+            try:
+                requests.post(
+                    f'{mobile_url}/api/sync/delivery-date-change',
+                    json={
+                        'order_no': order_no,
+                        'old_delivery_date': old_delivery or '',
+                        'new_delivery_date': new_delivery,
+                        'operator': operator or 'system'
+                    },
+                    timeout=5
+                )
+            except requests.exceptions.Timeout:
+                logger.warning(
+                    "[order_sync] 交货日期同步超时",
+                    extra={"order_no": order_no, "operator": operator or "system",
+                           "endpoint": f"{mobile_url}/api/sync/delivery-date-change"}
+                )
+            except requests.exceptions.ConnectionError:
+                logger.error(
+                    "[order_sync] 交货日期同步连接失败",
+                    extra={"order_no": order_no, "operator": operator or "system",
+                           "endpoint": f"{mobile_url}/api/sync/delivery-date-change"}
+                )
+            except Exception:
+                logger.exception(
+                    "[order_sync] 交货日期同步未预期异常",
+                    extra={"order_no": order_no, "operator": operator or "system",
+                           "endpoint": f"{mobile_url}/api/sync/delivery-date-change"}
+                )
+
+        threading.Thread(target=_do_sync, daemon=True).start()

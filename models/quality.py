@@ -1,0 +1,419 @@
+# -*- coding: utf-8 -*-
+"""
+质检记录数据模型 (DAO)
+"""
+import os
+import logging
+from models.database import get_connection, get_connection_context
+from constants import QualityStatus
+
+
+class QualityDAO:
+
+    @staticmethod
+    def _get_next_inspection_seq(order_id: int, inspection_type: str) -> tuple:
+        """
+        获取下一个质检序号。
+        返回: (seq, inspection_no) 如 (1, "首检-1"), (2, "中检-2")
+        """
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT COALESCE(MAX(inspection_seq), 0) + 1 AS next_seq
+                FROM quality_records
+                WHERE order_id = %s AND inspection_type = %s
+            """, (order_id, inspection_type))
+            seq = cursor.fetchone()['next_seq']
+            cursor.close()
+            inspection_no = f"{inspection_type}-{seq}"
+            return seq, inspection_no
+        finally:
+            conn.close()
+
+    @staticmethod
+    def _ensure_inspection_columns():
+        """确保质检记录表有 inspection_seq 和 inspection_no 字段"""
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SHOW COLUMNS FROM quality_records LIKE 'inspection_seq'")
+            if not cursor.fetchone():
+                cursor.execute("""
+                    ALTER TABLE quality_records
+                    ADD COLUMN inspection_seq INT DEFAULT 0 AFTER inspection_type
+                """)
+            cursor.execute("SHOW COLUMNS FROM quality_records LIKE 'inspection_no'")
+            if not cursor.fetchone():
+                cursor.execute("""
+                    ALTER TABLE quality_records
+                    ADD COLUMN inspection_no VARCHAR(50) DEFAULT '' AFTER inspection_seq
+                """)
+            cursor.execute("SHOW COLUMNS FROM quality_records LIKE 'attachment_path'")
+            if not cursor.fetchone():
+                cursor.execute("""
+                    ALTER TABLE quality_records
+                    ADD COLUMN attachment_path VARCHAR(500) DEFAULT '' AFTER remark
+                """)
+            conn.commit()
+            cursor.close()
+        finally:
+            conn.close()
+
+    @staticmethod
+    def create(data: dict) -> int:
+        """
+        创建质检记录。
+        - 只有「终检+合格」才自动创建成品入库并更新订单为「已完成」。
+        - 其他状态流转由视图层决策，DAO 不干涉。
+        - 自动生成质检序号（按订单+质检类型分开计数）。
+        - 使用 try/finally 确保连接始终被关闭，防止泄漏。
+        """
+        QualityDAO._ensure_inspection_columns()
+
+        try:
+            defect_qty = max(0, int(data.get("defect_qty", 0)))
+        except (ValueError, TypeError):
+            defect_qty = 0
+
+        order_id = data.get("order_id")
+        inspection_type = data.get("inspection_type", "终检")
+        inspection_seq, inspection_no = QualityDAO._get_next_inspection_seq(order_id, inspection_type)
+
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO quality_records (
+                    order_id, order_no, production_id, inspection_type, inspection_seq, inspection_no,
+                    inspection_items, result, defect_description, defect_qty, handling_method,
+                    inspector, remark, process_name, record_date
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+            """, (
+                order_id,
+                data.get("order_no", ""),
+                data.get("production_id"),
+                inspection_type,
+                inspection_seq,
+                inspection_no,
+                data.get("inspection_items", ""),
+                data.get("result", "待检"),
+                data.get("defect_description", ""),
+                defect_qty,
+                data.get("handling_method", ""),
+                data.get("inspector", ""),
+                data.get("remark", ""),
+                data.get("process_name", "")
+            ))
+            new_id = cursor.lastrowid
+            order_id = data.get("order_id")
+
+            record_items = data.get("record_items", [])
+            for item in record_items:
+                cursor.execute("""
+                    INSERT INTO quality_record_items
+                    (record_id, inspection_item, measured_value, standard_value, tolerance, is_passed)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """, (
+                    new_id,
+                    item.get("inspection_item", ""),
+                    item.get("measured_value", ""),
+                    item.get("standard_value", ""),
+                    item.get("tolerance", ""),
+                    1 if item.get("is_passed", True) else 0
+                ))
+
+            conn.commit()
+            cursor.close()
+
+        finally:
+            conn.close()
+
+        return new_id
+
+    @staticmethod
+    def confirm_order_completion(order_id: int):
+        """
+        终检合格后，确认完成订单：
+        1. 查询订单数量/单位
+        2. 创建成品入库
+        3. 更新订单状态为「已完成」
+        4. 更新工单状态为「已完成」
+        5. 记录状态变化日志
+        """
+        if not order_id:
+            return
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT quantity, unit FROM orders WHERE id=%s", (order_id,)
+            )
+            order = cursor.fetchone()
+            cursor.close()
+            if not order:
+                return
+            qty = order['quantity']
+            unit = order['unit']
+
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO finished_goods (order_id, warehouse, quantity, unit, status)
+                VALUES (%s, '成品仓库', %s, %s, '在库')
+            """, (order_id, qty, unit))
+            cursor.close()
+
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE orders SET status=%s, updated_at=NOW() WHERE id=%s",
+                (OrderStatus.FINISHED.value, order_id)
+            )
+            cursor.close()
+
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE production_orders SET status=%s WHERE order_id=%s",
+                (ProductionStatus.COMPLETED.value, order_id)
+            )
+            cursor.close()
+
+            conn.commit()
+            log_status_change("orders", order_id, OrderStatus.QC.value, OrderStatus.FINISHED.value, remark="终检合格确认完成")
+        finally:
+            conn.close()
+
+    @staticmethod
+    def update(record_id: int, data: dict):
+        """
+        更新质检记录。
+        """
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            fields = []
+            params = []
+            for key in ["result", "defect_description", "defect_qty", "handling_method", "inspector", "remark", "inspection_items", "attachment_path"]:
+                if key in data:
+                    fields.append(f"{key}=%s")
+                    params.append(data[key])
+            if not fields:
+                return
+            params.append(record_id)
+            sql = f"UPDATE quality_records SET {', '.join(fields)} WHERE id=%s"
+            cursor.execute(sql, params)
+            conn.commit()
+            cursor.close()
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_by_order(order_id: int) -> list:
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT * FROM quality_records WHERE order_id=%s ORDER BY record_date DESC",
+                (order_id,)
+            )
+            rows = cursor.fetchall()
+            cursor.close()
+        finally:
+            conn.close()
+        return [dict(r) for r in rows]
+
+    @staticmethod
+    def get_all(filters: dict = None, limit: int = 200, days_limit: int = 60) -> list:
+        conn = get_connection()
+        sql = """
+            SELECT qr.*, o.order_no AS orders_order_no, o.customer_name, o.product_type,
+                   GROUP_CONCAT(DISTINCT po.order_no SEPARATOR ', ') AS production_order_no
+            FROM quality_records qr
+            LEFT JOIN orders o ON qr.order_id = o.id
+            LEFT JOIN production_orders po ON qr.order_id = po.order_id
+            WHERE 1=1
+        """
+        params = []
+        if filters:
+            if filters.get("inspection_type") and filters["inspection_type"] != "全部":
+                sql += " AND qr.inspection_type=%s"
+                params.append(filters["inspection_type"])
+            if filters.get("result") and filters["result"] != "全部":
+                sql += " AND qr.result=%s"
+                params.append(filters["result"])
+            if filters.get("keyword"):
+                kw = f"%{filters['keyword']}%"
+                sql += " AND (po.order_no LIKE %s OR o.customer_name LIKE %s)"
+                params.extend([kw, kw])
+        if days_limit:
+            sql += " AND qr.record_date >= DATE_SUB(CURDATE(), INTERVAL %s DAY)"
+            params.append(days_limit)
+        sql += " GROUP BY qr.id ORDER BY qr.record_date DESC LIMIT %s"
+        params.append(limit)
+        try:
+            cursor = conn.cursor()
+            cursor.execute(sql, params)
+            rows = cursor.fetchall()
+            cursor.close()
+        finally:
+            conn.close()
+        return [dict(r) for r in rows]
+
+    @staticmethod
+    def get_stats() -> dict:
+        """
+        统计质检数据（优化：4次查询→1次查询）。
+        三种结果：合格 / 不合格 / 待复检，分别统计，不混为一谈。
+        合格率 = 合格 / 总计（待复检不计入不合格）。
+        """
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT
+                    COUNT(*) as total,
+                    SUM(CASE WHEN result='合格' THEN 1 ELSE 0 END) as passed,
+                    SUM(CASE WHEN result='不合格' THEN 1 ELSE 0 END) as failed,
+                    SUM(CASE WHEN result='待复检' THEN 1 ELSE 0 END) as pending
+                FROM quality_records
+            """)
+            row = cursor.fetchone()
+            cursor.close()
+            total = row['total'] if row else 0
+            passed = row['passed'] if row else 0
+            failed = row['failed'] if row else 0
+            pending = row['pending'] if row else 0
+            return {
+                "total": total,
+                "passed": passed,
+                "failed": failed,
+                "pending": pending,
+                "pass_rate": f"{passed / total * 100:.1f}%" if total > 0 else "0%"
+            }
+        finally:
+            conn.close()
+
+    @staticmethod
+    def delete(record_id: int):
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM quality_records WHERE id=%s", (record_id,))
+            conn.commit()
+            cursor.close()
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_order_processes(order_id: int) -> list:
+        """获取订单的所有工序记录"""
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT pr.*
+                FROM process_records pr
+                WHERE pr.order_id = %s
+                ORDER BY pr.process_seq
+            """, (order_id,))
+            rows = cursor.fetchall()
+            cursor.close()
+        finally:
+            conn.close()
+        return [dict(r) for r in rows]
+
+    @staticmethod
+    def get_production_by_order(order_id: int):
+        """获取订单对应的生产工单"""
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id
+                FROM production_orders
+                WHERE order_id = %s
+                LIMIT 1
+            """, (order_id,))
+            row = cursor.fetchone()
+            cursor.close()
+        finally:
+            conn.close()
+        return dict(row) if row else None
+
+    @staticmethod
+    def get_work_no_map(order_ids: list) -> dict:
+        if not order_ids:
+            return {}
+        placeholders = ",".join(["%s"] * len(order_ids))
+        sql = f"SELECT order_id, GROUP_CONCAT(DISTINCT order_no SEPARATOR ', ') as wn FROM production_orders WHERE order_id IN ({placeholders}) GROUP BY order_id"
+        with get_connection_context() as conn:
+            cursor = conn.cursor()
+            cursor.execute(sql, order_ids)
+            rows = cursor.fetchall()
+        return {row["order_id"]: row["wn"] for row in rows}
+
+    @staticmethod
+    def get_by_id(record_id):
+        """获取单条质检记录"""
+        with get_connection_context() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM quality_records WHERE id=%s", (record_id,))
+            return cursor.fetchone()
+
+    @staticmethod
+    def get_record_items(record_id):
+        """获取质检记录的检查项明细"""
+        with get_connection_context() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT * FROM quality_record_items WHERE record_id=%s ORDER BY id",
+                (record_id,))
+            return cursor.fetchall()
+
+    @staticmethod
+    def create_full(order_no, inspection_type, process_name, inspector, items,
+                    overall_result='', defect_description='', defect_qty=0,
+                    handling_method='', status='quality_reported'):
+        """事务创建质检记录 + 明细"""
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute(
+                """INSERT INTO quality_records
+                   (order_no, inspection_type, process_name, inspector, result,
+                    defect_description, defect_qty, handling_method, status, record_date)
+                   VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,NOW())""",
+                (order_no, inspection_type, process_name, inspector, overall_result,
+                 defect_description, defect_qty, handling_method, status))
+            record_id = cursor.lastrowid
+            if items:
+                for it in items:
+                    cursor.execute(
+                        """INSERT INTO quality_record_items
+                           (record_id, inspection_item, measured_value, standard_value,
+                            tolerance, is_passed)
+                           VALUES (%s,%s,%s,%s,%s,%s)""",
+                        (record_id, it.get('inspection_item', ''),
+                         str(it.get('measured_value', '')),
+                         str(it.get('standard_value', '')),
+                         str(it.get('tolerance', '')),
+                         1 if it.get('is_passed') else 0))
+            conn.commit()
+            return record_id
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_timeline(order_no):
+        """获取订单的质检时间线"""
+        with get_connection_context() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """SELECT id, order_no, inspection_type, process_name, result, status,
+                   inspector, record_date
+                   FROM quality_records WHERE order_no=%s
+                   ORDER BY record_date DESC""",
+                (order_no,))
+            return cursor.fetchall()

@@ -1,0 +1,420 @@
+﻿扫描测试文件总数: 364
+
+======================================================================
+一、死测试文件 (无任何 def test_*)
+======================================================================
+死测试文件: 49 个
+  ⚠️ mobile_api_ai\tests\__init__.py
+  ⚠️ mobile_api_ai\tests\fixtures\_test_cc.py
+  ⚠️ mobile_api_ai\tests\fixtures\clock_sync.py
+  ⚠️ mobile_api_ai\tests\fixtures\mock_api_data.py
+  ⚠️ mobile_api_ai\tests\fixtures\mock_storage_data.py
+  ⚠️ mobile_api_ai\tests\pre_release\__init__.py
+  ⚠️ mobile_api_ai\tests\run_all_tests.py
+  ⚠️ mobile_api_ai\tests\unit\_syspath_runner.py
+  ⚠️ mobile_api_ai\tests\unit\e2e_get_packages_process_report.py
+  ⚠️ mobile_api_ai\tests\unit\http_client.py
+  ⚠️ scripts\migrations\test_process_code_gen.py
+  ⚠️ scripts\migrations\test_sort_key.py
+  ⚠️ scripts\test_5003.py
+  ⚠️ scripts\test_finished_goods.py
+  ⚠️ scripts\test_functional_xiaoh.py
+  ⚠️ scripts\test_login.py
+  ⚠️ scripts\test_metrics_integration.py
+  ⚠️ scripts\test_order_detail.py
+  ⚠️ scripts\test_orders_list.py
+  ⚠️ scripts\test_process_api.py
+  ⚠️ scripts\test_process_detail.py
+  ⚠️ scripts\test_production_list.py
+  ⚠️ scripts\test_schedule_list.py
+  ⚠️ scripts\test_shipment_api.py
+  ⚠️ scripts\test_shipment_full.py
+  ⚠️ scripts\tools\test_fresh_publish.py
+  ⚠️ scripts\tools\test_process_api.py
+  ⚠️ scripts\tools\test_publish_direct.py
+  ⚠️ scripts\tools\test_publish_flow.py
+  ⚠️ scripts\tools\test_submit_report.py
+  ⚠️ tests\_analyze_imports.py
+  ⚠️ tests\append_quality_rule_tests.py
+  ⚠️ tests\conftest.py
+  ⚠️ tests\conftest_category_hook.py
+  ⚠️ tests\e2e\__init__.py
+  ⚠️ tests\e2e\conftest.py
+  ⚠️ tests\generate_report.py
+  ⚠️ tests\modular\__init__.py
+  ⚠️ tests\run_tests_by_case_type.py
+  ⚠️ tests\run_tests_by_module.py
+  ⚠️ tests\test_re002_message_trigger.py
+  ⚠️ tests\unit\__init__.py
+  ⚠️ tests\unit\conftest.py
+  ⚠️ tests\unit\core\__init__.py
+  ⚠️ tests\unit\models\__init__.py
+  ⚠️ tests\unit\models\_run_native_coverage.py
+  ⚠️ tests\unit\models\_run_operator_full_cov.py
+  ⚠️ tests\unit\utils\conftest.py
+  ⚠️ tests\write_all_test_classes.py
+
+======================================================================
+二、pytest 实际收集路径分析
+======================================================================
+
+[pytest.ini]
+# -*- coding: utf-8 -*-
+# pytest 配置文件
+#
+# 项目: 不锈钢网带跟单3.0
+# 创建: 2026-06-15
+#
+
+[pytest]
+# 测试目录
+testpaths = tests/unit
+
+# 测试文件匹配模式
+python_files = test_*.py
+python_classes = Test*
+python_functions = test_*
+
+# 默认选项
+addopts =
+    -v
+    --tb=short
+    --strict-markers
+    --disable-warnings
+    -p no:cacheprovider
+
+# 标记定义
+markers =
+    unit: 单元测试
+    integration: 集成测试（需要真实数据库）
+    e2e: 端到端测试
+    slow: 慢速测试
+    skip: 跳过的测试
+    parametrize: 参数化测试
+
+# 最小Python版本
+minversion = 3.10
+
+# 控制台输出编码
+console_output_style = progress
+
+# 日志配置
+log_cli = false
+log_cli_level = INFO
+log_cli_format = %(asctime)s [%(levelname)s] %(message)s
+log_cli_date_format = %Y-%m-%d %H:%M:%S
+
+# 覆盖范围配置（如果安装了pytest-cov）
+# addopts = --cov=. --cov-report=html --cov-report=term
+
+# 跳过特定目录
+norecursedirs = .git .tox dist build *.egg .workbuddy docs reports
+
+# 跳过的测试文件（模块依赖问题）
+skip_files =
+    test_event_bus_factory.py
+
+
+[pyproject.toml 摘要]
+  [tool.pytest.ini_options]
+  minversion = "7.0"
+  testpaths = ["tests"]
+  python_files = ["test_*.py"]
+  pythonpath = ["."]
+  addopts = ["-v", "--tb=short", "--strict-markers", "--ignore=tests/e2e", "--ignore=tests/integration", "--cov=core", "--cov=models", "--cov=services", "--cov=utils", "--cov-report=term-missing", "--cov-report=html:coverage_html", "--cov-report=xml:coverage.xml", "--cov-fail-under=48"]
+  
+
+======================================================================
+三、测试漏洞: 空测试 / 弱断言 / 仅 assert True
+======================================================================
+空测试(只有 pass/字符串): 0 个
+
+弱断言(只有 assert True): 4 个
+  ⚠️  [assert True] tests\integration\test_schedule_publish.py :: test_dead_letter_stays_on_failure()
+  ⚠️  [assert True] tests\unit\core\test_core_modules.py :: test_reset_clears_handlers()
+  ⚠️  [assert True] tests\unit\models\test_quality_dao_complete.py :: test_delete_quality_record()
+  ⚠️  [assert True] tests\unit\services\test_push_to_50.py :: test_get_order_detail_not_found()
+
+无任何 assert 的测试函数: 518 个
+  ⚠️  [no-assert] tests\e2e\test_01_auth.py :: test_99_auth_summary()
+  ⚠️  [no-assert] tests\e2e\test_02_order.py :: test_99_order_summary()
+  ⚠️  [no-assert] tests\e2e\test_03_process.py :: test_99_process_summary()
+  ⚠️  [no-assert] tests\e2e\test_04_schedule.py :: test_99_schedule_summary()
+  ⚠️  [no-assert] tests\e2e\test_05_workreport.py :: test_01_worker_login_mobile()
+  ⚠️  [no-assert] tests\e2e\test_05_workreport.py :: test_99_workreport_summary()
+  ⚠️  [no-assert] tests\e2e\test_06_quality.py :: test_99_quality_summary()
+  ⚠️  [no-assert] tests\e2e\test_07_shipment.py :: test_99_shipment_summary()
+  ⚠️  [no-assert] tests\e2e\test_08_cost.py :: test_99_cost_summary()
+  ⚠️  [no-assert] tests\e2e\test_09_sync.py :: test_99_sync_summary()
+  ⚠️  [no-assert] tests\e2e\test_10_concurrent.py :: test_99_concurrent_summary()
+  ⚠️  [no-assert] tests\e2e\test_11_metrics.py :: test_99_metrics_summary()
+  ⚠️  [no-assert] tests\integration\test_schedule_publish.py :: test_mixed_datetime_string_sort()
+  ⚠️  [no-assert] tests\integration\test_schedule_publish.py :: test_ensure_conn_recovers()
+  ⚠️  [no-assert] tests\modular\test_auto_publish.py :: test_handle_production_confirmed_with_disabled()
+  ⚠️  [no-assert] tests\modular\test_auto_publish.py :: test_handle_production_confirmed_with_missing_data()
+  ⚠️  [no-assert] tests\modular\test_modular_config.py :: test_load_from_temp_config()
+  ⚠️  [no-assert] tests\modular\test_publish_mode_manager.py :: test_set_mode_invalid()
+  ⚠️  [no-assert] tests\test_business_correctness.py :: test_5002_rate_limit_actually_blocks()
+  ⚠️  [no-assert] tests\test_smoke_basic.py :: test_5008_imports()
+  ...还有 498 个
+
+======================================================================
+四、重复测试函数名 (跨文件同名)
+======================================================================
+重复测试函数名数: 281
+
+  test_get_all 出现在 11 个文件:
+    tests\unit\core\test_constants_and_enums.py
+    tests\unit\models\test_dao_methods.py
+    tests\unit\models\test_dao_methods.py
+    tests\unit\models\test_dao_methods.py
+    tests\unit\models\test_dao_methods.py
+    tests\unit\models\test_dao_methods.py
+    tests\unit\models\test_dao_more.py
+    tests\unit\models\test_material_rules.py
+    tests\unit\models\test_material_rules_complete.py
+    tests\unit\models\test_unit.py
+    mobile_api_ai\tests\unit\test_dao.py
+
+  test_create 出现在 11 个文件:
+    tests\unit\models\test_dao_methods.py
+    tests\unit\models\test_dao_more.py
+    tests\unit\models\test_dao_more.py
+    tests\unit\models\test_dao_more.py
+    tests\unit\models\test_dao_more.py
+    tests\unit\models\test_dao_more.py
+    tests\unit\models\test_dao_more.py
+    tests\unit\models\test_final_sprint.py
+    tests\unit\models\test_material_rules_complete.py
+    tests\unit\models\test_operation_log_quick.py
+    mobile_api_ai\tests\unit\test_dao.py
+
+  test_init 出现在 10 个文件:
+    tests\unit\core\test_db.py
+    tests\unit\core\test_error_codes_structured_complete.py
+    tests\unit\models\test_base_dao.py
+    tests\unit\services\test_inventory_sync_complete.py
+    tests\unit\utils\test_json_store.py
+    mobile_api_ai\tests\unit\test_cost_service.py
+    mobile_api_ai\tests\unit\test_dispatcher.py
+    mobile_api_ai\tests\unit\test_dispatcher.py
+    mobile_api_ai\tests\unit\test_scheduler.py
+    mobile_api_ai\tests\unit\test_stats_engine.py
+
+  test_get_by_id_not_found 出现在 10 个文件:
+    tests\unit\models\test_base_dao.py
+    tests\unit\models\test_material_rules.py
+    tests\unit\models\test_material_rules_complete.py
+    tests\unit\models\test_operator_complete.py
+    tests\unit\models\test_order_dao_complete.py
+    tests\unit\models\test_process_dao_complete.py
+    tests\unit\models\test_quality_depth.py
+    tests\unit\models\test_shipment_dao_complete.py
+    mobile_api_ai\tests\unit\test_dao.py
+    mobile_api_ai\tests\unit\test_dao.py
+
+  test_module_can_be_imported 出现在 9 个文件:
+    tests\unit\services\test_inventory_notifier_complete.py
+    tests\unit\utils\test_backup_manager_complete.py
+    tests\unit\utils\test_copyable_widgets_complete.py
+    tests\unit\utils\test_custom_types_complete.py
+    tests\unit\utils\test_dao_patches_complete.py
+    tests\unit\utils\test_data_type_contract_complete.py
+    tests\unit\utils\test_expected_zh_complete.py
+    tests\unit\utils\test_log_scheduler_complete.py
+    tests\unit\utils\test_order_templates_complete.py
+
+  test_get_by_id 出现在 8 个文件:
+    tests\unit\models\test_dao_methods.py
+    tests\unit\models\test_dao_methods.py
+    tests\unit\models\test_dao_methods.py
+    tests\unit\models\test_dao_methods.py
+    tests\unit\models\test_dao_methods.py
+    tests\unit\models\test_material_rules_complete.py
+    tests\unit\models\test_process_dao_complete.py
+    mobile_api_ai\tests\unit\test_dao.py
+
+  test_update_success 出现在 7 个文件:
+    tests\unit\models\test_base_dao.py
+    tests\unit\models\test_inventory_depth.py
+    tests\unit\models\test_material_rules.py
+    tests\unit\models\test_process_calc_rule.py
+    tests\unit\models\test_quality_rule.py
+    tests\unit\services\test_wechat_report_service.py
+    mobile_api_ai\tests\unit\test_dao.py
+
+  test_get_by_id_returns_dict 出现在 7 个文件:
+    tests\unit\models\test_bom.py
+    tests\unit\models\test_operator.py
+    tests\unit\models\test_process.py
+    tests\unit\models\test_production.py
+    tests\unit\models\test_quality.py
+    tests\unit\models\test_quality_rule.py
+    tests\unit\models\test_shipment.py
+
+  test_get_by_id_missing_returns_none 出现在 7 个文件:
+    tests\unit\models\test_operator.py
+    tests\unit\models\test_order_dao.py
+    tests\unit\models\test_process.py
+    tests\unit\models\test_production.py
+    tests\unit\models\test_quality.py
+    tests\unit\models\test_quality_rule.py
+    tests\unit\models\test_shipment.py
+
+  test_normal 出现在 7 个文件:
+    tests\unit\models\test_order_crud_gaps.py
+    tests\unit\models\test_order_crud_gaps.py
+    tests\unit\models\test_order_crud_gaps.py
+    tests\unit\models\test_order_gaps.py
+    tests\unit\models\test_order_gaps.py
+    tests\unit\models\test_order_gaps.py
+    tests\unit\utils\test_helpers_logistics.py
+
+  test_empty 出现在 7 个文件:
+    tests\unit\models\test_order_gaps.py
+    tests\unit\models\test_order_gaps.py
+    tests\unit\utils\test_helpers_logistics.py
+    tests\unit\utils\test_helpers_logistics.py
+    tests\unit\utils\test_helpers_logistics.py
+    tests\unit\utils\test_helpers_logistics.py
+    tests\unit\utils\test_order_templates.py
+
+  test_module_has_functions 出现在 6 个文件:
+    tests\unit\core\test_config_modules_complete.py
+    tests\unit\core\test_db_compat_complete.py
+    tests\unit\services\test_inventory_notifier_complete.py
+    tests\unit\utils\test_backup_manager_complete.py
+    tests\unit\utils\test_order_templates_complete.py
+    tests\unit\utils\test_trace_complete.py
+
+  test_get_all_with_filters 出现在 6 个文件:
+    tests\unit\models\test_base_dao.py
+    tests\unit\models\test_bom.py
+    tests\unit\models\test_order_dao_complete.py
+    tests\unit\models\test_quality.py
+    tests\unit\models\test_quality_dao_complete.py
+    mobile_api_ai\tests\unit\test_dao.py
+
+  test_create_success 出现在 6 个文件:
+    tests\unit\models\test_base_dao.py
+    tests\unit\models\test_inventory_depth.py
+    tests\unit\models\test_material_rules.py
+    tests\unit\models\test_operation_log.py
+    mobile_api_ai\tests\integration\test_api_core.py
+    mobile_api_ai\tests\unit\test_dao.py
+
+  test_get_all_returns_list 出现在 6 个文件:
+    tests\unit\models\test_inventory.py
+    tests\unit\models\test_operator.py
+    tests\unit\models\test_operator_complete.py
+    tests\unit\models\test_order_log.py
+    tests\unit\models\test_quality.py
+    tests\unit\models\test_shipment.py
+
+  test_exception 出现在 6 个文件:
+    tests\unit\models\test_order_crud_gaps.py
+    tests\unit\models\test_order_gaps.py
+    tests\unit\models\test_order_gaps.py
+    mobile_api_ai\tests\unit\test_notifier.py
+    mobile_api_ai\tests\unit\test_notifier.py
+    mobile_api_ai\tests\unit\test_notifier.py
+
+  test_exception_closes_connection 出现在 6 个文件:
+    tests\unit\utils\test_dao_patches.py
+    tests\unit\utils\test_dao_patches.py
+    tests\unit\utils\test_dao_patches.py
+    tests\unit\utils\test_dao_patches.py
+    tests\unit\utils\test_dao_patches.py
+    tests\unit\utils\test_dao_patches.py
+
+  test_is_available 出现在 5 个文件:
+    tests\modular\test_auto_publish.py
+    tests\modular\test_desktop_container.py
+    tests\modular\test_manual_publish_service.py
+    tests\modular\test_task_recall_service.py
+    tests\unit\services\test_material_publish.py
+
+  test_get_by_id_found 出现在 5 个文件:
+    tests\unit\models\test_base_dao.py
+    tests\unit\models\test_material_rules.py
+    tests\unit\models\test_order_dao_complete.py
+    tests\unit\models\test_quality_depth.py
+    tests\unit\models\test_shipment_dao_complete.py
+
+  test_update_not_found 出现在 5 个文件:
+    tests\unit\models\test_base_dao.py
+    tests\unit\models\test_material_rules.py
+    tests\unit\models\test_unit.py
+    tests\unit\services\test_wechat_report_service.py
+    mobile_api_ai\tests\unit\test_dao.py
+
+  ...还有 261 个重复名
+
+======================================================================
+五、测试中直接连真实数据库风险 (无 @patch)
+======================================================================
+风险文件数: 8
+  ⚠️  mobile_api_ai\tests\integration\test_startup_integration.py
+  ⚠️  scripts\test_data_source_direct_0620.py
+  ⚠️  scripts\test_independent_tables_sync_0620.py
+  ⚠️  scripts\test_main_software_sync_0620.py
+  ⚠️  scripts\test_mobile_desktop_sync_0620.py
+  ⚠️  tests\test_business_correctness.py
+  ⚠️  tests\test_smoke_basic.py
+  ⚠️  tests\unit\utils\test_final_batch2.py
+
+======================================================================
+六、巨型测试文件 (>500 行)
+======================================================================
+巨型测试文件数: 24
+  📏 1344 行  mobile_api_ai\tests\integration\test_cc_aux.py
+  📏 1282 行  mobile_api_ai\tests\integration\test_cc_core.py
+  📏 1277 行  tests\unit\services\test_schedule_dispatch_service.py
+  📏 1012 行  tests\unit\services\test_wechat_report_service.py
+  📏 855 行  mobile_api_ai\tests\unit\test_dao.py
+  📏 847 行  tests\unit\models\test_order_dao.py
+  📏 831 行  scripts\test_functional_xiaoh.py
+  📏 828 行  scripts\test_consistency_xiaosheng.py
+  📏 810 行  scripts\test_security_xiaoyu.py
+  📏 752 行  tests\unit\models\test_order_crud_gaps.py
+  📏 752 行  tests\unit\models\test_order_gaps.py
+  📏 719 行  mobile_api_ai\tests\unit\test_cost_module.py
+  📏 696 行  tests\unit\utils\test_dao_patches.py
+  📏 686 行  tests\unit\test_draft_service.py
+  📏 671 行  tests\unit\utils\test_order_templates.py
+  📏 655 行  tests\unit\models\test_shipment_depth.py
+  📏 617 行  tests\unit\utils\test_material_calculator_complete.py
+  📏 609 行  scripts\test_ux_xiaoxi.py
+  📏 598 行  tests\unit\models\test_warehouse_link.py
+  📏 576 行  tests\unit\models\test_production_stats_depth.py
+
+======================================================================
+七、语法错误的测试文件 (无法被 pytest 收集)
+======================================================================
+语法错误文件数: 24
+  ❌ tests\unit\core\test_db_complete.py :: invalid non-printable character U+FEFF (<unknown>, line 1)
+  ❌ tests\unit\models\test_base_dao_complete.py :: invalid non-printable character U+FEFF (<unknown>, line 1)
+  ❌ tests\unit\models\test_inventory_complete.py :: invalid non-printable character U+FEFF (<unknown>, line 1)
+  ❌ tests\unit\models\test_inventory_dao_complete.py :: invalid non-printable character U+FEFF (<unknown>, line 1)
+  ❌ tests\unit\models\test_order_complete.py :: invalid non-printable character U+FEFF (<unknown>, line 1)
+  ❌ tests\unit\models\test_process_complete.py :: invalid non-printable character U+FEFF (<unknown>, line 1)
+  ❌ tests\unit\models\test_production_complete.py :: invalid non-printable character U+FEFF (<unknown>, line 1)
+  ❌ tests\unit\models\test_product_type_complete.py :: invalid non-printable character U+FEFF (<unknown>, line 1)
+  ❌ tests\unit\models\test_quality_complete.py :: invalid non-printable character U+FEFF (<unknown>, line 1)
+  ❌ tests\unit\models\test_shipment_complete.py :: invalid non-printable character U+FEFF (<unknown>, line 1)
+  ❌ tests\unit\services\test_audit_service_complete.py :: invalid non-printable character U+FEFF (<unknown>, line 1)
+  ❌ tests\unit\services\test_order_service_complete.py :: invalid non-printable character U+FEFF (<unknown>, line 1)
+  ❌ tests\unit\services\test_process_service_complete.py :: invalid non-printable character U+FEFF (<unknown>, line 1)
+  ❌ tests\unit\utils\test_excel_utils_complete.py :: invalid non-printable character U+FEFF (<unknown>, line 1)
+  ❌ tests\unit\utils\test_helpers_complete.py :: invalid non-printable character U+FEFF (<unknown>, line 1)
+  ❌ tests\unit\utils\test_logistics_companies_complete.py :: invalid non-printable character U+FEFF (<unknown>, line 1)
+  ❌ tests\unit\utils\test_material_calculator_complete.py :: invalid non-printable character U+FEFF (<unknown>, line 1)
+  ❌ tests\unit\utils\test_pagination_complete.py :: invalid non-printable character U+FEFF (<unknown>, line 1)
+  ❌ tests\unit\utils\test_query_cache_complete.py :: invalid non-printable character U+FEFF (<unknown>, line 1)
+  ❌ tests\unit\utils\test_settings_manager_complete.py :: invalid non-printable character U+FEFF (<unknown>, line 1)
+  ❌ tests\unit\utils\test_validators_complete.py :: invalid non-printable character U+FEFF (<unknown>, line 1)
+  ❌ mobile_api_ai\tests\fixtures\__init__.py :: invalid non-printable character U+FEFF (<unknown>, line 1)
+  ❌ mobile_api_ai\tests\integration\__init__.py :: invalid non-printable character U+FEFF (<unknown>, line 1)
+  ❌ mobile_api_ai\tests\unit\__init__.py :: invalid non-printable character U+FEFF (<unknown>, line 1)
+
+=== 漏洞扫描完成 ===

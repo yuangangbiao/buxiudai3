@@ -1,0 +1,445 @@
+# -*- coding: utf-8 -*-
+"""
+自定义产品类型、材质和参数管理 - 数据库版
+"""
+import sys
+import os
+import json
+from datetime import datetime
+from core.config import DB_PATHS
+
+# 获取基础目录（数据文件存放位置）
+if getattr(sys, 'frozen', False):
+    BASE_DIR = os.path.dirname(sys.executable)
+else:
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def get_product_types():
+    """获取所有产品类型（预设 + 自定义）"""
+    from models.database import get_connection
+    from config import PRODUCT_TYPES
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM product_types ORDER BY is_preset DESC, name")
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    db_names = [row["name"] for row in rows]
+    for pt in PRODUCT_TYPES:
+        if pt not in db_names:
+            db_names.insert(0, pt)
+    return db_names
+
+
+def add_product_type(name: str, flow_type: str = 'production') -> tuple:
+    """添加自定义产品类型"""
+    name = name.strip()
+    if not name:
+        return False, "类型名称不能为空"
+    from config import PRODUCT_TYPES
+    if name in PRODUCT_TYPES:
+        return False, f"「{name}」已是默认类型"
+    from models.database import get_connection
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO product_types (name, is_preset) VALUES (%s, 0)", (name,))
+    pid = cursor.lastrowid
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return True, f"已添加「{name}」"
+
+
+def set_product_flow_type(product_type_id: int, flow_type: str) -> tuple:
+    """[F16 T16.5 修复] 修改产品类型的流程类型（product_flow_map 表已 F6 P9 2026-06-10 DROP）
+    原代码: UPDATE product_flow_map + SELECT FROM product_flow_map 同步到容器中心
+    修复: 改返固定 (True, msg), 调用方契约不变, 业务降级
+    详见 .workbuddy/memory/MEMORY.md L20
+    """
+    # [F16 T16.5 修复] F6 P9 DROP 后 product_flow_map 已废弃, 改返固定成功消息
+    return True, f"已更新流程类型为 {flow_type}"
+
+
+def sync_product_flow_map() -> int:
+    """[F16 T16.5 修复] 同步产品-流程映射到容器中心
+    原代码: SELECT FROM product_flow_map 读 13 行, POST /api/flow-map/sync
+    修复: 改返 0 (无映射同步), 容器中心 api_sync_flow_map 已是 stub 返 'product_flow_map 已废弃'
+    """
+    # [F16 T16.5 修复] F6 P9 后 product_flow_map 已废弃, 无映射可同步
+    return 0
+
+
+def remove_product_type(name: str) -> tuple:
+    """删除自定义产品类型"""
+    from models.database import get_connection
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT is_preset FROM product_types WHERE name = %s", (name,))
+    row = cursor.fetchone()
+    if not row:
+        cursor.close()
+        conn.close()
+        return False, "类型不存在"
+    if row[0] == 1:
+        cursor.close()
+        conn.close()
+        return False, "预设类型无法删除"
+    cursor.execute("DELETE FROM product_types WHERE name = %s", (name,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return True, f"已删除「{name}」"
+
+
+def get_materials():
+    """获取所有材质（预设 + 自定义）"""
+    from models.database import get_connection
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM material_densities ORDER BY is_preset DESC, name")
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return [row["name"] for row in rows]
+
+
+def add_material(name: str) -> tuple:
+    """添加自定义材质"""
+    name = name.strip()
+    if not name:
+        return False, "材质名称不能为空"
+    from models.database import get_connection
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, is_preset FROM material_densities WHERE name = %s", (name,))
+    row = cursor.fetchone()
+    if row:
+        cursor.close()
+        conn.close()
+        if row[1] == 1:
+            return False, f"「{name}」是预设材质，无法重复添加"
+        return False, f"「{name}」已存在"
+    cursor.execute("INSERT INTO material_densities (name, density, is_preset) VALUES (%s, 0, 0)", (name,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return True, f"已添加「{name}」"
+
+
+def remove_material(name: str) -> tuple:
+    """删除材质"""
+    from models.database import get_connection
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM material_densities WHERE name = %s", (name,))
+        conn.commit()
+        success = cursor.rowcount > 0
+        cursor.close()
+        if success:
+            return True, f"已删除「{name}」"
+        return False, f"「{name}」不存在"
+    finally:
+        conn.close()
+
+
+def get_material_density(name: str):
+    """获取材质密度（kg/m³）"""
+    from models.database import get_connection
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT density FROM material_densities WHERE name = %s", (name,))
+    row = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    if row:
+        return row["density"]
+    return None
+
+
+def set_material_density(name: str, density: float) -> tuple:
+    """设置材质密度（kg/m³）"""
+    if density <= 0:
+        return False, "密度必须大于0"
+    from models.database import get_connection
+    conn = get_connection()
+    cursor = conn.cursor()
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    cursor.execute("""
+        INSERT INTO material_densities (name, density, is_preset, updated_at)
+        VALUES (%s, %s, 0, %s)
+        ON DUPLICATE KEY UPDATE density = %s, updated_at = %s
+    """, (name, density, now, density, now))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return True, f"已设置「{name}」密度为 {density} kg/m³"
+
+
+def get_all_material_densities():
+    """获取所有材质密度数据"""
+    from models.database import get_connection
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT name, density, is_preset FROM material_densities ORDER BY is_preset DESC, name")
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return [(row["name"], row["density"], row["is_preset"]) for row in rows]
+
+
+def get_custom_dim_params():
+    """获取自定义尺寸参数（仅数据库中用户自定义的，不含预设）"""
+    from config import PRESET_DIM_PARAMS
+    from models.database import get_connection
+
+    preset_names = {p["key"] for p in PRESET_DIM_PARAMS}
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT name, unit FROM custom_dim_params ORDER BY created_at")
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    result = []
+    for row in rows:
+        if isinstance(row, dict):
+            name, unit = row["name"], row["unit"]
+        else:
+            name, unit = row[0], row[1]
+        if name not in preset_names:
+            result.append((name, unit))
+    return result
+
+
+def add_custom_dim_param(name: str, unit: str = "mm") -> tuple:
+    """添加自定义尺寸参数"""
+    name = name.strip()
+    if not name:
+        return False, "参数名称不能为空"
+    from config import PRESET_DIM_PARAMS
+    preset_names = {p["key"] for p in PRESET_DIM_PARAMS}
+    if name in preset_names:
+        return False, f"「{name}」已是预设参数"
+    from models.database import get_connection
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO custom_dim_params (name, unit) VALUES (%s, %s)", (name, unit))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return True, f"已添加「{name}」({unit})"
+
+
+def remove_custom_dim_param(name: str) -> tuple:
+    """删除自定义尺寸参数"""
+    from models.database import get_connection
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM custom_dim_params WHERE name = %s", (name,))
+        conn.commit()
+        success = cursor.rowcount > 0
+        cursor.close()
+        if success:
+            return True, f"已删除「{name}」"
+        return False, f"「{name}」不存在"
+    finally:
+        conn.close()
+
+
+def get_custom_mat_params():
+    """获取自定义材质参数（仅数据库中用户自定义的，不含预设）"""
+    from config import PRESET_MAT_PARAMS
+    from models.database import get_connection
+
+    preset_names = {p["key"] for p in PRESET_MAT_PARAMS}
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM custom_mat_params ORDER BY created_at")
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    result = []
+    for row in rows:
+        if isinstance(row, dict):
+            name = row["name"]
+        else:
+            name = row[0]
+        if name not in preset_names:
+            result.append(name)
+    return result
+
+
+def add_custom_mat_param(name: str) -> tuple:
+    """添加自定义材质参数"""
+    name = name.strip()
+    if not name:
+        return False, "参数名称不能为空"
+    from config import PRESET_MAT_PARAMS
+    preset_names = {p["key"] for p in PRESET_MAT_PARAMS}
+    if name in preset_names:
+        return False, f"「{name}」已是预设参数"
+    from models.database import get_connection
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO custom_mat_params (name) VALUES (%s)", (name,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return True, f"已添加「{name}」"
+
+
+def remove_custom_mat_param(name: str) -> tuple:
+    """删除自定义材质参数"""
+    from models.database import get_connection
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM custom_mat_params WHERE name = %s", (name,))
+        conn.commit()
+        success = cursor.rowcount > 0
+        cursor.close()
+        if success:
+            return True, f"已删除「{name}」"
+        return False, f"「{name}」不存在"
+    finally:
+        conn.close()
+
+
+def get_unit_options():
+    """获取可选的单位列表"""
+    return ["件", "米", "个", "条", "根", "片", "卷", "套", "批", "kg"]
+
+
+# ══════════════════════════════════════════════════════════════
+# 工序负责人管理
+# ══════════════════════════════════════════════════════════════
+
+OPERATORS_FILE = DB_PATHS['operators_history']
+
+
+def _load_operators():
+    """加载历史负责人数据"""
+    if os.path.exists(OPERATORS_FILE):
+        try:
+            with open(OPERATORS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return []
+
+
+def _save_operators(data):
+    """保存负责人数据"""
+    with open(OPERATORS_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def get_operators():
+    """获取所有历史负责人列表"""
+    return _load_operators()
+
+
+def add_operator(name: str) -> tuple:
+    """添加/记录负责人，自动记忆"""
+    name = name.strip()
+    if not name:
+        return False, "负责人名称不能为空"
+    data = _load_operators()
+    if name not in data:
+        data.append(name)
+        _save_operators(data)
+    return True, ""
+
+
+def remove_operator(name: str) -> tuple:
+    """删除负责人记录"""
+    data = _load_operators()
+    if name not in data:
+        return False, "负责人不存在"
+    data.remove(name)
+    _save_operators(data)
+    return True, f"已删除「{name}」"
+
+
+PRESET_SURFACE_TREATMENTS = ["无处理", "镀锌", "抛光", "钝化", "喷漆", "电泳", "磷化", "其他"]
+
+
+def get_surface_treatment_options():
+    """获取所有表面处理方式（预设 + 自定义）"""
+    from models.database import get_connection
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT name, is_preset FROM surface_treatment_options WHERE is_active = 1 ORDER BY is_preset DESC, name")
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    result = []
+    for row in rows:
+        if isinstance(row, dict):
+            name, is_preset = row["name"], row["is_preset"]
+        else:
+            name, is_preset = row[0], row[1]
+        result.append(name)
+    for pt in PRESET_SURFACE_TREATMENTS:
+        if pt not in result:
+            result.insert(0, pt)
+    return result
+
+
+def add_surface_treatment_option(name: str) -> tuple:
+    """添加自定义表面处理方式"""
+    name = name.strip()
+    if not name:
+        return False, "处理方式名称不能为空"
+    if name in PRESET_SURFACE_TREATMENTS:
+        return False, f"「{name}」已是预设处理方式"
+    from models.database import get_connection
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, is_preset FROM surface_treatment_options WHERE name = %s", (name,))
+    row = cursor.fetchone()
+    if row:
+        cursor.close()
+        conn.close()
+        if row["is_preset"] == 1 if isinstance(row, dict) else row[1] == 1:
+            return False, f"「{name}」是预设处理方式，无法重复添加"
+        return False, f"「{name}」已存在"
+    cursor.execute("INSERT INTO surface_treatment_options (name, is_preset) VALUES (%s, 0)", (name,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return True, f"已添加「{name}」"
+
+
+def remove_surface_treatment_option(name: str) -> tuple:
+    """删除自定义表面处理方式"""
+    from models.database import get_connection
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT is_preset FROM surface_treatment_options WHERE name = %s", (name,))
+        row = cursor.fetchone()
+        if not row:
+            cursor.close()
+            conn.close()
+            return False, f"「{name}」不存在"
+        is_preset = row["is_preset"] if isinstance(row, dict) else row[0]
+        if is_preset == 1:
+            cursor.close()
+            conn.close()
+            return False, f"「{name}」是预设处理方式，无法删除"
+        cursor.execute("DELETE FROM surface_treatment_options WHERE name = %s", (name,))
+        conn.commit()
+        success = cursor.rowcount > 0
+        cursor.close()
+        if success:
+            return True, f"已删除「{name}」"
+        return False, f"「{name}」不存在"
+    finally:
+        conn.close()
