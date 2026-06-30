@@ -65,7 +65,7 @@ jobs:
             'OPERATOR_ID': '${{ github.event.inputs.operator_id || '5001' }}',
           })
           proc = subprocess.Popen(
-            ['python', 'standalone_dispatch_server.py'],
+            ['python', 'standalone_server.py'],
             env=env,
             cwd='.'
           )

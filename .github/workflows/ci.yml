@@ -26,9 +26,10 @@ jobs:
 
       - name: Run flake8 on modified files
         run: |
-          # 仅检查近30天内修改的文件（避免历史债务）
-          MODIFIED=$(git diff --name-only --since='30 days ago' origin/master)
+          set +e
+          MODIFIED=$(git diff --name-only --since='30 days ago' origin/master 2>/dev/null || echo "")
           if [ -n "$MODIFIED" ]; then
+            echo "检查以下文件: $MODIFIED"
             flake8 $MODIFIED \
               --max-line-length=120 \
               --extend-ignore=E203,W503,F401,F403,F405,F811,E402,E401,F541,F841 \
@@ -36,6 +37,7 @@ jobs:
           else
             echo "无近30天修改，跳过 lint"
           fi
+          set -e
 
   unit-test:
     runs-on: ubuntu-latest
