@@ -287,11 +287,16 @@ def _persist_process_to_db(name: str, code: str, category: str) -> None:
     import pymysql
     _logger = _log.getLogger(__name__)
     try:
-        conn = pymysql.connect(
-            host='localhost', user='root',
-            password=__import__('os').getenv('MYSQL_PASSWORD', ''),
-            database='steel_belt', charset='utf8mb4',
-            connect_timeout=5)
+        try:
+            from core._db_pools import get_steel_belt_connection
+            conn = get_steel_belt_connection(autocommit=False)
+        except Exception:
+            import os as _os
+            conn = pymysql.connect(
+                host='localhost', user='root',
+                password=_os.getenv('MYSQL_PASSWORD', ''),
+                database='steel_belt', charset='utf8mb4',
+                connect_timeout=5)
         try:
             cursor = conn.cursor()
             cursor.execute(
@@ -350,11 +355,16 @@ def _unpersist_process_from_db(name: str) -> None:
     import pymysql
     _logger = _log.getLogger(__name__)
     try:
-        conn = pymysql.connect(
-            host='localhost', user='root',
-            password=__import__('os').getenv('MYSQL_PASSWORD', ''),
-            database='steel_belt', charset='utf8mb4',
-            connect_timeout=5)
+        try:
+            from core._db_pools import get_steel_belt_connection
+            conn = get_steel_belt_connection(autocommit=False)
+        except Exception:
+            import os as _os
+            conn = pymysql.connect(
+                host='localhost', user='root',
+                password=_os.getenv('MYSQL_PASSWORD', ''),
+                database='steel_belt', charset='utf8mb4',
+                connect_timeout=5)
         try:
             cursor = conn.cursor()
             cursor.execute(
@@ -557,15 +567,20 @@ def save_display_order_to_db(mysql_conn=None) -> int:
         try:
             import pymysql
             import os as _os
-            mysql_conn = pymysql.connect(
-                host=_os.getenv('MYSQL_HOST', 'localhost'),
-                port=int(_os.getenv('MYSQL_PORT', '3306')),
-                user=_os.getenv('MYSQL_USER', 'root'),
-                password=_os.getenv('MYSQL_PASSWORD', ''),
-                database=_os.getenv('MYSQL_DATABASE', 'steel_belt'),
-                charset='utf8mb4',
-                autocommit=True
-            )
+            try:
+                from core._db_pools import get_steel_belt_connection
+                mysql_conn = get_steel_belt_connection(autocommit=True)
+            except Exception:
+                import os as _os
+                mysql_conn = pymysql.connect(
+                    host=_os.getenv('MYSQL_HOST', 'localhost'),
+                    port=int(_os.getenv('MYSQL_PORT', '3306')),
+                    user=_os.getenv('MYSQL_USER', 'root'),
+                    password=_os.getenv('MYSQL_PASSWORD', ''),
+                    database=_os.getenv('MYSQL_DATABASE', 'steel_belt'),
+                    charset='utf8mb4',
+                    autocommit=True
+                )
         except Exception:
             return 0
 
@@ -640,14 +655,19 @@ def get_display_seq_map(mysql_conn=None, force_refresh: bool = False) -> dict:
         try:
             import pymysql
             import os as _os
-            mysql_conn = pymysql.connect(
-                host=_os.getenv('MYSQL_HOST', 'localhost'),
-                port=int(_os.getenv('MYSQL_PORT', '3306')),
-                user=_os.getenv('MYSQL_USER', 'root'),
-                password=_os.getenv('MYSQL_PASSWORD', ''),
-                database=_os.getenv('MYSQL_DATABASE', 'steel_belt'),
-                charset='utf8mb4'
-            )
+            try:
+                from core._db_pools import get_steel_belt_connection
+                mysql_conn = get_steel_belt_connection(autocommit=False)
+            except Exception:
+                import os as _os
+                mysql_conn = pymysql.connect(
+                    host=_os.getenv('MYSQL_HOST', 'localhost'),
+                    port=int(_os.getenv('MYSQL_PORT', '3306')),
+                    user=_os.getenv('MYSQL_USER', 'root'),
+                    password=_os.getenv('MYSQL_PASSWORD', ''),
+                    database=_os.getenv('MYSQL_DATABASE', 'steel_belt'),
+                    charset='utf8mb4'
+                )
         except Exception:
             return {}
 
