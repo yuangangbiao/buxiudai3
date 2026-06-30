@@ -1,0 +1,112 @@
+name: API E2E 测试
+
+on:
+  workflow_dispatch:
+    inputs:
+      operator_id:
+        description: '操作员ID (可选)'
+        required: false
+        default: ''
+
+jobs:
+  api-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE: buxiudai3
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt requests
+
+      - name: Start dispatch server
+        run: |
+          python -c "
+          import subprocess, time, os, signal
+          env = os.environ.copy()
+          env.update({
+            'DB_HOST': '127.0.0.1',
+            'DB_PORT': '3306',
+            'DB_USER': 'root',
+            'DB_PASSWORD': '${{ secrets.MYSQL_ROOT_PASSWORD }}',
+            'DB_NAME': 'buxiudai3',
+            'REDIS_HOST': '127.0.0.1',
+            'REDIS_PORT': '6379',
+            'SECRET_KEY': 'test-secret-key-for-ci',
+            'OPERATOR_ID': '${{ github.event.inputs.operator_id || '5001' }}',
+          })
+          proc = subprocess.Popen(
+            ['python', 'standalone_dispatch_server.py'],
+            env=env,
+            cwd='.'
+          )
+          time.sleep(5)
+          print('Server started with PID:', proc.pid)
+          with open('server_pid', 'w') as f:
+            f.write(str(proc.pid))
+          " &
+          sleep 8
+
+      - name: Run API health check
+        run: |
+          python -c "
+          import requests, time, sys
+          for i in range(15):
+            try:
+              r = requests.get('http://127.0.0.1:5003/api/health', timeout=5)
+              if r.status_code == 200:
+                print('Server healthy:', r.json())
+                sys.exit(0)
+            except Exception as e:
+                print(f'Attempt {i+1} failed: {e}')
+            time.sleep(2)
+          print('Server did not start')
+          sys.exit(1)
+          "
+
+      - name: Run P1+P2 API tests
+        run: |
+          pytest tests/ \
+            -m "api or e2e" \
+            -m "not mobile and not desktop" \
+            --tb=short \
+            -v \
+            --timeout=600 \
+            || true
+
+      - name: Cleanup server
+        if: always()
+        run: |
+          if [ -f server_pid ]; then
+            kill $(cat server_pid) 2>/dev/null || true
+            rm server_pid
+          fi

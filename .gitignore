@@ -1,0 +1,118 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+build/
+build_*/
+dist/
+*.egg-info/
+*.egg
+MANIFEST
+
+# PyInstaller
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+pytest_cache/
+tests/reports/
+tests/.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+*.env
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# MySQL
+*.frm
+*.ibd
+*.MYD
+*.MYI
+
+# Logs
+logs/
+*.log
+
+# Build outputs
+final_inventory_build/
+temp_inventory_build/
+build_dashboard_launcher/
+build_dashboard_new/
+build_license_temp/
+build_with_license_temp/
+visualization_app/
+
+# Playwright
+playwright-report/
+test-results/
+videos/
+traces/
+
+# node
+node_modules/
+
+# Mobile API
+mobile_api_ai/tests/
+mobile_api_ai/__pycache__/
+mobile_api_ai/venv/
+mobile_api_ai/.env
+mobile_api_ai/instance/
+
+# Misc
+*.bak
+*.orig
+*.old
+*.tmp
+*.temp
+*.swp
+*.swo
+*.db
+*.sqlite
+*.sqlite3
+nul
+con
+prn
+aux

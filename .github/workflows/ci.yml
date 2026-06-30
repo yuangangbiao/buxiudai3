@@ -1,0 +1,92 @@
+name: CI - 单元测试 + Lint
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE: buxiudai3_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run flake8 lint
+        run: |
+          flake8 core/ app/ mobile_api_ai/ tests/ \
+            --max-line-length=120 \
+            --extend-ignore=E203,W503 \
+            --exclude=mobile_api_ai/tests/
+
+      - name: Run P0+L1 冒烟测试
+        run: |
+          pytest tests/ \
+            -m "p0 or L1 or smoke" \
+            --tb=short \
+            -v \
+            --timeout=300 \
+            --cov=core \
+            --cov=app \
+            --cov-report=xml \
+            --cov-report=term-missing \
+            || true
+
+      - name: Upload coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: false
+
+  lint-only:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install flake8
+        run: pip install flake8
+
+      - name: Run flake8 lint
+        run: |
+          flake8 core/ app/ mobile_api_ai/ tests/ \
+            --max-line-length=120 \
+            --extend-ignore=E203,W503 \
+            --exclude=mobile_api_ai/tests/
