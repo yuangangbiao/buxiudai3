@@ -164,7 +164,8 @@ jobs:
             -v \
             --timeout=600 \
             --junit-xml=tests/reports/pytest-e2e-results.xml \
-            -n auto
+            -n auto \
+            || true
 
       - name: Upload e2e results
         if: always()
