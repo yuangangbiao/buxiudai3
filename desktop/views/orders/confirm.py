@@ -458,19 +458,18 @@ def show_order_confirm(parent, order: dict):
 
         for m in materials:
             material_name = m["material_name"]
-            spec_value = m.get("spec_value")
-            spec_unit = m.get("spec_unit", "")
-
-            spec_text = ""
-            if spec_value:
-                spec_text = f"{spec_value}{spec_unit}"
+            spec_value = m.get("spec_value", "") or ""
+            spec_unit = m.get("spec_unit", "") or ""
+            spec_text = spec_value + spec_unit
+            qty_value = m.get("qty_value", 0) or 0
+            qty_unit = m.get("qty_unit", "") or "未配置"
 
             try:
                 cursor.execute("""
                     INSERT INTO order_materials (order_id, material_name, spec, unit,
                         required_qty, prepared_qty, status, created_at)
-                    VALUES (%s, %s, %s, %s, 0, 0, '待备料', %s)
-                """, (order["id"], material_name, spec_text, "待定", datetime.now().isoformat()))
+                    VALUES (%s, %s, %s, %s, %s, 0, '待备料', %s)
+                """, (order["id"], material_name, spec_text, qty_unit, qty_value, datetime.now().isoformat()))
                 added_count += 1
             except Exception:
                 pass

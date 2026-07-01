@@ -382,21 +382,43 @@ class BatchCalcMaterialDialog(BaseDialog):
                 if row:
                     existing_count = row["cnt"] if isinstance(row, dict) else row[0]
 
+                missing_units = []
                 for mat in results:
+                    missing = mat.get("missing_params", [])
+                    for m in missing:
+                        if "单位" in m and mat.get("material_name") not in missing_units:
+                            missing_units.append(mat.get("material_name"))
+
+                if missing_units:
+                    messagebox.showwarning(
+                        "单位未配置",
+                        f"以下物料的数量单位未配置，请先在「DIM_FIELDS」或「material_rules」中设置：\n\n" +
+                        "\n".join(f"• {name}" for name in missing_units),
+                        parent=self.window
+                    )
+                    fail_count += len(missing_units)
+                    continue
+
+                for mat in results:
+                    spec_value = mat.get("spec_value", "") or ""
+                    spec_unit = mat.get("spec_unit", "") or ""
+                    spec = spec_value + spec_unit
+                    qty_value = mat.get("qty_value", 0) or 0
+                    qty_unit = mat.get("qty_unit", "") or "未配置"
                     cursor.execute("""
                         INSERT INTO order_materials (order_id, material_name, spec, required_qty, unit, remark)
                         VALUES (%s, %s, %s, %s, %s, %s)
                     """, (
                         order_id,
                         mat.get("material_name", ""),
-                        mat.get("spec", "") or "",
-                        mat.get("required_qty", 0),
-                        mat.get("unit", "米") or "米",
+                        spec,
+                        qty_value,
+                        qty_unit,
                         mat.get("remark", "") or ""
                     ))
 
                 success_count += 1
-                total_qty += sum(m.get("required_qty", 0) for m in results)
+                total_qty += sum(m.get("qty_value", 0) for m in results)
 
                 if existing_count > 0:
                     action = "更新" if messagebox.askyesno("确认", f"工单 {order.get('order_no', '')} 已有 {existing_count} 条物料记录，是否覆盖更新？",
@@ -408,15 +430,20 @@ class BatchCalcMaterialDialog(BaseDialog):
                     else:
                         cursor.execute("DELETE FROM order_materials WHERE order_id=%s", (order_id,))
                         for mat in results:
+                            spec_value = mat.get("spec_value", "") or ""
+                            spec_unit = mat.get("spec_unit", "") or ""
+                            spec = spec_value + spec_unit
+                            qty_value = mat.get("qty_value", 0) or 0
+                            qty_unit = mat.get("qty_unit", "") or "未配置"
                             cursor.execute("""
                                 INSERT INTO order_materials (order_id, material_name, spec, required_qty, unit, remark)
                                 VALUES (%s, %s, %s, %s, %s, %s)
                             """, (
                                 order_id,
                                 mat.get("material_name", ""),
-                                mat.get("spec", "") or "",
-                                mat.get("required_qty", 0),
-                                mat.get("unit", "米") or "米",
+                                spec,
+                                qty_value,
+                                qty_unit,
                                 mat.get("remark", "") or ""
                             ))
             except Exception as e:

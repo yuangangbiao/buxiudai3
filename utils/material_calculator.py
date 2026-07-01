@@ -100,6 +100,7 @@ class MaterialCalculator:
         self.order_params = order_params
         self.product_type = order_params.get("product_type", "")
         self.materials = []
+        self.dim_fields_map = {f["key"]: f for f in DIM_FIELDS}
 
     def calculate_material_types(self) -> list:
         """计算物料种类和数量"""
@@ -122,7 +123,7 @@ class MaterialCalculator:
             spec_unit = ""
 
             qty_value = None
-            qty_unit = mat_param_field.get("unit", "米")
+            qty_unit = None
             missing_params = []
 
             if rule:
@@ -154,12 +155,24 @@ class MaterialCalculator:
                     if not formula_missing:
                         base_value = self.order_params.get(qty_field, 1)
                         qty_value = self._calculate_qty(base_value, qty_formula, spec_value)
-                        qty_unit = rule.get("qty_unit", qty_unit)
+                        if rule.get("qty_unit"):
+                            qty_unit = rule.get("qty_unit")
+                        else:
+                            dim_field = self.dim_fields_map.get(qty_field, {})
+                            qty_unit = dim_field.get("unit")
+                            if not qty_unit:
+                                missing_params.append(f"数量单位「{qty_field}」未配置单位，请在 DIM_FIELDS 或 material_rules 中设置")
                 elif qty_field:
                     base_value = self.order_params.get(qty_field, 1)
                     if base_value is not None and base_value != "":
                         qty_value = float(base_value)
-                        qty_unit = rule.get("qty_unit", qty_unit)
+                        if rule.get("qty_unit"):
+                            qty_unit = rule.get("qty_unit")
+                        else:
+                            dim_field = self.dim_fields_map.get(qty_field, {})
+                            qty_unit = dim_field.get("unit")
+                            if not qty_unit:
+                                missing_params.append(f"数量单位「{qty_field}」未配置单位，请在 DIM_FIELDS 或 material_rules 中设置")
 
             material_item = {
                 "material_name": material_name,
