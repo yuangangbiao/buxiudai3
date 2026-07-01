@@ -1,0 +1,3 @@
+-- production_orders 表数据备份 — 关联 WO- 记录 (2026-05-16 20:03:14.812503)
+
+INSERT INTO production_orders (id, work_order_no, order_id, priority, plan_start, plan_end, actual_start, actual_end, assigned_to, status, remark, created_at, updated_at, is_deleted, deleted_at, deleted_by, created_by, updated_by, version, planned_start_date, planned_end_date, actual_start_date, actual_end_date) VALUES ('28', 'WO-202605004', '20', '5', '2026-05-15 00:00:00', '2026-05-30 00:00:00', NULL, NULL, '', '待开始', '[排产回调] 已确认排产，工期15天', '2026-05-12 00:10:23', '2026-05-15 20:07:37', '0', NULL, NULL, NULL, NULL, '1', NULL, NULL, NULL, NULL);

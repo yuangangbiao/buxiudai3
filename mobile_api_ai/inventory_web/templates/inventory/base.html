@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}库存管理{% endblock %} — 宁津晨圣</title>
+<link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.bootcdn.net/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<style>
+  :root{--sidebar-w:230px;--dark:#1a1d23;--accent:#4f8ff7;--success:#22c55e;--danger:#ef4444;--warn:#f59e0b}
+  *{box-sizing:border-box}
+  body{display:flex;min-height:100vh;margin:0;font-family:"Microsoft YaHei","Segoe UI",sans-serif;background:#f0f2f5}
+  .sidebar{width:var(--sidebar-w);background:var(--dark);color:#c0c6d0;flex-shrink:0;display:flex;flex-direction:column;overflow-y:auto;font-size:0.9rem}
+  .sidebar .logo{font-size:1.05rem;font-weight:700;padding:1.2rem 1rem;border-bottom:1px solid #2a2d35;color:#fff;text-align:center}
+  .sidebar .logo span{color:var(--accent)}
+  .sidebar .nav-group{padding:0.5rem 0}
+  .sidebar .nav-group-title{font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;padding:0.5rem 1rem 0.25rem;color:#6b7280}
+  .sidebar a{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1rem;color:#9ca3af;text-decoration:none;transition:all .15s;border-left:3px solid transparent}
+  .sidebar a:hover,.sidebar a.active{background:#22252c;color:#fff;border-left-color:var(--accent)}
+  .sidebar a i{width:1.2rem;text-align:center;font-size:0.95rem}
+  .main{flex:1;display:flex;flex-direction:column;overflow-y:auto}
+  .topbar{background:#fff;padding:0.6rem 1.5rem;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;font-size:0.9rem}
+  .topbar .title{font-weight:600;color:#111827;font-size:1rem}
+  .topbar .right{display:flex;align-items:center;gap:1rem;color:#9ca3af}
+  .topbar .right .clock{font-size:0.8rem}
+  .content{padding:1.2rem 1.5rem}
+  .card{border:none;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:1rem;background:#fff}
+  .card .card-header{background:transparent;border-bottom:1px solid #f0f0f0;font-weight:600;padding:0.75rem 1rem}
+  .stat-card{text-align:center;padding:1.2rem 0.8rem}
+  .stat-card .value{font-size:1.8rem;font-weight:700;line-height:1.2}
+  .stat-card .label{color:#8b95a5;font-size:0.78rem;margin-top:0.3rem}
+  .table th{background:#f9fafb;font-weight:600;font-size:0.8rem;color:#4b5563;white-space:nowrap}
+  .table td{font-size:0.85rem;vertical-align:middle}
+  .search-bar{display:flex;gap:0.5rem;margin-bottom:0.75rem;flex-wrap:wrap}
+  .search-bar input,.search-bar select{max-width:180px}
+  .badge-d{background:var(--danger)}.badge-s{background:var(--success)}.badge-w{background:var(--warn)}
+  .btn-xs{padding:0.15rem 0.45rem;font-size:0.75rem;border-radius:4px}
+  .toast-container{position:fixed;top:1rem;right:1rem;z-index:9999}
+  .pagination{justify-content:center;--bs-pagination-active-bg:var(--accent);--bs-pagination-active-border-color:var(--accent)}
+  .progress{height:6px;border-radius:3px}
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="logo">📦 <span>库存管理系统</span> V3.0</div>
+  <div class="nav-group">
+    <div class="nav-group-title">概览</div>
+    <a href="/inventory/dashboard" id="nav-dashboard"><i class="bi bi-speedometer2"></i>首页概览</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">出入库</div>
+    <a href="/inventory/inbound" id="nav-inbound"><i class="bi bi-box-arrow-in-down"></i>入库管理</a>
+    <a href="/inventory/outbound" id="nav-outbound"><i class="bi bi-box-arrow-up"></i>出库管理</a>
+    <a href="/inventory/batch" id="nav-batch"><i class="bi bi-stack"></i>批量操作</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">台账</div>
+    <a href="/inventory/stock" id="nav-stock"><i class="bi bi-table"></i>库存台账</a>
+    <a href="/inventory/alerts" id="nav-alerts"><i class="bi bi-exclamation-triangle"></i>预警分析</a>
+    <a href="/inventory/products" id="nav-products"><i class="bi bi-tags"></i>商品管理</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">数据</div>
+    <a href="/inventory/suppliers" id="nav-suppliers"><i class="bi bi-truck"></i>供应商管理</a>
+    <a href="/inventory/categories" id="nav-categories"><i class="bi bi-folder"></i>产品分类</a>
+    <a href="/inventory/base" id="nav-base"><i class="bi bi-database"></i>基础数据</a>
+    <a href="/inventory/warehouses" id="nav-warehouses"><i class="bi bi-building"></i>仓库管理</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">业务</div>
+    <a href="/inventory/stocktake" id="nav-stocktake"><i class="bi bi-clipboard-check"></i>抽盘</a>
+    <a href="/inventory/transfer" id="nav-transfer"><i class="bi bi-arrow-left-right"></i>调拨</a>
+    <a href="/inventory/scanner" id="nav-scanner"><i class="bi bi-qr-code-scan"></i>扫码录入</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">分析</div>
+    <a href="/inventory/reports" id="nav-reports"><i class="bi bi-bar-chart"></i>统计报表</a>
+    <a href="/inventory/notifications" id="nav-notifications"><i class="bi bi-bell"></i>通知中心<span class="badge bg-danger ms-1" id="notifBadge" style="display:none">0</span></a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">系统</div>
+    <a href="/inventory/backup" id="nav-backup"><i class="bi bi-cloud-arrow-up"></i>数据备份</a>
+    <a href="/inventory/export" id="nav-export"><i class="bi bi-download"></i>导出打印</a>
+    <a href="/inventory/recycle-bin" id="nav-recycle"><i class="bi bi-trash"></i>回收站</a>
+    <a href="/inventory/settings" id="nav-settings"><i class="bi bi-sliders"></i>系统设置</a>
+  </div>
+</div>
+<div class="main">
+  <div class="topbar">
+    <span class="title">{% block page_title %}首页概览{% endblock %}</span>
+    <div class="right"><span class="clock" id="clock"></span>
+      <a href="/inventory/notifications" class="text-muted"><i class="bi bi-bell"></i></a>
+      <a href="/logout" class="text-muted small">退出</a>
+    </div>
+  </div>
+  <div class="content">{% block content %}{% endblock %}</div>
+</div>
+<div class="toast-container" id="toasts"></div>
+<meta name="csrf-token" content="{{ session.get('_csrf_token', '') }}">
+<script>
+setInterval(()=>document.getElementById('clock').innerText=new Date().toLocaleString('zh-CN'),1000);
+// 侧边栏高亮
+(function(){
+  var p=location.pathname;var nav=document.querySelector('.sidebar');
+  nav.querySelectorAll('a').forEach(function(a){
+    if(p===a.getAttribute('href')||p.startsWith(a.getAttribute('href')+'/')){a.classList.add('active')}
+  });
+})();
+// TASK-T8: 通知铃铛未读数
+async function refreshNotifBadge(){
+  try {
+    const r = await fetch('/inventory/api/notification/unread-count');
+    const d = await r.json();
+    const badge = document.getElementById('notifBadge');
+    if (badge) {
+      if (d.count > 0) { badge.textContent = d.count > 99 ? '99+' : d.count; badge.style.display = 'inline'; }
+      else { badge.style.display = 'none'; }
+    }
+  } catch(e) {}
+}
+setInterval(refreshNotifBadge, 30000);
+refreshNotifBadge();
+<script>
+setInterval(()=>document.getElementById('clock').innerText=new Date().toLocaleString('zh-CN'),1000);
+// 侧边栏高亮
+(function(){
+  var p=location.pathname;var nav=document.querySelector('.sidebar');
+  nav.querySelectorAll('a').forEach(function(a){
+    if(p===a.getAttribute('href')||p.startsWith(a.getAttribute('href')+'/')){a.classList.add('active')}
+  });
+})();
+// Toast 通知
+function toast(msg,type){type=type||'info';var bg={'success':'#22c55e','error':'#ef4444','info':'#4f8ff7','warn':'#f59e0b'};
+  var d=document.createElement('div');d.className='alert text-white py-2 px-3 mb-1';d.style.cssText='min-width:200px;background:'+(bg[type]||bg.info)+';box-shadow:0 2px 8px rgba(0,0,0,.2);border-radius:6px;animation:fadeIn .3s';
+  d.textContent=msg;document.getElementById('toasts').appendChild(d);setTimeout(function(){d.style.opacity='0';d.style.transition='opacity .3s';setTimeout(function(){d.remove()},300);},2500);
+}
+// 通用 CRUD
+async function delRow(type,id){if(!confirm('确认删除？'))return;
+  var r=await fetch('/inventory/api/'+type+'/'+id,{method:'DELETE'});var j=await r.json();
+  toast(j.ok?'已删除':'删除失败: '+j.msg,j.ok?'success':'error');if(j.ok)setTimeout(function(){location.reload()},600);}
+async function editRow(type,id,data){
+  var q=prompt('修改 (key=value, 逗号分隔)',Object.entries(data).map(function(kv){return kv[0]+'='+kv[1]}).join(','));
+  if(!q)return;var obj={};q.split(',').forEach(function(s){var kv=s.split('=');if(kv[0])obj[kv[0].trim()]=kv[1]?kv[1].trim():''});
+  var r=await fetch('/inventory/api/'+type+'/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(obj)});
+  var j=await r.json();toast(j.ok?'已修改':'修改失败',j.ok?'success':'error');if(j.ok)setTimeout(function(){location.reload()},600);}
+</script>
+<script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

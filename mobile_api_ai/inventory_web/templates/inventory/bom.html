@@ -1,0 +1,14 @@
+{% extends "inventory/base.html" %}
+{% block title %}物料清单{% endblock %}
+{% block page_title %}📐 物料清单 (BOM){% endblock %}
+{% block content %}
+<div class="card p-3">
+  <p class="text-muted">选择产品查看物料清单（BOM 功能由桌面端 material_prep_view 迁移，Web 版后续完善）</p>
+  <select class="form-select" style="max-width:300px" onchange="if(this.value)location='?pid='+this.value">
+    <option value="">选择产品...</option>
+    {% for p in products %}<option value="{{ p.id }}">{{ p.name }} {% if p.spec %}({{ p.spec }}){% endif %}</option>{% endfor %}
+  </select>
+  <hr>
+  <p class="text-muted">此功能等价于桌面端备料单（material_prep_view），后续实现原材料分解、用量计算、备料清单生成。</p>
+</div>
+{% endblock %}

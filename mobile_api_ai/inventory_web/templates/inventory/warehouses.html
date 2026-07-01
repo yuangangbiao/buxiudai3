@@ -1,0 +1,104 @@
+{% extends "inventory/base.html" %}
+{% block title %}仓库管理{% endblock %}
+{% block page_title %}🏭 仓库管理{% endblock %}
+{% block content %}
+<div class="card p-3">
+  <h6>新增仓库</h6>
+  <form class="row g-2" onsubmit="addWh(event)">
+    <div class="col-2"><input class="form-control form-control-sm" id="wCode" placeholder="编码" required></div>
+    <div class="col-3"><input class="form-control form-control-sm" id="wName" placeholder="名称" required></div>
+    <div class="col-4"><input class="form-control form-control-sm" id="wAddress" placeholder="地址"></div>
+    <div class="col-2"><input class="form-control form-control-sm" id="wManager" placeholder="负责人"></div>
+    <div class="col-1"><button class="btn btn-sm btn-primary w-100">添加</button></div>
+  </form>
+</div>
+<div class="card p-3 mt-3">
+  <h6>仓库列表 <span class="badge bg-secondary ms-2">{{ warehouses|length }} 个</span></h6>
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead><tr>
+        <th>ID</th><th>编码</th><th>名称</th><th>地址</th><th>负责人</th>
+        <th>状态</th><th>产品数</th><th>操作</th>
+      </tr></thead>
+      <tbody>
+      {% for w in warehouses %}
+      <tr>
+        <td>{{ w.id }}</td>
+        <td>{{ w.code or '-' }}</td>
+        <td><strong>{{ w.name }}</strong></td>
+        <td>{{ w.address or '-' }}</td>
+        <td>{{ w.manager or '-' }}</td>
+        <td>
+          {% if w.is_active %}<span class="badge bg-success">启用</span>
+          {% else %}<span class="badge bg-secondary">停用</span>{% endif %}
+        </td>
+        <td><span class="badge bg-info">{{ w.product_count or 0 }}</span></td>
+        <td>
+          <button class="btn btn-xs btn-info me-1" onclick="editWh({{ w.id }},'{{ w.name|e }}','{{ w.address or ''|e }}','{{ w.manager or ''|e }}')">✏️</button>
+          <button class="btn btn-xs btn-warning me-1" onclick="toggleWh({{ w.id }},{{ 0 if w.is_active else 1 }})">
+            {{ '停用' if w.is_active else '启用' }}
+          </button>
+          <button class="btn btn-xs btn-danger" onclick="delWh({{ w.id }})">🗑️</button>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="8" class="text-muted text-center">暂无仓库</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+async function addWh(e){
+  e.preventDefault();
+  const data = {
+    code: document.getElementById('wCode').value,
+    name: document.getElementById('wName').value,
+    address: document.getElementById('wAddress').value,
+    manager: document.getElementById('wManager').value,
+  };
+  const r = await fetch('/inventory/warehouses/add', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(data)
+  });
+  const ret = await r.json();
+  if (ret.ok || ret.code === 0) { location.reload(); }
+  else { alert('添加失败: ' + (ret.msg || '未知错误')); }
+}
+
+function editWh(id, name, address, manager){
+  const n = prompt('修改名称', name);
+  if (!n) return;
+  const a = prompt('修改地址', address);
+  const m = prompt('修改负责人', manager);
+  fetch('/inventory/warehouses/edit/' + id, {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({name: n, address: a, manager: m})
+  }).then(r => r.json()).then(ret => {
+    if (ret.ok || ret.code === 0) location.reload();
+    else alert('修改失败: ' + (ret.msg || ''));
+  });
+}
+
+function toggleWh(id, newState){
+  if (!confirm('确认' + (newState ? '启用' : '停用') + '该仓库？')) return;
+  fetch('/inventory/warehouses/toggle/' + id, {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({is_active: newState})
+  }).then(r => r.json()).then(ret => {
+    if (ret.ok || ret.code === 0) location.reload();
+    else alert('失败: ' + (ret.msg || ''));
+  });
+}
+
+function delWh(id){
+  if (!confirm('确认删除该仓库？已有库存的仓库无法删除')) return;
+  fetch('/inventory/warehouses/delete/' + id, {method: 'POST'})
+    .then(r => r.json()).then(ret => {
+      if (ret.ok || ret.code === 0) location.reload();
+      else alert('删除失败: ' + (ret.msg || '该仓库有库存或历史记录'));
+    });
+}
+</script>
+{% endblock %}

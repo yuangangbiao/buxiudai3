@@ -1,0 +1,14 @@
+{% extends "inventory/base.html" %}{% block title %}操作日志{% endblock %}{% block page_title %}📝 操作日志{% endblock %}{% block content %}
+<div class="card p-3"><div class="table-responsive"><table class="table table-sm">
+  <thead><tr><th>ID</th><th>操作</th><th>详情</th><th>操作人</th><th>时间</th></tr></thead>
+  <tbody>{% for l in logs %}<tr>
+    <td>{{ l.id }}</td><td>{{ l.get('action','') or l.get('operation','') }}</td>
+    <td>{{ l.get('detail','') or l.get('remark','') }}</td>
+    <td>{{ l.get('operator','') }}</td>
+    <td style="font-size:0.8rem">{{ l.created_at }}</td>
+  </tr>{% endfor %}</tbody>
+</table></div>
+<nav><ul class="pagination pagination-sm">{% for p in range(1, total_pages+1) %}
+  <li class="page-item {% if p==page %}active{% endif %}"><a class="page-link" href="?page={{ p }}">{{ p }}</a></li>
+{% endfor %}</ul></nav></div>
+{% endblock %}

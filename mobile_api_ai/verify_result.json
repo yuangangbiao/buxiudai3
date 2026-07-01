@@ -1,0 +1,22 @@
+[
+  {
+    "test": "容器中心不再主动调云端",
+    "ok": true,
+    "detail": "HTTP 500 msg=部门列表为空"
+  },
+  {
+    "test": "容器中心接收推送正常",
+    "ok": true,
+    "detail": "HTTP 200 code=0"
+  },
+  {
+    "test": "调度中心直接调云端force_cloud=1",
+    "ok": true,
+    "detail": "HTTP 200 code=0 部门数=1"
+  },
+  {
+    "test": "调度中心读缓存force_cloud=0",
+    "ok": true,
+    "detail": "HTTP 200 code=0 部门数=1"
+  }
+]

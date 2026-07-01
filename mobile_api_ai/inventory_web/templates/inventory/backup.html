@@ -1,0 +1,30 @@
+{% extends "inventory/base.html" %}
+{% block title %}数据备份{% endblock %}
+{% block page_title %}💾 数据备份与恢复{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-md-6"><div class="card p-3">
+    <h6>创建备份</h6>
+    <button class="btn btn-primary btn-sm" onclick="createBackup()">立即备份 inventory_db</button>
+    <div id="backupMsg" class="mt-2 small"></div>
+  </div></div>
+  <div class="col-md-6"><div class="card p-3">
+    <h6>已有备份 ({{ backups|length }})</h6>
+    <div class="table-responsive" style="max-height:300px;overflow-y:auto">
+    <table class="table table-sm"><thead><tr><th>文件名</th><th>大小</th><th>操作</th></tr></thead>
+      <tbody>{% for b in backups %}<tr>
+        <td style="font-size:0.85rem">{{ b.name }}</td>
+        <td>{{ '%.1f'|format(b.size/1024) }} KB</td>
+        <td><button class="btn btn-xs btn-warning btn-sm" onclick="if(confirm('确认恢复？'))restoreBackup('{{ b.name }}')">恢复</button></td>
+      </tr>{% endfor %}</tbody></table></div>
+  </div></div>
+</div>
+<script>
+async function createBackup(){ document.getElementById('backupMsg').innerHTML='备份中...';
+  const r=await fetch('/inventory/backup/create',{method:'POST'}); const d=await r.json();
+  document.getElementById('backupMsg').innerHTML=d.ok? '✅ '+d.file : '❌ '+d.msg;
+  if(d.ok) setTimeout(()=>location.reload(),1000); }
+async function restoreBackup(fn){ const r=await fetch('/inventory/backup/restore/'+fn,{method:'POST'}); const d=await r.json();
+  alert(d.ok?'恢复成功':'恢复失败: '+d.msg); if(d.ok) location.reload(); }
+</script>
+{% endblock %}

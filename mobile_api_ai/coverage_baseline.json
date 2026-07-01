@@ -1,0 +1,28 @@
+{
+  "version": "v3.7.1",
+  "collected_at": "2026-06-28",
+  "pytest_threshold": 80.0,
+  "results": {
+    "unit": {
+      "totals": {
+        "line_rate": 19.76,
+        "lines_covered": 0,
+        "lines_total": 0
+      },
+      "ok": false,
+      "passed": 0,
+      "failed": 203
+    },
+    "integration": {
+      "totals": {
+        "line_rate": 18.57,
+        "lines_covered": 0,
+        "lines_total": 0
+      },
+      "ok": false,
+      "passed": 0,
+      "failed": 9
+    },
+    "e2e": null
+  }
+}

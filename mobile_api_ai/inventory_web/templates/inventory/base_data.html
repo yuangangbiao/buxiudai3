@@ -1,0 +1,47 @@
+{% extends "inventory/base.html" %}
+{% block title %}基础数据{% endblock %}
+{% block page_title %}🏗️ 基础数据 & 呆滞分析{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-md-4"><div class="card p-3"><h6>🏭 仓库</h6>
+    <table class="table table-sm"><thead><tr><th>编码</th><th>名称</th></tr></thead>
+    <tbody>{% for w in warehouses %}<tr><td>{{ w.code }}</td><td>{{ w.name }}</td></tr>{% endfor %}</tbody></table>
+    <form class="row g-1" onsubmit="addBase('warehouse',event)">
+      <div class="col-4"><input class="form-control form-control-sm" name="code" placeholder="编码"></div>
+      <div class="col-5"><input class="form-control form-control-sm" name="name" placeholder="名称"></div>
+      <div class="col-3"><button class="btn btn-sm btn-primary w-100">添加</button></div>
+    </form>
+  </div></div>
+  <div class="col-md-4"><div class="card p-3"><h6>📂 类别</h6>
+    <table class="table table-sm"><thead><tr><th>编码</th><th>名称</th></tr></thead>
+    <tbody>{% for c in categories %}<tr><td>{{ c.code }}</td><td>{{ c.name }}</td></tr>{% endfor %}</tbody></table>
+    <form class="row g-1" onsubmit="addBase('category',event)">
+      <div class="col-4"><input class="form-control form-control-sm" name="code" placeholder="编码"></div>
+      <div class="col-5"><input class="form-control form-control-sm" name="name" placeholder="名称"></div>
+      <div class="col-3"><button class="btn btn-sm btn-primary w-100">添加</button></div>
+    </form>
+  </div></div>
+  <div class="col-md-4"><div class="card p-3"><h6>🚚 供应商</h6>
+    <table class="table table-sm"><thead><tr><th>编码</th><th>名称</th><th>联系人</th></tr></thead>
+    <tbody>{% for s in suppliers %}<tr><td>{{ s.code }}</td><td>{{ s.name }}</td><td>{{ s.contact }}</td></tr>{% endfor %}</tbody></table>
+    <form class="row g-1" onsubmit="addBase('supplier',event)">
+      <div class="col-3"><input class="form-control form-control-sm" name="code" placeholder="编码"></div>
+      <div class="col-3"><input class="form-control form-control-sm" name="name" placeholder="名称"></div>
+      <div class="col-3"><input class="form-control form-control-sm" name="contact" placeholder="联系人"></div>
+      <div class="col-3"><button class="btn btn-sm btn-primary w-100">添加</button></div>
+    </form>
+  </div></div>
+</div>
+<div class="card p-3 mt-3"><h6>⚠️ 呆滞库存 (90天未变动)</h6>
+  <div class="table-responsive"><table class="table table-sm"><thead><tr><th>产品</th><th>规格</th><th>当前库存</th><th>最后变动</th><th>停滞天数</th></tr></thead>
+    <tbody>{% for s in stagnant %}<tr>
+      <td>{{ s.product_name }}</td><td>{{ s.spec }}</td><td><strong>{{ s.current_qty }}</strong></td>
+      <td>{{ s.last_trans }}</td><td class="text-danger">{{ s.days_idle }} 天</td>
+    </tr>{% endfor %}</tbody></table></div>
+</div>
+<script>
+async function addBase(type, e) { e.preventDefault(); const f = e.target; const data = {}; for(let el of f.elements) if(el.name) data[el.name]=el.value;
+  const r = await fetch('/inventory/base/'+type+'/add', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  if(r.ok) location.reload(); else alert('失败'); }
+</script>
+{% endblock %}

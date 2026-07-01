@@ -1,0 +1,89 @@
+{% extends "inventory/base.html" %}
+{% block title %}统计报表{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <h2><i class="bi bi-bar-chart"></i> 统计报表</h2>
+
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">库存趋势（最近 6 月）</div>
+        <div class="card-body"><canvas id="trendChart" height="200"></canvas></div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">出入库流量（最近 12 周）</div>
+        <div class="card-body"><canvas id="flowChart" height="200"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-3">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">Top 10 低库存</div>
+        <div class="card-body"><canvas id="lowStockChart" height="200"></canvas></div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">分类占比</div>
+        <div class="card-body"><canvas id="catDistChart" height="200"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+async function loadAll() {
+  const [trend, flow, low, cat] = await Promise.all([
+    fetch('/inventory/api/report/stock-trend?months=6').then(r => r.json()),
+    fetch('/inventory/api/report/io-flow?weeks=12').then(r => r.json()),
+    fetch('/inventory/api/report/top-low-stock?limit=10').then(r => r.json()),
+    fetch('/inventory/api/report/category-distribution').then(r => r.json())
+  ]);
+
+  new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: {
+      labels: trend.data.map(d => d.month),
+      datasets: [{label: '库存数量', data: trend.data.map(d => d.total_qty || 0), borderColor: 'rgb(75,192,192)', tension: 0.1}]
+    }
+  });
+
+  new Chart(document.getElementById('flowChart'), {
+    type: 'bar',
+    data: {
+      labels: flow.data.map(d => d.week_start),
+      datasets: [
+        {label: '入库', data: flow.data.map(d => d.inbound || 0), backgroundColor: 'rgba(75,192,192,0.6)'},
+        {label: '出库', data: flow.data.map(d => d.outbound || 0), backgroundColor: 'rgba(255,99,132,0.6)'}
+      ]
+    }
+  });
+
+  new Chart(document.getElementById('lowStockChart'), {
+    type: 'bar',
+    data: {
+      labels: low.data.map(d => `${d.code} ${d.name}`),
+      datasets: [
+        {label: '当前', data: low.data.map(d => d.current_qty), backgroundColor: 'rgba(255,99,132,0.6)'},
+        {label: '安全', data: low.data.map(d => d.safety_stock), backgroundColor: 'rgba(75,192,192,0.6)'}
+      ]
+    },
+    options: {indexAxis: 'y'}
+  });
+
+  new Chart(document.getElementById('catDistChart'), {
+    type: 'pie',
+    data: {
+      labels: cat.data.map(d => d.category_name),
+      datasets: [{data: cat.data.map(d => d.total_qty), backgroundColor: ['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF','#FF9F40']}]
+    }
+  });
+}
+loadAll();
+</script>
+{% endblock %}

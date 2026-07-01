@@ -1,0 +1,133 @@
+{% extends "inventory/base.html" %}
+{% block title %}调拨管理{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <h2><i class="bi bi-arrow-left-right"></i> 调拨管理</h2>
+
+  <!-- 创建调拨单 -->
+  <div class="card mb-3">
+    <div class="card-header">创建调拨单</div>
+    <div class="card-body">
+      <form id="transferForm">
+        <div class="row mb-2">
+          <div class="col"><label>调出仓</label><select id="fromWh" class="form-select" required></select></div>
+          <div class="col"><label>调入仓</label><select id="toWh" class="form-select" required></select></div>
+        </div>
+        <div class="mb-2"><label>备注</label><input type="text" id="remark" class="form-control"></div>
+        <table class="table table-sm">
+          <thead><tr><th>产品</th><th>数量</th><th>当前库存</th><th></th></tr></thead>
+          <tbody id="itemsBody"></tbody>
+        </table>
+        <button type="button" class="btn btn-sm btn-secondary" onclick="addItem()">添加明细</button>
+        <button type="submit" class="btn btn-primary">提交</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 调拨单列表 -->
+  <div class="card">
+    <div class="card-header">
+      调拨单列表
+      <select id="statusFilter" class="form-select form-select-sm d-inline-block w-auto ms-2" onchange="loadList()">
+        <option value="">全部</option>
+        <option value="in_transit">在途</option>
+        <option value="completed">已完成</option>
+        <option value="cancelled">已取消</option>
+      </select>
+    </div>
+    <div class="card-body">
+      <table class="table">
+        <thead><tr><th>ID</th><th>调出</th><th>调入</th><th>状态</th><th>项数</th><th>操作人</th><th>创建时间</th><th>操作</th></tr></thead>
+        <tbody id="listBody"><tr><td colspan="8" class="text-center">加载中...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+let products = [];
+async function loadData() {
+  const [whs, prs] = await Promise.all([
+    fetch('/inventory/api/warehouse/list?page_size=100').then(r => r.json()),
+    fetch('/inventory/api/product/list?page_size=200').then(r => r.json())
+  ]);
+  const opts = whs.items.filter(w => w.is_active === 1).map(w => `<option value="${w.id}">${w.name}</option>`).join('');
+  document.getElementById('fromWh').innerHTML = '<option value="">请选择</option>' + opts;
+  document.getElementById('toWh').innerHTML = '<option value="">请选择</option>' + opts;
+  products = prs.items;
+}
+
+function addItem() {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><select class="form-select form-select-sm productSel"><option value="">请选择</option>${
+      products.map(p => `<option value="${p.id}">${p.code} ${p.name}</option>`).join('')
+    }</select></td>
+    <td><input type="number" step="0.01" min="0" class="form-control form-control-sm qty"></td>
+    <td class="current">-</td>
+    <td><button type="button" class="btn btn-sm btn-danger" onclick="this.closest('tr').remove()">删</button></td>`;
+  tr.querySelector('.productSel').onchange = async (e) => {
+    const pid = e.target.value;
+    if (!pid) return;
+    const r = await fetch(`/inventory/api/stock/list?product_code=&warehouse_id=${document.getElementById('fromWh').value}`);
+    const d = await r.json();
+    const it = d.items.find(i => i.product_id == pid);
+    tr.querySelector('.current').textContent = it ? it.current_qty : '0';
+  };
+  document.getElementById('itemsBody').appendChild(tr);
+}
+
+async function loadList() {
+  const status = document.getElementById('statusFilter').value;
+  const r = await fetch(`/inventory/api/transfer/list?status=${status}&page_size=20`);
+  const d = await r.json();
+  const tb = document.getElementById('listBody');
+  if (!d.items.length) { tb.innerHTML = '<tr><td colspan="8" class="text-center">暂无</td></tr>'; return; }
+  tb.innerHTML = d.items.map(t => `
+    <tr>
+      <td>${t.id}</td><td>${t.from_name}</td><td>${t.to_name}</td>
+      <td><span class="badge bg-${t.status === 'completed' ? 'success' : t.status === 'in_transit' ? 'warning' : 'secondary'}">${t.status}</span></td>
+      <td>${t.total_items}</td><td>${t.operator}</td><td>${t.created_at}</td>
+      <td>${t.status === 'in_transit' ? `<button class="btn btn-sm btn-success" onclick="completeT(${t.id})">完成</button> <button class="btn btn-sm btn-danger" onclick="cancelT(${t.id})">取消</button>` : ''}</td>
+    </tr>`).join('');
+}
+
+async function completeT(tid) { /* 二次确认 */
+  if (!confirm('确认调拨完成？此操作不可逆')) return;
+  const r = await fetch(`/inventory/api/transfer/${tid}/complete`, {method: 'POST', headers: {'X-CSRF-Token': getCSRFToken()}});
+  const d = await r.json(); alert(JSON.stringify(d)); loadList();
+}
+async function cancelT(tid) {
+  const reason = prompt('取消原因');
+  if (!reason) return;
+  const r = await fetch(`/inventory/api/transfer/${tid}/cancel`, {
+    method: 'POST', headers: {'Content-Type': 'application/json', 'X-CSRF-Token': getCSRFToken()},
+    body: JSON.stringify({reason})});
+  const d = await r.json(); alert(JSON.stringify(d)); loadList();
+}
+
+document.getElementById('transferForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const from = parseInt(document.getElementById('fromWh').value);
+  const to = parseInt(document.getElementById('toWh').value);
+  if (from === to) { alert('调出/调入不能相同'); return; }
+  const rows = document.querySelectorAll('#itemsBody tr');
+  const items = Array.from(rows).map(tr => ({
+    product_id: parseInt(tr.querySelector('.productSel').value),
+    qty: parseFloat(tr.querySelector('.qty').value)
+  })).filter(it => it.product_id && it.qty > 0);
+  if (!items.length) { alert('请添加至少一项'); return; }
+  const r = await fetch('/inventory/api/transfer/create', {
+    method: 'POST', headers: {'Content-Type': 'application/json', 'X-CSRF-Token': getCSRFToken()},
+    body: JSON.stringify({from_warehouse_id: from, to_warehouse_id: to, items, remark: document.getElementById('remark').value})
+  });
+  const d = await r.json();
+  alert(JSON.stringify(d));
+  if (d.ok) { document.getElementById('transferForm').reset(); loadList(); }
+};
+
+function getCSRFToken() { return document.querySelector('meta[name="csrf-token"]')?.content || ''; }
+
+loadData(); loadList();
+</script>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "inventory/base.html" %}
+{% block title %}首页概览{% endblock %}
+{% block page_title %}📊 首页概览{% endblock %}
+{% block content %}
+
+<div class="row g-3">
+  <div class="col-md-2"><div class="card stat-card"><div class="value text-primary">{{ total_items }}</div><div class="label">库存总条目</div></div></div>
+  <div class="col-md-2"><div class="card stat-card"><div class="value text-danger">{{ low_items }}</div><div class="label">低库存预警</div></div></div>
+  <div class="col-md-2"><div class="card stat-card"><div class="value text-success">{{ today_in }}</div><div class="label">今日入库笔数</div></div></div>
+  <div class="col-md-2"><div class="card stat-card"><div class="value text-warning">{{ today_out }}</div><div class="label">今日出库笔数</div></div></div>
+  <div class="col-md-2"><div class="card stat-card"><div class="value text-info">{{ '%.0f'|format(month_in) }}</div><div class="label">本月入库量</div></div></div>
+  <div class="col-md-2"><div class="card stat-card"><div class="value" style="color:#fd7e14">{{ '%.0f'|format(month_out) }}</div><div class="label">本月出库量</div></div></div>
+</div>
+
+<div class="row g-3 mt-0">
+  <div class="col-md-4">
+    <div class="card p-3"><h6>🏭 各仓库库存</h6>
+      <table class="table table-sm mb-0"><thead><tr><th>仓库</th><th>库存总量</th></tr></thead>
+        <tbody>{% for w in warehouse_stats %}<tr><td>{{ w.name }}</td><td><strong>{{ '%.0f'|format(w.total_qty) }}</strong></td></tr>{% endfor %}</tbody></table>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card p-3"><h6>🔔 最近预警</h6>
+      <table class="table table-sm mb-0"><thead><tr><th>物品</th><th>类型</th><th>时间</th></tr></thead>
+        <tbody>{% for a in alerts %}<tr><td>{{ a.item_name or '' }}</td>
+          <td><span class="badge {% if a.alert_type=='low_stock' %}badge-low{% else %}badge-warn{% endif %}">{{ a.alert_type }}</span></td>
+          <td style="font-size:0.8rem">{{ a.created_at }}</td></tr>{% endfor %}</tbody></table>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card p-3"><h6>📋 最近出入库</h6>
+      <table class="table table-sm mb-0"><thead><tr><th>类型</th><th>产品</th><th>数量</th></tr></thead>
+        <tbody>{% for t in recent %}<tr>
+          <td><span class="badge {% if t.trans_type=='inbound' %}badge-normal{% else %}badge-warn{% endif %}">{{ '入库' if t.trans_type=='inbound' else '出库' }}</span></td>
+          <td>{{ t.product_name or '' }}</td><td>{{ t.qty or 0 }}</td></tr>{% endfor %}</tbody></table>
+    </div>
+  </div>
+</div>
+{% endblock %}

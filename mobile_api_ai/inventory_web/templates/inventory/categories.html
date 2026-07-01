@@ -1,0 +1,67 @@
+{% extends "inventory/base.html" %}{% block title %}产品分类{% endblock %}{% block page_title %}📂 产品分类 (按品类管理){% endblock %}{% block content %}
+<div class="card p-3">
+  <form class="row g-2 mb-2" onsubmit="addCat(event)">
+    <div class="col-3"><input class="form-control form-control-sm" id="cCode" placeholder="编码" required></div>
+    <div class="col-4"><input class="form-control form-control-sm" id="cName" placeholder="名称" required></div>
+    <div class="col-2"><button class="btn btn-sm btn-primary w-100">添加分类</button></div>
+  </form>
+</div>
+{% for cat in categories %}
+<div class="card mb-3">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><strong>{{ cat.code }}</strong> — {{ cat.name }} <span class="badge bg-secondary ms-2">{{ cat.product_count or 0 }} 个产品</span></span>
+    <span>
+      <button class="btn btn-xs btn-info me-1" onclick="editRow('category',{{ cat.id }},{code:'{{ cat.code }}',name:'{{ cat.name }}'})">✏️</button>
+      <button class="btn btn-xs btn-danger me-1" onclick="delRow('category',{{ cat.id }})">🗑️</button>
+      <button class="btn btn-xs btn-success" onclick="showAddProduct({{ cat.id }})">+ 添加产品</button>
+    </span>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-sm mb-0"><thead><tr><th>ID</th><th>名称</th><th>规格</th><th>单位</th><th>单价</th><th>操作</th></tr></thead>
+      <tbody>
+      {% for p in cat.products %}
+      <tr><td>{{ p.id }}</td><td>{{ p.name }}</td><td>{{ p.spec or '-' }}</td>
+        <td>{{ p.unit or '-' }}</td><td>¥{{ '%.2f'|format(p.price or 0) }}</td>
+        <td><button class="btn btn-xs btn-info me-1" onclick="editRow('product',{{ p.id }},{name:'{{ p.name }}',spec:'{{ p.spec or '' }}',price:{{ p.price or 0 }}})">✏️</button>
+          <button class="btn btn-xs btn-danger" onclick="delRow('product',{{ p.id }})">🗑️</button></td></tr>
+      {% else %}
+      <tr><td colspan="6" class="text-muted text-center">暂无产品</td></tr>
+      {% endfor %}
+      </tbody></table>
+  </div>
+</div>
+{% endfor %}
+
+<!-- 添加产品弹窗 -->
+<div class="modal fade" id="addProdModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+  <div class="modal-header"><h6>添加产品</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body">
+    <input type="hidden" id="addCatId">
+    <div class="mb-2"><label class="form-label">名称</label><input class="form-control form-control-sm" id="addName"></div>
+    <div class="mb-2"><label class="form-label">规格</label><input class="form-control form-control-sm" id="addSpec"></div>
+    <div class="mb-2"><label class="form-label">单位</label><input class="form-control form-control-sm" id="addUnit" value="件"></div>
+    <div class="mb-2"><label class="form-label">供应商</label><select class="form-select form-select-sm" id="addSup">{% for s in suppliers %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}</select></div>
+    <div class="mb-2"><label class="form-label">单价</label><input class="form-control form-control-sm" id="addPrice" type="number" step="0.01" value="0"></div>
+  </div>
+  <div class="modal-footer"><button class="btn btn-primary btn-sm" onclick="doAddProduct()">添加</button></div>
+</div></div></div>
+
+<script>
+async function addCat(e){e.preventDefault();
+  await fetch('/inventory/categories/add',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({code:document.getElementById('cCode').value,name:document.getElementById('cName').value})}); location.reload(); }
+
+function showAddProduct(catId){
+  document.getElementById('addCatId').value=catId;
+  new bootstrap.Modal('#addProdModal').show();
+}
+
+async function doAddProduct(){
+  var r=await fetch('/inventory/products/add',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({name:document.getElementById('addName').value, spec:document.getElementById('addSpec').value,
+      unit:document.getElementById('addUnit').value, category_id:document.getElementById('addCatId').value,
+      supplier_id:document.getElementById('addSup').value, unit_price:document.getElementById('addPrice').value})});
+  if(r.ok) location.reload(); else toast('添加失败','error');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "updated_at": "2026-05-17T18:30:00",
+  "tables": [
+    {
+      "id": "table_webhook_001",
+      "name": "跟单系统工单总表",
+      "docid": "",
+      "s3_id": "s3_AKwAWxSZABQCNlYR0OoQTQHqiQ2oD_a",
+      "url": "https://doc.weixin.qq.com/smartsheet/s3_AKwAWxSZABQCNlYR0OoQTQHqiQ2oD_a?scode=ADgA_AerABw80mX7FHAKwAWxSZABQ",
+      "sheet_id": "",
+      "sheet_name": "",
+      "fields": [
+        "分类", "工单号", "客户名称", "产品类型", "材质",
+        "状态", "创建日期", "订单数量", "单位", "订单号",
+        "当前工序", "数据来源", "工序总数", "备注"
+      ],
+      "record_count": 0,
+      "purpose": "原始 Webhook 测试表，通过 webhook URL 直接写入，无法通过正式 API 操作",
+      "created_via": "webhook",
+      "created_at": "",
+      "status": "deprecated",
+      "tags": ["测试", "webhook", "只读"]
+    },
+    {
+      "id": "table_step_test_001",
+      "name": "跟单系统工单总表",
+      "docid": "dcxxhjI_IUAsV1MCTjke_dbAQXfKbuuF_nhgUfgQLYM_NNF_X4hthJV3ajyCVx2gHZZgKN0CAKhmKO2pDr27mTIw",
+      "s3_id": "s3_AKwAWxSZABQCNVWGkcY2fTR21vkzf_a",
+      "url": "https://doc.weixin.qq.com/smartsheet/s3_AKwAWxSZABQCNVWGkcY2fTR21vkzf_a?scode=ADgA_AerABwi8hcibSAKwAWxSZABQ",
+      "sheet_id": "hng1RS",
+      "sheet_name": "工单数据",
+      "fields": [
+        "分类", "工单号", "客户名称", "产品类型", "材质",
+        "状态", "创建日期", "订单数量", "单位", "订单号",
+        "当前工序", "数据来源", "工序总数", "完成进度", "备注"
+      ],
+      "record_count": 1,
+      "purpose": "step_complete.py 验证测试表，正式API可用，作为灰度验证",
+      "created_via": "formal_api",
+      "created_at": "2026-05-17",
+      "status": "active",
+      "tags": ["测试", "正式API", "可操作"]
+    },
+    {
+      "id": "table_formal_001",
+      "name": "跟单系统工单总表",
+      "docid": "dc9BOfT3aUXTqPO8L9MRcQyOxsEKVwYBq7Ft7G8484NbbqsVnScoKnMXjYC0NzPubW6Fpx0L_dFwniZhWs5AZXQA",
+      "s3_id": "s3_AKwAWxSZABQCNQCJjqmfjQeGmQz1z_a",
+      "url": "https://doc.weixin.qq.com/smartsheet/s3_AKwAWxSZABQCNQCJjqmfjQeGmQz1z_a?scode=ADgA_AerABw80mX7FHAKwAWxSZABQ",
+      "sheet_id": "ccPZ5D",
+      "sheet_name": "工单数据",
+      "fields": [
+        "分类", "工单号", "客户名称", "产品类型", "材质",
+        "状态", "创建日期", "订单数量", "单位", "订单号",
+        "当前工序", "数据来源", "工序总数", "完成进度", "备注"
+      ],
+      "record_count": 1,
+      "purpose": "create_smartsheet_table.py 创建的最新正式表，主用表格",
+      "created_via": "formal_api",
+      "created_at": "2026-05-17",
+      "status": "active",
+      "tags": ["正式", "正式API", "可操作", "主用"]
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{% extends "inventory/base.html" %}{% block title %}供应商管理{% endblock %}{% block page_title %}🚚 供应商管理{% endblock %}{% block content %}
+<div class="card p-3">
+  <form class="row g-2 mb-2" onsubmit="addSupplier(event)">
+    <div class="col-2"><input class="form-control form-control-sm" id="sCode" placeholder="编码" required></div>
+    <div class="col-2"><input class="form-control form-control-sm" id="sName" placeholder="名称" required></div>
+    <div class="col-2"><input class="form-control form-control-sm" id="sContact" placeholder="联系人"></div>
+    <div class="col-2"><input class="form-control form-control-sm" id="sPhone" placeholder="电话"></div>
+    <div class="col-3"><input class="form-control form-control-sm" id="sAddr" placeholder="地址"></div>
+    <div class="col-1"><button class="btn btn-sm btn-primary w-100">添加</button></div>
+  </form>
+  <div class="table-responsive"><table class="table table-sm"><thead><tr><th>编码</th><th>名称</th><th>联系人</th><th>电话</th><th>地址</th><th>操作</th></tr></thead>
+    <tbody>{% for s in suppliers %}<tr><td>{{ s.code }}</td><td>{{ s.name }}</td><td>{{ s.contact }}</td><td>{{ s.phone }}</td><td>{{ s.address }}</td>
+      <td><button class="btn btn-xs btn-info btn-sm me-1" onclick="editRow('supplier',{{ s.id }},{code:'{{ s.code }}',name:'{{ s.name }}',contact:'{{ s.contact or '' }}',phone:'{{ s.phone or '' }}',address:'{{ s.address or '' }}'})">✏️</button>
+        <button class="btn btn-xs btn-danger btn-sm" onclick="delRow('supplier',{{ s.id }})">🗑️</button></td></tr>{% endfor %}</tbody></table></div>
+</div>
+<script>async function addSupplier(e){e.preventDefault();
+  const d={code:document.getElementById('sCode').value,name:document.getElementById('sName').value,
+    contact:document.getElementById('sContact').value,phone:document.getElementById('sPhone').value,
+    address:document.getElementById('sAddr').value};
+  await fetch('/inventory/suppliers/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}); location.reload(); }
+</script>
+{% endblock %}

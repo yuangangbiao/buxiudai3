@@ -1,0 +1,9 @@
+{
+  "cloud_host": "http://124.223.57.82:5006",
+  "api_key": "Wk9Q-8X7Z-3K2M-5P6L",
+  "enabled": true,
+  "enable_group_notification": true,
+  "enable_notification": true,
+  "enable_distribution": true,
+  "notification_template": ""
+}

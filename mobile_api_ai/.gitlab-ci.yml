@@ -1,0 +1,89 @@
+# ============================================================
+# GitLab CI/CD 配置
+# 备选方案（如果使用GitLab而非GitHub）
+# ============================================================
+
+stages:
+  - lint
+  - test
+  - security
+  - build
+
+variables:
+  PYTHON_VERSION: "3.11"
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  paths:
+    - .cache/pip
+    - .venv/
+
+before_script:
+  - python --version
+  - pip install --upgrade pip
+  - pip install -r ../requirements.txt
+
+# ============================================================
+# 代码质量检查
+# ============================================================
+lint:
+  stage: lint
+  script:
+    - pip install flake8 black isort
+    - flake8 . --max-line-length=120 --extend-ignore=E203,W503 --exclude=tests,__pycache__,.git,venv || true
+    - black --check --diff . --exclude='tests|__pycache__|\.git|venv' || true
+    - isort --check-only --diff . --skip=tests --skip=__pycache__ || true
+  allow_failure: true
+
+# ============================================================
+# 单元测试
+# ============================================================
+test:
+  stage: test
+  services:
+    - mysql:8.0
+  variables:
+    MYSQL_ROOT_PASSWORD: test_password
+    MYSQL_DATABASE: steel_belt_test
+  script:
+    - pip install pytest pytest-cov pytest-mock responses
+    - pytest tests/ -v --tb=short --cov=. --cov-report=coverage.xml --cov-report=html
+  coverage: '/TOTAL.*\s+(\d+%)$/'
+  artifacts:
+    when: always
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+    paths:
+      - test-results/
+      - htmlcov/
+      - .pytest_cache/
+
+# ============================================================
+# 安全扫描
+# ============================================================
+security:
+  stage: security
+  script:
+    - pip install bandit safety pip-audit
+    - bandit -r . -x tests -f json -o bandit.json || true
+    - safety check --json --output=safety.json || true
+  allow_failure: true
+  artifacts:
+    when: always
+    paths:
+      - bandit.json
+      - safety.json
+
+# ============================================================
+# 构建验证
+# ============================================================
+build:
+  stage: build
+  script:
+    - python -m py_compile app.py config.py logging_setup.py dispatch_center.py
+    - pip install pip-check
+    - pip-check || true
+  only:
+    - main

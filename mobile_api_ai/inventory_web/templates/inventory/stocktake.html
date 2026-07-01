@@ -1,0 +1,138 @@
+{% extends "inventory/base.html" %}
+{% block title %}抽盘管理{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <h2><i class="bi bi-clipboard-check"></i> 抽盘管理</h2>
+
+  <!-- 创建抽盘单 -->
+  <div class="card mb-3">
+    <div class="card-header">创建抽盘单</div>
+    <div class="card-body">
+      <form id="createForm" class="row g-3">
+        <div class="col-auto">
+          <label>仓库</label>
+          <select id="warehouse" class="form-select" required>
+            <option value="">加载中...</option>
+          </select>
+        </div>
+        <div class="col-auto">
+          <label>差异容差(%)</label>
+          <input type="number" id="tolerance" class="form-control" value="0.5" min="0" max="100" step="0.1">
+        </div>
+        <div class="col-auto">
+          <label>备注</label>
+          <input type="text" id="remark" class="form-control" placeholder="可选">
+        </div>
+        <div class="col-auto align-self-end">
+          <button type="submit" class="btn btn-primary">创建并进入录入</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 抽盘单列表 -->
+  <div class="card">
+    <div class="card-header">历史抽盘单</div>
+    <div class="card-body">
+      <table class="table">
+        <thead>
+          <tr><th>ID</th><th>仓库</th><th>状态</th><th>容差</th><th>总数</th><th>无差异</th><th>异常</th><th>创建人</th><th>创建时间</th><th>操作</th></tr>
+        </thead>
+        <tbody id="listBody"><tr><td colspan="10" class="text-center">加载中...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+async function loadWarehouses() {
+  const r = await fetch('/inventory/api/warehouse/list?page=1&page_size=100');
+  const d = await r.json();
+  const sel = document.getElementById('warehouse');
+  sel.innerHTML = '<option value="">请选择</option>' +
+    d.items.filter(w => w.is_active === 1).map(w => `<option value="${w.id}">${w.name}</option>`).join('');
+}
+
+async function loadList() {
+  const r = await fetch('/inventory/api/stocktake/list?page=1&page_size=20');
+  const d = await r.json();
+  const tb = document.getElementById('listBody');
+  if (!d.items.length) { tb.innerHTML = '<tr><td colspan="10" class="text-center">暂无</td></tr>'; return; }
+  tb.innerHTML = d.items.map(s => `
+    <tr>
+      <td>${s.id}</td>
+      <td>${s.warehouse_name}</td>
+      <td><span class="badge bg-${s.status === 'adjusted' ? 'success' : s.status === 'submitted' ? 'warning' : 'secondary'}">${s.status}</span></td>
+      <td>${s.tolerance_pct}%</td>
+      <td>${s.total_items}</td>
+      <td>${s.matched_items}</td>
+      <td>${s.diff_abnormal}</td>
+      <td>${s.operator}</td>
+      <td>${s.created_at}</td>
+      <td>${s.status === 'draft' ? `<button class="btn btn-sm btn-primary" onclick="enterStocktake(${s.id})">录入</button>` : ''}${s.status === 'submitted' ? `<button class="btn btn-sm btn-warning" onclick="adjustStocktake(${s.id})">调整</button>` : ''}</td>
+    </tr>`).join('');
+}
+
+async function enterStocktake(sid) {
+  const items = await fetch(`/inventory/api/stocktake/${sid}/items`).then(r => r.json());
+  const html = items.items.map(it => `
+    <tr>
+      <td>${it.code} ${it.name}</td>
+      <td>${it.expected_qty}</td>
+      <td><input type="number" step="0.01" class="form-control form-control-sm" data-pid="${it.product_id}" data-expected="${it.expected_qty}" value="${it.expected_qty}"></td>
+    </tr>`).join('');
+  const w = window.open('', '_blank', 'width=800,height=600');
+  w.document.write(`<h3>抽盘单 #${sid}</h3><table class="table"><thead><tr><th>产品</th><th>预期</th><th>实存</th></tr></thead><tbody>${html}</tbody></table><button onclick="submitStocktake(${sid})">提交</button>`);
+  w.submitStocktake = async (sid) => {
+    const inputs = w.document.querySelectorAll('input[data-pid]');
+    const items = Array.from(inputs).map(inp => ({
+      product_id: parseInt(inp.dataset.pid),
+      actual_qty: parseFloat(inp.value)
+    }));
+    const r = await fetch(`/inventory/api/stocktake/${sid}/submit`, {
+      method: 'POST', headers: {'Content-Type': 'application/json', 'X-CSRF-Token': getCSRFToken()},
+      body: JSON.stringify({items})
+    });
+    const d = await r.json();
+    alert(JSON.stringify(d));
+    if (d.ok) w.close();
+  };
+}
+
+async function adjustStocktake(sid) {
+  const code = prompt('请输入 ADJUST 确认调整（异常项也会一并调整）');
+  if (code !== 'ADJUST') { alert('已取消'); return; }
+  const r = await fetch(`/inventory/api/stocktake/${sid}/adjust`, {
+    method: 'POST', headers: {'Content-Type': 'application/json', 'X-CSRF-Token': getCSRFToken()},
+    body: JSON.stringify({confirm: 'ADJUST'})
+  });
+  const d = await r.json();
+  alert(JSON.stringify(d));
+  loadList();
+}
+
+document.getElementById('createForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const wid = document.getElementById('warehouse').value;
+  if (!wid) { alert('请选择仓库'); return; }
+  const r = await fetch('/inventory/api/stocktake/create', {
+    method: 'POST', headers: {'Content-Type': 'application/json', 'X-CSRF-Token': getCSRFToken()},
+    body: JSON.stringify({
+      warehouse_id: parseInt(wid),
+      tolerance_pct: parseFloat(document.getElementById('tolerance').value),
+      remark: document.getElementById('remark').value
+    })
+  });
+  const d = await r.json();
+  if (d.ok) {
+    alert(`创建成功: ID=${d.stocktake_id}, 共 ${d.total_items} 项`);
+    enterStocktake(d.stocktake_id);
+  } else alert(d.msg);
+};
+
+function getCSRFToken() { return document.querySelector('meta[name="csrf-token"]')?.content || ''; }
+
+loadWarehouses();
+loadList();
+</script>
+{% endblock %}

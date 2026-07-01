@@ -1,0 +1,115 @@
+{% extends "inventory/base.html" %}
+{% block title %}库存台账{% endblock %}
+{% block page_title %}📋 库存台账 ({{ total }} 条){% endblock %}
+{% block content %}
+
+<div class="card p-3">
+  <!-- 搜索/筛选 -->
+  <form class="search-bar" method="get">
+    <input class="form-control form-control-sm" name="q" value="{{ keyword }}" placeholder="搜索产品名称/编号/规格...">
+    <select class="form-select form-select-sm" name="category">
+      <option value="">全部类别</option>
+      {% for c in categories %}<option value="{{ c.id }}" {% if category==c.id|string %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+    </select>
+    <select class="form-select form-select-sm" name="alert">
+      <option value="">全部状态</option>
+      <option value="1" {% if alert=='1' %}selected{% endif %}>仅低库存</option>
+    </select>
+    <button class="btn btn-sm btn-primary">搜索</button>
+    <a href="#" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#stockModal" onclick="document.getElementById('stockForm').reset()">+ 新库存项</a>
+  </form>
+
+  <!-- 表格 -->
+  <div class="table-responsive">
+  <table class="table table-sm table-hover">
+    <thead><tr>
+      <th>ID</th><th>产品名称</th><th>规格</th><th>单位</th>
+      <th>当前库存</th><th>安全库存</th><th>最大库存</th>
+      <th>单价</th><th>仓库</th><th>操作</th>
+    </tr></thead>
+    <tbody>
+    {% for item in items %}
+    <tr class="{% if item.current_qty <= item.safety_stock %}table-danger{% endif %}">
+      <td>{{ item.id }}</td>
+      <td>{{ item.product_name or item.product_id }}</td>
+      <td>{{ item.spec or '' }}</td>
+      <td>{{ item.unit or '' }}</td>
+      <td><strong>{{ item.current_qty }}</strong></td>
+      <td>{{ item.safety_stock }}</td>
+      <td>{{ item.max_stock or '-' }}</td>
+      <td>¥{{ '%.2f'|format(item.unit_price or 0) }}</td>
+      <td>{{ item.warehouse_name or '' }}</td>
+      <td>
+        <button class="btn btn-xs btn-success btn-sm me-1" onclick="showStockOp({{ item.id }},'in')">入库</button>
+        <button class="btn btn-xs btn-warning btn-sm" onclick="showStockOp({{ item.id }},'out')">出库</button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+
+  <!-- 分页 -->
+  <nav>
+    <ul class="pagination pagination-sm">
+      {% for p in range(1, total_pages+1) %}
+      <li class="page-item {% if p==page %}active{% endif %}">
+        <a class="page-link" href="?q={{ keyword }}&category={{ category }}&alert={{ alert }}&page={{ p }}">{{ p }}</a>
+      </li>
+      {% endfor %}
+    </ul>
+  </nav>
+</div>
+
+<!-- 出入库弹窗 -->
+<div class="modal fade" id="stockOpModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 id="stockOpTitle">入库</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="opType">
+        <input type="hidden" id="opId">
+        <div class="mb-2"><label class="form-label">数量</label><input class="form-control" id="opQty" type="number" step="0.01" value="0"></div>
+        <div class="mb-2"><label class="form-label">关联订单号</label><input class="form-control" id="opOrderId" placeholder="可选"></div>
+        <div class="mb-2"><label class="form-label">操作人</label><input class="form-control" id="opOperator" value="admin"></div>
+        <div class="mb-2"><label class="form-label">备注</label><input class="form-control" id="opRemark"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary btn-sm" onclick="doStockOp()">确认</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showStockOp(id, type) {
+  document.getElementById('opId').value = id;
+  document.getElementById('opType').value = type;
+  document.getElementById('stockOpTitle').innerText = type==='in' ? '入库' : '出库';
+  new bootstrap.Modal('#stockOpModal').show();
+}
+async function doStockOp() {
+  const type = document.getElementById('opType').value;
+  const payload = {
+    id: parseInt(document.getElementById('opId').value),
+    qty: parseFloat(document.getElementById('opQty').value),
+    order_id: document.getElementById('opOrderId').value,
+    operator: document.getElementById('opOperator').value,
+    remark: document.getElementById('opRemark').value,
+  };
+  const r = await fetch('/inventory/stock/' + type, {
+    method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
+  });
+  if (r.ok) { location.reload(); } else { alert('操作失败'); }
+}
+async function editStock(id, curQty) {
+  const q = prompt('新的库存数量:', curQty);
+  if(q===null)return;
+  await fetch('/inventory/api/stock/adjust',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id,current_qty:q})});
+  location.reload();
+}
+</script>
+{% endblock %}

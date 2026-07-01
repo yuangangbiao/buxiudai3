@@ -1,0 +1,52 @@
+{% extends "inventory/base.html" %}{% block title %}产品管理{% endblock %}{% block page_title %}🏷️ 产品管理{% endblock %}{% block content %}
+<div class="card p-3">
+  <form class="search-bar" method="get">
+    <input class="form-control form-control-sm" name="q" value="{{ keyword }}" placeholder="搜索产品名称...">
+    <select class="form-select form-select-sm" name="category" onchange="this.form.submit()">
+      <option value="">全部类别</option>
+      {% for c in categories %}<option value="{{ c.id }}" {% if category_id==c.id|string %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+    </select>
+    <button class="btn btn-sm btn-primary">筛选</button>
+    <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#productModal">+ 新产品</button>
+  </form>
+  <div class="table-responsive">
+  <table class="table table-sm table-hover">
+    <thead><tr><th>ID</th><th>名称</th><th>规格</th><th>分类</th><th>单位</th><th>单价</th><th>仓库</th><th>操作</th></tr></thead>
+    <tbody>{% for p in products %}<tr>
+      <td>{{ p.id }}</td><td>{{ p.name }}</td><td>{{ p.spec or '' }}</td>
+      <td>{{ p.category_name or '-' }}</td>
+      <td>{{ p.unit or '' }}</td>
+      <td>¥{{ '%.2f'|format(p.price or 0) }}</td>
+      <td>{{ p.warehouse_id or '' }}</td>
+      <td><button class="btn btn-xs btn-success btn-sm me-1" onclick="alert('从库存台账操作出入库')">+库存</button>
+        <button class="btn btn-xs btn-info btn-sm me-1" onclick="editRow('product',{{ p.id }},{name:'{{ p.name }}',spec:'{{ p.spec or '' }}',price:{{ p.price or 0 }}})">✏️</button>
+        <button class="btn btn-xs btn-danger btn-sm" onclick="delRow('product',{{ p.id }})">🗑️</button></td>
+    </tr>{% endfor %}</tbody>
+  </table></div>
+</div>
+
+<div class="modal fade" id="productModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+  <div class="modal-header"><h6>添加产品</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body">
+    <div class="mb-2"><label class="form-label">名称</label><input class="form-control" id="prodName"></div>
+    <div class="mb-2"><label class="form-label">规格</label><input class="form-control" id="prodSpec"></div>
+    <div class="mb-2"><label class="form-label">单位</label><input class="form-control" id="prodUnit" value="件"></div>
+    <div class="mb-2"><label class="form-label">类别</label><select class="form-select" id="prodCat">{% for c in categories %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select></div>
+    <div class="mb-2"><label class="form-label">供应商</label><select class="form-select" id="prodSup">{% for s in suppliers %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}</select></div>
+    <div class="mb-2"><label class="form-label">单价</label><input class="form-control" id="prodPrice" type="number" step="0.01" value="0"></div>
+  </div>
+  <div class="modal-footer"><button class="btn btn-primary btn-sm" onclick="addProduct()">添加</button></div>
+</div></div></div>
+
+<script>
+async function addProduct() {
+  const r = await fetch('/inventory/products/add', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({name:document.getElementById('prodName').value, spec:document.getElementById('prodSpec').value,
+      unit:document.getElementById('prodUnit').value, category_id:document.getElementById('prodCat').value,
+      supplier_id:document.getElementById('prodSup').value, unit_price:document.getElementById('prodPrice').value})
+  });
+  if(r.ok) location.reload(); else alert('失败');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "inventory/base.html" %}
+{% block title %}批量操作{% endblock %}
+{% block page_title %}📋 批量出入库{% endblock %}
+{% block content %}
+<div class="card p-3">
+  <div class="mb-2">
+    <select class="form-select form-select-sm d-inline w-auto me-2" id="batchType"><option value="inbound">批量入库</option><option value="outbound">批量出库</option></select>
+    <button class="btn btn-sm btn-success me-1" onclick="addRow()">+ 添加行</button>
+    <button class="btn btn-sm btn-primary" onclick="doBatch()">提交</button>
+    <span id="batchMsg" class="ms-2 small"></span>
+  </div>
+  <div class="table-responsive"><table class="table table-sm" id="batchTable">
+    <thead><tr><th>产品</th><th>仓库</th><th>数量</th><th>操作人</th><th>备注</th><th></th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+</div>
+<script>
+const products = JSON.parse('{{ products | tojson | safe }}');
+const warehouses = JSON.parse('{{ warehouses | tojson | safe }}');
+function addRow(){
+  const tr = document.createElement('tr');
+  let popt='', wopt='';
+  products.forEach(p=>{popt+=`<option value="${p.id}">${p.name} ${p.spec||''}</option>`});
+  warehouses.forEach(w=>{wopt+=`<option value="${w.id}">${w.name}</option>`});
+  tr.innerHTML=`<td><select class="form-select form-select-sm prod">${popt}</select></td>
+    <td><select class="form-select form-select-sm wh">${wopt}</select></td>
+    <td><input class="form-control form-control-sm qty" type="number" step="0.01" value="0" style="width:80px"></td>
+    <td><input class="form-control form-control-sm op" value="admin" style="width:80px"></td>
+    <td><input class="form-control form-control-sm remark" style="width:150px"></td>
+    <td><button class="btn btn-xs btn-danger btn-sm" onclick="this.closest('tr').remove()">×</button></td>`;
+  document.querySelector('#batchTable tbody').appendChild(tr);
+}
+addRow();
+async function doBatch(){
+  const items=[];
+  document.querySelectorAll('#batchTable tbody tr').forEach(tr=>{
+    items.push({product_id:tr.querySelector('.prod').value,warehouse_id:tr.querySelector('.wh').value,
+      qty:tr.querySelector('.qty').value,operator:tr.querySelector('.op').value,remark:tr.querySelector('.remark').value});
+  });
+  const r=await fetch('/inventory/batch/do',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({type:document.getElementById('batchType').value,items})});
+  const d=await r.json();
+  document.getElementById('batchMsg').innerHTML=d.ok?`✅ 成功 ${d.count} 条`:'❌ '+d.msg;
+  if(d.ok)setTimeout(()=>location.reload(),800);
+}
+</script>
+{% endblock %}

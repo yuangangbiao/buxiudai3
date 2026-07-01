@@ -1,0 +1,62 @@
+{% extends "inventory/base.html" %}
+{% block title %}通知中心{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <h2><i class="bi bi-bell"></i> 通知中心
+    <button class="btn btn-sm btn-primary ms-2" onclick="markAllRead()">全部已读</button>
+    <button class="btn btn-sm btn-secondary" onclick="checkLowStock()">检查低库存</button>
+  </h2>
+
+  <ul class="nav nav-tabs" id="notifTabs">
+    <li class="nav-item"><a class="nav-link active" data-filter="" onclick="loadList(null, this)">全部</a></li>
+    <li class="nav-item"><a class="nav-link" data-filter="0" onclick="loadList(0, this)">未读</a></li>
+    <li class="nav-item"><a class="nav-link" data-filter="1" onclick="loadList(1, this)">已读</a></li>
+  </ul>
+
+  <div id="notifList" class="mt-3"><p class="text-center">加载中...</p></div>
+</div>
+
+<script>
+let currentFilter = null;
+async function loadList(filter, el) {
+  if (filter !== undefined) currentFilter = filter;
+  document.querySelectorAll('#notifTabs .nav-link').forEach(a => a.classList.remove('active'));
+  if (el) el.classList.add('active');
+  const url = currentFilter === null ? '/inventory/api/notification/list' : `/inventory/api/notification/list?is_read=${currentFilter}`;
+  const r = await fetch(url);
+  const d = await r.json();
+  const div = document.getElementById('notifList');
+  if (!d.items.length) { div.innerHTML = '<p class="text-center text-muted">暂无通知</p>'; return; }
+  div.innerHTML = d.items.map(n => `
+    <div class="card mb-2 ${n.is_read ? 'opacity-50' : 'border-primary'}">
+      <div class="card-body">
+        <h5 class="card-title">
+          <span class="badge bg-${n.type === 'low_stock' ? 'danger' : 'info'}">${n.type}</span>
+          ${n.title}
+        </h5>
+        <p class="card-text">${n.body || ''}</p>
+        <small class="text-muted">${n.created_at}</small>
+        ${n.is_read ? '' : `<button class="btn btn-sm btn-link float-end" onclick="markRead(${n.id})">标记已读</button>`}
+        ${n.link ? `<a href="${n.link}" class="btn btn-sm btn-link float-end">查看</a>` : ''}
+      </div>
+    </div>`).join('');
+}
+async function markRead(nid) {
+  await fetch(`/inventory/api/notification/${nid}/read`, {method: 'POST', headers: {'X-CSRF-Token': getCSRFToken()}});
+  loadList();
+}
+async function markAllRead() {
+  if (!confirm('确认全部已读？')) return;
+  await fetch('/inventory/api/notification/read-all', {method: 'POST', headers: {'X-CSRF-Token': getCSRFToken()}});
+  loadList();
+}
+async function checkLowStock() {
+  const r = await fetch('/inventory/api/notification/check-low-stock', {method: 'POST', headers: {'X-CSRF-Token': getCSRFToken()}});
+  const d = await r.json();
+  alert(`已创建 ${d.created} 条新通知`);
+  loadList();
+}
+function getCSRFToken() { return document.querySelector('meta[name="csrf-token"]')?.content || ''; }
+loadList();
+</script>
+{% endblock %}

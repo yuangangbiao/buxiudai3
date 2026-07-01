@@ -1,0 +1,68 @@
+# ============================================================
+# Docker 忽略文件
+# ============================================================
+
+# Git
+.git
+.gitignore
+
+# Python缓存
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# 虚拟环境
+venv/
+.venv/
+env/
+.env.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# 测试
+tests/
+test-results/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 文档
+docs/
+*.md
+!requirements*.md
+
+# 日志
+logs/
+*.log
+
+# 数据库
+*.db
+*.sqlite
+*.sqlite3
+
+# 备份
+*.bak
+backups/
+
+# Docker文件（不需要打包进镜像）
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Node.js（如果有）
+node_modules/
+
+# 其他
+.DS_Store
+Thumbs.db

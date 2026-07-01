@@ -1,0 +1,46 @@
+# Mobile API AI 核心依赖清单
+# 安装: pip install -r requirements.txt
+# 注意：本文件为项目核心依赖（缺失时核心业务 / 测试无法运行）
+
+# Web 框架
+flask>=3.0.0
+flask-cors>=4.0.0
+flask-limiter>=4.1.0,<4.2.0
+werkzeug>=3.1.0,<3.2.0
+
+# Web 服务器
+waitress>=3.0.0,<4.0.0
+
+# 数据库
+pymysql>=1.1.0
+dbutils>=3.1.0
+sqlalchemy>=2.0.0
+
+# 认证 / 加密
+pyjwt>=2.8.0
+bcrypt>=4.1.0
+cryptography>=48.0.0,<49.0.0
+
+# 工具
+python-dotenv>=1.0.0
+requests>=2.31.0
+
+# 缓存 / 消息队列
+redis>=5.0.0,<5.1.0
+
+# 定时任务
+APScheduler>=3.11.0,<3.12.0
+
+# 图像处理（人脸考勤 / 照片存储）
+Pillow>=12.2.0,<12.3.0
+
+# 进程管理（重启 / 诊断）
+psutil>=6.1.0,<7.0.0
+
+# 测试
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-mock>=3.11.0
+
+# Excel 读写（智能表格 / 报工导出共用）
+openpyxl>=3.1.5,<3.2.0

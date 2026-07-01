@@ -1,0 +1,86 @@
+# 增强模块专用依赖文件
+# 此文件包含增强模块所需的所有依赖项
+# 优先级分类：P0（必须）> P1（重要）> P2（可选）
+
+# ========================
+# P0 - 核心依赖（必须安装）
+# ========================
+
+# Redis客户端（队列管理、缓存、熔断器）
+redis>=4.5.0
+
+# Elasticsearch客户端（审计日志）
+elasticsearch>=8.0.0
+
+# 系统监控（健康检查）
+psutil>=5.9.0
+
+# API限流（性能与稳定性保障）
+flask-limiter>=3.0
+
+# ========================
+# P1 - 重要依赖（推荐安装）
+# ========================
+
+# NTP时间同步（时钟同步）
+ntplib>=0.4.0
+
+# Windows系统时间调整（时钟同步）
+pywin32>=306; sys_platform == "win32"
+
+# ========================
+# P2 - 可选依赖（按需安装）
+# ========================
+
+# 异步支持（熔断器）
+asyncio>=3.4.0
+
+# 数据序列化（队列消息）
+msgpack>=1.0.0
+
+# 高级监控（可选）
+prometheus-client>=0.17.0
+
+# ========================
+# 开发依赖
+# ========================
+
+# 测试框架
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+
+# 代码质量
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.0.0
+
+# 类型提示支持
+typing-extensions>=4.0.0
+
+# ========================
+# 系统依赖（非Python包）
+# ========================
+
+# Redis服务器（需要单独安装）
+# Ubuntu: sudo apt install redis-server
+# CentOS: sudo yum install redis
+
+# Elasticsearch（需要单独安装）
+# Ubuntu: sudo apt install elasticsearch
+# CentOS: sudo yum install elasticsearch
+
+# NTP服务（需要单独安装）
+# Ubuntu: sudo apt install ntp
+# CentOS: sudo yum install ntp
+
+# ========================
+# 依赖说明
+# ========================
+
+# Redis: 用于队列管理、缓存、熔断器状态存储
+# Elasticsearch: 用于审计日志存储和检索
+# psutil: 用于系统资源监控和健康检查
+# ntplib: 用于NTP时间同步，防止数据漂移
+# pywin32: Windows系统时间调整（仅Windows需要）
+
+# 注意：系统依赖（Redis、Elasticsearch、NTP）需要单独安装配置

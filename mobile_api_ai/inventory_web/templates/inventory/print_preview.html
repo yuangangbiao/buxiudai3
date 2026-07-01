@@ -1,0 +1,28 @@
+{% extends "inventory/base.html" %}
+{% block title %}打印预览{% endblock %}
+{% block page_title %}🖨️ {% if trans_type=='inbound' %}入库单{% else %}出库单{% endif %} 打印预览{% endblock %}
+{% block content %}
+<div class="card p-3">
+  <div class="mb-2">
+    <a href="/inventory/print/preview?type=inbound" class="btn btn-sm {% if trans_type=='inbound' %}btn-primary{% else %}btn-outline-primary{% endif %} me-1">入库单</a>
+    <a href="/inventory/print/preview?type=outbound" class="btn btn-sm {% if trans_type=='outbound' %}btn-primary{% else %}btn-outline-primary{% endif %} me-1">出库单</a>
+    <button class="btn btn-sm btn-success" onclick="window.print()">🖨️ 打印</button>
+  </div>
+  <!-- 单据 -->
+  <div id="printArea" style="max-width:800px;margin:0 auto;padding:2rem;border:2px solid #000">
+    <h3 class="text-center">宁津晨圣输送机械有限公司</h3>
+    <h5 class="text-center mb-3">{% if trans_type=='inbound' %}入库单{% else %}出库单{% endif %}</h5>
+    <table class="table table-bordered">
+      <thead><tr><th>#</th><th>产品名称</th><th>规格</th><th>单位</th><th>数量</th><th>操作人</th><th>备注</th></tr></thead>
+      <tbody>{% for t in transactions %}
+      <tr><td>{{ loop.index }}</td><td>{{ t.product_name }}</td><td>{{ t.spec or '' }}</td><td>{{ t.unit or '' }}</td>
+        <td class="{% if trans_type=='inbound' %}text-success{% else %}text-danger{% endif %}">{{ t.qty }}</td>
+        <td>{{ t.operator }}</td><td>{{ t.remark }}</td></tr>
+      {% endfor %}</tbody>
+    </table>
+    <div class="row mt-4"><div class="col-6">制单人: _________</div><div class="col-6 text-end">日期: _________</div></div>
+    <div class="row mt-3"><div class="col-6">仓管员: _________</div><div class="col-6 text-end">主管: _________</div></div>
+  </div>
+</div>
+<style>@media print{body{background:#fff}.sidebar,.navbar-top,.card{display:none!important}#printArea{border:none!important;position:absolute;top:0;left:0;width:100%}}</style>
+{% endblock %}

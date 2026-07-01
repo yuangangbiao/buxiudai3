@@ -1,0 +1,144 @@
+{% extends "inventory/base.html" %}
+{% block title %}{{ '出库管理' if mode=='outbound' else '入库管理' }}{% endblock %}
+{% block page_title %}{{ '📤 出库管理' if mode=='outbound' else '📥 入库管理' }}{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <!-- 左侧：物料搜索 + 选择 -->
+  <div class="col-md-8">
+    <div class="card p-3">
+      <div class="d-flex gap-2 mb-2">
+        <input class="form-control form-control-sm" id="searchBox" placeholder="搜索物料名称/规格/编码..." autofocus oninput="filterProducts()" style="max-width:280px">
+        <select class="form-select form-select-sm" id="catFilter" onchange="filterProducts()" style="max-width:140px">
+          <option value="">全部分类</option>
+          {% for c in categories %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
+        </select>
+        <select class="form-select form-select-sm" id="whFilter" onchange="filterProducts()" style="max-width:140px">
+          <option value="">全部仓库</option>
+          {% for w in warehouses %}<option value="{{ w.id }}">{{ w.name }}</option>{% endfor %}
+        </select>
+        <button class="btn btn-sm btn-outline-secondary ms-auto" onclick="toggleSelectAll()">全选/取消</button>
+      </div>
+      <div class="table-responsive" style="max-height:55vh;overflow-y:auto">
+        <table class="table table-sm table-hover mb-0">
+          <thead class="sticky-top bg-white"><tr><th style="width:30px"><input type="checkbox" id="selectAll" onchange="toggleAll(this)"></th>
+            <th>名称</th><th>规格</th><th>单位</th><th>当前库存</th><th>仓库</th><th>出库数量</th></tr></thead>
+          <tbody id="productGrid">
+          {% for item in items %}
+          <tr class="product-row" data-id="{{ item.id }}" data-name="{{ item.product_name }}" data-spec="{{ item.spec or '' }}" data-qty="{{ item.current_qty }}" data-wh="{{ item.warehouse_name }}" data-cat="{{ item.category_id or '' }}">
+            <td><input type="checkbox" class="row-check"></td>
+            <td><strong>{{ item.product_name }}</strong></td>
+            <td>{{ item.spec or '-' }}</td>
+            <td>{{ item.unit }}</td>
+            <td><span class="{% if item.current_qty <= item.safety_stock %}text-danger fw-bold{% endif %}">{{ '%.0f'|format(item.current_qty or 0) }}</span></td>
+            <td>{{ item.warehouse_name }}</td>
+            <td><input class="form-control form-control-sm row-qty" type="number" step="0.01" value="0" min="0" style="width:80px" onfocus="if(this.value=='0')this.value=''" onchange="updateCart()"></td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右侧：操作面板 -->
+  <div class="col-md-4">
+    <div class="card p-3"><h6>{{ '📤 出库清单' if mode=='outbound' else '📥 入库清单' }}</h6>
+      <div id="cartItems" class="small" style="max-height:40vh;overflow-y:auto;min-height:100px">
+        <p class="text-muted">点击物料行设置数量，或勾选后填入统一数量</p>
+      </div>
+      <hr>
+      <div class="mb-2"><label class="form-label small">统一数量</label>
+        <div class="input-group input-group-sm"><input class="form-control" id="bulkQty" type="number" step="0.01" value="0"><button class="btn btn-outline-secondary" onclick="applyBulkQty()">应用</button></div></div>
+      <div class="mb-2"><label class="form-label small">操作人</label><input class="form-control form-control-sm" id="operator" value="admin"></div>
+      <div class="mb-2"><label class="form-label small">备注</label><input class="form-control form-control-sm" id="remark"></div>
+      <button class="btn btn-{{ 'warning' if mode=='outbound' else 'success' }} btn-sm w-100 mb-1" onclick="submitOps()" id="submitBtn">
+        {{ '确认出库' if mode=='outbound' else '确认入库' }} (<span id="cartCount">0</span> 项)
+      </button>
+      <div id="opMsg" class="small mt-1"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// 所有数据
+window.products = JSON.parse('{{ items | tojson | safe }}');
+
+function filterProducts(){
+  var kw=document.getElementById('searchBox').value.toLowerCase();
+  var cat=document.getElementById('catFilter').value;
+  var wh=document.getElementById('whFilter').value;
+  document.querySelectorAll('.product-row').forEach(function(tr){
+    var match=true;
+    if(kw){var name=tr.dataset.name||'';var spec=tr.dataset.spec||'';match=match&&(name.toLowerCase().indexOf(kw)>=0||spec.toLowerCase().indexOf(kw)>=0);}
+    if(cat){match=match&&(tr.dataset.cat===cat);}
+    if(wh){match=match&&(tr.dataset.wh.indexOf(wh)>=0);}
+    tr.style.display=match?'':'none';
+  });
+}
+
+function toggleAll(el){
+  document.querySelectorAll('.product-row').forEach(function(tr){
+    if(tr.style.display!=='none'){var cb=tr.querySelector('.row-check');if(cb)cb.checked=el.checked;}
+  });
+  updateCart();
+}
+
+function toggleSelectAll(){
+  var checked=document.querySelectorAll('.row-check:checked').length;
+  document.getElementById('selectAll').checked=false;
+  document.querySelectorAll('.row-check:checked').forEach(function(cb){cb.checked=false;});
+  updateCart();
+}
+
+function applyBulkQty(){
+  var q=document.getElementById('bulkQty').value;
+  document.querySelectorAll('.product-row .row-check:checked').forEach(function(cb){
+    cb.closest('tr').querySelector('.row-qty').value=q;
+  });
+  updateCart();
+}
+
+function updateCart(){
+  var items=[];
+  document.querySelectorAll('.product-row').forEach(function(tr){
+    var qty=parseFloat(tr.querySelector('.row-qty').value)||0;
+    if(qty>0){
+      items.push({id:tr.dataset.id,name:tr.dataset.name,spec:tr.dataset.spec,qty:qty,current:tr.dataset.qty,wh:tr.dataset.wh});
+    }
+  });
+  var html='';
+  items.forEach(function(it){
+    var warn='';{% if mode=='outbound' %}if(it.qty>parseFloat(it.current))warn='<span class=\"text-danger\">⚠️超库存('+it.current+')</span>';{% endif %}
+    html+='<div class=\"d-flex justify-content-between align-items-center py-1 border-bottom\"><span>'+it.name+' '+it.spec+'</span><span>'+it.qty+' '+warn+'</span></div>';
+  });
+  if(!items.length)html='<p class=\"text-muted\">尚未选择物料或数量为0</p>';
+  document.getElementById('cartItems').innerHTML=html;
+  document.getElementById('cartCount').textContent=items.length;
+}
+
+// 行内数量变更时触发行选中 + 更新购物车
+document.querySelectorAll('.row-qty').forEach(function(el){
+  el.addEventListener('change',function(){
+    var tr=el.closest('tr');
+    if(parseFloat(el.value)>0){tr.querySelector('.row-check').checked=true;}
+    updateCart();
+  });
+});
+
+async function submitOps(){
+  var items=[];
+  document.querySelectorAll('.product-row').forEach(function(tr){
+    var qty=parseFloat(tr.querySelector('.row-qty').value)||0;
+    if(qty>0){
+      items.push({product_id:parseInt(tr.dataset.id),warehouse_id:1,qty:qty,operator:document.getElementById('operator').value,remark:document.getElementById('remark').value});
+    }
+  });
+  if(!items.length){toast('请先选择物料并设置数量','warn');return;}
+  var bt=document.getElementById('submitBtn');bt.disabled=true;bt.textContent='提交中...';
+  var r=await fetch('/inventory/batch/do',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'{{ mode }}',items:items})});
+  var d=await r.json();bt.disabled=false;
+  if(d.ok){toast('成功 '+d.count+' 条','success');setTimeout(function(){location.reload()},800);}
+  else{toast('失败: '+d.msg,'error');bt.textContent='{{ "确认出库" if mode=="outbound" else "确认入库" }} ('+items.length+' 项)';}
+}
+</script>
+{% endblock %}

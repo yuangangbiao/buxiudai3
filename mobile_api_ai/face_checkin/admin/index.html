@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>签到管理后台</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <h1>管理员登录</h1>
+    <p>请输入管理员账号和密码</p>
+    <div class="error" id="loginError"></div>
+    <input id="loginUsername" type="text" placeholder="用户名" value="admin" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('loginPassword').focus()" />
+    <input id="loginPassword" type="password" placeholder="管理员密码" autocomplete="current-password" />
+    <button id="loginBtn">登录</button>
+    <div class="setup-hint" id="setupHint" style="display:none">
+      首次使用？尚未设置管理员账号。<br>
+      输入用户名和密码，点击「登录」即可创建。
+    </div>
+  </div>
+</div>
+
+<div id="mainContent" style="display:none">
+<div class="top-bar">
+  <a href="/face/">&larr; 首页</a>
+  <span>签到管理后台</span>
+  <button class="logout-btn" onclick="doLogout()">退出登录</button>
+</div>
+<div class="container">
+
+<div class="section">
+  <div class="section-title">存储配置</div>
+  <div class="config-card">
+    <div class="config-row">
+      <label>照片存储路径</label>
+      <input id="storagePath" placeholder="如: attendance 或 D:/photos" />
+      <button class="btn-secondary" onclick="openBrowser()">浏览</button>
+      <button class="btn-primary" onclick="saveConfig()">保存</button>
+      <span id="configStatus" style="font-size:12px;color:#94a3b8"></span>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">导出配置</div>
+  <div class="config-card">
+    <div class="config-row" style="margin-bottom:10px">
+      <label>导出路径</label>
+      <input id="exportPath" placeholder="如: exports 或 D:/exports" />
+      <button class="btn-secondary" onclick="openBrowser('exportPath')">浏览</button>
+    </div>
+    <div class="config-row" style="margin-bottom:10px">
+      <label>号数</label>
+      <input id="exportScheduleDay" type="number" min="1" max="31" style="max-width:80px" />
+      <label style="margin-left:12px">时间</label>
+      <input id="exportScheduleTime" type="time" style="max-width:120px" />
+    </div>
+    <div class="config-row">
+      <button class="btn-primary" onclick="saveExportConfig()">保存</button>
+      <span id="exportConfigStatus" style="font-size:12px;color:#94a3b8"></span>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">自动导出 <span class="badge" id="schedulerBadge">未启动</span></div>
+  <div class="config-card">
+    <div class="stat-row">
+      <span class="stat-label">状态</span>
+      <span class="stat-value"><span class="stat-dot off" id="schedDot"></span><span id="schedStatusText">未启动</span></span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">上次导出</span>
+      <span class="stat-value" id="schedLastExport">--</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">下次导出</span>
+      <span class="stat-value" id="schedNextExport">--</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">错误信息</span>
+      <span class="stat-value" id="schedError" style="color:#fca5a5"></span>
+    </div>
+    <div class="config-row" style="margin-top:8px">
+      <button class="btn-primary" id="schedToggleBtn" onclick="toggleScheduler()">启动</button>
+      <button class="btn-secondary" onclick="manualExport()">立即导出</button>
+      <span id="schedActionStatus" style="font-size:12px;color:#94a3b8"></span>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">账号安全</div>
+  <div class="config-card">
+    <div class="config-row" style="margin-bottom:8px">
+      <label>旧密码</label>
+      <input id="oldAdminPwd" type="password" placeholder="当前密码（首次设置可为空）" onkeydown="if(event.key==='Enter')document.getElementById('newAdminPwd').focus()" />
+    </div>
+    <div class="config-row">
+      <label>新密码</label>
+      <input id="newAdminPwd" type="password" placeholder="输入新密码（至少4位）" onkeydown="if(event.key==='Enter')changePassword()" />
+      <label>确认密码</label>
+      <input id="confirmAdminPwd" type="password" placeholder="再次输入新密码" onkeydown="if(event.key==='Enter')changePassword()" />
+      <button class="btn-primary" onclick="changePassword()">修改密码</button>
+      <span id="pwdStatus" style="font-size:12px;color:#94a3b8"></span>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">管理员账号 <span class="badge" id="adminCount">0</span></div>
+  <div class="config-card">
+    <div class="toolbar" style="margin-bottom:8px">
+      <span class="count">当前登录: <span id="currentAdmin">--</span></span>
+    </div>
+    <div id="adminUserList"></div>
+    <div class="config-row" style="border-top:1px solid #1e293b;padding-top:12px;margin-top:8px">
+      <label>新用户名</label>
+      <input id="newAdminUser" type="text" placeholder="字母数字中文下划线" onkeydown="if(event.key==='Enter')document.getElementById('newAdminPwd2').focus()" style="flex:1" />
+      <label style="margin-left:8px">密码</label>
+      <input id="newAdminPwd2" type="password" placeholder="至少4位" onkeydown="if(event.key==='Enter')createAdminUser()" style="flex:1" />
+      <button class="btn-primary" onclick="createAdminUser()" style="white-space:nowrap">添加</button>
+      <span id="adminStatus" style="font-size:12px;color:#94a3b8;margin-left:8px"></span>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">人员管理 <span class="badge" id="enrollCount">0</span></div>
+  <div class="config-card">
+    <div class="toolbar">
+      <span class="count">已注册人脸库的人员</span>
+      <button class="btn-secondary" onclick="loadEnrollments()">刷新</button>
+    </div>
+    <div id="enrollList"></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">云端推送配置</div>
+  <div class="config-card">
+    <div class="config-row">
+      <label>云端地址</label>
+      <input id="cloudUrl" placeholder="如: http://127.0.0.1:5006" style="flex:1" />
+      <button class="btn-primary" onclick="saveCloudConfig()">保存</button>
+      <span id="cloudConfigStatus" style="font-size:12px;color:#94a3b8;margin-left:8px"></span>
+    </div>
+    <div class="config-row" style="margin-top:8px">
+      <label>实时推送</label>
+      <label class="switch">
+        <input id="cloudEnabledToggle" type="checkbox" onchange="saveCloudConfig()" />
+        <span class="slider"></span>
+      </label>
+      <span id="cloudEnabledLabel" style="font-size:12px;color:#94a3b8;margin-left:8px">关闭</span>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">服务器签到记录 <span class="badge" id="serverCount">0</span></div>
+  <div class="toolbar">
+    <span class="count">从服务器读取</span>
+    <button class="btn-secondary" onclick="loadServerRecords()">刷新</button>
+    <button class="btn-secondary" onclick="manualExport()">导出 CSV</button>
+    <button class="btn-primary" onclick="sendAttendanceToCloud()" id="sendToCloudBtn">发送到云端</button>
+  </div>
+  <div id="serverRecordList"></div>
+</div>
+
+</div>
+</div>
+
+<div class="overlay" id="dirOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>选择存储目录</h3>
+      <button class="modal-close" onclick="closeBrowser()">&times;</button>
+    </div>
+    <div class="breadcrumb" id="dirBreadcrumb"></div>
+    <div class="new-folder-bar">
+      <input id="newFolderName" placeholder="新建文件夹名称" onkeydown="if(event.key==='Enter')createFolder()" />
+      <button class="btn-primary" id="createFolderBtn" onclick="createFolder()">新建</button>
+    </div>
+    <div class="modal-body" id="dirList"></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeBrowser()">取消</button>
+      <button class="btn-primary" onclick="pickCurrentDir()">选择此目录</button>
+    </div>
+  </div>
+</div>
+
+<script src="admin.js"></script>
+</body>
+</html>

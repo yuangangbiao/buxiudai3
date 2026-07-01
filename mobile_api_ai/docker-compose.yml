@@ -1,0 +1,118 @@
+# ============================================================
+# Docker Compose 配置
+# 不锈钢网带跟单系统
+# [v3.7.9] 新增 dispatch-5003 服务（双轨化存储 + 集成测试基础环境）
+# ============================================================
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: steel_belt_api
+    command: ["python", "app.py"]
+    ports:
+      - "5008:5008"
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - MYSQL_DATABASE=steel_belt
+      - MYSQL_USER=steel_belt
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8080
+      - FLASK_DEBUG=false
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5008/api/metrics/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # [v3.7.9] 调度中心 (5003) - publisher.py DB 模式启用
+  # - 复用 mysql, redis 服务
+  # - DISPATCH_CENTER_USE_DB=1 启用 dispatch_center_tasks 表写入
+  # - 端口暴露 5003 供 5008 报工和集成测试访问
+  dispatch:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: steel_belt_dispatch_5003
+    command: ["python", "standalone_dispatch_server.py"]
+    ports:
+      - "5003:5003"
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - MYSQL_USER=steel_belt
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - CONTAINER_MYSQL_DATABASE=container_center
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - DISPATCH_HOST=0.0.0.0
+      - DISPATCH_PORT=5003
+      - DISPATCH_CENTER_USE_DB=1
+      - DISPATCH_CENTER_URL=http://localhost:5003
+      - CONTAINER_CENTER_URL=http://localhost:5003
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5003/api/dispatch-center/forward-to-cloud", "-X", "POST", "-H", "Content-Type: application/json", "-d", "{\"action\":\"ping\"}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  mysql:
+    image: mysql:8.0
+    container_name: steel_belt_mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=steel_belt
+      - MYSQL_USER=steel_belt
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: steel_belt_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+  redis_data:

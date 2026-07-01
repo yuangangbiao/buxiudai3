@@ -1,0 +1,16 @@
+{
+  "admin_password_hash": "aaffebecec560fec66e75f24062224ffa4e07696d2ae9a1fee3707c3f8fd9373",
+  "admin_users": [
+    {
+      "username": "admin",
+      "password_hash": "15e2b0d3c33891ebb0f1ef609ec419420c20e320ce94c65fbc8c3312448eb225"
+    },
+    {
+      "username": "苑岗彪",
+      "password_hash": "15e2b0d3c33891ebb0f1ef609ec419420c20e320ce94c65fbc8c3312448eb225"
+    }
+  ],
+  "export_path": "exports",
+  "export_schedule_day": 25,
+  "export_schedule_time": "09:00"
+}

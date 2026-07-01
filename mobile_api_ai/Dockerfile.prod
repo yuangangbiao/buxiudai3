@@ -1,0 +1,63 @@
+# ============================================================
+# Docker 多阶段构建 - 优化镜像大小
+# 生产环境推荐使用此文件
+# ============================================================
+
+# ============================================================
+# Stage 1: Builder
+# ============================================================
+FROM python:3.11-slim as builder
+
+WORKDIR /build
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    default-libmysqlclient-dev \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+
+RUN pip install --no-cache-dir --user \
+    -r requirements.txt \
+    gunicorn \
+    && pip cache purge
+
+# ============================================================
+# Stage 2: Production
+# ============================================================
+FROM python:3.11-slim
+
+LABEL maintainer="Steel Belt Team"
+LABEL description="不锈钢网带跟单系统 API服务 (Production)"
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PATH=/root/.local/bin:$PATH
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd -m -u 1000 appuser
+
+COPY --from=builder /root/.local /root/.local
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+
+COPY . .
+
+RUN mkdir -p logs && chown -R appuser:appuser /app
+
+USER appuser
+
+EXPOSE 5000
+
+ENV FLASK_APP=app.py
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:5000/api/metrics/health || exit 1
+
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "--timeout", "120", "--access-logfile", "-", "--error-logfile", "-", "app:app"]

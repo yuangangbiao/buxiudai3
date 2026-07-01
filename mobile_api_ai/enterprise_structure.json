@@ -1,0 +1,155 @@
+{
+  "departments": [
+    {
+      "department_leader": [],
+      "id": 1,
+      "name": "宁津晨圣输送机械有限公司",
+      "order": 100000000,
+      "parentid": 0
+    },
+    {
+      "department_leader": [],
+      "id": 2,
+      "name": "生产部",
+      "order": 100000000,
+      "parentid": 1
+    },
+    {
+      "department_leader": [],
+      "id": 3,
+      "name": "生产部",
+      "order": 100000000,
+      "parentid": 2
+    },
+    {
+      "department_leader": [],
+      "id": 4,
+      "name": "其他（待设置部门）",
+      "order": 99999000,
+      "parentid": 1
+    }
+  ],
+  "users": [
+    {
+      "department": [
+        4
+      ],
+      "department_name": "宁津晨圣输送机械有限公司",
+      "name": "咳咳",
+      "userid": "KeKe"
+    },
+    {
+      "department": [
+        4
+      ],
+      "department_name": "宁津晨圣输送机械有限公司",
+      "name": "我有我的信念。",
+      "userid": "WoYouWoDeXinNian"
+    },
+    {
+      "department": [
+        4
+      ],
+      "department_name": "宁津晨圣输送机械有限公司",
+      "name": "微风细雨",
+      "userid": "WeiFengXiYu"
+    },
+    {
+      "department": [
+        4
+      ],
+      "department_name": "宁津晨圣输送机械有限公司",
+      "name": "边疆",
+      "userid": "BianJiang"
+    },
+    {
+      "department": [
+        4
+      ],
+      "department_name": "宁津晨圣输送机械有限公司",
+      "name": "小🎖",
+      "userid": "Xiao"
+    },
+    {
+      "department": [
+        4
+      ],
+      "department_name": "宁津晨圣输送机械有限公司",
+      "name": "晨圣五金～客服",
+      "userid": "ChenShengWuJinKeFu"
+    },
+    {
+      "department": [
+        4
+      ],
+      "department_name": "宁津晨圣输送机械有限公司",
+      "name": "春天的雨",
+      "userid": "ChunTianDeYu"
+    },
+    {
+      "department": [
+        4
+      ],
+      "department_name": "宁津晨圣输送机械有限公司",
+      "name": "开心快乐",
+      "userid": "KaiXinKuaiLe"
+    },
+    {
+      "department": [
+        4
+      ],
+      "department_name": "宁津晨圣输送机械有限公司",
+      "name": "晨圣五金配件",
+      "userid": "ChenShengWuJinPeiJian"
+    },
+    {
+      "department": [
+        1
+      ],
+      "department_name": "宁津晨圣输送机械有限公司",
+      "name": "苑岗彪",
+      "userid": "YuanGangBiao"
+    },
+    {
+      "department": [
+        2
+      ],
+      "department_name": "宁津晨圣输送机械有限公司",
+      "name": "晨圣网链～赵",
+      "userid": "ChenShengWangLianZhao"
+    },
+    {
+      "department": [
+        2
+      ],
+      "department_name": "宁津晨圣输送机械有限公司",
+      "name": "苑圆彪  晨圣链网 链板 网带眼睛网",
+      "userid": "YuanYuanBiaoChenShengLianWangLia"
+    },
+    {
+      "department": [
+        4
+      ],
+      "department_name": "宁津晨圣输送机械有限公司",
+      "name": "李和勇",
+      "userid": "LiHeYong"
+    },
+    {
+      "department": [
+        4
+      ],
+      "department_name": "宁津晨圣输送机械有限公司",
+      "name": "A幸福人生",
+      "userid": "aXingFuRenSheng"
+    },
+    {
+      "department": [
+        2
+      ],
+      "department_name": "宁津晨圣输送机械有限公司",
+      "name": "赵晓明",
+      "userid": "ZhaoXiaoMing"
+    }
+  ],
+  "updated_at": "2026-05-30T11:21:39.981122"
+}

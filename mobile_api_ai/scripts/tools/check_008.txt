@@ -1,0 +1,14 @@
+=== 检查 WO-202605008 ===
+[数据库] WO-202605008: 0 条
+
+[调度中心 5003]
+  总6条，含008: 0条
+  *** 未找到 WO-202605008 ***
+  最近3条:
+    wo=WO-REAL-TEST order=ORD-REAL-TEST
+    wo=WO-202605007 order=ORD-202605007
+    wo=WO-TEST-VERIFY order=ORD-TEST-VERIFY
+
+[晨圣报工 5008]
+  总11条，含008: 0条
+  *** 未找到 WO-202605008 ***

@@ -1,0 +1,9 @@
+队列管理器导入失败（将使用内存降级模式）: No module named 'modules'
+Traceback (most recent call last):
+  File "D:\yuan\不锈钢网带跟单3.0\mobile_api_ai\_bootstrap_check.py", line 49, in <module>
+    status, detail = timed_import('wechat_server')
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "D:\yuan\不锈钢网带跟单3.0\mobile_api_ai\_bootstrap_check.py", line 32, in timed_import
+    return result[0]
+           ~~~~~~^^^
+IndexError: list index out of range

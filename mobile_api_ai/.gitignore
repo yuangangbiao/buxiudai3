@@ -1,0 +1,79 @@
+# ─── 敏感信息 ──────────────────────────────────
+.env
+!.env.example
+
+# ─── Python 缓存 ────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+
+# ─── 构建产物 ───────────────────────────────────
+build/
+dist/
+*.spec
+deploy_output/
+云端部署包/
+云端部署包v*/
+
+# ─── 运行时数据库 ───────────────────────────────
+*.db
+*.db-shm
+*.db-wal
+
+# ─── 运行时数据文件 ─────────────────────────────
+operators.json
+tasks_data.json
+process_tracking.json
+repair_categories.json
+config_center_data.json
+dispatch_center_data.json
+config_versions.json
+
+# ─── 日志与输出文件 ─────────────────────────────
+*.log
+build_log.txt
+build_output.txt
+verify_result.txt
+v5_result.txt
+*_output.txt
+*_result.txt
+*_log.txt
+demo_flow_output.txt
+full_flow_wechat_result.txt
+
+# ─── 二进制/可执行文件 ──────────────────────────
+*.exe
+*.dll
+*.bin
+
+# ─── 一次性测试/调试脚本 ────────────────────────
+_v*.py
+_check*.py
+_verify*.py
+_clean.py
+_exe_info.py
+_health_check.py
+_kill*.py
+_wait_build.py
+
+# ─── 生成的HTML（templates/ 下有源文件） ────────
+container_center_admin.html
+scanner.html
+trigger_config.html
+wechat_bot_config.html
+mobile_scanner.html
+
+# ─── 二维码图片 ─────────────────────────────────
+qr_code_*.png
+
+# ─── 部署测试目录 ───────────────────────────────
+_deploy/
+test_deploy/
+
+# ─── IDE ─────────────────────────────────────────
+.vscode/
+.idea/
+
+# ─── 操作系统文件 ───────────────────────────────
+Thumbs.db
+.DS_Store

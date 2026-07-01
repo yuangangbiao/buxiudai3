@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>人脸签到系统</title>
+    <script type="module" crossorigin src="/face/assets/index-CSvaDeP4.js"></script>
+    <link rel="stylesheet" crossorigin href="/face/assets/index-DSseBjzS.css">
+  </head>
+  <body>
+    <div id="app">
+      <h1 class="page-title">人脸签到系统</h1>
+      <div class="container">
+        <h1>人脸签到系统</h1>
+        <div class="video-wrapper">
+          <video id="video" autoplay playsinline muted></video>
+          <div id="loading" class="overlay">
+            <div class="spinner"></div>
+            <p>正在加载检测引擎...</p>
+          </div>
+          <div id="result-overlay" class="overlay hidden">
+            <div id="result-icon"></div>
+            <p id="result-text"></p>
+          </div>
+        </div>
+        <div id="status-bar" class="status-bar">
+          <span class="status-item">状态: <span id="status-text">初始化中...</span></span>
+          <span class="status-item">质量: <span id="quality-text">--</span></span>
+          <span class="status-item">正对度: <span id="frontal-text">--</span></span>
+          <span class="status-item">动作: <span id="action-text">--</span></span>
+        </div>
+        <div id="action-guide" class="action-guide hidden">
+          <p id="guide-text"></p>
+        </div>
+        <div class="controls">
+          <button id="btn-start" class="btn btn-primary" disabled>启动检测</button>
+        </div>
+        <div id="result-image" class="result-image hidden">
+          <h3>最佳人脸截图</h3>
+          <img id="face-img" alt="检测到的人脸" />
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="register-section">
+          <h2>人脸注册</h2>
+          <div class="register-form">
+            <input id="reg-name" type="text" placeholder="输入姓名" maxlength="20" />
+            <button id="btn-register" class="btn btn-secondary">拍照注册</button>
+          </div>
+          <div id="reg-status" class="reg-status"></div>
+          <div id="reg-preview" class="register-preview hidden">
+            <video id="reg-video" autoplay playsinline muted></video>
+          </div>
+          <div id="reg-list" class="register-list">
+            <h3>已注册人员</h3>
+            <ul id="reg-user-list"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
