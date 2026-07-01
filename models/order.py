@@ -7,7 +7,7 @@ import json
 import logging
 from models.database import get_connection, generate_order_no, log_status_change
 from models.order_log import log_order_action
-from constants import OrderStatus
+from constants import OrderStatus, ORDER_STATUS_TRANSITIONS
 
 logger = logging.getLogger(__name__)
 
@@ -188,7 +188,7 @@ class OrderDAO:
 
     @staticmethod
     def update_status(order_id: int, new_status: str, operator: str = "系统") -> bool:
-        """更新订单状态"""
+        """更新订单状态（带状态机白名单校验）"""
         if not order_id:
             logger.error(f"[ERROR] update_status called with invalid order_id: {order_id}")
             return False
@@ -203,21 +203,30 @@ class OrderDAO:
                 cursor.close()
                 return False
             cursor.close()
+
+            # P0-E: 状态机白名单校验
+            allowed_next_states = ORDER_STATUS_TRANSITIONS.get(old_status, [])
+            if new_status not in allowed_next_states:
+                logger.warning(
+                    f"[P0-E] 非法状态转换被拦截: 订单{order_id} 从「{old_status}」不能转换到「{new_status}」"
+                )
+                return False
+
             cursor = conn.cursor()
             cursor.execute(
                 "UPDATE orders SET status=%s, updated_at=NOW() WHERE id=%s",
                 (new_status, order_id)
             )
             affected = cursor.rowcount
-            
+
             cursor.execute("SELECT order_no FROM orders WHERE id=%s", (order_id,))
             order_row = cursor.fetchone()
             order_no = order_row['order_no'] if order_row else "未知"
-            
+
             conn.commit()
             cursor.close()
             log_status_change("orders", order_id, old_status, new_status, operator)
-            
+
             action_map = {
                 "待确认": "CREATE",
                 "待排产": "CONFIRM",

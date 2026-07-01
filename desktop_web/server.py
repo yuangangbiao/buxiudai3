@@ -732,6 +732,11 @@ def api_orders_delete_by_no(order_no):
         try:
             cur = conn.cursor()
             try:
+                # P0-J: 添加 FOR UPDATE 行锁防止并发撤回
+                cur.execute("SELECT id FROM orders WHERE order_no=%s FOR UPDATE", (order_no,))
+                row = cur.fetchone()
+                if not row:
+                    return jsonify({'code': 404, 'message': '订单不存在'}), 404
                 cur.execute("UPDATE orders SET is_deleted=1, deleted_at=NOW() WHERE order_no=%s", (order_no,))
                 conn.commit()
                 return jsonify({'code': 0, 'data': {'order_no': order_no, 'message': '已软删除'}})
@@ -1410,7 +1415,8 @@ def api_material_delete(mat_id):
         cur = None
         try:
             cur = conn.cursor()
-            cur.execute("SELECT order_id, material_name FROM order_materials WHERE id=%s", (mat_id,))
+            # P0-J: 添加 FOR UPDATE 行锁防止并发删除
+            cur.execute("SELECT order_id, material_name FROM order_materials WHERE id=%s FOR UPDATE", (mat_id,))
             m = cur.fetchone()
             if not m:
                 return jsonify({'code': 404, 'message': '物料不存在'}), 404
@@ -2650,7 +2656,8 @@ def api_process_delete(process_id):
         cur = None
         try:
             cur = conn.cursor()
-            cur.execute("SELECT * FROM process_records WHERE id=%s", (process_id,))
+            # P0-J: 添加 FOR UPDATE 行锁防止并发删除
+            cur.execute("SELECT * FROM process_records WHERE id=%s FOR UPDATE", (process_id,))
             old = cur.fetchone()
             if not old:
                 return jsonify({'code': 404, 'message': '工序不存在'}), 404
@@ -3202,7 +3209,8 @@ def api_quality_delete(record_id):
         cur = None
         try:
             cur = conn.cursor()
-            cur.execute("SELECT id FROM quality_records WHERE id=%s", (record_id,))
+            # P0-J: 添加 FOR UPDATE 行锁防止并发删除
+            cur.execute("SELECT id FROM quality_records WHERE id=%s FOR UPDATE", (record_id,))
             if not cur.fetchone():
                 return jsonify({'code': 404, 'message': '记录不存在'}), 404
             # [P1-3 修复 2026-06-24] 软删除（符合 R-113 规则）
@@ -3528,7 +3536,8 @@ def api_shipment_delete(shipment_id):
         cur = None
         try:
             cur = conn.cursor()
-            cur.execute("SELECT shipment_no FROM shipments WHERE id=%s", (shipment_id,))
+            # P0-J: 添加 FOR UPDATE 行锁防止并发删除
+            cur.execute("SELECT shipment_no FROM shipments WHERE id=%s FOR UPDATE", (shipment_id,))
             row = cur.fetchone()
             if not row:
                 return jsonify({'code': 404, 'message': '发货单不存在'}), 404

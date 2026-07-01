@@ -1405,25 +1405,27 @@ def task_notify():
         'received_at': datetime.now().isoformat(),
     }
 
-    # 写入 data_packages — operator_id 是标记(谁提交的), 不是指派
+    # [v3.8.1 重构] 写入 process_sub_steps（SSOT），不再写 data_packages
     target_op = operator_id or ''
     try:
         cc = _get_container_center()
-        if cc and hasattr(cc, 'storage'):
-            cc.storage.save_package({
-                'id': task_record['task_id'],
-                'data_type': 'report',
-                'title': f"{order_no} - {process}",
-                'status': 'pending',
-                'related_order': order_no,
-                'related_process': process,
-                'target_operator': target_op,
-                'source': source,
-                'content': json.dumps(task_record, ensure_ascii=False),
-                'created_at': task_record['created_at'],
-            })
+        if cc and hasattr(cc, 'storage') and target_op and order_no and process:
+            cc.storage.save_process_sub_step_with_pkg_update(
+                {
+                    'order_no': order_no,
+                    'step_name': process,
+                    'operator': target_op,
+                    'quantity': 0,
+                    'batch_no': task_record.get('batch_no', '') or f'NT-{task_record["task_id"][:8]}',
+                    'status': 'pending',
+                    'source': source,
+                },
+                pkg_order=order_no,
+                pkg_process=process,
+                qty_delta=0,
+            )
     except Exception as e:
-        logger.warning(f'[task-notify] 持久化到 data_packages 失败: {e}')
+        logger.warning(f'[task-notify] 持久化到 process_sub_steps 失败: {e}')
 
     data = _dispatch_cache.get_data()
     auto_send = data.get('auto_send', True)
@@ -1538,15 +1540,15 @@ def _do_send_process_task(task_record: dict):
         (t.update({'status': 'sent', 'published_at': datetime.now().isoformat(), 'recipients': recipients}))
         for t in d.get('process_tasks', []) if t.get('task_id') == task_id
     ])
-    # 同步更新 data_packages 状态 — 只改状态，不动 target_operator（桌面端的标记）
+    # [v3.8.1 重构] 更新 process_sub_steps 状态
     try:
         cc = _get_container_center()
-        if cc and hasattr(cc, 'storage') and hasattr(cc.storage, 'update'):
-            cc.storage.update('data_packages', {
-                'status': 'distributed', 'distributed_at': datetime.now().isoformat(),
-            }, 'id=%s', (task_id,))
+        if cc and cc.storage and hasattr(cc.storage, 'update_package'):
+            cc.storage.update_package(task_id, {
+                'status': 'distributed',
+            })
     except Exception as e:
-        logger.warning(f'[发送] 更新 data_packages 状态失败: {e}')
+        logger.warning(f'[发送] 更新工序状态失败: {e}')
 
     logger.info(f'[发送] 工序任务已发送，目标: {recipients}')
     return True, ''
@@ -1669,22 +1671,20 @@ def get_process_names():
             process_names.add(p)
 
     try:
-        import pymysql
-        from pymysql.cursors import DictCursor
-        from storage.mysql_storage import MySQLStorage
-        conn = MySQLStorage.get_connection()
-        try:
-            cursor = conn.cursor()
-            cursor.execute("SELECT DISTINCT related_process as process_name FROM data_packages WHERE related_process IS NOT NULL AND related_process != ''")
-            for row in cursor.fetchall():
-                if row.get('process_name'):
-                    process_names.add(row['process_name'])
-            cursor.execute("SELECT DISTINCT related_process FROM data_packages WHERE related_process IS NOT NULL AND related_process != ''")
-            for row in cursor.fetchall():
-                if row.get('related_process'):
-                    process_names.add(row['related_process'])
-        finally:
-            conn.close()
+        cc = _get_container_center()
+        if cc and cc.storage:
+            rows = cc.storage.fetch_all(
+                "SELECT DISTINCT step_name FROM process_sub_steps WHERE step_name IS NOT NULL AND step_name != ''")
+            for row in rows:
+                pn = row.get('step_name') if isinstance(row, dict) else row[0]
+                if pn:
+                    process_names.add(pn)
+            rows2 = cc.storage.fetch_all(
+                "SELECT DISTINCT process_code FROM process_sub_steps WHERE process_code IS NOT NULL AND process_code != ''")
+            for row in rows2:
+                pn = row.get('process_code') if isinstance(row, dict) else row[0]
+                if pn:
+                    process_names.add(pn)
     except Exception as e:
         logger.warning(f'[process-names] 从容器中心获取工序失败: {e}')
 
@@ -2390,49 +2390,48 @@ def list_tasks():
         if cc is None or cc.storage is None:
             return jsonify({'code': 500, 'message': '存储未初始化'}), 500
 
-        # [优化] SQL 层过滤和分页，不一次性加载 2000 条
-        offset = (page - 1) * page_size
-
-        # 1. 先获取总数（用于分页）
-        total = _get_task_count_sql(cc, status_filter, operator_filter, task_type_filter)
-
-        # 2. SQL 层分页查询 + 字段裁剪（只查需要的字段）
+        # [v3.8.1 重构] 从 process_sub_steps（工序任务）和 quality_records（质检任务）查询
         TASK_LIST_FIELDS = [
-            'id', 'data_type', 'title', 'status', 'priority',
-            'related_order', 'related_process', 'process_code',
-            'target_operator', 'source', 'created_at',
-            'distributed_at', 'acknowledged_at', 'completed_at'
+            'id', 'order_no', 'step_name', 'process_code', 'quantity',
+            'operator', 'status', 'flow_type', 'source', 'priority',
+            'created_at', 'updated_at', 'completed_qty'
         ]
-        packages = cc.storage.get_packages(
-            status=status_filter,
-            operator=operator_filter if operator_filter else None,
-            limit=page_size,
-            offset=offset,
+        operator_arg = operator_filter if operator_filter else None
+        status_arg = status_filter if status_filter else None
+
+        # 工序任务（process_sub_steps）
+        process_packages = cc.storage.get_packages(
+            data_type='report',
+            status=status_arg,
+            operator=operator_arg,
+            limit=2000,
+            offset=0,
             fields=TASK_LIST_FIELDS
         )
+        # 质检任务（quality_records）
+        quality_packages = cc.storage.get_packages(
+            data_type='quality_task',
+            status=status_arg,
+            operator=operator_arg,
+            limit=2000,
+            offset=0,
+            fields=['id', 'order_no', 'process_name', 'inspection_type', 'inspector', 'status', 'result', 'created_at', 'updated_at']
+        )
+        all_packages = process_packages + quality_packages
+        total = len(all_packages)
 
-        # 3. 类型映射（只有 SQL 过滤后的数据才需要映射）
-        DB_TO_API = {
-            'process_report': 'report',
-            'process_task':   'process',
-            'quality_task':   'quality',
-            'material_request': 'material',
-            'material_pickup': 'material',
-            'material_buy':   'material',
-            'outsource_task': 'outsource',
-            'approval':       'approval',
-        }
+        # Python 层分页
+        offset = (page - 1) * page_size
+        page_packages = all_packages[offset:offset + page_size]
 
-        for pkg in packages:
+        # [v3.8.1 重构] 字段映射（process_sub_steps + quality_records → API 字段）
+        for pkg in page_packages:
             if not isinstance(pkg, dict):
                 continue
-            pkg_type = pkg.get('data_type', '')
-            api_type = DB_TO_API.get(pkg_type)
+            pkg_type = pkg.get('data_type', 'report')
+            api_type = 'quality' if pkg_type == 'quality_task' else 'process'
 
-            # 任务类型过滤（SQL 不支持多类型映射，保留 Python 层过滤）
             if task_type_filter and api_type != task_type_filter:
-                continue
-            if api_type is None:
                 continue
 
             task = {
@@ -2441,16 +2440,16 @@ def list_tasks():
                 'title': pkg.get('title', ''),
                 'status': pkg.get('status', 'pending'),
                 'priority': pkg.get('priority', 'normal'),
-                'order_no': pkg.get('related_order', ''),
-                'process': pkg.get('related_process', ''),
+                'order_no': pkg.get('order_no') or pkg.get('related_order', ''),
+                'process': pkg.get('step_name') or pkg.get('process_name', ''),
                 'process_code': pkg.get('process_code', ''),
-                'operator': pkg.get('target_operator', ''),
+                'operator': pkg.get('operator', '') or pkg.get('inspector', ''),
                 'dispatched_to': '全员' if pkg.get('status') == 'distributed' else '-',
                 'source': pkg.get('source', ''),
                 'created_at': pkg.get('created_at', ''),
-                'distributed_at': pkg.get('distributed_at', ''),
-                'acknowledged_at': pkg.get('acknowledged_at', ''),
-                'completed_at': pkg.get('completed_at', ''),
+                'distributed_at': pkg.get('updated_at', ''),
+                'acknowledged_at': '',
+                'completed_at': '',
             }
             tasks.append(task)
 
@@ -2458,44 +2457,6 @@ def list_tasks():
         logger.error(f'获取任务列表失败: {e}')
 
     return jsonify({'code': 0, 'data': {'tasks': tasks, 'total': total, 'page': page, 'page_size': page_size}})
-
-
-def _get_task_count_sql(cc, status_filter=None, operator_filter=None, task_type_filter=None):
-    """[优化 2026-06-12] SQL 层获取总数，避免 SELECT COUNT(*) 全表扫描
-
-    [修复 2026-06-12] 增加 task_type_filter 参数，与 get_packages 过滤逻辑一致
-    """
-    try:
-        sql = "SELECT COUNT(*) FROM data_packages WHERE 1=1"
-        params = []
-        if status_filter:
-            sql += " AND status=%s"
-            params.append(status_filter)
-        if operator_filter:
-            sql += " AND (target_operator=%s OR status='distributed')"
-            params.append(operator_filter)
-
-        # [修复] task_type_filter 需要映射为 data_type
-        DB_TO_API = {
-            'report': 'process_report',
-            'process': 'process_task',
-            'quality': 'quality_task',
-            'material': 'material_request',
-            'outsource': 'outsource_task',
-            'approval': 'approval',
-        }
-        if task_type_filter and task_type_filter in DB_TO_API:
-            sql += " AND data_type=%s"
-            params.append(DB_TO_API[task_type_filter])
-
-        with cc.storage._pool.connection() as conn:
-            with conn.cursor() as c:
-                c.execute(sql, tuple(params))
-                result = c.fetchone()
-                return result[0] if result else 0
-    except Exception as e:
-        logger.warning(f'获取任务总数失败: {e}')
-        return 0
 
 
 @dispatch_center_bp.route('/material/requirements', methods=['GET'])
@@ -6795,7 +6756,7 @@ _SERVER_DEFS = {
     },
     'dispatch': {
         'name': '调度中心',
-        'script': 'mobile_api_ai/wechat_server.py',
+        'script': 'mobile_api_ai/standalone_dispatch_server.py',
         'cwd': 'mobile_api_ai',
         'port': 5003,
     },
@@ -7005,14 +6966,9 @@ def create_quality_task():
 
         # 去重：同一订单+同一工序不重复创建
         try:
-            with get_connection_context() as conn:
-                conn.select_db('container_center')
-                cursor = conn.cursor()
-                cursor.execute(
-                    "SELECT id FROM data_packages WHERE related_order=%s AND related_process=%s "
-                    "AND data_type='quality' AND status='pending' LIMIT 1",
-                    (order_no, process_name))
-                if cursor.fetchone():
+            cc = _get_container_center()
+            if cc and cc.storage:
+                if cc.storage.package_exists(order_no, process_name, 'quality_task'):
                     return jsonify({'code': 0, 'message': '该工序任务已存在，跳过',
                                     'order_no': order_no, 'task_id': 'dup'}), 200
         except Exception:
@@ -7024,7 +6980,7 @@ def create_quality_task():
         pkg_dict = {
             'id': pkg_id,
             'title': f'质检任务: {inspection_type} - {order_no}',
-            'data_type': 'quality',
+            'data_type': 'quality_task',
             'source': '主软件',
             'priority': 'normal',
             'status': 'pending',
@@ -7046,24 +7002,7 @@ def create_quality_task():
         cc = _get_container_center()
         if cc and hasattr(cc, 'storage') and hasattr(cc.storage, 'save_package'):
             cc.storage.save_package(pkg_dict)
-            logger.info(f"[质检任务] 已创建 data_package: {pkg_id} for {order_no}")
-
-            # 同步写入 data_packages 表（手机端查询入口）
-            try:
-                with get_connection_context() as conn:
-                    conn.select_db('container_center')
-                    cursor = conn.cursor()
-                    cursor.execute(
-                        """INSERT INTO data_packages
-                           (id, data_type, title, content, source, priority, status,
-                            related_order, related_process, target_operator, created_at)
-                           VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,NOW())""",
-                        (pkg_id, 'quality', pkg_dict['title'], pkg_dict['content'],
-                         '主软件', 'normal', 'pending',
-                         order_no, process_name, inspector or ''))
-                    conn.commit()
-            except Exception as e:
-                logger.warning(f"[质检任务] 同步data_packages失败: {e}")
+            logger.info(f"[质检任务] 已创建 quality_record: {pkg_id} for {order_no}")
             if cc.is_notification_enabled:
                 try:
                     msg = _render_template('tmpl_alert_quality', {
@@ -7368,6 +7307,52 @@ import threading, json as _json, time as _time
 
 DispatchContext.get_instance().outbox_running = False
 
+
+def _move_to_dead_letter(cursor, row, error_msg):
+    """P0-K: 将重试3次后仍失败的消息移动到死信表并发送告警"""
+    try:
+        cursor.execute("""
+            INSERT INTO outbox_dead_letter (event_type, payload, error_msg, failed_at)
+            VALUES (%s, %s, %s, NOW())
+        """, (row['event_type'], row['payload'], error_msg))
+        cursor.execute("DELETE FROM outbox WHERE id=%s", (row['id'],))
+        logger.warning('[P0-K] 死信已记录: event=%s id=%s error=%s',
+                       row['event_type'], row['id'], error_msg)
+        _send_dead_letter_alert(row, error_msg)
+    except Exception as e:
+        logger.error('[P0-K] 死信记录失败: %s', e)
+
+
+def _send_dead_letter_alert(row, error_msg):
+    """P0-K: 发送死信告警到企业微信"""
+    try:
+        alert_content = {
+            "msgtype": "text",
+            "text": {
+                "content": f"【P0-K 死信告警】\n事件类型: {row['event_type']}\n错误信息: {error_msg}\n时间: {row.get('created_at', '未知')}"
+            }
+        }
+        from services.factory import ServiceFactory
+        notifier = ServiceFactory.create_notifier()
+        if notifier:
+            notifier.send_text(alert_content['text']['content'])
+    except Exception as e:
+        logger.error('[P0-K] 告警发送失败: %s', e)
+
+
+def _check_dead_letter_alert(cursor):
+    """P0-K: 检查是否有新的死信需要告警"""
+    try:
+        cursor.execute("""
+            SELECT COUNT(*) as cnt FROM outbox_dead_letter
+            WHERE alerted = 0 AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)
+        """)
+        result = cursor.fetchone()
+        if result and result['cnt'] > 0:
+            logger.warning('[P0-K] 检测到 %s 条新死信', result['cnt'])
+    except Exception:
+        pass
+
 def start_outbox_worker(interval=30):
     """启动 Outbox 后台消费者"""
     # [removed] global DispatchContext.get_instance().outbox_running
@@ -7381,6 +7366,9 @@ def start_outbox_worker(interval=30):
             try:
                 with get_connection_context() as conn:
                     cursor = conn.cursor()
+                    # P0-K: 先检查是否有新的死信需要告警
+                    _check_dead_letter_alert(cursor)
+
                     cursor.execute(
                         "SELECT * FROM outbox WHERE retries < 5 ORDER BY created_at LIMIT 10")
                     rows = cursor.fetchall()
@@ -7400,6 +7388,11 @@ def start_outbox_worker(interval=30):
                             cursor.execute(
                                 "UPDATE outbox SET retries=retries+1 WHERE id=%s", (row['id'],))
                             conn.commit()
+                            # P0-K: 重试3次后标记为死信
+                            cursor.execute("SELECT retries FROM outbox WHERE id=%s", (row['id'],))
+                            r = cursor.fetchone()
+                            if r and r['retries'] >= 3:
+                                _move_to_dead_letter(cursor, row, str(e))
             except Exception as e:
                 logger.warning('[Outbox] 轮询异常: %s', e)
             _time.sleep(interval)
@@ -7416,19 +7409,16 @@ def _on_quality_record_completed_dict(payload):
     record_id = payload.get('record_id', 0)
     logger.info('[质检流程] record_id=%s order=%s result=%s', record_id, order_no, result)
 
-    # 1. 更新关联 data_package 状态（桌面端可见）
+    # 1. [v3.8.1 重构] 更新关联 quality_records 状态
     try:
-        with get_connection_context() as conn:
-            conn.select_db('container_center')
-            cursor = conn.cursor()
-            cursor.execute(
-                "UPDATE data_packages SET status=%s, completed_at=NOW() "
-                "WHERE related_order=%s AND data_type = 'quality_task' "
-                "AND status NOT IN ('completed','quality_reported')",
-                ('completed' if result == '合格' else 'quality_failed', order_no))
-            conn.commit()
+        cc = _get_container_center()
+        if cc and cc.storage:
+            cc.storage.update('quality_records',
+                {'status': 'completed' if result == '合格' else 'quality_failed',
+                 'updated_at': datetime.now().isoformat()},
+                'order_no=%s', (order_no,))
     except Exception as e:
-        logger.warning('[质检流程] 回写data_package失败: %s', e)
+        logger.warning('[质检流程] 回写quality_record失败: %s', e)
 
     # 2. 推进生产流程
     if result == '合格':
