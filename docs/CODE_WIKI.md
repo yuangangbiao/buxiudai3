@@ -1330,7 +1330,7 @@ start_all.bat / start_all.py
 | 服务 | 默认端口 | 入口 |
 |------|----------|------|
 | 主 Flask 微服务 | 5000 | `mobile_api_ai/app.py` |
-| 微信回调服务 | 5003 | `mobile_api_ai/wechat_server.py` |
+| 微信回调服务 | 5003 | `mobile_api_ai/standalone_dispatch_server.py`（整合原 wechat_server.py） |
 | 容器中心 API | 5002 | `mobile_api_ai/container_api_server.py` |
 | 库存 API | 5010 | `mobile_api_ai/inventory_api_server.py` |
 | 调度中心 | 5001 | `mobile_api_ai/standalone_dispatch_server.py` |

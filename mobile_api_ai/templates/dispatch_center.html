@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>调度中心</title>
+<link rel="stylesheet" href="/static/css/dispatch_center.css">
+</head>
+<body>
+<div id="loading-overlay" class="loading-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.7);z-index:9999;justify-content:center;align-items:center;">
+  <div class="spinner" style="width:40px;height:40px;border:4px solid #f3f3f3;border-top:4px solid #3498db;border-radius:50%;animation:spin 1s linear infinite;"></div>
+</div>
+<style>@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>
+<div class="header">
+  <h1>调度中心</h1>
+  <span class="subtitle">Dispatch Center</span>
+</div>
+<div class="container">
+  <div class="sidebar">
+    <div class="sidebar-item active" onclick="switchTab('overview')">概览</div>
+    <div class="sidebar-item" onclick="switchTab('operators')">👥 操作员管理</div>
+    <div class="sidebar-item" onclick="switchTab('tasks')">任务调度</div>
+    <div class="sidebar-item" onclick="switchTab('messages')">消息调度</div>
+    <div class="sidebar-item" onclick="switchTab('processes')">流程编排</div>
+    <div class="sidebar-item" onclick="switchTab('rules')">规则配置</div>
+    <div class="sidebar-item" onclick="switchTab('process-config')">📋 工序配置</div>
+    <div class="sidebar-item" onclick="switchTab('monitor')">监控告警</div>
+    <div class="sidebar-item" onclick="switchTab('cloud')">☁️ 云端配置</div>
+    <div class="sidebar-item" onclick="switchTab('repairs')">报修管理</div>
+    <div class="sidebar-item" onclick="switchTab('outsource')">外协管理</div>
+    <div class="sidebar-item" onclick="switchTab('warehousing')">📦 成品入库</div>
+    <div class="sidebar-item" onclick="switchTab('feedback')">📋 反馈管理</div>
+    <div class="sidebar-item" onclick="switchTab('quality-inspect');setTimeout(loadQualityRecords,200);">✅ 质检管理</div>
+    <div class="sidebar-item" onclick="switchTab('report-records');if(typeof loadReportRecords==='function')loadReportRecords();">📋 报工记录</div>
+    <div class="sidebar-item" onclick="switchTab('quality-regression');if(typeof loadQualityRegression==='function')loadQualityRegression();" style="border-left:3px solid #9b59b6;">🔬 质检回归</div>
+    <div class="sidebar-item" onclick="switchTab('material-regression');if(typeof loadMaterialRegression==='function')loadMaterialRegression();" style="border-left:3px solid #e67e22;">📦 物料回归</div>
+    <div class="sidebar-item" onclick="switchTab('outsource-regression');if(typeof loadOutsourceRegression==='function')loadOutsourceRegression();" style="border-left:3px solid #1abc9c;">🔄 外协回归</div>
+    <div class="sidebar-item" onclick="switchTab('schedule-regression');if(typeof loadScheduleRegression==='function')loadScheduleRegression();" style="border-left:3px solid #3498db;">📅 排产回归</div>
+    <div class="sidebar-item" onclick="switchTab('schedule');if(typeof loadScheduleTab==='function')loadScheduleTab();">📅 排产列表</div>
+    <div class="sidebar-item" onclick="switchTab('material-dc');if(typeof loadMaterialDc==='function')loadMaterialDc();">📦 物料任务</div>
+    <div class="sidebar-item" onclick="switchTab('system-config')">⚙️ 系统配置</div>
+    <div class="sidebar-item" onclick="switchTab('sync-queue');if(typeof loadSyncQueue==='function')loadSyncQueue();" style="border-left:3px solid #e74c3c;">📡 同步队列</div>
+  </div>
+  <div class="main">
+
+    <!-- 概览 -->
+    <div id="tab-overview" class="tab-content active">
+      <div class="cards" id="overview-cards">
+        <div class="card"><div class="label">待处理任务</div><div class="value warning" id="ov-pending">-</div></div>
+        <div class="card"><div class="label">进行中</div><div class="value primary" id="ov-in-progress">-</div></div>
+        <div class="card"><div class="label">今日完成</div><div class="value success" id="ov-completed">-</div></div>
+        <div class="card"><div class="label">超时任务</div><div class="value danger" id="ov-overdue">-</div></div>
+        <div class="card"><div class="label">完成率</div><div class="value primary" id="ov-rate">-</div></div>
+        <div class="card"><div class="label">活跃流程</div><div class="value primary" id="ov-processes">-</div></div>
+        <div class="card" onclick="showPendingWarehousing()" style="cursor:pointer;"><div class="label">待入库</div><div class="value warning" id="ov-pending-warehousing">-</div></div>
+      </div>
+      <div class="section">
+        <div class="section-title">操作员负载</div>
+        <div id="operator-load"><div class="loading">加载中</div></div>
+      </div>
+      <div class="section">
+        <div class="section-title">容器中心概览</div>
+        <div class="cards" id="container-overview-cards">
+          <div class="card"><div class="label">待处理</div><div class="value warning" id="ct-pending">-</div></div>
+          <div class="card"><div class="label">已分配</div><div class="value primary" id="ct-distributed">-</div></div>
+          <div class="card"><div class="label">已确认</div><div class="value" style="color:#722ed1" id="ct-acknowledged">-</div></div>
+          <div class="card"><div class="label">已完成</div><div class="value success" id="ct-completed">-</div></div>
+          <div class="card"><div class="label">已过期</div><div class="value danger" id="ct-expired">-</div></div>
+          <div class="card"><div class="label">总数</div><div class="value primary" id="ct-total">-</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 任务调度 -->
+    <div id="tab-tasks" class="tab-content">
+      <div class="section">
+        <div class="section-title">
+          任务列表
+          <div class="actions">
+            <button class="btn btn-outline btn-sm" onclick="refreshTasks()">刷新</button>
+          </div>
+        </div>
+        <div class="filter-bar">
+          <select id="task-status-filter" onchange="refreshTasks()">
+            <option value="">全部状态</option>
+            <option value="pending">待处理</option>
+            <option value="dispatched">已分配</option>
+            <option value="in_progress">进行中</option>
+            <option value="completed">已完成</option>
+            <option value="overdue">已超时</option>
+            <option value="cancelled">已取消</option>
+          </select>
+          <select id="task-operator-filter" onchange="refreshTasks()">
+            <option value="">全部操作员</option>
+          </select>
+          <select id="task-type-filter" onchange="refreshTasks()">
+            <option value="">全部类型</option>
+            <option value="report">报工</option>
+            <option value="quality">质检</option>
+            <option value="material">物料</option>
+            <option value="approval">审批</option>
+          </select>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin:8px 0;">
+          <span style="font-size:13px;color:#666;">派发模式:</span>
+          <button id="btn-dispatch-mode" class="btn btn-sm btn-success" onclick="toggleDispatchMode()">
+            ✅ 全员派发
+          </button>
+          <select id="dispatch-dept-select" style="display:none;padding:4px 8px;border-radius:4px;" onchange="saveDeptFilter()">
+            <option value="">选择部门</option>
+            <option value="1">计划部</option>
+            <option value="2">销售部</option>
+            <option value="4">生产部/质检/仓库</option>
+          </select>
+          <span id="dispatch-mode-label" style="font-size:12px;color:#999;">任务自动对全体工人可见</span>
+          <button class="btn btn-sm btn-info" onclick="convertAllToPublic()" style="margin-left:12px;">
+            📋 全部转为全员
+          </button>
+        </div>
+        <div id="task-list"><div class="loading">加载中</div></div>
+      </div>
+    </div>
+
+    <!-- 操作员管理 -->
+    <div id="tab-operators" class="tab-content">
+      <div class="section">
+        <div class="section-title">
+          👥 操作员列表
+          <div class="actions">
+            <button class="btn btn-primary btn-sm" onclick="showAddOperatorModal()">+ 新增操作员</button>
+            <button class="btn btn-outline btn-sm" onclick="refreshOperators()">🔄 刷新</button>
+          </div>
+        </div>
+        <div id="operator-list"><div class="loading">加载中</div></div>
+      </div>
+      <div class="section">
+        <div class="section-title">
+          🏢 部门管理
+          <div class="actions">
+            <button class="btn btn-outline btn-sm" onclick="syncWechatDepartments()">☁️ 从云端同步</button>
+          </div>
+        </div>
+        <div id="department-list"><div class="empty-state">点击上方「☁️ 从云端同步」按钮加载企业微信部门架构</div></div>
+      </div>
+    </div>
+
+    <!-- 消息调度 -->
+    <div id="tab-messages" class="tab-content">
+      <div class="section">
+        <div class="section-title">
+          📋 消息模板
+          <div class="actions">
+            <button class="btn btn-outline btn-sm" onclick="resetDefaultTemplates()">🔄 重置默认</button>
+            <button class="btn btn-primary btn-sm" onclick="showTemplateModal()">+ 新建模板</button>
+          </div>
+        </div>
+        <div class="template-tabs">
+          <button class="template-tab active" data-category="all" onclick="switchTemplateTab('all')">全部</button>
+          <button class="template-tab" data-category="task" onclick="switchTemplateTab('task')">📋 任务类</button>
+          <button class="template-tab" data-category="process" onclick="switchTemplateTab('process')">🔧 流程类</button>
+          <button class="template-tab" data-category="alert" onclick="switchTemplateTab('alert')">⚠️ 告警类</button>
+          <button class="template-tab" data-category="material" onclick="switchTemplateTab('material')">📦 物料类</button>
+          <button class="template-tab" data-category="schedule" onclick="switchTemplateTab('schedule')">📅 排产类</button>
+          <button class="template-tab" data-category="other" onclick="switchTemplateTab('other')">📂 其他</button>
+        </div>
+        <div id="template-list"><div class="loading">加载中</div></div>
+      </div>
+      <div class="section">
+        <div class="section-title">
+          📤 消息发送
+          <div class="actions">
+            <button class="btn btn-outline btn-sm" onclick="showTemplatePreview()">👁 预览模板</button>
+          </div>
+        </div>
+        <div class="quick-template-bar">
+          <span class="quick-template-label">快速模板：</span>
+          <div class="quick-template-tabs" id="quick-template-tabs">
+            <button class="quick-tab active" data-category="task" onclick="switchQuickTemplate('task')">📋 任务类</button>
+            <button class="quick-tab" data-category="process" onclick="switchQuickTemplate('process')">🔧 流程类</button>
+            <button class="quick-tab" data-category="alert" onclick="switchQuickTemplate('alert')">⚠️ 告警类</button>
+            <button class="quick-tab" data-category="material" onclick="switchQuickTemplate('material')">📦 物料类</button>
+            <button class="quick-tab" data-category="schedule" onclick="switchQuickTemplate('schedule')">📅 排产类</button>
+            <button class="quick-tab" data-category="other" onclick="switchQuickTemplate('other')">📂 其他</button>
+          </div>
+        </div>
+        <div class="template-selector-grid" id="template-selector-grid"></div>
+        <div class="filter-bar" style="margin-bottom:12px;">
+          <select id="send-template-select" onchange="onSendTemplateChange()" style="flex:1;">
+            <option value="">— 选择模板发送（推荐）—</option>
+          </select>
+          <input type="text" id="send-variables" placeholder='{"工单号":"ORD001","操作员":"张三"}' style="flex:1;">
+        </div>
+        <div id="template-variable-hint" style="display:none;margin-bottom:12px;padding:8px 12px;background:#fffbe6;border:1px solid #ffe58f;border-radius:4px;font-size:12px;color:#8c6c00;">
+          💡 可用变量: <code id="var-hint-list"></code>
+        </div>
+        <div class="form-group">
+          <label>发送渠道</label>
+          <div class="checkbox-group">
+            <label><input type="checkbox" value="wechat_group" checked> 💬 企业微信群</label>
+            <label><input type="checkbox" value="wechat_app" onchange="toggleReceiverSelector()"> 🤖 企业微信应用</label>
+            <label><input type="checkbox" value="desktop"> 🖥 桌面端</label>
+          </div>
+        </div>
+        <div id="receiver-selector" class="form-group" style="display:none;">
+          <label>
+            <input type="checkbox" id="send-all-checkbox" onchange="toggleSendAll()">
+            👥 全员发送 (@all)
+          </label>
+          <div id="dept-receiver-list" style="max-height:200px;overflow-y:auto;border:1px solid #e8e8e8;border-radius:6px;padding:8px;margin-top:8px;">
+            <div class="loading" style="text-align:center;padding:20px;">加载中...</div>
+          </div>
+          <div id="operator-receiver-list" style="margin-top:8px;">
+          </div>
+          <div style="font-size:12px;color:#666;margin-top:4px;">
+            已选择: <span id="selected-receiver-count">0</span> 人
+          </div>
+        </div>
+        <div class="form-group">
+          <label>消息内容（支持Markdown）</label>
+          <textarea id="send-content" rows="4" placeholder="选择模板后自动填充，也可以手动输入..."></textarea>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary" onclick="sendMessage()">📨 发送消息</button>
+          <button class="btn btn-outline" onclick="document.getElementById('send-content').value='';document.getElementById('send-variables').value=''">清空</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 流程编排 -->
+    <div id="tab-processes" class="tab-content">
+      <div class="section">
+        <div class="section-title">
+          📋 流程与工单管理
+          <div class="actions">
+            <button class="btn btn-outline btn-sm" onclick="showCreateProcessModal()">+ 新建流程</button>
+            <button class="btn btn-outline btn-sm" onclick="refreshProcesses()">🔄 刷新</button>
+            <button class="btn btn-success btn-sm" onclick="syncWorkorders()">📡 同步工单</button>
+            <button class="btn btn-warning btn-sm" onclick="repairProcessProducts()">🔧 修复产品</button>
+          </div>
+        </div>
+        <div class="cards" id="workorder-stats" style="margin-bottom:16px;">
+          <div class="card"><div class="label">工单总数</div><div class="value primary" id="wo-total">-</div></div>
+          <div class="card"><div class="label">进行中</div><div class="value primary" id="wo-in-progress">-</div></div>
+          <div class="card"><div class="label">已完成</div><div class="value success" id="wo-completed">-</div></div>
+          <div class="card"><div class="label">任务总数</div><div class="value primary" id="wo-tasks">-</div></div>
+          <div class="card"><div class="label">已完成任务</div><div class="value success" id="wo-done-tasks">-</div></div>
+        </div>
+        <div class="filter-bar">
+          <select id="process-type-filter" onchange="loadProcesses()">
+            <option value="">全部类型</option>
+            <option value="production">生产流程</option>
+            <option value="material_purchase">物料采购</option>
+            <option value="quality">质检流程</option>
+          </select>
+          <select id="process-status-filter" onchange="loadProcesses()">
+            <option value="">全部状态</option>
+            <option value="created">已创建</option>
+            <option value="in_progress">进行中</option>
+            <option value="completed">已完成</option>
+          </select>
+          <form autocomplete="off" style="flex:1;max-width:280px;display:inline-flex;margin:0;padding:0;">
+            <input type="text" style="display:none;" aria-hidden="true">
+            <input id="process-search" placeholder="搜索工单号/客户/产品..." style="flex:1;" oninput="debounceProcessSearch()">
+          </form>
+        </div>
+        <div id="process-list"><div class="loading">加载中</div></div>
+      </div>
+
+      <!-- 新建工单弹窗 -->
+      <div id="create-workorder-modal-template" style="display:none;"></div>
+    </div>
+
+    <!-- 规则配置 -->
+    <div id="tab-rules" class="tab-content">
+      <div class="section">
+        <div class="section-title">调度规则配置</div>
+        <div id="rules-list"><div class="loading">加载中</div></div>
+        <div style="margin-top: 16px;">
+          <button class="btn btn-primary" onclick="saveRules()">保存规则</button>
+        </div>
+      </div>
+      <div class="section" style="margin-top: 24px;">
+        <div class="section-title">
+          流程匹配规则
+          <div class="actions">
+            <button class="btn btn-outline btn-sm" onclick="addFlowMatchingRule()">+ 新增规则</button>
+            <button class="btn btn-primary btn-sm" onclick="saveFlowMatchingRules()">保存</button>
+            <button class="btn btn-outline btn-sm" onclick="refreshFlowMatchingRules()">刷新</button>
+          </div>
+        </div>
+        <div id="flow-matching-rules-list"><div class="loading">加载中</div></div>
+      </div>
+    </div>
+
+    <!-- 工序配置 -->
+<div id="tab-process-config" class="tab-content">
+  <div class="process-config-layout">
+    <!-- 左侧：微信推送配置 -->
+    <div class="config-panel">
+      <div class="panel-header">📋 微信推送配置</div>
+      <div class="panel-body">
+        <div class="config-item">
+          <label class="config-label">
+            <input type="checkbox" id="cfg-auto-send">
+            <span>自动发送</span>
+          </label>
+          <div class="config-hint">开启后，工序任务创建后自动发送到微信群</div>
+        </div>
+        <div class="config-item">
+          <label class="config-label">
+            <input type="checkbox" id="cfg-default-all" checked>
+            <span>无匹配时发送给全员</span>
+          </label>
+          <div class="config-hint">工序未匹配到部门时，是否发送给全员</div>
+        </div>
+        <div class="config-item">
+          <label class="config-label">📝 消息模板</label>
+          <textarea id="cfg-template" rows="6" placeholder="支持变量: {order_no}, {order_no}, {process}, {operator_name}, {operator_id}, {quantity}, {source}, {created_at}"></textarea>
+          <div class="config-hint">支持 Markdown 格式，变量用 {} 包裹</div>
+        </div>
+        <div class="config-item">
+              <label class="config-label">📂 模板管理</label>
+              <div class="template-toolbar">
+                <select id="template-name-select" style="flex:1;" onchange="onProcessTemplateSelect(this.value)">
+                  <option value="">-- 选择模板 --</option>
+                </select>
+                <button class="btn btn-sm btn-primary" onclick="saveTemplate()">💾 保存</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteSelectedTemplate()">🗑 删除</button>
+              </div>
+            </div>
+        <div class="config-actions">
+          <button class="btn btn-primary" onclick="saveGlobalConfig()">💾 保存配置</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 中间：工序-部门绑定 -->
+    <div class="config-panel">
+      <div class="panel-header">🔗 工序部门绑定</div>
+      <div class="panel-body">
+        <div class="process-dept-list" id="process-dept-list">
+          <div class="loading">加载中...</div>
+        </div>
+        <div class="add-process-dept">
+          <select id="add-process-select">
+            <option value="">-- 选择工序 --</option>
+          </select>
+          <span class="arrow">→</span>
+          <select id="add-dept-select">
+            <option value="">-- 选择部门 --</option>
+          </select>
+          <button class="btn btn-sm btn-primary" onclick="addProcessDept()">添加</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 监控告警 -->
+<div id="tab-monitor" class="tab-content">
+      <div class="section">
+        <div class="section-title">
+          告警列表
+          <div class="actions">
+            <button class="btn btn-outline btn-sm" onclick="refreshAlerts()">刷新</button>
+          </div>
+        </div>
+        <div id="alert-list"><div class="loading">加载中</div></div>
+      </div>
+      <div class="section">
+        <div class="section-title">调度日志</div>
+        <div id="dispatch-log"><div class="loading">加载中</div></div>
+      </div>
+    </div>
+
+    <!-- 云端配置 -->
+    <div id="tab-cloud" class="tab-content">
+      <div class="section">
+        <div class="section-title">
+          ☁️ 云端连接配置
+          <div class="actions">
+            <button class="btn btn-outline btn-sm" onclick="testCloudConnection()">🔗 测试连接</button>
+          </div>
+        </div>
+        <form id="cloud-config-form" autocomplete="on" style="margin:0;padding:0;">
+        <div id="cloud-status" style="margin-bottom: 16px; padding: 12px; border-radius: 6px; background: #f5f5f5; display: none;">
+          <div id="cloud-status-text"></div>
+        </div>
+        <div class="form-group">
+          <label>云端地址 (Cloud Host)</label>
+          <input type="text" id="cloud-host" placeholder="https://你的云端域名" />
+          <div style="font-size: 12px; color: #888; margin-top: 4px;">例: https://your-domain.com (不需要加路径)</div>
+        </div>
+        <div class="form-group">
+          <label>API密钥 (API Key)</label>
+          <input type="password" id="cloud-api-key" placeholder="请输入API密钥" />
+          <div style="font-size: 12px; color: #888; margin-top: 4px;">云端设置的 WECHAT_CLOUD_API_KEY</div>
+        </div>
+        <div class="form-group">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" id="cloud-enabled" style="width: auto;" />
+            启用云端连接
+          </label>
+          <div style="font-size: 12px; color: #888; margin-top: 4px;">启用后，微信消息将通过云端中转</div>
+        </div>
+        </form>
+        <div class="form-group" style="margin-top: 12px;">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" id="cloud-group-notify" style="width: auto;" />
+            启用群通知
+          </label>
+          <div style="font-size: 12px; color: #888; margin-top: 4px;">启用后，群消息也将推送到微信</div>
+        </div>
+        <div style="margin-top: 20px;">
+          <button class="btn btn-primary" onclick="saveCloudConfig()">💾 保存配置</button>
+          <button class="btn btn-outline" style="margin-left: 8px;" onclick="loadCloudConfig()">🔄 重置</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">📡 连接状态 
+          <button class="btn btn-outline btn-sm" onclick="refreshCloudStatus()" title="手动刷新">🔄 刷新</button>
+        </div>
+        <div id="cloud-connection-info">
+          <table>
+            <tr><td style="width: 120px; color: #888;">云端状态</td><td id="cloud-connected">-</td></tr>
+            <tr><td style="color: #888;">云端地址</td><td id="cloud-host-display">-</td></tr>
+            <tr><td style="color: #888;">轮询代码</td><td id="cloud-poll-code">-</td></tr>
+            <tr><td style="color: #888;">消息数量</td><td id="cloud-poll-count">-</td></tr>
+            <tr><td style="color: #888;">数据来源</td><td id="cloud-poll-source">-</td></tr>
+            <tr><td style="color: #888;">最后轮询</td><td id="cloud-poll-time">-</td></tr>
+            <tr><td style="color: #888;">刷新状态</td><td id="cloud-refresh-status">-</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="section" id="poll-messages-section" style="display:none;">
+        <div class="section-title">📨 轮询消息</div>
+        <div id="poll-messages-list" style="max-height: 300px; overflow-y: auto;"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">📋 使用说明</div>
+        <div style="font-size: 13px; color: #666; line-height: 1.8;">
+          <p><strong>1. 云端服务器部署</strong></p>
+          <div style="background: #f5f5f5; padding: 12px; border-radius: 4px; margin: 8px 0;">
+            在云端服务器运行 <code style="background: #e8e8e8; padding: 2px 6px; border-radius: 3px;">python wechat_cloud.py</code>
+          </div>
+          <p><strong>2. 配置云端地址</strong></p>
+          <p>将云端服务器的域名或IP填入上方"云端地址"，并填写正确的API密钥</p>
+          <p><strong>3. 启用连接</strong></p>
+          <p>勾选"启用云端连接"后保存，本地服务将自动开始轮询云端</p>
+          <p><strong>4. 测试连接</strong></p>
+          <p>点击"测试连接"按钮验证云端是否可达</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 报修管理 -->
+    <div id="tab-repairs" class="tab-content">
+      <div class="section">
+        <div class="section-title">
+          报修记录
+          <div class="actions">
+            <button class="btn btn-outline btn-sm" onclick="refreshRepairs()">刷新</button>
+          </div>
+        </div>
+        <div id="repair-list"><div class="loading">加载中</div></div>
+      </div>
+      <div class="section">
+        <div class="section-title">报修种类配置</div>
+        <div style="margin-bottom: 12px;">
+          <button class="btn btn-primary" onclick="showRepairCategoryModal()">新增种类</button>
+        </div>
+        <div id="repair-category-list"><div class="loading">加载中</div></div>
+      </div>
+    </div>
+
+    <!-- 外协管理 -->
+    <div id="tab-outsource" class="tab-content">
+      <div class="section">
+        <div class="section-title">
+          外协任务
+          <div class="actions">
+            <button class="btn btn-primary btn-sm" onclick="showOutsourceCreateModal()">新建外协</button>
+            <button class="btn btn-outline btn-sm" onclick="loadOutsourceRecords()">刷新</button>
+          </div>
+        </div>
+        <div class="filter-bar">
+          <select id="outsource-filter-status" onchange="loadOutsourceRecords()">
+            <option value="">全部状态</option>
+            <option value="pending">待反馈</option>
+            <option value="processing">加工中</option>
+            <option value="completed">已完成</option>
+            <option value="received">已收货</option>
+            <option value="overdue">已逾期</option>
+          </select>
+        </div>
+        <div id="outsource-list"><div class="loading">加载中</div></div>
+      </div>
+      <div class="section">
+        <div class="section-title">外协配置</div>
+        <div id="outsource-config"><div class="loading">加载中</div></div>
+      </div>
+    </div>
+
+    <!-- 成品入库 -->
+    <div id="tab-warehousing" class="tab-content">
+      <div class="section">
+        <div class="section-title">
+          📦 待入库工单
+          <div class="actions">
+            <button class="btn btn-outline btn-sm" onclick="loadWarehousing()">🔄 刷新</button>
+          </div>
+        </div>
+        <div id="warehousing-list"><div class="loading">加载中</div></div>
+      </div>
+    </div>
+
+    <!-- 反馈管理 -->
+<div id="tab-feedback" class="tab-content">
+  <div class="section">
+    <div class="section-title">
+      📋 问题反馈
+      <div class="actions">
+        <button class="btn btn-primary btn-sm" onclick="showCreateFeedbackModal()">+ 提交反馈</button>
+        <button class="btn btn-outline btn-sm" onclick="loadFeedback()">🔄 刷新</button>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <select id="fb-status-filter" onchange="loadFeedback()">
+        <option value="">全部状态</option>
+        <option value="open">待处理</option>
+        <option value="in_progress">处理中</option>
+        <option value="resolved">已解决</option>
+        <option value="closed">已关闭</option>
+      </select>
+      <select id="fb-category-filter" onchange="loadFeedback()">
+        <option value="">全部类型</option>
+        <option value="template">📋 模板问题</option>
+        <option value="system">⚙️ 系统问题</option>
+        <option value="process">🔧 流程问题</option>
+        <option value="data">📊 数据问题</option>
+        <option value="other">📂 其他</option>
+      </select>
+      <select id="fb-source-filter" onchange="loadFeedback()">
+        <option value="">全部来源</option>
+        <option value="auto">🤖 自动检测</option>
+        <option value="manual">👤 人工提交</option>
+      </select>
+      <span id="fb-stats" style="font-size:13px;color:#888;margin-left:auto;"></span>
+    </div>
+    <div id="feedback-list"><div class="loading">加载中</div></div>
+  </div>
+</div>
+
+<!-- 系统配置（动态渲染） -->
+<div class="tab-content" id="tab-system-config">
+  <div class="config-center-layout">
+    <div class="config-sidebar" id="config-category-tabs"></div>
+    <div class="config-main" id="config-category-content">
+      <div class="loading">加载配置中...</div>
+    </div>
+  </div>
+</div>
+
+<!-- 同步队列 tab -->
+<div class="tab-content" id="tab-sync-queue">
+  <div class="page-header">
+    <h2>📡 同步队列</h2>
+    <p class="subtitle">8008同步失败的记录，可手动重推</p>
+  </div>
+  <div class="filter-bar" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px;padding:12px;background:#f8f9fa;border-radius:8px;">
+    <select id="sq-status" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;">
+      <option value="failed,retry">失败+待重试</option>
+      <option value="failed">仅失败</option>
+      <option value="retry">仅待重试</option>
+      <option value="completed">已完成</option>
+      <option value="pending">待处理</option>
+    </select>
+    <button onclick="loadSyncQueue(1)" style="padding:8px 20px;background:#3498db;color:#fff;border:none;border-radius:6px;cursor:pointer;">🔍 查询</button>
+    <button onclick="document.getElementById('sq-status').value='failed,retry';loadSyncQueue(1)" style="padding:8px 20px;background:#95a5a6;color:#fff;border:none;border-radius:6px;cursor:pointer;">🔄 重置</button>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    <div>共 <span id="sq-total">0</span> 条</div>
+    <div id="sq-pagination" style="display:flex;gap:5px;"></div>
+  </div>
+  <div id="sq-list" style="background:#fff;border-radius:8px;overflow:hidden;">
+    <div style="padding:30px;text-align:center;color:#999;">加载中...</div>
+  </div>
+</div>
+
+<!-- 同步队列重试确认弹窗 -->
+<div id="sq-retry-modal" class="modal-overlay">
+  <div class="modal" style="width:480px;">
+    <div class="modal-header">
+      <h3>📡 重推同步</h3>
+      <button class="modal-close" onclick="closeSqRetryModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="sq-retry-body" style="padding:20px;font-size:14px;line-height:1.8;"></div>
+    <div class="modal-footer" style="padding:12px 20px;text-align:right;border-top:1px solid #eee;">
+      <button onclick="closeSqRetryModal()" style="padding:8px 16px;background:#95a5a6;color:#fff;border:none;border-radius:6px;cursor:pointer;margin-right:8px;">取消</button>
+      <button onclick="confirmSqRetry()" style="padding:8px 16px;background:#e74c3c;color:#fff;border:none;border-radius:6px;cursor:pointer;">确认重推</button>
+    </div>
+  </div>
+</div>
+
+<!-- 反馈编辑弹窗 -->
+<div id="feedback-modal" class="modal-overlay">
+  <div class="modal" style="width:560px;">
+    <div class="modal-header">
+      <h3 id="fb-modal-title">提交反馈</h3>
+      <button class="modal-close" onclick="closeModal('feedback-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="fb-edit-id">
+      <div class="form-group">
+        <label>反馈标题 <span style="color:#ff4d4f;">*</span></label>
+        <input id="fb-title" placeholder="简要描述问题">
+      </div>
+      <div class="form-group">
+        <label>详细描述</label>
+        <textarea id="fb-description" rows="4" placeholder="请详细描述问题的现象、触发条件等"></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+        <div class="form-group">
+          <label>类型</label>
+          <select id="fb-category">
+            <option value="template">📋 模板问题</option>
+            <option value="system">⚙️ 系统问题</option>
+            <option value="process">🔧 流程问题</option>
+            <option value="data">📊 数据问题</option>
+            <option value="other">📂 其他</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>优先级</label>
+          <select id="fb-priority">
+            <option value="low">🟢 低</option>
+            <option value="medium" selected>🟡 中</option>
+            <option value="high">🔴 高</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>状态</label>
+          <select id="fb-status" onchange="toggleFeedbackResolveFields()">
+            <option value="open">待处理</option>
+            <option value="in_progress">处理中</option>
+            <option value="resolved">已解决</option>
+            <option value="closed">已关闭</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group" id="fb-resolution-group" style="display:none;">
+        <label>解决方案</label>
+        <textarea id="fb-resolution" rows="3" placeholder="描述解决该问题的具体方案"></textarea>
+      </div>
+      <div class="form-group" id="fb-resolver-group" style="display:none;">
+        <label>处理人</label>
+        <input id="fb-resolver" placeholder="处理人姓名">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('feedback-modal')">取消</button>
+      <button class="btn btn-primary" onclick="saveFeedback()">💾 保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 模板编辑弹窗 -->
+<div id="template-modal" class="modal-overlay">
+  <div class="modal" style="width:840px;">
+    <div class="modal-header">
+      <h3 id="template-modal-title">编辑模板</h3>
+      <button class="modal-close" onclick="closeModal('template-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="tmpl-edit-id">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+        <div class="form-group">
+          <label>模板名称 <span style="color:#ff4d4f;">*</span></label>
+          <input id="tmpl-name" placeholder="例如：任务分配通知">
+        </div>
+        <div class="form-group">
+          <label>分类 <span style="color:#ff4d4f;">*</span></label>
+          <select id="tmpl-category" onchange="onCategoryChange()">
+            <option value="task">📋 任务类</option>
+            <option value="process">🔧 流程类</option>
+            <option value="alert">⚠️ 告警类</option>
+            <option value="material">📦 物料类</option>
+            <option value="schedule">📅 排产类</option>
+            <option value="other">📂 其他</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>描述</label>
+        <input id="tmpl-description" placeholder="简要说明该模板的用途">
+      </div>
+      <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:16px;">
+        <div>
+          <label>消息内容</label>
+          <textarea id="tmpl-content" rows="8" oninput="updatePreview()"
+            placeholder="请输入模板内容，用 {变量名} 定义占位符..."
+            style="font-family:monospace;font-size:13px;border-radius:4px;width:100%;box-sizing:border-box;"></textarea>
+          <div id="var-panel" style="margin-top:8px;border:1px solid #e8e8ff;border-radius:6px;background:#fafaff;overflow:hidden;">
+            <div id="var-panel-header" style="padding:6px 10px;background:#f0f0ff;font-size:12px;color:#667eea;font-weight:500;display:none;border-bottom:1px solid #e8e8ff;">
+              📌 已检测变量 <span id="var-count"></span>
+            </div>
+            <div id="var-panel-body" style="padding:10px;display:flex;flex-wrap:wrap;gap:6px;min-height:36px;">
+              <span id="var-panel-empty" style="color:#bbb;font-size:12px;">输入 <code style="background:#f0f0f0;padding:1px 4px;border-radius:2px;">{变量名}</code> 后将在此显示可拖拽的变量卡片</span>
+            </div>
+            <div id="available-vars-panel" style="padding:10px;border-top:1px solid #e8e8ff;min-height:30px;"></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+            <div class="form-group" style="flex:1;min-width:200px;">
+              <label>发送渠道</label>
+              <div class="checkbox-group">
+                <label><input type="checkbox" value="wechat_group" checked onchange="updatePreview()"> 💬 群聊</label>
+                <label><input type="checkbox" value="wechat_app" onchange="updatePreview(); toggleTmplReceiverSelector();"> 🤖 应用</label>
+                <label><input type="checkbox" value="desktop" onchange="updatePreview()"> 🖥 桌面</label>
+              </div>
+            </div>
+          </div>
+          <div id="tmpl-receiver-selector" class="form-group" style="display:none;">
+            <label>
+              <input type="checkbox" id="tmpl-send-all-checkbox" onchange="toggleTmplSendAll()">
+              👥 全员发送 (@all)
+            </label>
+            <div id="tmpl-dept-receiver-list" style="max-height:160px;overflow-y:auto;border:1px solid #e8e8e8;border-radius:6px;padding:8px;margin-top:8px;">
+              <div class="loading" style="text-align:center;padding:20px;">加载中...</div>
+            </div>
+            <div id="tmpl-operator-receiver-list" style="margin-top:8px;">
+            </div>
+            <div style="font-size:12px;color:#666;margin-top:4px;">
+              已选择: <span id="tmpl-selected-receiver-count">0</span> 人
+            </div>
+          </div>
+        </div>
+        <div>
+          <label>实时预览</label>
+          <div id="tmpl-preview" style="background:#f5f5f5;border:1px solid #e8e8e8;border-radius:6px;padding:0;min-height:280px;font-size:13px;overflow:hidden;">
+            <div style="background:#667eea;color:#fff;padding:8px 12px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px;">
+              <span style="width:8px;height:8px;border-radius:50%;background:#fff;display:inline-block;"></span>
+              <span id="preview-title">消息预览</span>
+              <span id="preview-channel-tag" style="margin-left:auto;font-size:11px;background:rgba(255,255,255,0.2);padding:2px 8px;border-radius:10px;">群聊</span>
+            </div>
+            <div id="preview-body" style="padding:12px;white-space:pre-wrap;line-height:1.6;color:#333;min-height:180px;font-size:13px;">
+              <div style="color:#999;text-align:center;padding:40px 0;">编辑左侧内容后自动预览</div>
+            </div>
+            <div id="preview-vars" style="border-top:1px dashed #ddd;padding:8px 12px;background:#fafafa;font-size:12px;">
+              <div style="color:#888;margin-bottom:4px;">📌 变量测试值</div>
+              <div id="preview-var-inputs" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('template-modal')">取消</button>
+      <button class="btn btn-primary" onclick="saveTemplate()">💾 保存模板</button>
+    </div>
+  </div>
+</div>
+
+    <!-- 质检管理 -->
+    <div id="tab-quality-inspect" class="tab-content">
+      <div class="cards" style="grid-template-columns: repeat(4,1fr);margin-bottom:15px;">
+        <div class="card"><div class="label">总记录</div><div class="value primary" id="qi-stat-total">-</div></div>
+        <div class="card"><div class="label">合格</div><div class="value success" id="qi-stat-passed">-</div></div>
+        <div class="card"><div class="label">不合格</div><div class="value danger" id="qi-stat-failed">-</div></div>
+        <div class="card"><button class="btn btn-primary" onclick="loadQualityRecords()" style="margin-top:10px;">🔄 刷新</button></div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <button class="filter-btn active" onclick="qiChangeFilter('全部')" style="padding:6px 14px;border:1px solid #ddd;border-radius:4px;background:white;cursor:pointer;margin-right:6px;">全部</button>
+        <button class="filter-btn" onclick="qiChangeFilter('合格')" style="padding:6px 14px;border:1px solid #ddd;border-radius:4px;background:white;cursor:pointer;margin-right:6px;">合格</button>
+        <button class="filter-btn" onclick="qiChangeFilter('不合格')" style="padding:6px 14px;border:1px solid #ddd;border-radius:4px;background:white;cursor:pointer;margin-right:6px;">不合格</button>
+        <button class="filter-btn" onclick="qiChangeFilter('待复检')" style="padding:6px 14px;border:1px solid #ddd;border-radius:4px;background:white;cursor:pointer;margin-right:6px;">待复检</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead><tr style="background:#f5f5f5;">
+            <th style="padding:8px;text-align:left;">ID</th>
+            <th style="padding:8px;text-align:left;">订单号</th>
+            <th style="padding:8px;text-align:left;">类型</th>
+            <th style="padding:8px;text-align:left;">工序</th>
+            <th style="padding:8px;text-align:left;">质检员</th>
+            <th style="padding:8px;text-align:left;">结果</th>
+            <th style="padding:8px;text-align:left;">审核</th>
+            <th style="padding:8px;text-align:left;">日期</th>
+            <th style="padding:8px;text-align:left;">操作</th>
+          </tr></thead>
+          <tbody id="qi-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 质检详情弹窗 -->
+    <div id="qi-detail-modal" class="modal-overlay" onclick="if(event.target===this)closeQiModal()">
+      <div class="modal-content" style="max-width:600px;max-height:80vh;overflow-y:auto;">
+        <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>📋 质检详情 #<span id="qid-id"></span></span>
+          <button onclick="closeQiModal()" style="border:none;background:none;font-size:20px;cursor:pointer;">✕</button>
+        </div>
+        <div id="qid-body"></div>
+      </div>
+    </div>
+
+    <!-- 排产列表 tab -->
+    <div id="tab-schedule" class="tab-content">
+      <div class="page-header">
+        <h2>📅 排产列表</h2>
+        <p class="subtitle">所有已排产订单的状态跟踪</p>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <input id="sch-filter" type="text" placeholder="搜索订单号" style="flex:1;padding:8px 12px;border:1px solid #ddd;border-radius:6px;"
+          oninput="loadScheduleTab()">
+        <button onclick="loadScheduleTab()" style="padding:8px 16px;background:#3498db;color:#fff;border:none;border-radius:6px;cursor:pointer;">🔍 查询</button>
+      </div>
+      <div id="sch-list" style="background:#fff;border-radius:8px;">
+        <div style="padding:30px;text-align:center;color:#999;">加载中...</div>
+      </div>
+    </div>
+
+    <!-- 物料任务 tab -->
+    <div id="tab-material-dc" class="tab-content">
+      <div class="page-header">
+        <h2>📦 物料任务</h2>
+        <p class="subtitle">所有订单的物料准备情况</p>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <input id="mat-dc-filter" type="text" placeholder="搜索订单号" style="flex:1;padding:8px 12px;border:1px solid #ddd;border-radius:6px;"
+          oninput="loadMaterialDc()">
+        <button onclick="loadMaterialDc()" style="padding:8px 16px;background:#3498db;color:#fff;border:none;border-radius:6px;cursor:pointer;">🔍 查询</button>
+      </div>
+      <div id="mat-dc-list" style="background:#fff;border-radius:8px;">
+        <div style="padding:30px;text-align:center;color:#999;">加载中...</div>
+      </div>
+    </div>
+
+    <!-- 报工记录管理 tab -->
+    <div id="tab-report-records" class="tab-content">
+      <div class="page-header">
+        <h2>📋 报工记录管理</h2>
+        <p class="subtitle">查看、修改、撤回所有报工记录，变更全部留痕可审计</p>
+      </div>
+
+      <!-- 筛选区 -->
+      <div class="filter-bar" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px;padding:12px;background:#f8f9fa;border-radius:8px;">
+        <input id="rr-filter-order" type="text" placeholder="订单号" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;width:140px;">
+        <input id="rr-filter-step" type="text" placeholder="工序" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;width:120px;">
+        <input id="rr-filter-operator" type="text" placeholder="操作员" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;width:120px;">
+        <input id="rr-filter-start" type="date" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;">
+        <input id="rr-filter-end" type="date" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;">
+        <button onclick="loadReportRecords(1)" style="padding:8px 20px;background:#3498db;color:#fff;border:none;border-radius:6px;cursor:pointer;">🔍 查询</button>
+        <button onclick="resetReportRecordFilter()" style="padding:8px 20px;background:#95a5a6;color:#fff;border:none;border-radius:6px;cursor:pointer;">🔄 重置</button>
+      </div>
+
+      <!-- 统计 + 分页 -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div>共 <span id="rr-total">0</span> 条记录</div>
+        <div id="rr-pagination" style="display:flex;gap:5px;"></div>
+      </div>
+
+      <!-- 列表 -->
+      <div id="rr-list" style="background:#fff;border-radius:8px;overflow:hidden;">
+        <div style="padding:30px;text-align:center;color:#999;">加载中...</div>
+      </div>
+    </div>
+
+    <!-- ============= 质检回归审计 ============= -->
+    <div id="tab-quality-regression" class="tab-content">
+      <div class="page-header">
+        <h2>🔬 质检回归审计</h2>
+        <p class="subtitle">查看、修改、撤回质检记录，变更全部留痕可审计</p>
+      </div>
+      <div class="filter-bar" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px;padding:12px;background:#f8f9fa;border-radius:8px;">
+        <input id="qr-filter-order" type="text" placeholder="订单号" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;width:140px;">
+        <input id="qr-filter-type" type="text" placeholder="质检类型" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;width:120px;">
+        <input id="qr-filter-operator" type="text" placeholder="质检员" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;width:120px;">
+        <input id="qr-filter-start" type="date" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;">
+        <input id="qr-filter-end" type="date" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;">
+        <button onclick="loadQualityRegression(1)" style="padding:8px 20px;background:#9b59b6;color:#fff;border:none;border-radius:6px;cursor:pointer;">🔍 查询</button>
+        <button onclick="resetQualityRegressionFilter()" style="padding:8px 20px;background:#95a5a6;color:#fff;border:none;border-radius:6px;cursor:pointer;">🔄 重置</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div>共 <span id="qr-total">0</span> 条记录</div>
+        <div id="qr-pagination" style="display:flex;gap:5px;"></div>
+      </div>
+      <div id="qr-list" style="background:#fff;border-radius:8px;overflow:hidden;">
+        <div style="padding:30px;text-align:center;color:#999;">加载中...</div>
+      </div>
+    </div>
+
+    <!-- ============= 物料回归审计 ============= -->
+    <div id="tab-material-regression" class="tab-content">
+      <div class="page-header">
+        <h2>📦 物料回归审计</h2>
+        <p class="subtitle">查看、修改、撤回物料记录，变更全部留痕可审计</p>
+      </div>
+      <div class="filter-bar" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px;padding:12px;background:#f8f9fa;border-radius:8px;">
+        <input id="mr-filter-order" type="text" placeholder="订单号/标题" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;width:140px;">
+        <input id="mr-filter-operator" type="text" placeholder="目标操作员" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;width:120px;">
+        <input id="mr-filter-start" type="date" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;">
+        <input id="mr-filter-end" type="date" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;">
+        <button onclick="loadMaterialRegression(1)" style="padding:8px 20px;background:#e67e22;color:#fff;border:none;border-radius:6px;cursor:pointer;">🔍 查询</button>
+        <button onclick="resetMaterialRegressionFilter()" style="padding:8px 20px;background:#95a5a6;color:#fff;border:none;border-radius:6px;cursor:pointer;">🔄 重置</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div>共 <span id="mr-total">0</span> 条记录</div>
+        <div id="mr-pagination" style="display:flex;gap:5px;"></div>
+      </div>
+      <div id="mr-list" style="background:#fff;border-radius:8px;overflow:hidden;">
+        <div style="padding:30px;text-align:center;color:#999;">加载中...</div>
+      </div>
+    </div>
+
+    <!-- ============= 外协回归审计 ============= -->
+    <div id="tab-outsource-regression" class="tab-content">
+      <div class="page-header">
+        <h2>🔄 外协回归审计</h2>
+        <p class="subtitle">查看、修改、撤回外协记录，变更全部留痕可审计</p>
+      </div>
+      <div class="filter-bar" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px;padding:12px;background:#f8f9fa;border-radius:8px;">
+        <input id="or-filter-order" type="text" placeholder="订单号/标题" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;width:140px;">
+        <input id="or-filter-operator" type="text" placeholder="目标操作员" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;width:120px;">
+        <input id="or-filter-start" type="date" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;">
+        <input id="or-filter-end" type="date" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;">
+        <button onclick="loadOutsourceRegression(1)" style="padding:8px 20px;background:#1abc9c;color:#fff;border:none;border-radius:6px;cursor:pointer;">🔍 查询</button>
+        <button onclick="resetOutsourceRegressionFilter()" style="padding:8px 20px;background:#95a5a6;color:#fff;border:none;border-radius:6px;cursor:pointer;">🔄 重置</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div>共 <span id="or-total">0</span> 条记录</div>
+        <div id="or-pagination" style="display:flex;gap:5px;"></div>
+      </div>
+      <div id="or-list" style="background:#fff;border-radius:8px;overflow:hidden;">
+        <div style="padding:30px;text-align:center;color:#999;">加载中...</div>
+      </div>
+    </div>
+
+    <!-- ============= 排产回归审计 ============= -->
+    <div id="tab-schedule-regression" class="tab-content">
+      <div class="page-header">
+        <h2>📅 排产回归审计</h2>
+        <p class="subtitle">查看、修改、撤回排产记录，变更全部留痕可审计</p>
+      </div>
+      <div class="filter-bar" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px;padding:12px;background:#f8f9fa;border-radius:8px;">
+        <input id="sr-filter-order" type="text" placeholder="订单号/标题" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;width:140px;">
+        <input id="sr-filter-operator" type="text" placeholder="目标操作员" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;width:120px;">
+        <input id="sr-filter-start" type="date" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;">
+        <input id="sr-filter-end" type="date" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;">
+        <button onclick="loadScheduleRegression(1)" style="padding:8px 20px;background:#3498db;color:#fff;border:none;border-radius:6px;cursor:pointer;">🔍 查询</button>
+        <button onclick="resetScheduleRegressionFilter()" style="padding:8px 20px;background:#95a5a6;color:#fff;border:none;border-radius:6px;cursor:pointer;">🔄 重置</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div>共 <span id="sr-total">0</span> 条记录</div>
+        <div id="sr-pagination" style="display:flex;gap:5px;"></div>
+      </div>
+      <div id="sr-list" style="background:#fff;border-radius:8px;overflow:hidden;">
+        <div style="padding:30px;text-align:center;color:#999;">加载中...</div>
+      </div>
+    </div>
+
+    <!-- 修改弹窗 -->
+    <div id="rr-edit-modal" class="modal-overlay" onclick="if(event.target===this)closeRrEditModal()" style="display:none;">
+      <div class="modal-content" style="max-width:520px;">
+        <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;padding:15px 20px;border-bottom:1px solid #eee;">
+          <span>✏️ 修改报工记录</span>
+          <button onclick="closeRrEditModal()" style="border:none;background:none;font-size:20px;cursor:pointer;">✕</button>
+        </div>
+        <div style="padding:20px;">
+          <div style="margin-bottom:12px;padding:10px;background:#f8f9fa;border-radius:6px;font-size:13px;">
+            <div>订单号: <span id="rre-order" style="font-weight:bold;"></span></div>
+            <div>工序: <span id="rre-step" style="font-weight:bold;"></span></div>
+            <div>操作员: <span id="rre-operator" style="font-weight:bold;"></span></div>
+            <div>批次: <span id="rre-batch"></span></div>
+            <div>原始数量: <span id="rre-old-qty" style="font-weight:bold;color:#e74c3c;"></span></div>
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="display:block;margin-bottom:5px;font-size:13px;">新数量 *</label>
+            <input id="rre-new-qty" type="number" step="0.01" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="display:block;margin-bottom:5px;font-size:13px;">修改原因 *</label>
+            <select id="rre-reason" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
+              <option value="admin_force">管理员修正</option>
+              <option value="data_error">数据录入错误</option>
+              <option value="process_adjust">工艺调整</option>
+              <option value="quality_redo">质量返工</option>
+            </select>
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="display:block;margin-bottom:5px;font-size:13px;">备注</label>
+            <textarea id="rre-remark" rows="2" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;"></textarea>
+          </div>
+          <div style="padding:10px;background:#fff3cd;border-radius:6px;font-size:12px;margin-bottom:15px;">
+            ⚠️ 提示：此操作会写审计记录，被修正人会收到通知
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button onclick="closeRrEditModal()" style="padding:8px 20px;background:#95a5a6;color:#fff;border:none;border-radius:6px;cursor:pointer;">取消</button>
+            <button onclick="submitRrUpdate()" style="padding:8px 20px;background:#3498db;color:#fff;border:none;border-radius:6px;cursor:pointer;">确认修改</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 撤回弹窗 -->
+    <div id="rr-withdraw-modal" class="modal-overlay" onclick="if(event.target===this)closeRrWithdrawModal()" style="display:none;">
+      <div class="modal-content" style="max-width:480px;">
+        <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;padding:15px 20px;border-bottom:1px solid #eee;">
+          <span>🗑️ 撤回报工记录</span>
+          <button onclick="closeRrWithdrawModal()" style="border:none;background:none;font-size:20px;cursor:pointer;">✕</button>
+        </div>
+        <div style="padding:20px;">
+          <div style="margin-bottom:12px;padding:10px;background:#fee;border-radius:6px;font-size:13px;">
+            <div>订单号: <span id="rrw-order" style="font-weight:bold;"></span></div>
+            <div>工序: <span id="rrw-step" style="font-weight:bold;"></span></div>
+            <div>操作员: <span id="rrw-operator" style="font-weight:bold;"></span></div>
+            <div>数量: <span id="rrw-qty" style="font-weight:bold;color:#e74c3c;"></span></div>
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="display:block;margin-bottom:5px;font-size:13px;">撤回原因 *</label>
+            <textarea id="rrw-reason" rows="2" placeholder="如：操作员报工错误" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;"></textarea>
+          </div>
+          <div style="padding:10px;background:#fee;border-radius:6px;font-size:12px;margin-bottom:15px;">
+            ⚠️ 撤回后该记录数量清零，工序累计会减少，原操作员会收到通知
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button onclick="closeRrWithdrawModal()" style="padding:8px 20px;background:#95a5a6;color:#fff;border:none;border-radius:6px;cursor:pointer;">取消</button>
+            <button onclick="submitRrWithdraw()" style="padding:8px 20px;background:#e74c3c;color:#fff;border:none;border-radius:6px;cursor:pointer;">确认撤回</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 历史详情弹窗 -->
+    <div id="rr-history-modal" class="modal-overlay" onclick="if(event.target===this)closeRrHistoryModal()" style="display:none;">
+      <div class="modal-content" style="max-width:560px;max-height:80vh;overflow-y:auto;">
+        <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;padding:15px 20px;border-bottom:1px solid #eee;">
+          <span>📜 修改历史</span>
+          <button onclick="closeRrHistoryModal()" style="border:none;background:none;font-size:20px;cursor:pointer;">✕</button>
+        </div>
+        <div id="rrh-body" style="padding:20px;"></div>
+      </div>
+    </div>
+
+    <!-- ============= 质检回归 · 修改弹窗 ============= -->
+    <div id="qr-edit-modal" class="modal-overlay" onclick="if(event.target===this)closeQrEditModal()" style="display:none;">
+      <div class="modal-content" style="max-width:520px;">
+        <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;padding:15px 20px;border-bottom:1px solid #eee;">
+          <span>✏️ 修改质检结果</span>
+          <button onclick="closeQrEditModal()" style="border:none;background:none;font-size:20px;cursor:pointer;">✕</button>
+        </div>
+        <div style="padding:20px;">
+          <div style="margin-bottom:12px;padding:10px;background:#f8f9fa;border-radius:6px;font-size:13px;">
+            <div>订单号: <span id="qre-order" style="font-weight:bold;"></span></div>
+            <div>工序: <span id="qre-step" style="font-weight:bold;"></span></div>
+            <div>质检员: <span id="qre-operator" style="font-weight:bold;"></span></div>
+            <div>质检类型: <span id="qre-type"></span></div>
+            <div>当前结果: <span id="qre-old-result" style="font-weight:bold;color:#e74c3c;"></span></div>
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="display:block;margin-bottom:5px;font-size:13px;">新结果 *</label>
+            <select id="qre-new-result" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
+              <option value="合格">合格</option>
+              <option value="不合格">不合格</option>
+              <option value="待复检">待复检</option>
+            </select>
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="display:block;margin-bottom:5px;font-size:13px;">修改原因 *</label>
+            <select id="qre-reason" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
+              <option value="admin_force">管理员修正</option>
+              <option value="data_error">数据录入错误</option>
+              <option value="quality_redo">质量返工</option>
+            </select>
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="display:block;margin-bottom:5px;font-size:13px;">备注</label>
+            <textarea id="qre-remark" rows="2" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;"></textarea>
+          </div>
+          <div style="padding:10px;background:#f3e8ff;border-radius:6px;font-size:12px;margin-bottom:15px;">
+            ⚠️ 此操作会写审计记录
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button onclick="closeQrEditModal()" style="padding:8px 20px;background:#95a5a6;color:#fff;border:none;border-radius:6px;cursor:pointer;">取消</button>
+            <button onclick="submitQrUpdate()" style="padding:8px 20px;background:#9b59b6;color:#fff;border:none;border-radius:6px;cursor:pointer;">确认修改</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 质检撤回弹窗 -->
+    <div id="qr-withdraw-modal" class="modal-overlay" onclick="if(event.target===this)closeQrWithdrawModal()" style="display:none;">
+      <div class="modal-content" style="max-width:480px;">
+        <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;padding:15px 20px;border-bottom:1px solid #eee;">
+          <span>🗑️ 撤回质检记录</span>
+          <button onclick="closeQrWithdrawModal()" style="border:none;background:none;font-size:20px;cursor:pointer;">✕</button>
+        </div>
+        <div style="padding:20px;">
+          <div style="margin-bottom:12px;padding:10px;background:#fee;border-radius:6px;font-size:13px;">
+            <div>订单号: <span id="qrw-order" style="font-weight:bold;"></span></div>
+            <div>工序: <span id="qrw-step" style="font-weight:bold;"></span></div>
+            <div>质检员: <span id="qrw-operator" style="font-weight:bold;"></span></div>
+            <div>当前结果: <span id="qrw-result" style="font-weight:bold;color:#e74c3c;"></span></div>
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="display:block;margin-bottom:5px;font-size:13px;">撤回原因 *</label>
+            <textarea id="qrw-reason" rows="2" placeholder="如：质检记录有误" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;"></textarea>
+          </div>
+          <div style="padding:10px;background:#fee;border-radius:6px;font-size:12px;margin-bottom:15px;">
+            ⚠️ 撤回后该质检记录被标记为已撤回
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button onclick="closeQrWithdrawModal()" style="padding:8px 20px;background:#95a5a6;color:#fff;border:none;border-radius:6px;cursor:pointer;">取消</button>
+            <button onclick="submitQrWithdraw()" style="padding:8px 20px;background:#e74c3c;color:#fff;border:none;border-radius:6px;cursor:pointer;">确认撤回</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 质检历史弹窗 -->
+    <div id="qr-history-modal" class="modal-overlay" onclick="if(event.target===this)closeQrHistoryModal()" style="display:none;">
+      <div class="modal-content" style="max-width:560px;max-height:80vh;overflow-y:auto;">
+        <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;padding:15px 20px;border-bottom:1px solid #eee;">
+          <span>📜 质检修改历史</span>
+          <button onclick="closeQrHistoryModal()" style="border:none;background:none;font-size:20px;cursor:pointer;">✕</button>
+        </div>
+        <div id="qrh-body" style="padding:20px;"></div>
+      </div>
+    </div>
+
+    <!-- ============= 物料回归 · 弹窗 ============= -->
+    <div id="mr-edit-modal" class="modal-overlay" onclick="if(event.target===this)closeMrEditModal()" style="display:none;">
+      <div class="modal-content" style="max-width:520px;">
+        <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;padding:15px 20px;border-bottom:1px solid #eee;">
+          <span>✏️ 修改物料记录</span>
+          <button onclick="closeMrEditModal()" style="border:none;background:none;font-size:20px;cursor:pointer;">✕</button>
+        </div>
+        <div style="padding:20px;">
+          <div style="margin-bottom:12px;padding:10px;background:#f8f9fa;border-radius:6px;font-size:13px;">
+            <div>订单号: <span id="mre-order" style="font-weight:bold;"></span></div>
+            <div>工序: <span id="mre-step" style="font-weight:bold;"></span></div>
+            <div>当前操作员: <span id="mre-operator" style="font-weight:bold;"></span></div>
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="display:block;margin-bottom:5px;font-size:13px;">标题</label>
+            <input id="mre-title" type="text" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="display:block;margin-bottom:5px;font-size:13px;">优先级</label>
+            <select id="mre-priority" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
+              <option value="normal">普通</option>
+              <option value="high">高</option>
+              <option value="urgent">紧急</option>
+            </select>
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="display:block;margin-bottom:5px;font-size:13px;">目标操作员</label>
+            <input id="mre-target-op" type="text" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="display:block;margin-bottom:5px;font-size:13px;">修改原因 *</label>
+            <select id="mre-reason" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
+              <option value="admin_force">管理员修正</option>
+              <option value="data_error">数据录入错误</option>
+              <option value="process_adjust">流程调整</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button onclick="closeMrEditModal()" style="padding:8px 20px;background:#95a5a6;color:#fff;border:none;border-radius:6px;cursor:pointer;">取消</button>
+            <button onclick="submitMrUpdate()" style="padding:8px 20px;background:#e67e22;color:#fff;border:none;border-radius:6px;cursor:pointer;">确认修改</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="mr-withdraw-modal" class="modal-overlay" onclick="if(event.target===this)closeMrWithdrawModal()" style="display:none;">
+      <div class="modal-content" style="max-width:480px;">
+        <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;padding:15px 20px;border-bottom:1px solid #eee;">
+          <span>🗑️ 撤回物料记录</span>
+          <button onclick="closeMrWithdrawModal()" style="border:none;background:none;font-size:20px;cursor:pointer;">✕</button>
+        </div>
+        <div style="padding:20px;">
+          <div style="margin-bottom:12px;padding:10px;background:#fee;border-radius:6px;font-size:13px;">
+            <div>订单号: <span id="mrw-order" style="font-weight:bold;"></span></div>
+            <div>工序: <span id="mrw-step" style="font-weight:bold;"></span></div>
+            <div>操作员: <span id="mrw-operator" style="font-weight:bold;"></span></div>
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="display:block;margin-bottom:5px;font-size:13px;">撤回原因 *</label>
+            <textarea id="mrw-reason" rows="2" placeholder="如：物料任务作废" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;"></textarea>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button onclick="closeMrWithdrawModal()" style="padding:8px 20px;background:#95a5a6;color:#fff;border:none;border-radius:6px;cursor:pointer;">取消</button>
+            <button onclick="submitMrWithdraw()" style="padding:8px 20px;background:#e74c3c;color:#fff;border:none;border-radius:6px;cursor:pointer;">确认撤回</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="mr-history-modal" class="modal-overlay" onclick="if(event.target===this)closeMrHistoryModal()" style="display:none;">
+      <div class="modal-content" style="max-width:560px;max-height:80vh;overflow-y:auto;">
+        <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;padding:15px 20px;border-bottom:1px solid #eee;">
+          <span>📜 物料修改历史</span>
+          <button onclick="closeMrHistoryModal()" style="border:none;background:none;font-size:20px;cursor:pointer;">✕</button>
+        </div>
+        <div id="mrh-body" style="padding:20px;"></div>
+      </div>
+    </div>
+
+    <!-- ============= 外协回归 · 弹窗 ============= -->
+    <div id="or-edit-modal" class="modal-overlay" onclick="if(event.target===this)closeOrEditModal()" style="display:none;">
+      <div class="modal-content" style="max-width:520px;">
+        <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;padding:15px 20px;border-bottom:1px solid #eee;">
+          <span>✏️ 修改外协记录</span>
+          <button onclick="closeOrEditModal()" style="border:none;background:none;font-size:20px;cursor:pointer;">✕</button>
+        </div>
+        <div style="padding:20px;">
+          <div style="margin-bottom:12px;padding:10px;background:#f8f9fa;border-radius:6px;font-size:13px;">
+            <div>订单号: <span id="ore-order" style="font-weight:bold;"></span></div>
+            <div>工序: <span id="ore-step" style="font-weight:bold;"></span></div>
+            <div>当前操作员: <span id="ore-operator" style="font-weight:bold;"></span></div>
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="display:block;margin-bottom:5px;font-size:13px;">标题</label>
+            <input id="ore-title" type="text" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="display:block;margin-bottom:5px;font-size:13px;">优先级</label>
+            <select id="ore-priority" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
+              <option value="normal">普通</option>
+              <option value="high">高</option>
+              <option value="urgent">紧急</option>
+            </select>
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="display:block;margin-bottom:5px;font-size:13px;">目标操作员</label>
+            <input id="ore-target-op" type="text" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="display:block;margin-bottom:5px;font-size:13px;">修改原因 *</label>
+            <select id="ore-reason" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
+              <option value="admin_force">管理员修正</option>
+              <option value="data_error">数据录入错误</option>
+              <option value="process_adjust">流程调整</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button onclick="closeOrEditModal()" style="padding:8px 20px;background:#95a5a6;color:#fff;border:none;border-radius:6px;cursor:pointer;">取消</button>
+            <button onclick="submitOrUpdate()" style="padding:8px 20px;background:#1abc9c;color:#fff;border:none;border-radius:6px;cursor:pointer;">确认修改</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="or-withdraw-modal" class="modal-overlay" onclick="if(event.target===this)closeOrWithdrawModal()" style="display:none;">
+      <div class="modal-content" style="max-width:480px;">
+        <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;padding:15px 20px;border-bottom:1px solid #eee;">
+          <span>🗑️ 撤回外协记录</span>
+          <button onclick="closeOrWithdrawModal()" style="border:none;background:none;font-size:20px;cursor:pointer;">✕</button>
+        </div>
+        <div style="padding:20px;">
+          <div style="margin-bottom:12px;padding:10px;background:#fee;border-radius:6px;font-size:13px;">
+            <div>订单号: <span id="orw-order" style="font-weight:bold;"></span></div>
+            <div>工序: <span id="orw-step" style="font-weight:bold;"></span></div>
+            <div>操作员: <span id="orw-operator" style="font-weight:bold;"></span></div>
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="display:block;margin-bottom:5px;font-size:13px;">撤回原因 *</label>
+            <textarea id="orw-reason" rows="2" placeholder="如：外协任务作废" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;"></textarea>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button onclick="closeOrWithdrawModal()" style="padding:8px 20px;background:#95a5a6;color:#fff;border:none;border-radius:6px;cursor:pointer;">取消</button>
+            <button onclick="submitOrWithdraw()" style="padding:8px 20px;background:#e74c3c;color:#fff;border:none;border-radius:6px;cursor:pointer;">确认撤回</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="or-history-modal" class="modal-overlay" onclick="if(event.target===this)closeOrHistoryModal()" style="display:none;">
+      <div class="modal-content" style="max-width:560px;max-height:80vh;overflow-y:auto;">
+        <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;padding:15px 20px;border-bottom:1px solid #eee;">
+          <span>📜 外协修改历史</span>
+          <button onclick="closeOrHistoryModal()" style="border:none;background:none;font-size:20px;cursor:pointer;">✕</button>
+        </div>
+        <div id="orh-body" style="padding:20px;"></div>
+      </div>
+    </div>
+
+    <!-- ============= 排产回归 · 弹窗 ============= -->
+    <div id="sr-edit-modal" class="modal-overlay" onclick="if(event.target===this)closeSrEditModal()" style="display:none;">
+      <div class="modal-content" style="max-width:520px;">
+        <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;padding:15px 20px;border-bottom:1px solid #eee;">
+          <span>✏️ 修改排产记录</span>
+          <button onclick="closeSrEditModal()" style="border:none;background:none;font-size:20px;cursor:pointer;">✕</button>
+        </div>
+        <div style="padding:20px;">
+          <div style="margin-bottom:12px;padding:10px;background:#f8f9fa;border-radius:6px;font-size:13px;">
+            <div>订单号: <span id="sre-order" style="font-weight:bold;"></span></div>
+            <div>工序: <span id="sre-step" style="font-weight:bold;"></span></div>
+            <div>当前操作员: <span id="sre-operator" style="font-weight:bold;"></span></div>
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="display:block;margin-bottom:5px;font-size:13px;">标题</label>
+            <input id="sre-title" type="text" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="display:block;margin-bottom:5px;font-size:13px;">优先级</label>
+            <select id="sre-priority" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
+              <option value="normal">普通</option>
+              <option value="high">高</option>
+              <option value="urgent">紧急</option>
+            </select>
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="display:block;margin-bottom:5px;font-size:13px;">目标操作员</label>
+            <input id="sre-target-op" type="text" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="display:block;margin-bottom:5px;font-size:13px;">修改原因 *</label>
+            <select id="sre-reason" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
+              <option value="admin_force">管理员修正</option>
+              <option value="data_error">数据录入错误</option>
+              <option value="process_adjust">流程调整</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button onclick="closeSrEditModal()" style="padding:8px 20px;background:#95a5a6;color:#fff;border:none;border-radius:6px;cursor:pointer;">取消</button>
+            <button onclick="submitSrUpdate()" style="padding:8px 20px;background:#3498db;color:#fff;border:none;border-radius:6px;cursor:pointer;">确认修改</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="sr-withdraw-modal" class="modal-overlay" onclick="if(event.target===this)closeSrWithdrawModal()" style="display:none;">
+      <div class="modal-content" style="max-width:480px;">
+        <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;padding:15px 20px;border-bottom:1px solid #eee;">
+          <span>🗑️ 撤回排产记录</span>
+          <button onclick="closeSrWithdrawModal()" style="border:none;background:none;font-size:20px;cursor:pointer;">✕</button>
+        </div>
+        <div style="padding:20px;">
+          <div style="margin-bottom:12px;padding:10px;background:#fee;border-radius:6px;font-size:13px;">
+            <div>订单号: <span id="srw-order" style="font-weight:bold;"></span></div>
+            <div>工序: <span id="srw-step" style="font-weight:bold;"></span></div>
+            <div>操作员: <span id="srw-operator" style="font-weight:bold;"></span></div>
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="display:block;margin-bottom:5px;font-size:13px;">撤回原因 *</label>
+            <textarea id="srw-reason" rows="2" placeholder="如：排产任务作废" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;"></textarea>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button onclick="closeSrWithdrawModal()" style="padding:8px 20px;background:#95a5a6;color:#fff;border:none;border-radius:6px;cursor:pointer;">取消</button>
+            <button onclick="submitSrWithdraw()" style="padding:8px 20px;background:#e74c3c;color:#fff;border:none;border-radius:6px;cursor:pointer;">确认撤回</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="sr-history-modal" class="modal-overlay" onclick="if(event.target===this)closeSrHistoryModal()" style="display:none;">
+      <div class="modal-content" style="max-width:560px;max-height:80vh;overflow-y:auto;">
+        <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;padding:15px 20px;border-bottom:1px solid #eee;">
+          <span>📜 排产修改历史</span>
+          <button onclick="closeSrHistoryModal()" style="border:none;background:none;font-size:20px;cursor:pointer;">✕</button>
+        </div>
+        <div id="srh-body" style="padding:20px;"></div>
+      </div>
+    </div>
+
+  <script>
+    window.API_BASE = window.API_BASE || "";
+    window.CONTAINER_CENTER_BASE = window.CONTAINER_CENTER_BASE || "{{ container_center_url | default('http://127.0.0.1:5002') }}";
+  </script>
+  <script src="/static/js/dispatch_center_labels.js?v=20260523.1"></script>
+  <script src="/static/js/dispatch_center.js?v=20260621.1" defer></script>
+
+</body>
+</html>

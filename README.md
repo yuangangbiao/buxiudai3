@@ -6,11 +6,13 @@
 
 | 组件 | 端口 | 说明 |
 |------|------|------|
-| `mobile_api_ai/app.py` | 5002 | 移动端 API 主服务（工序报工、扫码查询、任务分配） |
-| `mobile_api_ai/dispatch_center/dispatch_center.py` | 5003 | 调度中心（流程推进、规则匹配、操作员管理、报修、模板配置） |
-| `mobile_api_ai/container_center_api.py` | — | 容器中心 API（容器管理、容器池持久化） |
+| `mobile_api_ai/container_center_api.py` | 5002 | 容器中心 API（订单/工序/质检 CRUD、outbox worker） |
+| `mobile_api_ai/standalone_dispatch_server.py` | 5003 | 调度中心（流程推进、报工同步、企业微信机器人、outbox consumer、cloud poller） |
 | `mobile_api_ai/inventory_api_server.py` | 5010 | 库存管理 API（出入库、盘点、调拨、报表） |
-| `mobile_api_ai/wechat_server.py` | — | 云端企业微信机器人（回调、消息推送、指令处理） |
+
+### 已废弃（v3.8.1）
+- ~~`mobile_api_ai/app.py`~~ → 功能已合并到 `standalone_dispatch_server.py`
+- ~~`mobile_api_ai/wechat_server.py`~~ → 功能已合并到 `standalone_dispatch_server.py`（sync_bp + wechat_work_bot_bp）
 
 ### 共用逻辑层
 

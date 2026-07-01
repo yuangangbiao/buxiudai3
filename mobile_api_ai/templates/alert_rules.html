@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>告警规则配置</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 24px; }
+        .header .nav-links { display: flex; gap: 12px; }
+        .header .nav-links a { color: rgba(255,255,255,0.85); text-decoration: none; font-size: 14px; padding: 6px 14px; border-radius: 6px; transition: all 0.3s; }
+        .header .nav-links a:hover { background: rgba(255,255,255,0.15); color: white; }
+        .tabs { display: flex; gap: 10px; background: white; padding: 10px 40px; border-bottom: 1px solid #e0e0e0; }
+        .tab { padding: 10px 20px; cursor: pointer; border-radius: 8px 8px 0 0; transition: all 0.3s; border: 1px solid transparent; }
+        .tab:hover { background: #f0f0f0; }
+        .tab.active { background: #667eea; color: white; }
+        .content { padding: 30px 40px; }
+        .card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .card h3 { font-size: 18px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #667eea; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 500; }
+        .form-group input, .form-group select { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: #667eea; }
+        .form-group input[type="number"] { width: 120px; }
+        .form-group input[type="time"] { width: 140px; }
+        .form-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+        .form-row .form-group { margin-bottom: 0; }
+        .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; transition: all 0.3s; }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-primary:hover { background: #5a6fd6; }
+        .btn-secondary { background: #e0e0e0; color: #666; }
+        .btn-secondary:hover { background: #d0d0d0; }
+        .btn-success { background: #e8f5e9; color: #2e7d32; }
+        .btn-success:hover { background: #c8e6c9; }
+        .btn-danger { background: #ffebee; color: #c62828; }
+        .btn-danger:hover { background: #ffcdd2; }
+        .btn-sm { padding: 4px 10px; font-size: 12px; }
+        .toggle-switch { position: relative; display: inline-block; width: 48px; height: 26px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #ccc; border-radius: 26px; transition: 0.3s; }
+        .toggle-slider:before { content: ""; position: absolute; height: 20px; width: 20px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; }
+        .toggle-switch input:checked + .toggle-slider { background: #667eea; }
+        .toggle-switch input:checked + .toggle-slider:before { transform: translateX(22px); }
+        .tag-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+        .tag-item { display: inline-flex; align-items: center; gap: 6px; background: #f0f4ff; color: #5a6fd6; padding: 6px 12px; border-radius: 20px; font-size: 13px; border: 1px solid #d0d8f8; }
+        .tag-item .remove { cursor: pointer; font-size: 16px; line-height: 1; color: #999; }
+        .tag-item .remove:hover { color: #c62828; }
+        .empty-hint { color: #999; font-size: 13px; font-style: italic; }
+        .save-bar { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 16px; border-top: 1px solid #e0e0e0; }
+        .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; display: none; }
+        .alert-success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; display: block; }
+        .alert-error { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; display: block; }
+        .status-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+        .status-item { background: #f8f9fa; border-radius: 8px; padding: 16px; border-left: 4px solid #667eea; }
+        .status-item .label { font-size: 13px; color: #666; margin-bottom: 4px; }
+        .status-item .value { font-size: 20px; font-weight: 600; }
+        .status-item .value.online { color: #2e7d32; }
+        .status-item .value.offline { color: #c62828; }
+        .desc-text { font-size: 13px; color: #888; margin-top: 4px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>告警规则配置</h1>
+        <div class="nav-links">
+            <a href="/container/">仪表盘</a>
+            <a href="/container/config">配置管理</a>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" data-tab="rules">告警规则</div>
+        <div class="tab" data-tab="status">系统状态</div>
+    </div>
+
+    <div class="content">
+        <div id="alert-msg" class="alert"></div>
+
+        <!-- 告警规则 -->
+        <div id="tab-rules" class="tab-content">
+            <div class="card">
+                <h3>超时自动改派</h3>
+                <div class="form-group">
+                    <label>超时时间（分钟）</label>
+                    <input type="number" id="auto_reassign_timeout" min="1" max="1440" value="120">
+                    <div class="desc-text">任务创建后超过此时间未完成，系统自动改派给其他操作员</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>委外超期提醒</h3>
+                <div class="form-row" style="justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>启用委外超期提醒</label>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="outsource_enabled">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label>提醒时间点</label>
+                    <div class="form-row">
+                        <input type="time" id="new_remind_time" value="09:00">
+                        <button class="btn btn-secondary btn-sm" onclick="addRemindTime()">+ 添加</button>
+                    </div>
+                    <div class="tag-list" id="remind_times_list">
+                        <span class="empty-hint">暂无提醒时间点</span>
+                    </div>
+                    <div class="desc-text">每天在这些时间点发送超期提醒</div>
+                </div>
+
+                <div class="form-group">
+                    <label>提前提醒天数</label>
+                    <div class="form-row">
+                        <input type="number" id="new_remind_day" min="1" max="30" value="3" style="width: 80px;">
+                        <button class="btn btn-secondary btn-sm" onclick="addRemindDay()">+ 添加</button>
+                    </div>
+                    <div class="tag-list" id="remind_days_list">
+                        <span class="empty-hint">暂无提醒天数</span>
+                    </div>
+                    <div class="desc-text">在任务截止日期前 N 天开始提醒</div>
+                </div>
+            </div>
+
+            <div class="save-bar">
+                <button class="btn btn-secondary" onclick="resetForm()">重置</button>
+                <button class="btn btn-primary" onclick="saveRules()">保存配置</button>
+            </div>
+        </div>
+
+        <!-- 系统状态 -->
+        <div id="tab-status" class="tab-content" style="display:none;">
+            <div class="card">
+                <h3>告警引擎状态</h3>
+                <div class="status-grid" id="statusGrid">
+                    <div class="status-item">
+                        <div class="label">引擎状态</div>
+                        <div class="value" id="engineStatus">检查中...</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="label">告警规则数</div>
+                        <div class="value" id="ruleCount">-</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="label">容器中心</div>
+                        <div class="value" id="ccStatus">检查中...</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="label">API 版本</div>
+                        <div class="value" id="apiVersion">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentRules = {};
+
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+                tab.classList.add('active');
+                document.getElementById('tab-' + tab.dataset.tab).style.display = 'block';
+                if (tab.dataset.tab === 'status') loadStatus();
+            });
+        });
+
+        async function loadRules() {
+            try {
+                const resp = await fetch('/container/api/alert-rules');
+                const result = await resp.json();
+                if (result.code === 0) {
+                    currentRules = result.data || {};
+                    renderRules(currentRules);
+                } else {
+                    showAlert('加载告警规则失败: ' + (result.message || '未知错误'), 'error');
+                }
+            } catch (e) {
+                showAlert('加载告警规则失败: ' + e.message, 'error');
+            }
+        }
+
+        function renderRules(rules) {
+            document.getElementById('auto_reassign_timeout').value = rules.auto_reassign_timeout || 120;
+
+            const oc = rules.outsource_config || {};
+            document.getElementById('outsource_enabled').checked = oc.enabled || false;
+
+            const times = oc.overdue_remind_times || [];
+            const timesList = document.getElementById('remind_times_list');
+            if (times.length === 0) {
+                timesList.innerHTML = '<span class="empty-hint">暂无提醒时间点</span>';
+            } else {
+                timesList.innerHTML = times.map((t, i) =>
+                    `<span class="tag-item">${t} <span class="remove" onclick="removeRemindTime(${i})">&times;</span></span>`
+                ).join('');
+            }
+
+            const days = oc.remind_days || [];
+            const daysList = document.getElementById('remind_days_list');
+            if (days.length === 0) {
+                daysList.innerHTML = '<span class="empty-hint">暂无提醒天数</span>';
+            } else {
+                daysList.innerHTML = days.map((d, i) =>
+                    `<span class="tag-item">提前 ${d} 天 <span class="remove" onclick="removeRemindDay(${i})">&times;</span></span>`
+                ).join('');
+            }
+        }
+
+        function collectRules() {
+            const times = [];
+            document.querySelectorAll('#remind_times_list .tag-item').forEach(el => {
+                const text = el.textContent.replace('×', '').trim();
+                if (text) times.push(text);
+            });
+
+            const days = [];
+            document.querySelectorAll('#remind_days_list .tag-item').forEach(el => {
+                const match = el.textContent.match(/提前 (\d+) 天/);
+                if (match) days.push(parseInt(match[1]));
+            });
+
+            return {
+                auto_reassign_timeout: parseInt(document.getElementById('auto_reassign_timeout').value) || 120,
+                outsource_config: {
+                    enabled: document.getElementById('outsource_enabled').checked,
+                    overdue_remind_times: times,
+                    remind_days: days
+                }
+            };
+        }
+
+        function addRemindTime() {
+            const input = document.getElementById('new_remind_time');
+            const val = input.value;
+            if (!val) return;
+
+            const list = document.getElementById('remind_times_list');
+            const empty = list.querySelector('.empty-hint');
+            if (empty) list.innerHTML = '';
+
+            const items = list.querySelectorAll('.tag-item');
+            const exists = Array.from(items).some(el => el.textContent.includes(val));
+            if (exists) {
+                showAlert('该时间点已存在', 'error');
+                return;
+            }
+
+            const idx = items.length;
+            list.insertAdjacentHTML('beforeend',
+                `<span class="tag-item">${val} <span class="remove" onclick="removeRemindTime(${idx})">&times;</span></span>`
+            );
+            // Fix indices after removal
+            reindexTags(list, 'removeRemindTime');
+        }
+
+        function removeRemindTime(idx) {
+            const list = document.getElementById('remind_times_list');
+            const items = list.querySelectorAll('.tag-item');
+            if (idx >= 0 && idx < items.length) items[idx].remove();
+            reindexTags(list, 'removeRemindTime');
+            if (list.querySelectorAll('.tag-item').length === 0) {
+                list.innerHTML = '<span class="empty-hint">暂无提醒时间点</span>';
+            }
+        }
+
+        function addRemindDay() {
+            const input = document.getElementById('new_remind_day');
+            const val = parseInt(input.value);
+            if (!val || val < 1) return;
+
+            const list = document.getElementById('remind_days_list');
+            const empty = list.querySelector('.empty-hint');
+            if (empty) list.innerHTML = '';
+
+            const items = list.querySelectorAll('.tag-item');
+            const exists = Array.from(items).some(el => el.textContent.includes(`提前 ${val} 天`));
+            if (exists) {
+                showAlert('该天数已存在', 'error');
+                return;
+            }
+
+            const idx = items.length;
+            list.insertAdjacentHTML('beforeend',
+                `<span class="tag-item">提前 ${val} 天 <span class="remove" onclick="removeRemindDay(${idx})">&times;</span></span>`
+            );
+            reindexTags(list, 'removeRemindDay');
+        }
+
+        function removeRemindDay(idx) {
+            const list = document.getElementById('remind_days_list');
+            const items = list.querySelectorAll('.tag-item');
+            if (idx >= 0 && idx < items.length) items[idx].remove();
+            reindexTags(list, 'removeRemindDay');
+            if (list.querySelectorAll('.tag-item').length === 0) {
+                list.innerHTML = '<span class="empty-hint">暂无提醒天数</span>';
+            }
+        }
+
+        function reindexTags(list, fnName) {
+            const items = list.querySelectorAll('.tag-item .remove');
+            items.forEach((el, i) => {
+                el.setAttribute('onclick', `${fnName}(${i})`);
+            });
+        }
+
+        async function saveRules() {
+            const rules = collectRules();
+            try {
+                const resp = await fetch('/container/api/alert-rules', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(rules)
+                });
+                const result = await resp.json();
+                if (result.code === 0) {
+                    showAlert('保存成功', 'success');
+                    currentRules = rules;
+                } else {
+                    showAlert('保存失败: ' + (result.message || '未知错误'), 'error');
+                }
+            } catch (e) {
+                showAlert('保存失败: ' + e.message, 'error');
+            }
+        }
+
+        function resetForm() {
+            renderRules(currentRules);
+            showAlert('已重置为当前配置', 'success');
+        }
+
+        async function loadStatus() {
+            try {
+                const resp = await fetch('/container/api/alert-rules');
+                const result = await resp.json();
+                if (result.code === 0) {
+                    const data = result.data || {};
+                    const oc = data.outsource_config || {};
+                    document.getElementById('engineStatus').textContent = '运行中';
+                    document.getElementById('engineStatus').className = 'value online';
+                    document.getElementById('ruleCount').textContent = '2 条规则';
+                    document.getElementById('ccStatus').textContent = '已连接';
+                    document.getElementById('ccStatus').className = 'value online';
+
+                    const ruleDetails = [];
+                    if (data.auto_reassign_timeout) ruleDetails.push(`超时改派: ${data.auto_reassign_timeout}分钟`);
+                    if (oc.enabled) {
+                        const times = (oc.overdue_remind_times || []).length;
+                        const days = (oc.remind_days || []).length;
+                        ruleDetails.push(`委外提醒: ${times}个时间点, ${days}个提前天数`);
+                    }
+                    document.getElementById('apiVersion').textContent = ruleDetails.join(' | ') || '无活动规则';
+                } else {
+                    document.getElementById('engineStatus').textContent = '未运行';
+                    document.getElementById('engineStatus').className = 'value offline';
+                    document.getElementById('ccStatus').textContent = '未连接';
+                    document.getElementById('ccStatus').className = 'value offline';
+                }
+            } catch (e) {
+                document.getElementById('engineStatus').textContent = '检查失败';
+                document.getElementById('engineStatus').className = 'value offline';
+                document.getElementById('ccStatus').textContent = '连接失败';
+                document.getElementById('ccStatus').className = 'value offline';
+            }
+        }
+
+        function showAlert(msg, type) {
+            const el = document.getElementById('alert-msg');
+            el.textContent = msg;
+            el.className = 'alert alert-' + type;
+            if (type === 'success') {
+                setTimeout(() => { el.style.display = 'none'; }, 3000);
+            }
+        }
+
+        loadRules();
+    </script>
+</body>
+</html>

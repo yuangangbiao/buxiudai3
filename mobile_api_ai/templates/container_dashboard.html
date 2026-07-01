@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>容器中心监控 - 数据可视化</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script>window.__CONN_CONFIG__ = {localHost: '{{ LOCAL_HOST }}', localPort: 5008, cloudHost: '{{ CLOUD_HOST }}', cloudPort: 5008};</script>
+    <script src="/static/js/connection-manager.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+        
+        .header {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .header h1 .icon {
+            font-size: 28px;
+        }
+        
+        .header .time {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px 40px;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .stat-card .label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 8px;
+        }
+        
+        .stat-card .value {
+            font-size: 36px;
+            font-weight: 700;
+        }
+        
+        .stat-card.pending { border-left: 4px solid #ffc107; }
+        .stat-card.pending .value { color: #ffc107; }
+        
+        .stat-card.distributed { border-left: 4px solid #2196f3; }
+        .stat-card.distributed .value { color: #2196f3; }
+        
+        .stat-card.acknowledged { border-left: 4px solid #9c27b0; }
+        .stat-card.acknowledged .value { color: #9c27b0; }
+        
+        .stat-card.completed { border-left: 4px solid #4caf50; }
+        .stat-card.completed .value { color: #4caf50; }
+        
+        .stat-card.total { border-left: 4px solid #00bcd4; }
+        .stat-card.total .value { color: #00bcd4; }
+        
+        .charts-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            padding: 0 40px 30px;
+        }
+        
+        .chart-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .chart-card h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .chart {
+            height: 300px;
+        }
+        
+        .flow-section {
+            padding: 0 40px 30px;
+        }
+        
+        .flow-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .flow-card h3 {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .flow-container {
+            position: relative;
+            height: 250px;
+        }
+        
+        .flow-node {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            min-width: 120px;
+            transition: all 0.3s;
+        }
+        
+        .flow-node:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.05);
+        }
+        
+        .flow-node .node-name {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 5px;
+        }
+        
+        .flow-node .node-count {
+            font-size: 28px;
+            font-weight: 700;
+        }
+        
+        .flow-node.pending { border: 2px solid #ffc107; }
+        .flow-node.pending .node-count { color: #ffc107; }
+        
+        .flow-node.distributed { border: 2px solid #2196f3; }
+        .flow-node.distributed .node-count { color: #2196f3; }
+        
+        .flow-node.acknowledged { border: 2px solid #9c27b0; }
+        .flow-node.acknowledged .node-count { color: #9c27b0; }
+        
+        .flow-node.completed { border: 2px solid #4caf50; }
+        .flow-node.completed .node-count { color: #4caf50; }
+        
+        .flow-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 24px;
+        }
+        
+        .activities-section {
+            padding: 0 40px 30px;
+        }
+        
+        .activity-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .activity-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+        
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 18px;
+        }
+        
+        .activity-icon.report { background: rgba(76, 175, 80, 0.2); }
+        .activity-icon.quality { background: rgba(33, 150, 243, 0.2); }
+        .activity-icon.material { background: rgba(255, 152, 0, 0.2); }
+        .activity-icon.approval { background: rgba(156, 39, 176, 0.2); }
+        
+        .activity-content {
+            flex: 1;
+        }
+        
+        .activity-content .title {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        
+        .activity-content .meta {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .activity-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        
+        .activity-status.pending { background: rgba(255, 193, 7, 0.2); color: #ffc107; }
+        .activity-status.distributed { background: rgba(33, 150, 243, 0.2); color: #2196f3; }
+        .activity-status.acknowledged { background: rgba(156, 39, 176, 0.2); color: #9c27b0; }
+        .activity-status.completed { background: rgba(76, 175, 80, 0.2); color: #4caf50; }
+        
+        .type-distribution {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .type-tag {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .type-tag .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        
+        .type-tag.report { background: rgba(76, 175, 80, 0.2); }
+        .type-tag.report .dot { background: #4caf50; }
+        
+        .type-tag.quality { background: rgba(33, 150, 243, 0.2); }
+        .type-tag.quality .dot { background: #2196f3; }
+        
+        .type-tag.material { background: rgba(255, 152, 0, 0.2); }
+        .type-tag.material .dot { background: #ff9800; }
+        
+        .type-tag.approval { background: rgba(156, 39, 176, 0.2); }
+        .type-tag.approval .dot { background: #9c27b0; }
+        
+        .refresh-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .refresh-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #4caf50;
+            font-size: 14px;
+        }
+        
+        .live-indicator .dot {
+            width: 8px;
+            height: 8px;
+            background: #4caf50;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>
+            <span class="icon">📊</span>
+            容器中心监控中心
+        </h1>
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <div class="live-indicator">
+                <span class="dot"></span>
+                <span>实时监控</span>
+            </div>
+            <div class="time" id="currentTime"></div>
+            <button class="refresh-btn" onclick="refreshData()">刷新数据</button>
+        </div>
+    </div>
+    
+    <div class="stats-grid">
+        <div class="stat-card total">
+            <div class="label">任务总数</div>
+            <div class="value" id="statTotal">-</div>
+        </div>
+        <div class="stat-card pending">
+            <div class="label">待处理</div>
+            <div class="value" id="statPending">-</div>
+        </div>
+        <div class="stat-card distributed">
+            <div class="label">已分配</div>
+            <div class="value" id="statDistributed">-</div>
+        </div>
+        <div class="stat-card acknowledged">
+            <div class="label">已确认</div>
+            <div class="value" id="statAcknowledged">-</div>
+        </div>
+        <div class="stat-card completed">
+            <div class="label">已完成</div>
+            <div class="value" id="statCompleted">-</div>
+        </div>
+    </div>
+    
+    <div class="charts-row">
+        <div class="chart-card">
+            <h3>📈 24小时趋势</h3>
+            <div id="trendChart" class="chart"></div>
+        </div>
+        <div class="chart-card">
+            <h3>📊 数据类型分布</h3>
+            <div id="distributionChart" class="chart"></div>
+            <div id="typeTags" class="type-distribution"></div>
+        </div>
+    </div>
+    
+    <div class="flow-section">
+        <div class="flow-card">
+            <h3>🔄 任务流程状态</h3>
+            <div class="flow-container" id="flowContainer">
+                <div class="flow-node pending" style="left: 50px; top: 80px;">
+                    <div class="node-name">待处理</div>
+                    <div class="node-count" id="flowPending">0</div>
+                </div>
+                <div class="flow-arrow" style="left: 190px;">→</div>
+                <div class="flow-node distributed" style="left: 230px; top: 80px;">
+                    <div class="node-name">已分配</div>
+                    <div class="node-count" id="flowDistributed">0</div>
+                </div>
+                <div class="flow-arrow" style="left: 370px;">→</div>
+                <div class="flow-node acknowledged" style="left: 410px; top: 80px;">
+                    <div class="node-name">已确认</div>
+                    <div class="node-count" id="flowAcknowledged">0</div>
+                </div>
+                <div class="flow-arrow" style="left: 550px;">→</div>
+                <div class="flow-node completed" style="left: 590px; top: 80px;">
+                    <div class="node-name">已完成</div>
+                    <div class="node-count" id="flowCompleted">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="activities-section">
+        <div class="chart-card">
+            <h3>📋 最近活动</h3>
+            <div class="activity-list" id="activityList"></div>
+        </div>
+    </div>
+    
+    <script>
+        const API_PATH = '/container';
+        let trendChart, distributionChart;
+        
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('currentTime').textContent = now.toLocaleString('zh-CN');
+        }
+        
+        function initCharts() {
+            trendChart = echarts.init(document.getElementById('trendChart'));
+            distributionChart = echarts.init(document.getElementById('distributionChart'));
+            
+            window.addEventListener('resize', () => {
+                trendChart.resize();
+                distributionChart.resize();
+            });
+        }
+        
+        async function loadStats() {
+            try {
+                const resp = await fetch((CONN.activeBase || '') + API_PATH + '/api/stats');
+                const result = await resp.json();
+                
+                if (result.code === 0) {
+                    const data = result.data;
+                    document.getElementById('statTotal').textContent = data.total || 0;
+                    document.getElementById('statPending').textContent = data.pending || 0;
+                    document.getElementById('statDistributed').textContent = data.distributed || 0;
+                    document.getElementById('statAcknowledged').textContent = data.acknowledged || 0;
+                    document.getElementById('statCompleted').textContent = data.completed || 0;
+                }
+            } catch (e) {
+                console.error('加载统计数据失败:', e);
+            }
+        }
+        
+        async function loadTrend() {
+            try {
+                const resp = await fetch((CONN.activeBase || '') + API_PATH + '/api/trend?hours=24');
+                const result = await resp.json();
+                
+                if (result.code === 0) {
+                    const data = result.data;
+                    const times = data.map(d => d.time);
+                    const created = data.map(d => d.created);
+                    const completed = data.map(d => d.completed);
+                    
+                    trendChart.setOption({
+                        tooltip: {
+                            trigger: 'axis',
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            borderColor: 'rgba(255, 255, 255, 0.1)',
+                            textStyle: { color: '#fff' }
+                        },
+                        legend: {
+                            data: ['新建任务', '完成任务'],
+                            textStyle: { color: 'rgba(255, 255, 255, 0.7)' }
+                        },
+                        grid: {
+                            left: '3%',
+                            right: '4%',
+                            bottom: '3%',
+                            top: '10%',
+                            containLabel: true
+                        },
+                        xAxis: {
+                            type: 'category',
+                            boundaryGap: false,
+                            data: times,
+                            axisLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.2)' } },
+                            axisLabel: { color: 'rgba(255, 255, 255, 0.5)' }
+                        },
+                        yAxis: {
+                            type: 'value',
+                            axisLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.2)' } },
+                            axisLabel: { color: 'rgba(255, 255, 255, 0.5)' },
+                            splitLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.1)' } }
+                        },
+                        series: [
+                            {
+                                name: '新建任务',
+                                type: 'line',
+                                smooth: true,
+                                data: created,
+                                lineStyle: { color: '#2196f3', width: 2 },
+                                areaStyle: { color: 'rgba(33, 150, 243, 0.3)' },
+                                itemStyle: { color: '#2196f3' }
+                            },
+                            {
+                                name: '完成任务',
+                                type: 'line',
+                                smooth: true,
+                                data: completed,
+                                lineStyle: { color: '#4caf50', width: 2 },
+                                areaStyle: { color: 'rgba(76, 175, 80, 0.3)' },
+                                itemStyle: { color: '#4caf50' }
+                            }
+                        ]
+                    });
+                }
+            } catch (e) {
+                console.error('加载趋势数据失败:', e);
+            }
+        }
+        
+        async function loadDistribution() {
+            try {
+                const resp = await fetch((CONN.activeBase || '') + API_PATH + '/api/distribution');
+                const result = await resp.json();
+                
+                if (result.code === 0) {
+                    const data = result.data;
+                    const names = data.map(d => d.name);
+                    const values = data.map(d => d.value);
+                    
+                    distributionChart.setOption({
+                        tooltip: {
+                            trigger: 'item',
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            textStyle: { color: '#fff' }
+                        },
+                        series: [
+                            {
+                                type: 'pie',
+                                radius: ['40%', '70%'],
+                                avoidLabelOverlap: false,
+                                itemStyle: {
+                                    borderRadius: 10,
+                                    borderColor: '#1a1a2e',
+                                    borderWidth: 2
+                                },
+                                label: {
+                                    show: true,
+                                    color: 'rgba(255, 255, 255, 0.8)'
+                                },
+                                data: values.map((v, i) => ({
+                                    value: v,
+                                    name: names[i],
+                                    itemStyle: {
+                                        color: ['#4caf50', '#2196f3', '#ff9800', '#9c27b0', '#00bcd4'][i % 5]
+                                    }
+                                }))
+                            }
+                        ]
+                    });
+                    
+                    const typeNames = { report: '报工', quality: '质检', material: '领料', approval: '审批' };
+                    document.getElementById('typeTags').innerHTML = data.map(d => 
+                        `<div class="type-tag ${d.type}">
+                            <span class="dot"></span>
+                            <span>${d.name}</span>
+                            <strong>${d.value}</strong>
+                        </div>`
+                    ).join('');
+                }
+            } catch (e) {
+                console.error('加载分布数据失败:', e);
+            }
+        }
+        
+        async function loadFlow() {
+            try {
+                const resp = await fetch((CONN.activeBase || '') + API_PATH + '/api/flow');
+                const result = await resp.json();
+                
+                if (result.code === 0) {
+                    const data = result.data;
+                    document.getElementById('flowPending').textContent = data.nodes[0].count;
+                    document.getElementById('flowDistributed').textContent = data.nodes[1].count;
+                    document.getElementById('flowAcknowledged').textContent = data.nodes[2].count;
+                    document.getElementById('flowCompleted').textContent = data.nodes[3].count;
+                }
+            } catch (e) {
+                console.error('加载流程数据失败:', e);
+            }
+        }
+        
+        async function loadActivities() {
+            try {
+                const resp = await fetch((CONN.activeBase || '') + API_PATH + '/api/activities?limit=10');
+                const result = await resp.json();
+                
+                if (result.code === 0) {
+                    const typeIcons = { report: '📝', quality: '🔍', material: '📦', approval: '✅' };
+                    const statusNames = {
+                        pending: '待处理',
+                        distributed: '已分配',
+                        acknowledged: '已确认',
+                        completed: '已完成'
+                    };
+                    
+                    document.getElementById('activityList').innerHTML = result.data.map(a => `
+                        <div class="activity-item">
+                            <div class="activity-icon ${a.type}">${typeIcons[a.type] || '📋'}</div>
+                            <div class="activity-content">
+                                <div class="title">${a.title}</div>
+                                <div class="meta">${a.order_no || ''} · ${a.time}</div>
+                            </div>
+                            <span class="activity-status ${a.status}">${statusNames[a.status] || a.status}</span>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) {
+                console.error('加载活动数据失败:', e);
+            }
+        }
+        
+        function refreshData() {
+            Promise.all([
+                fetch((CONN.activeBase || '') + API_PATH + '/api/stats').then(r => r.json()).catch(() => ({ code: -1 })),
+                fetch((CONN.activeBase || '') + API_PATH + '/api/trend?hours=24').then(r => r.json()).catch(() => ({ code: -1 })),
+                fetch((CONN.activeBase || '') + API_PATH + '/api/distribution').then(r => r.json()).catch(() => ({ code: -1 })),
+                fetch((CONN.activeBase || '') + API_PATH + '/api/flow').then(r => r.json()).catch(() => ({ code: 0, data: { nodes: [] } })),
+                fetch((CONN.activeBase || '') + API_PATH + '/api/activities?limit=10').then(r => r.json()).catch(() => ({ code: 0, data: [] })),
+            ]).then(([statsResult, trendResult, distResult, flowResult, activityResult]) => {
+                if (statsResult.code === 0) {
+                    const d = statsResult.data;
+                    document.getElementById('statTotal').textContent = d.total || 0;
+                    document.getElementById('statPending').textContent = d.pending || 0;
+                    document.getElementById('statDistributed').textContent = d.distributed || 0;
+                    document.getElementById('statAcknowledged').textContent = d.acknowledged || 0;
+                    document.getElementById('statCompleted').textContent = d.completed || 0;
+                }
+                if (trendResult.code === 0 && trendChart) {
+                    const data = trendResult.data;
+                    const times = data.map(d => d.time);
+                    trendChart.setOption({
+                        tooltip: { trigger: 'axis', backgroundColor: 'rgba(0,0,0,0.8)', borderColor: 'rgba(255,255,255,0.1)', textStyle: { color: '#fff' } },
+                        legend: { data: ['新建任务', '完成任务'], textStyle: { color: 'rgba(255,255,255,0.7)' } },
+                        grid: { left: '3%', right: '4%', bottom: '3%', top: '10%', containLabel: true },
+                        xAxis: { type: 'category', boundaryGap: false, data: times, axisLine: { lineStyle: { color: 'rgba(255,255,255,0.2)' } }, axisLabel: { color: 'rgba(255,255,255,0.5)' } },
+                        yAxis: { type: 'value', axisLine: { lineStyle: { color: 'rgba(255,255,255,0.2)' } }, axisLabel: { color: 'rgba(255,255,255,0.5)' }, splitLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } } },
+                        series: [
+                            { name: '新建任务', type: 'line', smooth: true, data: data.map(d => d.created), lineStyle: { color: '#2196f3', width: 2 }, areaStyle: { color: 'rgba(33,150,243,0.3)' }, itemStyle: { color: '#2196f3' } },
+                            { name: '完成任务', type: 'line', smooth: true, data: data.map(d => d.completed), lineStyle: { color: '#4caf50', width: 2 }, areaStyle: { color: 'rgba(76,175,80,0.3)' }, itemStyle: { color: '#4caf50' } }
+                        ]
+                    });
+                }
+                if (distResult.code === 0 && distributionChart) {
+                    const items = distResult.data;
+                    distributionChart.setOption({
+                        tooltip: { trigger: 'item', backgroundColor: 'rgba(0,0,0,0.8)', textStyle: { color: '#fff' } },
+                        legend: { bottom: 0, textStyle: { color: 'rgba(255,255,255,0.7)' } },
+                        series: [{ type: 'pie', radius: ['40%', '70%'], data: items.map(it => ({ name: it.name, value: it.value })), label: { color: 'rgba(255,255,255,0.8)' } }]
+                    });
+                }
+                if (flowResult.code === 0) {
+                    const fd = flowResult.data;
+                    document.getElementById('flowPending').textContent = (fd.nodes && fd.nodes[0]) ? fd.nodes[0].count : (fd.pending || 0);
+                    document.getElementById('flowDistributed').textContent = (fd.nodes && fd.nodes[1]) ? fd.nodes[1].count : (fd.distributed || 0);
+                    document.getElementById('flowAcknowledged').textContent = (fd.nodes && fd.nodes[2]) ? fd.nodes[2].count : (fd.acknowledged || 0);
+                    document.getElementById('flowCompleted').textContent = (fd.nodes && fd.nodes[3]) ? fd.nodes[3].count : (fd.completed || 0);
+                }
+                if (activityResult.code === 0) {
+                    const typeIcons = { report: '📝', quality: '🔍', material: '📦', approval: '✅' };
+                    const statusNames = { pending: '待处理', distributed: '已分配', acknowledged: '已确认', completed: '已完成' };
+                    document.getElementById('activityList').innerHTML = activityResult.data.map(a => `
+                        <div class="activity-item">
+                            <div class="activity-icon ${a.type}">${typeIcons[a.type] || '📋'}</div>
+                            <div class="activity-content">
+                                <div class="title">${a.title || ''}</div>
+                                <div class="meta">${a.order_no || ''} · ${a.time || ''}</div>
+                            </div>
+                            <span class="activity-status ${a.status}">${statusNames[a.status] || a.status || ''}</span>
+                        </div>
+                    `).join('');
+                }
+            }).catch(e => console.error('refreshData failed:', e));
+        }
+        
+        function init() {
+            updateTime();
+            setInterval(updateTime, 1000);
+            initCharts();
+            refreshData();
+            setInterval(refreshData, 30000);
+        }
+        
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

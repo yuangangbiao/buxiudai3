@@ -34,8 +34,8 @@ SERVICES = [
         'url': 'http://localhost:5000'
     },
     {
-        'name': '企业微信机器人',
-        'script': 'mobile_api_ai/wechat_server.py',
+        'name': '调度中心',
+        'script': 'mobile_api_ai/standalone_dispatch_server.py',
         'cwd': 'mobile_api_ai',
         'port': 5003,
         'url': 'http://localhost:5003'

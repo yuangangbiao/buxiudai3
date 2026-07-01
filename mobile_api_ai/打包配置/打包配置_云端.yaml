@@ -1,0 +1,96 @@
+project:
+  name: "微信云端转发服务"
+  name_en: "WeChatCloudServer"
+  version: "1.0"
+  name_exe: "wechat_cloud_server"
+
+paths:
+  source_dir: "."
+  main_entry: "wechat_work_bot_v2.py"
+  dist_dir: "dist"
+  build_dir: "build"
+  spec_dir: "specs"
+
+data_files:
+  extensions:
+    - ".env"
+  include_env: true
+
+hidden_imports:
+  base_modules:
+    - flask
+    - flask.Flask
+    - flask.request
+    - flask.jsonify
+    - flask.render_template
+    - requests
+    - dotenv
+    - cryptography
+    - wechat_app_bot
+    - cloud_backup
+    - config
+    - logging_setup
+    - qrcode
+    - qrcode.QRCode
+    - qrcode.constants
+    - io
+    - base64
+  auto_discovered: []
+
+excludes:
+  modules:
+    - matplotlib
+    - numpy
+    - pandas
+    - cv2
+    - torch
+    - tensorflow
+    - dashscope
+    - mysql
+    - mysql.connector
+    - jwt
+    - pyjwt
+    - flask_cors
+    - flask_cors.*
+    - tkinter
+    - PyQt5
+    - PySide2
+    - scipy
+    - sklearn
+    - IPython
+    - notebook
+    - jupyter
+    - pygame
+    - kivy
+    - django
+    - selenium
+
+build:
+  console: true
+  upx: true
+  clean: true
+  icon: null
+
+ignore_patterns:
+  dirs:
+    - __pycache__
+    - .git
+    - .vscode
+    - backups
+    - dist
+    - build
+    - build_package
+    - venv
+    - logs
+    - DAT
+    - tests
+    - ssl
+    - uploads
+    - 云端部署包
+    - 打包配置
+    - deploy_output
+  files:
+    - "*.log"
+    - "*.pyc"
+    - "*.pyo"
+    - "*.db"

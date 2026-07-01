@@ -165,9 +165,8 @@ DIR_PATHS = {
 SERVICE_URLS = {
     'container_center': os.getenv('CONTAINER_CENTER_URL', 'http://127.0.0.1:5002'),
     'dispatch_center': os.getenv('DISPATCH_CENTER_URL', 'http://127.0.0.1:5003'),
-    'sync_bridge': os.getenv('SYNC_BRIDGE_URL', 'http://127.0.0.1:5005'),
+    'sync_bridge': os.getenv('SYNC_BRIDGE_URL', 'http://127.0.0.1:5008'),
     'wechat_cloud': os.getenv('WECHAT_CLOUD_HOST', ''),
-    'cloud_relay': os.getenv('CLOUD_RELAY_URL', ''),
     'mobile_api': os.getenv('MOBILE_SERVER_URL', 'http://127.0.0.1:5003'),
     'inventory_api': os.getenv('INVENTORY_API_URL', 'http://127.0.0.1:5004'),
 }
@@ -177,7 +176,7 @@ CONTAINER_CENTER_URL = SERVICE_URLS['container_center']
 DISPATCH_CENTER_URL = SERVICE_URLS['dispatch_center']
 SYNC_BRIDGE_URL = SERVICE_URLS['sync_bridge']
 WECHAT_CLOUD_HOST = SERVICE_URLS['wechat_cloud']
-CLOUD_RELAY_URL = SERVICE_URLS['cloud_relay']
+CLOUD_RELAY_URL = SERVICE_URLS.get('wechat_cloud', '') or os.getenv('CLOUD_RELAY_URL', '')
 MOBILE_SERVER_URL = SERVICE_URLS['mobile_api']
 INVENTORY_API_URL = SERVICE_URLS['inventory_api']
 
@@ -225,6 +224,16 @@ MYSQL_CONFIG = {
     "password": os.getenv('MYSQL_PASSWORD', ''),
     "charset": "utf8mb4",
     "cursorclass": "dict"
+}
+
+# ETL etl_local_mirror 跨库同步用的别名（与 MYSQL_CFG 同库）
+STEELBELT_MYSQL_CFG = {
+    'host': os.getenv('MYSQL_HOST', 'localhost'),
+    'port': int(os.getenv('MYSQL_PORT', 3306)),
+    'user': os.getenv('MYSQL_USER', 'root'),
+    'password': os.getenv('MYSQL_PASSWORD', ''),
+    'database': os.getenv('MYSQL_DATABASE', 'steel_belt'),
+    'charset': 'utf8mb4',
 }
 
 # dispatch_center.py 等使用的 MYSQL_CFG 格式（兼容层）

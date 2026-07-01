@@ -97,6 +97,18 @@ node_modules/
 # Mobile API - 已移出gitignore (2026-07-01)，由主仓库统一管理
 # mobile_api_ai/
 
+# Mobile API 临时文件（排除）
+mobile_api_ai/.pytest_cache/
+mobile_api_ai/.sandbox_pkgs/
+mobile_api_ai/build/
+mobile_api_ai/dist/
+mobile_api_ai/logs/
+mobile_api_ai/node_modules/
+mobile_api_ai/modules/
+mobile_api_ai/specs/
+mobile_api_ai/data/*.db*
+mobile_api_ai/DAT/
+
 # Misc
 *.bak
 *.orig

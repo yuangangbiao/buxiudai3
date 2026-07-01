@@ -5,7 +5,7 @@
 | 端口 | 服务 | 启动文件 |
 |------|------|----------|
 | 5002 | 容器中心 API | container_center_api.py |
-| 5003 | 调度中心 + 企业微信 | wechat_server.py |
+| 5003 | 调度中心 + 企业微信 | standalone_dispatch_server.py |
 
 ## 完整URL清单
 

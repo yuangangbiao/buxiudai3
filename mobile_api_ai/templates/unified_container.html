@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>容器中心 · 综合管理</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:#0a1628;color:#e0e6ed;min-height:100vh}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:#0d1f3c}
+::-webkit-scrollbar-thumb{background:#1e3a5f;border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#2a4a7a}
+
+/* Header */
+.header{background:linear-gradient(135deg,#0d1f3c 0%,#1a2a4a 100%);border-bottom:1px solid #1e3a5f;padding:14px 30px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;backdrop-filter:blur(10px)}
+.header-left{display:flex;align-items:center;gap:12px}
+.header-title{font-size:20px;font-weight:600;background:linear-gradient(90deg,#60a5fa,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:1px}
+.header-subtitle{font-size:13px;color:#7e93b0;border-left:1px solid #1e3a5f;padding-left:12px}
+.header-right{display:flex;align-items:center;gap:16px}
+.live-indicator{display:flex;align-items:center;gap:6px;font-size:12px;color:#22c55e;padding:4px 10px;background:rgba(34,197,94,.1);border-radius:12px}
+.live-dot{width:7px;height:7px;background:#22c55e;border-radius:50%;animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.header-time{font-size:13px;color:#7e93b0}
+.nav-link{font-size:13px;color:#7e93b0;text-decoration:none;padding:5px 12px;border-radius:6px;transition:all .2s}
+.nav-link:hover{color:#60a5fa;background:rgba(96,165,250,.1)}
+
+/* Main Tabs */
+.main-tabs{display:flex;background:#0d1f3c;border-bottom:1px solid #1e3a5f;padding:0 20px;position:sticky;top:58px;z-index:99}
+.main-tab{padding:12px 24px;cursor:pointer;font-size:14px;font-weight:500;color:#7e93b0;border-bottom:2px solid transparent;transition:all .2s;user-select:none;position:relative}
+.main-tab:hover{color:#e0e6ed;background:rgba(96,165,250,.05)}
+.main-tab.active{color:#60a5fa;border-bottom-color:#60a5fa}
+.main-tab .badge{display:inline-block;background:#1e3a5f;color:#7e93b0;font-size:11px;padding:1px 7px;border-radius:8px;margin-left:6px}
+.main-tab.active .badge{background:rgba(96,165,250,.15);color:#60a5fa}
+
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* Container */
+.container{padding:20px;max-width:1600px;margin:0 auto}
+
+/* Cards */
+.card{background:linear-gradient(135deg,#0d1f3c,#132744);border:1px solid #1e3a5f;border-radius:12px;padding:20px;margin-bottom:16px}
+.card-title{font-size:15px;font-weight:600;color:#e0e6ed;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.card-title .icon{width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px}
+.card-title .num{font-size:24px;font-weight:700;color:#60a5fa}
+
+/* Stats Grid */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:20px}
+.stat-card{background:linear-gradient(135deg,#0d1f3c,#132744);border:1px solid #1e3a5f;border-radius:12px;padding:20px;text-align:center;transition:transform .2s,border-color .2s}
+.stat-card:hover{transform:translateY(-2px);border-color:#2a4a7a}
+.stat-icon{font-size:32px;margin-bottom:8px}
+.stat-value{font-size:32px;font-weight:700;color:#60a5fa;margin-bottom:4px}
+.stat-label{font-size:13px;color:#7e93b0}
+.stat-change{font-size:12px;margin-top:6px;padding:2px 8px;border-radius:8px;display:inline-block}
+
+/* charts grid */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.chart-box{background:linear-gradient(135deg,#0d1f3c,#132744);border:1px solid #1e3a5f;border-radius:12px;padding:20px}
+.chart-title{font-size:14px;font-weight:600;color:#e0e6ed;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.chart-title .more{font-size:12px;color:#7e93b0;cursor:pointer}
+.chart-title .more:hover{color:#60a5fa}
+.chart-container{width:100%;height:300px}
+
+/* Flow */
+.flow-list{display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto}
+.flow-item{display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(13,31,60,.5);border-radius:8px;border-left:3px solid #1e3a5f;transition:all .2s}
+.flow-item:hover{background:rgba(13,31,60,.8)}
+.flow-item .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.flow-item .info{flex:1}
+.flow-item .info .title{font-size:13px;color:#e0e6ed}
+.flow-item .info .time{font-size:11px;color:#7e93b0;margin-top:2px}
+.flow-item .status{font-size:11px;padding:2px 8px;border-radius:8px}
+
+/* Activities */
+.activity-list{display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto}
+.activity-item{display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(13,31,60,.3);border-radius:8px;transition:all .2s}
+.activity-item:hover{background:rgba(13,31,60,.6)}
+.activity-item .type-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.activity-item .info{flex:1;min-width:0}
+.activity-item .info .text{font-size:13px;color:#e0e6ed;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.activity-item .info .time{font-size:11px;color:#7e93b0;margin-top:1px}
+.activity-item .tag{font-size:11px;padding:2px 8px;border-radius:8px;flex-shrink:0}
+
+/* Tables */
+table{width:100%;border-collapse:collapse}
+thead th{padding:10px 12px;text-align:left;font-size:12px;font-weight:600;color:#7e93b0;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #1e3a5f}
+tbody td{padding:10px 12px;font-size:13px;border-bottom:1px solid rgba(30,58,95,.4);color:#c8d0da}
+tbody tr:hover{background:rgba(13,31,60,.6)}
+
+/* Forms - dark theme adaptation */
+input[type="text"],input[type="number"],input[type="email"],input[type="password"],select,textarea{background:#132744;border:1px solid #1e3a5f;border-radius:8px;padding:8px 12px;font-size:13px;color:#e0e6ed;width:100%;transition:border-color .2s;outline:none}
+input:focus,select:focus,textarea:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+textarea{resize:vertical;min-height:80px}
+label{font-size:13px;color:#c8d0da;margin-bottom:4px;display:block}
+.form-group{margin-bottom:14px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;transition:all .2s}
+.btn-primary{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff}
+.btn-primary:hover{background:linear-gradient(135deg,#60a5fa,#3b82f6);box-shadow:0 4px 15px rgba(59,130,246,.3)}
+.btn-success{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff}
+.btn-success:hover{background:linear-gradient(135deg,#4ade80,#22c55e);box-shadow:0 4px 15px rgba(34,197,94,.3)}
+.btn-danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff}
+.btn-danger:hover{background:linear-gradient(135deg,#f87171,#ef4444);box-shadow:0 4px 15px rgba(239,68,68,.3)}
+.btn-warning{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff}
+.btn-warning:hover{background:linear-gradient(135deg,#fbbf24,#f59e0b)}
+.btn-outline{background:transparent;border:1px solid #1e3a5f;color:#7e93b0}
+.btn-outline:hover{background:rgba(96,165,250,.1);border-color:#3b82f6;color:#60a5fa}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* Config & Alert sub-tabs */
+.sub-tabs{display:flex;gap:4px;margin-bottom:16px;background:rgba(13,31,60,.5);border-radius:8px;padding:4px}
+.sub-tab{padding:8px 18px;font-size:13px;color:#7e93b0;cursor:pointer;border-radius:6px;transition:all .2s;user-select:none}
+.sub-tab:hover{color:#e0e6ed;background:rgba(96,165,250,.08)}
+.sub-tab.active{color:#60a5fa;background:rgba(96,165,250,.12)}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.active{display:flex}
+.modal{background:#0d1f3c;border:1px solid #1e3a5f;border-radius:16px;padding:24px;width:90%;max-width:520px;max-height:80vh;overflow-y:auto}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.modal-header h3{font-size:16px;color:#e0e6ed}
+.modal-close{width:30px;height:30px;border-radius:8px;border:none;background:rgba(239,68,68,.1);color:#ef4444;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.modal-close:hover{background:rgba(239,68,68,.2)}
+.modal-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid #1e3a5f}
+
+/* Tags */
+.tag{display:inline-flex;align-items:center;padding:2px 10px;border-radius:10px;font-size:12px;gap:4px}
+.tag-success{background:rgba(34,197,94,.15);color:#22c55e}
+.tag-warning{background:rgba(245,158,11,.15);color:#f59e0b}
+.tag-danger{background:rgba(239,68,68,.15);color:#ef4444}
+.tag-info{background:rgba(96,165,250,.15);color:#60a5fa}
+.tag-secondary{background:rgba(126,147,176,.15);color:#7e93b0}
+
+/* Misc */
+.loading{text-align:center;padding:40px;color:#7e93b0;font-size:14px}
+.loading::after{content:'';display:block;width:30px;height:30px;border:3px solid #1e3a5f;border-top-color:#60a5fa;border-radius:50%;animation:spin .8s linear infinite;margin:10px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:40px;color:#7e93b0;font-size:14px}
+.empty .icon{font-size:48px;margin-bottom:10px;opacity:.5}
+.inline-flex{display:inline-flex;align-items:center;gap:6px}
+.ml-auto{margin-left:auto}
+.flex{display:flex;align-items:center;gap:10px}
+.flex-wrap{flex-wrap:wrap}
+.gap-8{gap:8px}
+.mb-16{margin-bottom:16px}
+.mt-16{margin-top:16px}
+.text-right{text-align:right}
+.text-center{text-align:center}
+.w-full{width:100%}
+
+/* Responsive */
+@media(max-width:900px){.charts-grid{grid-template-columns:1fr}.stats-grid{grid-template-columns:repeat(2,1fr)}.header{padding:12px 16px}.container{padding:12px}.form-row{grid-template-columns:1fr}}
+@media(max-width:600px){.stats-grid{grid-template-columns:1fr}.main-tabs{overflow-x:auto}.main-tab{padding:10px 14px;font-size:13px;white-space:nowrap}}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+    <div class="header-left">
+        <div class="header-title">容器中心</div>
+        <div class="header-subtitle">Container Center</div>
+    </div>
+    <div class="header-right">
+        <div class="live-indicator">
+            <span class="live-dot"></span>
+            <span>实时</span>
+        </div>
+        <span class="header-time" id="headerTime"></span>
+        <a href="http://localhost:5003/api/dispatch-center/" class="nav-link" target="_blank">调度中心 →</a>
+    </div>
+</div>
+
+<!-- Main Tabs -->
+<div class="main-tabs" id="mainTabs">
+    <div class="main-tab active" data-tab="dashboard">仪表盘</div>
+    <div class="main-tab" data-tab="config">配置管理</div>
+    <div class="main-tab" data-tab="alerts">告警规则</div>
+</div>
+
+<!-- ==================== TAB: DASHBOARD ==================== -->
+<div id="tab-dashboard" class="tab-content active">
+    <div class="container">
+        <div class="stats-grid" id="statsGrid"></div>
+
+        <div class="charts-grid">
+            <div class="chart-box">
+                <div class="chart-title">容器趋势 <span class="more" id="trendPeriod" style="cursor:pointer">近24小时 ▾</span></div>
+                <div class="chart-container" id="trendChart"></div>
+            </div>
+            <div class="chart-box">
+                <div class="chart-title">容器类型分布</div>
+                <div class="chart-container" id="distributionChart"></div>
+            </div>
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-box">
+                <div class="chart-title">任务流程</div>
+                <div class="chart-container" id="flowChart"></div>
+            </div>
+            <div class="chart-box">
+                <div class="chart-title">实时动态</div>
+                <div class="activity-list" id="activityList"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== TAB: CONFIG ==================== -->
+<div id="tab-config" class="tab-content">
+    <div class="container">
+        <div class="sub-tabs" id="configSubTabs">
+            <div class="sub-tab active" data-subtab="operators">操作员管理</div>
+            <div class="sub-tab" data-subtab="processes">工序配置</div>
+            <div class="sub-tab" data-subtab="datatypes">数据类型</div>
+            <div class="sub-tab" data-subtab="notification">通知配置</div>
+        </div>
+
+        <!-- Operators -->
+        <div id="subtab-operators" class="subtab-content" style="display:block">
+            <div class="card">
+                <div class="card-title">
+                    <span>操作员列表</span>
+                    <button class="btn btn-primary btn-sm ml-auto" onclick="showOperatorModal()">+ 添加操作员</button>
+                </div>
+                <div class="loading" id="operatorsLoading">加载中...</div>
+                <div id="operatorsTable" style="display:none"><table><thead><tr><th>姓名</th><th>工号</th><th>角色</th><th>部门</th><th>联系电话</th><th>状态</th><th>操作</th></tr></thead><tbody id="operatorsBody"></tbody></table></div>
+            </div>
+        </div>
+
+        <!-- Processes -->
+        <div id="subtab-processes" class="subtab-content" style="display:none">
+            <div class="card">
+                <div class="card-title"><span>工序配置</span></div>
+                <div class="loading" id="processesLoading">加载中...</div>
+                <table id="processesTable" style="display:none"><thead><tr><th>工序名称</th><th>工序编码</th><th>所属工序</th><th>描述</th><th>状态</th></tr></thead><tbody id="processesBody"></tbody></table>
+            </div>
+        </div>
+
+        <!-- Data Types -->
+        <div id="subtab-datatypes" class="subtab-content" style="display:none">
+            <div class="card">
+                <div class="card-title"><span>数据类型管理</span></div>
+                <div class="loading" id="datatypesLoading">加载中...</div>
+                <table id="datatypesTable" style="display:none"><thead><tr><th>类型名称</th><th>类型编码</th><th>描述</th><th>状态</th></tr></thead><tbody id="datatypesBody"></tbody></table>
+            </div>
+        </div>
+
+        <!-- Notification -->
+        <div id="subtab-notification" class="subtab-content" style="display:none">
+            <div class="card">
+                <div class="card-title"><span>通知配置</span></div>
+                <div class="loading" id="notificationLoading">加载中...</div>
+                <div id="notificationContent" style="display:none">
+                    <div class="form-row">
+                        <div class="form-group"><label>通知方式</label><select id="notifyMethod"><option value="wechat">企业微信</option><option value="sms">短信</option><option value="email">邮件</option></select></div>
+                        <div class="form-group"><label>通知级别</label><select id="notifyLevel"><option value="info">信息</option><option value="warning">警告</option><option value="critical">严重</option></select></div>
+                    </div>
+                    <div class="form-group"><label>通知接收人</label><input type="text" id="notifyReceivers" placeholder="多个接收人用逗号分隔"></div>
+                    <div class="form-group"><label>通知模板</label><textarea id="notifyTemplate" rows="4" placeholder="通知消息模板"></textarea></div>
+                    <div class="text-right"><button class="btn btn-primary" onclick="saveNotification()">保存配置</button></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== TAB: ALERTS ==================== -->
+<div id="tab-alerts" class="tab-content">
+    <div class="container">
+        <div class="sub-tabs" id="alertSubTabs">
+            <div class="sub-tab active" data-subtab="rules">告警规则</div>
+            <div class="sub-tab" data-subtab="status">告警状态</div>
+        </div>
+
+        <!-- Rules -->
+        <div id="subtab-rules" class="subtab-content" style="display:block">
+            <div class="card">
+                <div class="card-title">
+                    <span>告警规则列表</span>
+                    <button class="btn btn-primary btn-sm ml-auto" onclick="showAlertRuleModal()">+ 添加规则</button>
+                </div>
+                <div class="loading" id="rulesLoading">加载中...</div>
+                <div id="rulesTable" style="display:none"><table><thead><tr><th>规则名称</th><th>指标</th><th>条件</th><th>阈值</th><th>持续时间</th><th>通知方式</th><th>状态</th><th>操作</th></tr></thead><tbody id="rulesBody"></tbody></table></div>
+            </div>
+        </div>
+
+        <!-- Status -->
+        <div id="subtab-status" class="subtab-content" style="display:none">
+            <div class="card">
+                <div class="card-title"><span>当前告警状态</span></div>
+                <div class="stats-grid" id="alertStatsGrid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px"></div>
+                <div class="loading" id="alertStatusLoading">加载中...</div>
+                <div id="alertStatusTable" style="display:none"><table><thead><tr><th>告警名称</th><th>级别</th><th>来源</th><th>触发时间</th><th>状态</th><th>处理人</th><th>操作</th></tr></thead><tbody id="alertStatusBody"></tbody></table></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== MODAL: Operator ==================== -->
+<div class="modal-overlay" id="operatorModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="operatorModalTitle">添加操作员</h3>
+            <button class="modal-close" onclick="closeOperatorModal()">✕</button>
+        </div>
+        <input type="hidden" id="editOperatorId">
+        <div class="form-row">
+            <div class="form-group"><label>姓名 *</label><input type="text" id="opName" placeholder="请输入姓名"></div>
+            <div class="form-group"><label>工号</label><input type="text" id="opCode" placeholder="请输入工号"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>角色 *</label><select id="opRole"><option value="operator">操作员</option><option value="supervisor">主管</option><option value="admin">管理员</option></select></div>
+            <div class="form-group"><label>部门</label><input type="text" id="opDept" placeholder="所属部门"></div>
+        </div>
+        <div class="form-group"><label>联系电话</label><input type="text" id="opPhone" placeholder="联系电话"></div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeOperatorModal()">取消</button>
+            <button class="btn btn-primary" onclick="saveOperator()">保存</button>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== MODAL: Alert Rule ==================== -->
+<div class="modal-overlay" id="alertRuleModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="alertRuleModalTitle">添加告警规则</h3>
+            <button class="modal-close" onclick="closeAlertRuleModal()">✕</button>
+        </div>
+        <input type="hidden" id="editRuleId">
+        <div class="form-group"><label>规则名称 *</label><input type="text" id="ruleName" placeholder="例如：容器温度过高告警"></div>
+        <div class="form-row">
+            <div class="form-group"><label>监控指标</label><select id="ruleMetric"><option value="cpu">CPU使用率</option><option value="memory">内存使用率</option><option value="temperature">温度</option><option value="pressure">压力</option><option value="flow_rate">流速</option></select></div>
+            <div class="form-group"><label>触发条件</label><select id="ruleCondition"><option value="gt">大于</option><option value="lt">小于</option><option value="gte">大于等于</option><option value="lte">小于等于</option><option value="eq">等于</option></select></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>阈值 *</label><input type="number" id="ruleThreshold" step="0.1" placeholder="例如：85"></div>
+            <div class="form-group"><label>持续时间(分钟)</label><input type="number" id="ruleDuration" value="5" placeholder="持续多久触发告警"></div>
+        </div>
+        <div class="form-group"><label>通知方式</label><select id="ruleNotify"><option value="wechat">企业微信</option><option value="sms">短信</option><option value="email">邮件</option><option value="all">全部通知</option></select></div>
+        <div class="form-group"><label>级别</label><select id="ruleSeverity"><option value="warning">警告</option><option value="critical">严重</option><option value="info">信息</option></select></div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeAlertRuleModal()">取消</button>
+            <button class="btn btn-primary" onclick="saveAlertRule()">保存</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============ MAIN TAB SWITCHING ============
+let currentMainTab = 'dashboard';
+
+function switchMainTab(tabName) {
+    currentMainTab = tabName;
+    document.querySelectorAll('.main-tab').forEach(el => el.classList.toggle('active', el.dataset.tab === tabName));
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.toggle('active', el.id === 'tab-' + tabName));
+    if (tabName === 'dashboard') { refreshData(); initChartsIfNeeded(); }
+    if (tabName === 'config') { loadConfig(); }
+    if (tabName === 'alerts') { loadAlerts(); }
+}
+document.getElementById('mainTabs').addEventListener('click', e => {
+    const tab = e.target.closest('.main-tab');
+    if (tab) switchMainTab(tab.dataset.tab);
+});
+
+// ============ SUB TAB SWITCHING ============
+function switchSubTab(containerId, tabName) {
+    const container = document.getElementById(containerId);
+    container.querySelectorAll('.sub-tab').forEach(el => el.classList.toggle('active', el.dataset.subtab === tabName));
+    container.querySelectorAll('.subtab-content').forEach(el => el.style.display = el.id === 'subtab-' + tabName ? 'block' : 'none');
+}
+document.getElementById('configSubTabs').addEventListener('click', e => {
+    const tab = e.target.closest('.sub-tab');
+    if (tab) switchSubTab('configSubTabs', tab.dataset.subtab);
+});
+document.getElementById('alertSubTabs').addEventListener('click', e => {
+    const tab = e.target.closest('.sub-tab');
+    if (tab) switchSubTab('alertSubTabs', tab.dataset.subtab);
+});
+
+// ============ URL PARAMETER HANDLING ============
+const params = new URLSearchParams(window.location.search);
+if (params.get('tab')) switchMainTab(params.get('tab'));
+
+// ============ DASHBOARD ============
+let trendChart, distributionChart, flowChart;
+let chartsInitialized = false;
+
+function initChartsIfNeeded() {
+    if (chartsInitialized) return;
+    trendChart = echarts.init(document.getElementById('trendChart'));
+    distributionChart = echarts.init(document.getElementById('distributionChart'));
+    flowChart = echarts.init(document.getElementById('flowChart'));
+    chartsInitialized = true;
+
+    const trendOption = { tooltip: { trigger: 'axis', backgroundColor: 'rgba(13,31,60,.9)', borderColor: '#1e3a5f', textStyle: { color: '#e0e6ed' } }, legend: { data: ['新增', '完成'], textStyle: { color: '#7e93b0' }, top: 0, right: 0 }, grid: { left: 50, right: 20, top: 30, bottom: 30 }, xAxis: { type: 'category', data: [], axisLine: { lineStyle: { color: '#1e3a5f' } }, axisLabel: { color: '#7e93b0', fontSize: 11 } }, yAxis: { type: 'value', splitLine: { lineStyle: { color: 'rgba(30,58,95,.5)' } }, axisLabel: { color: '#7e93b0', fontSize: 11 } }, series: [{ name: '新增', type: 'line', smooth: true, symbol: 'none', lineStyle: { width: 2, color: '#3b82f6' }, areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(59,130,246,.3)' }, { offset: 1, color: 'rgba(59,130,246,0)' }] } }, data: [] }, { name: '完成', type: 'line', smooth: true, symbol: 'none', lineStyle: { width: 2, color: '#22c55e' }, areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(34,197,94,.2)' }, { offset: 1, color: 'rgba(34,197,94,0)' }] } }, data: [] }] };
+    trendChart.setOption(trendOption);
+
+    const distOption = { tooltip: { trigger: 'item', backgroundColor: 'rgba(13,31,60,.9)', borderColor: '#1e3a5f', textStyle: { color: '#e0e6ed' }, formatter: '{b}: {c} ({d}%)' }, series: [{ type: 'pie', radius: ['40%', '70%'], center: ['50%', '50%'], avoidLabelOverlap: true, itemStyle: { borderRadius: 6, borderColor: '#0a1628', borderWidth: 2 }, label: { color: '#e0e6ed', fontSize: 12 }, labelLine: { lineStyle: { color: '#1e3a5f' } }, data: [] }] };
+    distributionChart.setOption(distOption);
+
+    const flowOption = { tooltip: { trigger: 'axis', backgroundColor: 'rgba(13,31,60,.9)', borderColor: '#1e3a5f', textStyle: { color: '#e0e6ed' } }, grid: { left: 50, right: 20, top: 20, bottom: 30 }, xAxis: { type: 'category', data: [], axisLine: { lineStyle: { color: '#1e3a5f' } }, axisLabel: { color: '#7e93b0', fontSize: 11, rotate: 30 } }, yAxis: { type: 'value', splitLine: { lineStyle: { color: 'rgba(30,58,95,.5)' } }, axisLabel: { color: '#7e93b0', fontSize: 11 } }, series: [{ name: '已完成', type: 'bar', stack: 'flow', barWidth: 20, itemStyle: { color: '#22c55e', borderRadius: [3, 3, 0, 0] }, data: [] }, { name: '进行中', type: 'bar', stack: 'flow', barWidth: 20, itemStyle: { color: '#3b82f6', borderRadius: [3, 3, 0, 0] }, data: [] }, { name: '待处理', type: 'bar', stack: 'flow', barWidth: 20, itemStyle: { color: '#f59e0b', borderRadius: [3, 3, 0, 0] }, data: [] }] };
+    flowChart.setOption(flowOption);
+
+    loadStats(); loadTrend(); loadDistribution(); loadFlow(); loadActivities();
+}
+
+function formatDate(d) { if (!d) return ''; const dt = new Date(d); return isNaN(dt.getTime()) ? d : dt.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }); }
+
+function getStatusColor(s) { const m = { 'completed': '#22c55e', 'processing': '#3b82f6', 'pending': '#f59e0b', 'failed': '#ef4444', 'cancelled': '#7e93b0' }; return m[s] || '#7e93b0'; }
+
+async function loadStats() {
+    try {
+        const r = await fetch('/container/api/stats');
+        if (!r.ok) return;
+        const res = await r.json();
+        if (res.code !== 0) return;
+        const data = res.data || {};
+        const grid = document.getElementById('statsGrid');
+        const items = [
+            { icon: '📦', value: data.total || 0, label: '容器总数' },
+            { icon: '✅', value: data.distributed || 0, label: '已分配' },
+            { icon: '⏳', value: data.pending || 0, label: '待处理' },
+            { icon: '⚠️', value: (data.cancelled || 0) + (data.expired || 0), label: '异常' },
+            { icon: '📋', value: data.completed || 0, label: '已完成' },
+            { icon: '🔄', value: data.acknowledged || 0, label: '确认中' }
+        ];
+        grid.innerHTML = items.map(item => `<div class="stat-card"><div class="stat-icon">${item.icon}</div><div class="stat-value">${item.value}</div><div class="stat-label">${item.label}</div></div>`).join('');
+    } catch(e) { console.error('loadStats error:', e); }
+}
+
+async function loadTrend() {
+    try {
+        const r = await fetch('/container/api/trend?hours=24');
+        if (!r.ok) return;
+        const res = await r.json();
+        const data = res.code === 0 ? (res.data || []) : [];
+        if (!data || data.length === 0) return;
+        trendChart.setOption({ xAxis: { data: data.map(d => d.time || d.date || d.label) }, series: [
+            { name: '新增', type: 'line', smooth: true, symbol: 'none', lineStyle: { width: 2, color: '#3b82f6' }, areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(59,130,246,.3)' }, { offset: 1, color: 'rgba(59,130,246,0)' }] } }, data: data.map(d => d.created || 0) },
+            { name: '完成', type: 'line', smooth: true, symbol: 'none', lineStyle: { width: 2, color: '#22c55e' }, areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(34,197,94,.2)' }, { offset: 1, color: 'rgba(34,197,94,0)' }] } }, data: data.map(d => d.completed || 0) }
+        ]});
+    } catch(e) { console.error('loadTrend error:', e); }
+}
+
+async function loadDistribution() {
+    try {
+        const r = await fetch('/container/api/distribution');
+        if (!r.ok) return;
+        const res = await r.json();
+        const data = res.code === 0 ? (res.data || []) : [];
+        if (!data || data.length === 0) return;
+        const colors = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+        distributionChart.setOption({ series: [{ data: data.map((d, i) => ({ name: d.name || d.type || d.label, value: d.value || d.count || 0, itemStyle: { color: colors[i % colors.length] } })) }] });
+    } catch(e) { console.error('loadDistribution error:', e); }
+}
+
+async function loadFlow() {
+    try {
+        const r = await fetch('/container/api/flow');
+        if (!r.ok) return;
+        const res = await r.json();
+        if (res.code !== 0) return;
+        const flowData = res.data || {};
+        const nodes = flowData.nodes || [];
+        if (nodes.length === 0) return;
+        flowChart.setOption({ xAxis: { data: nodes.map(d => d.name || d.label) }, series: [
+            { name: '数量', type: 'bar', data: nodes.map(d => d.count || 0), itemStyle: { borderRadius: [4,4,0,0], color: new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'#3b82f6'},{offset:1,color:'#1d4ed8'}]) } }
+        ]});
+    } catch(e) { console.error('loadFlow error:', e); }
+}
+
+async function loadActivities() {
+    try {
+        const r = await fetch('/container/api/activities');
+        if (!r.ok) return;
+        const res = await r.json();
+        const data = res.code === 0 ? (res.data || []) : [];
+        if (!data || data.length === 0) { document.getElementById('activityList').innerHTML = '<div class="empty"><div class="icon">📭</div>暂无动态</div>'; return; }
+        const typeIcons = { 'order': '📋', 'dispatch': '🚚', 'alert': '⚠️', 'complete': '✅', 'create': '➕', 'other': '📄' };
+        document.getElementById('activityList').innerHTML = data.slice(0, 15).map(a => {
+            const icon = typeIcons[a.type] || '📄';
+            const s = a.status || 'info';
+            const sc = getStatusColor(s);
+            return `<div class="activity-item"><div class="type-icon" style="background:${sc}20">${icon}</div><div class="info"><div class="text">${a.title || a.text || ''}</div><div class="time">${formatDate(a.time || a.created_at)}</div></div><span class="tag" style="background:${sc}20;color:${sc}">${s}</span></div>`;
+        }).join('');
+    } catch(e) { console.error('loadActivities error:', e); }
+}
+
+async function refreshData() {
+    if (currentMainTab !== 'dashboard') return;
+    await Promise.all([loadStats(), loadTrend(), loadDistribution(), loadFlow(), loadActivities()]);
+}
+
+// ============ CLOCK ============
+function updateClock() {
+    const now = new Date();
+    document.getElementById('headerTime').textContent = now.toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ============ AUTO REFRESH ============
+setInterval(refreshData, 15000);
+
+// ============ CONFIG PAGE ============
+async function loadConfig() {
+    loadOperators(); loadProcesses(); loadDataTypes(); loadNotification();
+}
+
+async function loadOperators() {
+    try {
+        const r = await fetch('/container/api/container/config');
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const data = await r.json();
+        const ops = data.operators || data.data || [];
+        document.getElementById('operatorsLoading').style.display = 'none';
+        document.getElementById('operatorsTable').style.display = '';
+        document.getElementById('operatorsBody').innerHTML = ops.map(op => `<tr><td>${op.name || ''}</td><td>${op.code || op.operator_code || ''}</td><td>${op.role || ''}</td><td>${op.department || op.dept || ''}</td><td>${op.phone || op.contact || ''}</td><td><span class="tag ${op.status === 'active' || op.is_active ? 'tag-success' : 'tag-secondary'}">${op.status === 'active' || op.is_active ? '启用' : '停用'}</span></td><td><button class="btn btn-outline btn-sm" onclick="editOperator('${op.id || op.operator_id}')">编辑</button> <button class="btn btn-danger btn-sm" onclick="deleteOperator('${op.id || op.operator_id}')">删除</button></td></tr>`).join('');
+    } catch(e) { document.getElementById('operatorsLoading').textContent = '加载失败: ' + e.message; }
+}
+
+async function loadProcesses() {
+    try {
+        const r = await fetch('/container/api/container/config');
+        if (!r.ok) return;
+        const data = await r.json();
+        const procs = data.processes || [];
+        document.getElementById('processesLoading').style.display = 'none';
+        document.getElementById('processesTable').style.display = '';
+        document.getElementById('processesBody').innerHTML = procs.map(p => `<tr><td>${p.name || ''}</td><td>${p.code || p.process_code || ''}</td><td>${p.parent_name || p.parent || '-'}</td><td>${p.description || p.desc || ''}</td><td><span class="tag ${p.is_active ? 'tag-success' : 'tag-secondary'}">${p.is_active ? '启用' : '停用'}</span></td></tr>`).join('');
+    } catch(e) { document.getElementById('processesLoading').textContent = '加载失败'; }
+}
+
+async function loadDataTypes() {
+    try {
+        const r = await fetch('/container/api/container/config');
+        if (!r.ok) return;
+        const data = await r.json();
+        const dts = data.data_types || data.datatypes || [];
+        document.getElementById('datatypesLoading').style.display = 'none';
+        document.getElementById('datatypesTable').style.display = '';
+        document.getElementById('datatypesBody').innerHTML = dts.map(d => `<tr><td>${d.name || ''}</td><td>${d.code || d.type_code || ''}</td><td>${d.description || d.desc || ''}</td><td><span class="tag ${d.is_active ? 'tag-success' : 'tag-secondary'}">${d.is_active ? '启用' : '停用'}</span></td></tr>`).join('');
+    } catch(e) { document.getElementById('datatypesLoading').textContent = '加载失败'; }
+}
+
+async function loadNotification() {
+    try {
+        const r = await fetch('/container/api/container/config');
+        if (!r.ok) return;
+        const data = await r.json();
+        const nc = data.notification || data.notify_config || {};
+        document.getElementById('notificationLoading').style.display = 'none';
+        document.getElementById('notificationContent').style.display = '';
+        if (nc.method) document.getElementById('notifyMethod').value = nc.method;
+        if (nc.level) document.getElementById('notifyLevel').value = nc.level;
+        if (nc.receivers) document.getElementById('notifyReceivers').value = nc.receivers.join ? nc.receivers.join(',') : nc.receivers;
+        if (nc.template) document.getElementById('notifyTemplate').value = nc.template;
+    } catch(e) { document.getElementById('notificationLoading').textContent = '加载失败'; }
+}
+
+async function saveNotification() {
+    const data = {
+        method: document.getElementById('notifyMethod').value,
+        level: document.getElementById('notifyLevel').value,
+        receivers: document.getElementById('notifyReceivers').value.split(',').map(s => s.trim()).filter(Boolean),
+        template: document.getElementById('notifyTemplate').value
+    };
+    try {
+        const r = await fetch('/container/api/container/config', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notification: data }) });
+        if (r.ok) { alert('保存成功'); } else { alert('保存失败'); }
+    } catch(e) { alert('保存失败: ' + e.message); }
+}
+
+// Operator CRUD
+let currentOperatorId = null;
+function showOperatorModal(op) {
+    document.getElementById('editOperatorId').value = op?.id || op?.operator_id || '';
+    document.getElementById('operatorModalTitle').textContent = op ? '编辑操作员' : '添加操作员';
+    document.getElementById('opName').value = op?.name || '';
+    document.getElementById('opCode').value = op?.code || op?.operator_code || '';
+    document.getElementById('opRole').value = op?.role || 'operator';
+    document.getElementById('opDept').value = op?.department || op?.dept || '';
+    document.getElementById('opPhone').value = op?.phone || op?.contact || '';
+    document.getElementById('operatorModal').classList.add('active');
+}
+function closeOperatorModal() { document.getElementById('operatorModal').classList.remove('active'); }
+function editOperator(id) {
+    fetch('/container/api/container/config').then(r => r.json()).then(data => {
+        const ops = data.operators || data.data || [];
+        const op = ops.find(o => (o.id || o.operator_id) == id);
+        if (op) showOperatorModal(op);
+    }).catch(e => console.error(e));
+}
+async function saveOperator() {
+    const data = { name: document.getElementById('opName').value, code: document.getElementById('opCode').value, role: document.getElementById('opRole').value, department: document.getElementById('opDept').value, phone: document.getElementById('opPhone').value };
+    const editId = document.getElementById('editOperatorId').value;
+    try {
+        let r;
+        if (editId) {
+            r = await fetch('/container/api/container/config/operator/' + editId, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        } else {
+            r = await fetch('/container/api/container/config/operator', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        }
+        if (r.ok) { closeOperatorModal(); loadOperators(); } else { alert('保存失败'); }
+    } catch(e) { alert('保存失败: ' + e.message); }
+}
+async function deleteOperator(id) {
+    if (!confirm('确定删除此操作员？')) return;
+    try {
+        const r = await fetch('/container/api/container/config/operator/' + id, { method: 'DELETE' });
+        if (r.ok) { loadOperators(); } else { alert('删除失败'); }
+    } catch(e) { alert('删除失败: ' + e.message); }
+}
+
+// ============ ALERTS PAGE ============
+async function loadAlerts() {
+    loadRules(); loadAlertStatus();
+}
+
+async function loadRules() {
+    try {
+        const r = await fetch('/container/api/alert-rules');
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const data = await r.json();
+        const rules = data.rules || data.data || [];
+        document.getElementById('rulesLoading').style.display = 'none';
+        document.getElementById('rulesTable').style.display = '';
+        document.getElementById('rulesBody').innerHTML = rules.map(rule => `<tr><td>${rule.name || ''}</td><td>${rule.metric || ''}</td><td>${rule.condition || ''}</td><td>${rule.threshold || ''}</td><td>${rule.duration || ''}分钟</td><td>${rule.notify_method || rule.notify || ''}</td><td><span class="tag ${rule.is_active || rule.enabled ? 'tag-success' : 'tag-secondary'}">${rule.is_active || rule.enabled ? '启用' : '停用'}</span></td><td><button class="btn btn-outline btn-sm" onclick="editAlertRule('${rule.id || rule.rule_id}')">编辑</button> <button class="btn btn-danger btn-sm" onclick="toggleAlertRule('${rule.id || rule.rule_id}')">${rule.is_active || rule.enabled ? '停用' : '启用'}</button></td></tr>`).join('');
+    } catch(e) { document.getElementById('rulesLoading').textContent = '加载失败: ' + e.message; }
+}
+
+async function loadAlertStatus() {
+    try {
+        const r = await fetch('/container/api/alert-rules');
+        if (!r.ok) return;
+        const data = await r.json();
+        const status = data.status || data.alerts || [];
+        document.getElementById('alertStatusLoading').style.display = 'none';
+        document.getElementById('alertStatusTable').style.display = '';
+
+        const counts = { critical: 0, warning: 0, info: 0 };
+        status.forEach(s => { if (counts[s.severity] !== undefined) counts[s.severity]++; });
+        document.getElementById('alertStatsGrid').innerHTML = [
+            { icon: '🔴', value: counts.critical, label: '严重告警', cls: 'tag-danger' },
+            { icon: '🟡', value: counts.warning, label: '警告', cls: 'tag-warning' },
+            { icon: '🔵', value: counts.info, label: '信息', cls: 'tag-info' }
+        ].map(s => `<div class="stat-card"><div class="stat-icon">${s.icon}</div><div class="stat-value">${s.value}</div><div class="stat-label">${s.label}</div></div>`).join('');
+
+        document.getElementById('alertStatusBody').innerHTML = status.map(s => `<tr><td>${s.name || s.rule_name || ''}</td><td><span class="tag ${s.severity === 'critical' ? 'tag-danger' : s.severity === 'warning' ? 'tag-warning' : 'tag-info'}">${s.severity || ''}</span></td><td>${s.source || s.metric || ''}</td><td>${formatDate(s.trigger_time || s.time || s.created_at)}</td><td><span class="tag ${s.status === 'active' || s.status === 'triggered' ? 'tag-danger' : s.status === 'acknowledged' ? 'tag-warning' : 'tag-success'}">${s.status || ''}</span></td><td>${s.handler || s.assigned_to || '-'}</td><td>${s.status === 'active' || s.status === 'triggered' ? `<button class="btn btn-sm btn-outline" onclick="acknowledgeAlert('${s.id || s.alert_id}')">确认</button>` : '-'}</td></tr>`).join('');
+    } catch(e) { document.getElementById('alertStatusLoading').textContent = '加载失败'; }
+}
+
+async function acknowledgeAlert(id) {
+    try {
+        const r = await fetch('/container/api/alert-rules', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'acknowledge', id: id }) });
+        if (r.ok) loadAlertStatus();
+    } catch(e) {}
+}
+
+// Alert Rule CRUD
+let currentRuleId = null;
+function showAlertRuleModal(rule) {
+    document.getElementById('editRuleId').value = rule?.id || rule?.rule_id || '';
+    document.getElementById('alertRuleModalTitle').textContent = rule ? '编辑告警规则' : '添加告警规则';
+    document.getElementById('ruleName').value = rule?.name || '';
+    document.getElementById('ruleMetric').value = rule?.metric || 'cpu';
+    document.getElementById('ruleCondition').value = rule?.condition || 'gt';
+    document.getElementById('ruleThreshold').value = rule?.threshold || '';
+    document.getElementById('ruleDuration').value = rule?.duration || 5;
+    document.getElementById('ruleNotify').value = rule?.notify_method || rule?.notify || 'wechat';
+    document.getElementById('ruleSeverity').value = rule?.severity || 'warning';
+    document.getElementById('alertRuleModal').classList.add('active');
+}
+function closeAlertRuleModal() { document.getElementById('alertRuleModal').classList.remove('active'); }
+function editAlertRule(id) {
+    fetch('/container/api/alert-rules').then(r => r.json()).then(data => {
+        const rules = data.rules || data.data || [];
+        const rule = rules.find(r => (r.id || r.rule_id) == id);
+        if (rule) showAlertRuleModal(rule);
+    }).catch(e => console.error(e));
+}
+async function saveAlertRule() {
+    const data = {
+        name: document.getElementById('ruleName').value,
+        metric: document.getElementById('ruleMetric').value,
+        condition: document.getElementById('ruleCondition').value,
+        threshold: parseFloat(document.getElementById('ruleThreshold').value),
+        duration: parseInt(document.getElementById('ruleDuration').value),
+        notify_method: document.getElementById('ruleNotify').value,
+        severity: document.getElementById('ruleSeverity').value
+    };
+    const editId = document.getElementById('editRuleId').value;
+    try {
+        let r;
+        if (editId) {
+            r = await fetch('/container/api/alert-rules', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editId, ...data }) });
+        } else {
+            r = await fetch('/container/api/alert-rules', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        }
+        if (r.ok) { closeAlertRuleModal(); loadRules(); } else { alert('保存失败'); }
+    } catch(e) { alert('保存失败: ' + e.message); }
+}
+async function toggleAlertRule(id) {
+    try {
+        const r = await fetch('/container/api/alert-rules', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id, toggle: true }) });
+        if (r.ok) loadRules();
+    } catch(e) {}
+}
+
+// ============ INIT ============
+document.addEventListener('DOMContentLoaded', () => {
+    if (currentMainTab === 'dashboard') {
+        initChartsIfNeeded();
+        refreshData();
+    }
+});
+</script>
+</body>
+</html>

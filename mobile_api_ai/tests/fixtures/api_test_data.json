@@ -1,0 +1,28 @@
+{
+  "auth": {
+    "valid_operator": {"operator_id": "OP001"},
+    "invalid_operator": {"operator_id": "OP999"}
+  },
+  "approval": {
+    "valid_approve_id": 1,
+    "valid_reject_id": 2,
+    "reject_reason": {"reason": "不符合标准"}
+  },
+  "quality": {
+    "create_data": {
+      "result": "合格",
+      "inspector": "赵六",
+      "order_no": "ORD202604001",
+      "inspection_type": "终检"
+    },
+    "invalid_create_data": {"inspector": "赵六"}
+  },
+  "process": {
+    "worker_id": "OP001",
+    "valid_report": {
+      "completed_qty": 50,
+      "status": "已完成"
+    },
+    "invalid_report": {}
+  }
+}

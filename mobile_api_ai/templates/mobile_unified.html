@@ -1,0 +1,2780 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>晨圣报工系统测试版</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:Arial;-webkit-font-smoothing:antialiased;background:linear-gradient(135deg,#1a252f 0%,#2c3e50 100%);color:white;min-height:100vh;padding:0;margin:0;}
+.container{max-width:500px;margin:0 auto;padding:15px;padding-bottom:80px;}
+.card{background:white;color:#333;border-radius:16px;padding:20px;margin:15px 0;box-shadow:0 4px 15px rgba(0,0,0,0.1);}
+h1{color:#3498db;font-size:22px;margin-bottom:15px;}
+h2{color:#2c3e50;font-size:18px;margin-bottom:10px;}
+h3{color:#34495e;font-size:16px;margin:10px 0;}
+input,select,button{width:100%;padding:14px;margin:6px 0;border-radius:10px;border:2px solid #ddd;font-size:15px;outline:none;transition:border-color 0.3s;}
+input:focus,select:focus{border-color:#3498db;}
+button{background:#3498db;color:white;border:none;cursor:pointer;font-weight:bold;transition:background 0.3s;}
+button:active{transform:scale(0.98);}
+button:hover{background:#2980b9;}
+.btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.btn-action{background:#3498db;padding:20px;border-radius:12px;text-align:center;font-weight:bold;color:white;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s;}
+.btn-action:active{transform:scale(0.95);}
+.btn-action:hover{background:#2980b9;}
+.btn-scan{background:#27ae60;}
+.btn-scan:hover{background:#229954;}
+.btn-warning{background:#e67e22;}
+.btn-danger{background:#e74c3c;}
+.btn-success{background:#27ae60;}
+.toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.85);color:white;padding:18px 35px;border-radius:12px;display:none;z-index:1000;font-size:15px;}
+.page{display:none;}
+@keyframes scanSuccess{
+  0%{transform:scale(1);opacity:1;}
+  50%{transform:scale(1.1);opacity:0.8;}
+  100%{transform:scale(1);opacity:1;}
+}
+.scan-success{
+  animation:scanSuccess 0.5s ease-in-out;
+}
+.scan-tip{
+  animation:fadeIn 0.5s ease-in-out;
+}
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(-10px);}
+  to{opacity:1;transform:translateY(0);}
+}
+.loading{
+  color:#3498db;
+  font-size:14px;
+  padding:20px;
+}
+.page.active{display:block;}
+.loading{text-align:center;padding:40px;color:#666;font-size:14px;}
+.error-msg{background:#fee;color:#c33;padding:12px;border-radius:8px;margin:10px 0;font-size:14px;}
+.success-msg{background:#efe;color:#3c3;padding:12px;border-radius:8px;margin:10px 0;font-size:14px;}
+.back-btn{background:#95a5a6;margin-top:10px;}
+.back-btn:hover{background:#7f8c8d;}
+.badge{display:inline-block;padding:4px 10px;border-radius:15px;font-size:11px;font-weight:bold;margin-right:5px;}
+.badge-red{background:#ffebee;color:#c33;}
+.badge-yellow{background:#fff3cd;color:#856404;}
+.badge-blue{background:#e3f2fd;color:#1976d2;}
+.badge-green{background:#e8f5e9;color:#2e7d32;}
+.badge-orange{background:#fff3e0;color:#e65100;}
+.item-list{background:#f8f9fa;border-radius:10px;padding:15px;margin:10px 0;cursor:pointer;transition:background 0.2s;border-left:4px solid #3498db;}
+.item-list:hover{background:#e8f4fc;}
+.item-list:active{background:#ddeeff;}
+.item-header{font-weight:bold;color:#2c3e50;margin-bottom:5px;font-size:15px;}
+.item-detail{color:#666;font-size:13px;margin:3px 0;}
+.item-meta{color:#999;font-size:12px;margin-top:5px;}
+.item-list{cursor:pointer;}
+.item-list:hover{background:#eef3f8;}
+.progress-bar{background:#e0e0e0;height:10px;border-radius:5px;overflow:hidden;margin-top:8px;}
+.progress-fill{background:linear-gradient(90deg,#3498db,#2ecc71);height:100%;transition:width 0.5s;border-radius:5px;}
+.stat-card{background:white;border-radius:12px;padding:15px;text-align:center;color:#333;box-shadow:0 2px 10px rgba(0,0,0,0.08);}
+.stat-value{font-size:28px;font-weight:bold;color:#3498db;}
+.stat-label{font-size:12px;color:#666;margin-top:5px;}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:10px 0;}
+.process-timeline{margin:15px 0;}
+.process-item{display:flex;align-items:flex-start;margin:12px 0;position:relative;}
+.process-dot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;margin-right:12px;flex-shrink:0;}
+.process-dot.completed{background:#27ae60;color:white;}
+.process-dot.current{background:#3498db;color:white;animation:pulse 1.5s infinite;}
+.process-dot.available{background:#f39c12;color:white;}
+.process-dot.pending{background:#ddd;color:#999;}
+.process-line{position:absolute;left:12px;top:24px;width:2px;height:calc(100% + 10px);background:#e0e0e0;}
+.process-info{flex:1;padding-bottom:10px;}
+.process-name{font-weight:bold;color:#2c3e50;font-size:14px;}
+.process-desc{color:#888;font-size:12px;margin-top:2px;}
+.process-status{font-size:11px;padding:2px 8px;border-radius:10px;margin-top:3px;display:inline-block;}
+.process-status.done{background:#e8f5e9;color:#2e7d32;}
+.process-status.doing{background:#e3f2fd;color:#1565c0;}
+.process-status.wait{background:#fff3e0;color:#e65100;}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(52,152,219,0.5);}50%{box-shadow:0 0 0 8px rgba(52,152,219,0);}100%{box-shadow:0 0 0 0 rgba(52,152,219,0);}}
+.sub-item{background:#f8f9fa;padding:10px 12px;border-radius:8px;margin:6px 0;font-size:13px;border-left:3px solid #3498db;}
+.sub-item.done{border-left-color:#27ae60;background:#e8f5e9;}
+.sub-item.current{border-left-color:#3498db;background:#e3f2fd;}
+.sub-item.locked{border-left-color:#ddd;opacity:0.6;}
+.nav-bar{position:fixed;bottom:0;left:0;right:0;background:white;display:flex;justify-content:space-around;padding:10px 0;box-shadow:0 -2px 15px rgba(0,0,0,0.1);z-index:50;}
+.nav-item{flex:1;text-align:center;color:#666;font-size:11px;cursor:pointer;transition:color 0.2s;}
+.nav-item.active{color:#3498db;}
+.nav-icon{font-size:22px;display:block;margin-bottom:3px;}
+.filter-tabs{display:flex;gap:8px;margin:10px 0;overflow-x:auto;padding-bottom:5px;}
+.filter-tab{padding:8px 16px;border-radius:20px;font-size:12px;white-space:nowrap;background:#eee;color:#666;cursor:pointer;transition:all 0.2s;}
+.filter-tab.active{background:#3498db;color:white;}
+.filter-tab:active{transform:scale(0.95);}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:100;display:none;align-items:center;justify-content:center;}
+.modal-overlay.active{display:flex;}
+.modal-content{background:white;border-radius:16px;padding:25px;max-width:350px;width:90%;max-height:80vh;overflow-y:auto;}
+.modal-header{font-size:18px;font-weight:bold;color:#2c3e50;margin-bottom:15px;text-align:center;}
+.modal-footer{display:flex;gap:10px;margin-top:20px;}
+.modal-footer button{flex:1;}
+.inline-form{display:grid;gap:8px;}
+.inline-form label{font-size:13px;color:#666;font-weight:bold;}
+.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;}
+.page-title{font-size:20px;font-weight:bold;color:#3498db;}
+.header-btn{background:none;border:none;color:#3498db;font-size:14px;cursor:pointer;padding:5px 10px;}
+.header-btn:hover{color:#2980b9;}
+.quality-result{display:flex;gap:15px;margin:15px 0;}
+.quality-option{flex:1;padding:15px;text-align:center;border-radius:10px;cursor:pointer;border:2px solid #ddd;transition:all 0.2s;}
+.quality-option.selected{border-color:#27ae60;background:#e8f5e9;}
+.quality-option.rejected{border-color:#e74c3c;background:#ffebee;}
+.filter-row{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
+.filter-row input,.filter-row button{flex:1;min-width:80px;padding:10px;margin:0;font-size:13px;}
+.filter-row button{flex:0 0 auto;padding:10px 16px;white-space:nowrap;}
+.records-count{font-size:13px;color:#999;margin-bottom:8px;padding:0 5px;}
+.schedule-status{padding:3px 10px;border-radius:12px;font-size:11px;font-weight:bold;display:inline-block;}
+.schedule-status.pending{background:#fff3e0;color:#e65100;}
+.schedule-status.processing{background:#e3f2fd;color:#1976d2;}
+.schedule-status.completed{background:#e8f5e9;color:#2e7d32;}
+.schedule-status.confirmed{background:#e8f5e9;color:#2e7d32;}
+.schedule-detail-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;font-size:14px;}
+.schedule-detail-row:last-child{border-bottom:none;}
+.schedule-detail-label{color:#888;flex-shrink:0;}
+.schedule-detail-value{color:#333;font-weight:500;text-align:right;}
+.confirm-btn{background:#f39c12;color:white;border:none;padding:12px;border-radius:10px;font-size:15px;font-weight:bold;cursor:pointer;width:100%;transition:background 0.3s;}
+.confirm-btn:hover{background:#e67e22;}
+.confirm-btn:disabled{background:#ccc;cursor:not-allowed;}
+.schedule-empty{text-align:center;padding:40px 15px;color:#999;}
+.schedule-empty-icon{font-size:48px;margin-bottom:10px;}
+.flow-timeline{margin:15px 0;border-top:1px solid #e0e0e0;padding-top:12px;}
+.flow-timeline-title{font-size:13px;font-weight:bold;color:#2c3e50;margin-bottom:10px;}
+.flow-step{display:flex;align-items:stretch;min-height:42px;position:relative;padding-left:28px;}
+.flow-step-dot{position:absolute;left:0;top:8px;width:18px;height:18px;border-radius:50%;z-index:2;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all 0.3s;}
+.flow-step-dot.completed{background:#27ae60;color:white;border:2px solid #27ae60;}
+.flow-step-dot.active{background:#f39c12;color:white;border:2px solid #f39c12;box-shadow:0 0 0 3px rgba(243,156,18,0.25);}
+.flow-step-dot.pending{background:white;color:#bbb;border:2px solid #ddd;}
+.flow-step-line{position:absolute;left:8px;top:28px;width:2px;bottom:0;z-index:1;}
+.flow-step-line.completed{background:#27ae60;}
+.flow-step-line.pending{background:#e0e0e0;}
+.flow-step:last-child .flow-step-line{display:none;}
+.flow-step-body{flex:1;padding:4px 0 4px 10px;}
+.flow-step-name{font-size:13px;font-weight:500;color:#333;}
+.flow-step-role{font-size:11px;color:#999;margin-top:1px;}
+.flow-step-body.completed .flow-step-name{color:#27ae60;}
+.flow-step-body.active .flow-step-name{color:#e67e22;font-weight:600;}
+.flow-step-body.pending .flow-step-name{color:#aaa;}
+
+/* ===== 质检任务UI优化 ===== */
+.qi-task-card{background:white;border-radius:12px;padding:14px;margin:8px 0;box-shadow:0 1px 4px rgba(0,0,0,0.06);cursor:pointer;transition:all 0.15s;}
+.qi-task-card:active{transform:scale(0.98);background:#f8f9fa;}
+.qi-status-badge{padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;white-space:nowrap;}
+.qi-flow-bar{display:flex;gap:4px;margin-bottom:16px;overflow-x:auto;padding:4px 0;}
+.qi-flow-step{flex:1;text-align:center;padding:6px 4px;font-size:11px;border-radius:6px;background:#f0f0f0;color:#999;white-space:nowrap;min-width:0;}
+.qi-flow-step.completed{background:#e8f5e9;color:#27ae60;}
+.qi-flow-step.active{background:#e3f2fd;color:#3498db;font-weight:600;}
+.qi-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
+.qi-info-item{background:#f8f9fa;border-radius:8px;padding:10px 12px;}
+.qi-info-label{display:block;font-size:11px;color:#999;margin-bottom:2px;}
+.qi-info-val{display:block;font-size:14px;color:#2c3e50;font-weight:500;}
+.qi-section-title{font-size:15px;font-weight:600;color:#2c3e50;margin:16px 0 10px;}
+.qi-category{background:white;border-radius:12px;margin:8px 0;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.05);}
+.qi-cat-header{padding:12px 14px;font-size:14px;font-weight:600;color:#2c3e50;display:flex;justify-content:space-between;align-items:center;background:#fafbfc;border-bottom:1px solid #f0f0f0;cursor:pointer;}
+.qi-cat-body{padding:0 14px 14px;transition:max-height 0.3s;}
+.qi-cat-body.collapsed{max-height:0;padding:0 14px;overflow:hidden;opacity:0;}
+.qi-item-row{padding:10px 0;border-bottom:1px solid #f5f5f5;}
+.qi-item-row:last-child{border-bottom:none;}
+.qi-item-name{font-size:14px;color:#333;font-weight:500;margin-bottom:6px;}
+.qi-standard{font-size:12px;color:#999;margin-bottom:6px;}
+.qi-input{padding:10px 12px;border:2px solid #e8e8e8;border-radius:8px;font-size:15px;width:100%;outline:none;transition:border-color 0.2s;}
+.qi-input:focus{border-color:#3498db;box-shadow:0 0 0 3px rgba(52,152,219,0.1);}
+.qi-judge-icon{font-size:20px;min-width:28px;text-align:center;}
+.qi-result-toggle{display:flex;gap:8px;}
+.qi-result-btn{flex:1;padding:12px;border:2px solid #e0e0e0;border-radius:10px;font-size:14px;font-weight:600;text-align:center;background:white;cursor:pointer;transition:all 0.15s;}
+.qi-result-btn:active{transform:scale(0.96);}
+.qi-result-btn.selected.pass{border-color:#27ae60;background:#e8f5e9;color:#27ae60;}
+.qi-result-btn.selected.fail{border-color:#e74c3c;background:#ffebee;color:#e74c3c;}
+.qi-result-btn.selected.pending{border-color:#f39c12;background:#fff8e1;color:#f39c12;}
+.qi-process-tabs{display:flex;gap:6px;margin:12px 0;overflow-x:auto;}
+.qi-process-tab{padding:8px 14px;border-radius:8px;font-size:13px;background:#f0f0f0;color:#666;cursor:pointer;white-space:nowrap;transition:all 0.15s;}
+.qi-process-tab.active{background:#667eea;color:#fff;font-weight:600;}
+.qi-process-tab.submitted{opacity:0.5;}
+.qi-process-tab.submitted.active{opacity:1;background:#27ae60;}
+
+/* ===== 手机屏幕适配 (新增，不改变原风格) ===== */
+/* 触控目标最小44px */
+input,select,button,textarea{min-height:44px;}
+/* 安全区域 */
+.container{padding:15px;padding-bottom:calc(80px + env(safe-area-inset-bottom, 0px));}
+.nav-bar{padding-bottom:calc(10px + env(safe-area-inset-bottom, 10px));}
+/* 防止横向溢出 */
+body{overflow-x:hidden;}
+.card{overflow-x:hidden;word-break:break-all;}
+.item-list{word-break:break-all;}
+/* 筛选标签横向滚动 */
+.filter-tabs{-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.filter-tabs::-webkit-scrollbar{display:none;}
+/* 弹窗打开时锁定背景滚动 */
+body.modal-open{overflow:hidden;}
+/* 弹窗内容可滚动 */
+.modal-content{max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+/* 统计卡片在小屏自适应 */
+.stat-grid{grid-template-columns:repeat(3,1fr);}
+@media(max-width:360px){
+  .stat-value{font-size:22px;}
+  .stat-label{font-size:11px;}
+  .stat-card{padding:12px 8px;}
+  .btn-grid{grid-template-columns:1fr;}
+  .page-title{font-size:17px;}
+  .card{padding:14px;}
+  h1{font-size:18px;}
+}
+/* 触控反馈 */
+button:active, .btn-action:active, .item-list:active, .nav-item:active, .filter-tab:active, .qi-result-btn:active{transform:scale(0.97);transition:transform 0.1s;}
+/* 纵向滚动优化 */
+.container{-webkit-overflow-scrolling:touch;}
+/* 弹窗打开锁定滚动 */
+</style>
+</head>
+<body>
+<div class="container">
+<div id="login-page" class="page active">
+<div class="card" style="margin-top:60px;">
+<h1 style="text-align:center;">🏭 晨圣报工系统测试版</h1>
+<p style="text-align:center;color:#666;margin-bottom:20px;">不锈钢输送带生产管理</p>
+<input id="username" placeholder="输入工号/姓名" value="">
+<button onclick="login()">登 录</button>
+</div>
+</div>
+
+<div id="dashboard-page" class="page">
+<div class="card">
+<div class="page-header" style="margin-bottom:0;">
+<div class="page-title">📊 生产看板</div>
+<button class="header-btn" onclick="loadDashboard()">🔄 刷新</button>
+</div>
+</div>
+<div class="stat-grid">
+<div class="stat-card">
+<div class="stat-value" id="stat-total">0</div>
+<div class="stat-label">总订单</div>
+</div>
+<div class="stat-card">
+<div class="stat-value" id="stat-pending">0</div>
+<div class="stat-label">待生产</div>
+</div>
+<div class="stat-card">
+<div class="stat-value" id="stat-processing">0</div>
+<div class="stat-label">生产中</div>
+</div>
+</div>
+<div class="stat-grid">
+<div class="stat-card">
+<div class="stat-value" id="stat-completed">0</div>
+<div class="stat-label">已完成</div>
+</div>
+<div class="stat-card">
+<div class="stat-value" id="stat-today-checkin">0</div>
+<div class="stat-label">今日签到</div>
+</div>
+<div class="stat-card">
+<div class="stat-value" id="stat-today-reports">0</div>
+<div class="stat-label">今日报工</div>
+</div>
+</div>
+<div class="card">
+<h2>🚨 紧急订单</h2>
+<div id="urgent-orders-list"><div class="loading">加载中...</div></div>
+</div>
+<div class="card">
+<h2>📅 逾期订单</h2>
+<div id="expected-orders-list"><div class="loading">加载中...</div></div>
+</div>
+<div class="card">
+<h2>⚠️ 缺料订单</h2>
+<div id="shortage-orders-list"><div class="loading">加载中...</div></div>
+</div>
+<div class="card">
+<h2>📋 今日报工记录</h2>
+<div id="recent-records-list"><div class="loading">加载中...</div></div>
+</div>
+</div>
+
+<div id="orders-page" class="page">
+<div class="card">
+<div class="page-header">
+<div class="page-title">📝 工单列表</div>
+<button class="header-btn" onclick="showOrderFilters()">🔍 筛选</button>
+</div>
+<div style="margin-bottom:10px;">
+<input id="search-input" placeholder="输入工单号或产品名称">
+</div>
+<div style="display:flex;gap:10px;margin-bottom:10px;">
+<button class="btn-scan" onclick="openScanner()" style="flex:1;">📷 扫码报工</button>
+<button onclick="searchOrder()" style="flex:1;background:#9b59b6;">🔍 搜索</button>
+</div>
+<div style="display:flex;gap:10px;margin-bottom:10px;">
+<button onclick="showSchedule()" style="flex:1;background:#9b59b6;"><span style="font-size:18px;">📋</span> 排产</button>
+</div>
+<div style="display:flex;gap:10px;margin-bottom:10px;">
+<button onclick="showProcessTasks()" style="flex:1;background:#2980b9;"><span style="font-size:18px;">🔧</span> 工序任务</button>
+</div>
+<div style="display:flex;gap:10px;margin-bottom:10px;">
+<button onclick="showMaterial()" style="flex:1;background:#f39c12;"><span style="font-size:18px;">📦</span> 物料任务</button>
+</div>
+<div style="display:flex;gap:10px;margin-bottom:10px;">
+<button onclick="showQuality()" style="flex:1;background:#3498db;"><span style="font-size:18px;">🔍</span> 质检任务</button>
+</div>
+<div style="display:flex;gap:10px;margin-bottom:10px;">
+<button onclick="showOutsource()" style="flex:1;background:#e67e22;"><span style="font-size:18px;">🔗</span> 外协任务</button>
+</div>
+<div style="display:flex;gap:10px;margin-bottom:10px;">
+<button onclick="showWarehousing()" style="flex:1;background:#27ae60;"><span style="font-size:18px;">📦</span> 成品入库</button>
+</div>
+<div id="scan-tip" style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#856404;display:flex;align-items:center;gap:8px;">
+  <span style="font-size:16px;">💡</span>
+  <span>提示：点击"📷 扫码报工"扫描贴在工件上的订单二维码快速报工</span>
+</div>
+
+<!-- 扫码弹窗 -->
+<div id="scanner-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:200;flex-direction:column;">
+  <div style="text-align:right;padding:10px;">
+    <button onclick="closeScanner()" style="background:transparent;color:white;border:none;font-size:24px;padding:10px;">✕</button>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:20px;">
+    <video id="scan-video" style="width:100%;max-height:60vh;border-radius:12px;" playsinline></video>
+    <canvas id="scan-canvas" style="display:none;"></canvas>
+    <div style="text-align:center;margin-top:15px;">
+      <p style="color:white;font-size:14px;margin-bottom:10px;">将二维码对准扫描框</p>
+      <button onclick="stopScanCamera()" style="background:#e74c3c;color:white;border:none;padding:12px 30px;border-radius:10px;font-size:15px;">停止扫码</button>
+    </div>
+  </div>
+  <div id="scan-result-hint" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(39,174,96,0.9);color:white;padding:20px 30px;border-radius:12px;font-size:16px;text-align:center;">
+    <div style="font-size:40px;margin-bottom:8px;">✅</div>
+    <div id="scan-result-text">识别成功</div>
+  </div>
+</div>
+
+<div id="orders-list"></div>
+</div>
+</div>
+
+<div id="detail-page" class="page">
+<div class="card">
+<div id="detail-content"><div class="loading">加载中...</div></div>
+<div class="btn-grid" style="margin-top:15px;">
+<button onclick="showReport()">📝 报工入库</button>
+<button onclick="showProcessDetail()">📋 订单详情</button>
+</div>
+<div class="btn-grid" style="margin-top:10px;">
+<button onclick="showQualityReport()" id="btn-quality" style="display:none;background:#27ae60;">✅ 质检</button>
+<button onclick="printOrderQR()" style="background:#e67e22;">🖨️ 打印</button>
+<button class="back-btn" onclick="showOrders()">返回</button>
+</div>
+</div>
+</div>
+
+<div id="process-detail-page" class="page">
+<div class="card">
+<h2>📊 8步排产流程</h2>
+<div style="font-size:12px;color:#666;margin-bottom:10px;">用于展示订单状态（来源：docs/全流程架构图.md）</div>
+<div id="process-detail-content"><div class="loading">加载中...</div></div>
+<button class="back-btn" onclick="showDetail()">返回订单</button>
+</div>
+</div>
+
+<div id="report-page" class="page">
+<div class="card">
+<h2>📝 工序报工</h2>
+<div id="report-order-info" style="background:#e3f2fd;padding:12px;border-radius:10px;margin:10px 0;font-size:14px;"></div>
+<div id="report-history-info"></div>
+<div class="hint">💡 选择要报工的工序，填写完成数量</div>
+<div class="inline-form">
+<label>选择工序</label>
+<select id="main-process-select">
+<option value="">-- 请选择工序 --</option>
+</select>
+</div>
+<div class="inline-form">
+<label>完成数量</label>
+<input id="quantity" type="number" placeholder="数量">
+</div>
+<div class="inline-form">
+<label>合格数量</label>
+<input id="qualified_qty" type="number" placeholder="合格(默认等于完成数量)">
+</div>
+<div class="inline-form">
+<label>备注</label>
+<input id="remark" placeholder="备注（选填）">
+</div>
+<div class="inline-form">
+<label>生产设备</label>
+<input id="equipment_name" placeholder="设备名称（选填）">
+</div>
+<div class="inline-form">
+<label>工时(小时)</label>
+<input id="overtime_hours" type="number" min="0" step="0.1" placeholder="工时(选填)">
+</div>
+<button onclick="submitReport()">提 交 报 工</button>
+<button class="back-btn" onclick="showDetail()">返回</button>
+</div>
+</div>
+
+<div id="quality-page" class="page">
+<div class="card">
+<h2>✅ 质量检验</h2>
+<div id="quality-order-info" style="background:#e3f2fd;padding:12px;border-radius:10px;margin:10px 0;font-size:14px;"></div>
+<div class="inline-form">
+<label>检验类型</label>
+<select id="inspection-type">
+<option value="巡检">巡检</option>
+<option value="首检">首检</option>
+<option value="终检">终检</option>
+</select>
+</div>
+<div class="inline-form">
+<label>检验项目</label>
+<input id="inspection-items" placeholder="尺寸、外观、焊点等">
+</div>
+<div class="quality-result">
+<div class="quality-option selected" id="quality-pass" onclick="selectQualityResult('合格')">
+<div style="font-size:24px;">✅</div>
+<div>合格</div>
+</div>
+<div class="quality-option" id="quality-fail" onclick="selectQualityResult('不合格')">
+<div style="font-size:24px;">❌</div>
+<div>不合格</div>
+</div>
+</div>
+<div class="inline-form" id="defect-section" style="display:none;">
+<label>不合格描述</label>
+<textarea id="defect-desc" rows="2" placeholder="描述不合格原因" style="width:100%;padding:14px;border-radius:10px;border:2px solid #ddd;font-size:15px;"></textarea>
+</div>
+<div class="inline-form">
+<label>处理方式</label>
+<input id="handling-method" placeholder="返工/报废/降级等">
+</div>
+<div class="inline-form">
+<label>备注</label>
+<input id="quality-remark" placeholder="其他说明">
+</div>
+<button onclick="submitQualityReport()">提 交 质 检</button>
+<button class="back-btn" onclick="showDetail()">返回</button>
+</div>
+</div>
+
+<div id="records-page" class="page">
+<div class="card">
+<div class="page-header">
+<div class="page-title">📋 报工记录</div>
+<button class="header-btn" onclick="loadRecords()">🔄 刷新</button>
+</div>
+<div class="filter-row">
+<input id="records-worker-filter" placeholder="工人姓名">
+<input id="records-date-from" type="date">
+<input id="records-date-to" type="date">
+<button onclick="loadRecords()">🔍 查询</button>
+</div>
+<div id="records-count" class="records-count"></div>
+<div id="records-list"></div>
+<button class="back-btn" onclick="showDashboard()">返回看板</button>
+</div>
+</div>
+
+<div id="production-page" class="page">
+<div class="card">
+<div class="page-header">
+<div class="page-title">🏭 生产工单</div>
+<button class="header-btn" onclick="loadProductionOrders()">🔄 刷新</button>
+</div>
+<div id="production-orders-list"></div>
+<button class="back-btn" onclick="showDashboard()">返回看板</button>
+</div>
+</div>
+
+<div id="quality-records-page" class="page">
+<div class="card">
+<div class="page-header">
+<div class="page-title">✅ 质检记录</div>
+<button class="header-btn" onclick="loadQualityRecords()">🔄 刷新</button>
+</div>
+<div id="quality-records-list"></div>
+<button class="back-btn" onclick="showDashboard()">返回看板</button>
+</div>
+</div>
+
+<div id="workers-page" class="page">
+<div class="card">
+<div class="page-header">
+<div class="page-title">👥 人员管理</div>
+<button class="header-btn" onclick="loadWorkers()">🔄 刷新</button>
+</div>
+<div id="workers-list"></div>
+<button class="back-btn" onclick="showDashboard()">返回看板</button>
+</div>
+</div>
+
+<div id="schedule-page" class="page">
+<div class="card">
+<div class="page-header">
+<div class="page-title">📋 排产任务</div>
+</div>
+<div style="display:flex;gap:8px;margin-bottom:12px;">
+<input id="sc-search-input" placeholder="输入订单号" style="flex:1;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:14px;">
+<button onclick="queryForPage('sc','schedule')" style="background:#3498db;color:#fff;border:none;padding:8px 16px;border-radius:6px;">查询</button>
+<button onclick="scanForPage('schedule')" style="background:#27ae60;color:#fff;border:none;padding:8px 12px;border-radius:6px;">📷 扫码</button>
+<button class="header-btn" onclick="loadScheduleList()">🔄 刷新</button>
+</div>
+<div id="schedule-list"><div class="loading">加载中...</div></div>
+</div>
+</div>
+
+<div id="process-tasks-page" class="page">
+<div class="card">
+<h2>🔧 工序任务</h2>
+<input id="pt-filter" type="text" placeholder="搜索订单号" style="width:100%;padding:10px;margin-bottom:8px;font-size:14px;border-radius:8px;border:2px solid #ddd;"
+  oninput="showProcessTasks()">
+<button onclick="scanForProcessTasks()" style="width:100%;background:#27ae60;color:#fff;border:none;padding:12px;border-radius:6px;font-size:15px;">📷 扫码查询</button>
+<div id="process-tasks-content" style="margin-top:12px;"><div class="loading">加载中...</div></div>
+</div>
+</div>
+
+<div id="warehousing-page" class="page">
+<div class="card">
+<div class="page-header">
+<div class="page-title">📦 成品入库</div>
+<button class="header-btn" onclick="loadWarehousingList()">🔄 刷新</button>
+</div>
+<div id="warehousing-list"><div class="loading">加载中...</div></div>
+</div>
+</div>
+
+<div id="material-page" class="page">
+<div class="card">
+<div class="page-header">
+    <div class="page-title">📦 物料任务</div>
+</div>
+<input id="mat-search-input" placeholder="搜索订单号" style="width:100%;padding:10px;margin-bottom:8px;font-size:14px;border-radius:8px;border:2px solid #ddd;"
+  oninput="loadMaterialTasks(this.value)">
+<div style="display:flex;gap:8px;margin-bottom:12px;">
+<button onclick="scanForPage('material')" style="flex:1;background:#27ae60;color:#fff;border:none;padding:12px;border-radius:6px;font-size:15px;">📷 扫码查询</button>
+<button class="header-btn" onclick="showMaterial()">🔄 刷新全部</button>
+</div>
+<div id="material-list"><div class="loading">加载中...</div></div>
+</div>
+</div>
+
+<div id="outsource-page" class="page">
+<div class="card">
+<div class="page-header">
+    <div class="page-title">🔗 外协任务</div>
+</div>
+<input id="os-search-input" placeholder="搜索订单号" style="width:100%;padding:10px;margin-bottom:8px;font-size:14px;border-radius:8px;border:2px solid #ddd;"
+  oninput="queryForPage('os','outsource')">
+<div style="display:flex;gap:8px;margin-bottom:12px;">
+<button onclick="scanForPage('outsource')" style="flex:1;background:#27ae60;color:#fff;border:none;padding:12px;border-radius:6px;font-size:15px;">📷 扫码查询</button>
+<button class="header-btn" onclick="showOutsource()">🔄 刷新全部</button>
+</div>
+<div id="outsource-list"><div class="loading">加载中...</div></div>
+</div>
+</div>
+
+<div id="quality-inspection-page" class="page">
+<div class="card">
+<div class="page-header">
+    <div class="page-title">🔍 质检任务</div>
+</div>
+<input id="qi-search-input" placeholder="搜索订单号" style="width:100%;padding:10px;margin-bottom:8px;font-size:14px;border-radius:8px;border:2px solid #ddd;"
+  oninput="searchQualityOrder()">
+<div style="display:flex;gap:8px;margin-bottom:12px;">
+<button onclick="startQualityScan()" style="flex:1;background:#27ae60;color:#fff;border:none;padding:12px;border-radius:6px;font-size:15px;">📷 扫码查询</button>
+<button class="header-btn" onclick="showQuality()">🔄 刷新全部</button>
+</div>
+<div id="qi-list"><div class="loading">加载中...</div></div>
+</div>
+</div>
+
+<div class="nav-bar" id="nav-bar" style="display:none;">
+<div class="nav-item active" onclick="showDashboard()">
+<span class="nav-icon">📊</span>看板
+</div>
+<div class="nav-item" onclick="showOrders()">
+<span class="nav-icon">📝</span>工单
+</div>
+<div class="nav-item" onclick="showRecords()">
+<span class="nav-icon">📋</span>记录
+</div>
+<div class="nav-item" onclick="showQualityMenu()">
+<span class="nav-icon">✅</span>质检记录
+</div>
+<div class="nav-item" onclick="logout()">
+<span class="nav-icon">🚪</span>退出
+</div>
+</div>
+
+<div id="toast" class="toast"></div>
+</div>
+
+<div id="scanner-container" class="modal-overlay">
+<div class="modal-content" style="max-width:320px;text-align:center;">
+<div class="modal-header" id="scanner-header">📷 扫描订单二维码</div>
+<div id="qr-reader" style="width:250px;height:250px;margin:0 auto;border:3px solid #3498db;border-radius:12px;overflow:hidden;"></div>
+<div id="qr-result" style="margin-top:15px;color:#666;"></div>
+<button onclick="stopScan()" style="margin-top:15px;background:#e74c3c;">关闭</button>
+</div>
+</div>
+
+<div id="face-checkin-modal" class="modal-overlay">
+<div class="modal-content" style="max-width:100%;width:100%;height:100%;border-radius:0;padding:0;background:#0f172a;">
+  <div style="position:relative;width:100%;height:100%;">
+    <button onclick="closeFaceCheckin()" style="position:absolute;top:10px;right:10px;z-index:10;width:auto;padding:8px 16px;background:#e74c3c;border:none;border-radius:6px;color:#fff;cursor:pointer;font-size:14px;">✕ 关闭</button>
+    <iframe id="face-checkin-iframe" src="/face/app/" style="width:100%;height:100%;border:none;"></iframe>
+  </div>
+</div>
+</div>
+
+<div id="qrcode-print-container" class="modal-overlay">
+<div class="modal-content" style="max-width:400px;text-align:center;">
+<div class="modal-header">🖨️ 订单二维码</div>
+<div id="qrcode-display" style="padding:20px;background:#fff;">
+<div id="qrcode-image" style="margin:10px auto;"></div>
+<div id="qrcode-order-info" style="margin-top:15px;font-size:14px;"></div>
+</div>
+<div class="btn-grid" style="margin-top:15px;">
+<button onclick="doPrintQR()" style="background:#27ae60;">🖨️ 打印</button>
+<button onclick="closeQRModal()" style="background:#95a5a6;">关闭</button>
+</div>
+</div>
+</div>
+
+<div id="attendance-qr-modal" class="modal-overlay">
+<div class="modal-content" style="max-width:400px;text-align:center;">
+<div class="modal-header">📱 我的签到二维码</div>
+<div style="padding:20px;">
+  <div id="attendance-qr-image" style="margin:10px auto;min-height:200px;">
+    <div class="loading">生成中...</div>
+  </div>
+  <div id="attendance-qr-info" style="margin-top:15px;font-size:14px;color:#666;"></div>
+</div>
+<div style="font-size:12px;color:#999;margin-bottom:15px;padding:8px 12px;background:#fff3cd;border-radius:8px;display:inline-block;">
+  💡 将此二维码贴在工位或员工卡上，扫码即可签到/签退
+</div>
+<div class="btn-grid" style="margin-top:15px;">
+<button onclick="doPrintAttendanceQR()" style="background:#27ae60;">🖨️ 打印</button>
+<button onclick="closeAttendanceQRModal()" style="background:#95a5a6;">关闭</button>
+</div>
+</div>
+</div>
+
+<div id="schedule-detail-modal" class="modal-overlay">
+<div class="modal-content">
+<div class="modal-header">📋 工单详情</div>
+<div id="schedule-detail-body"></div>
+<div class="modal-footer" id="schedule-detail-footer">
+<button onclick="closeScheduleDetail()" style="background:#95a5a6;">关闭</button>
+</div>
+</div>
+</div>
+
+<div id="material-detail-modal" class="modal-overlay">
+<div class="modal-content">
+<div class="modal-header">📦 物料任务详情</div>
+<div id="material-detail-body"></div>
+<div class="modal-footer" id="material-detail-footer">
+<button onclick="closeMaterialDetail()" style="background:#95a5a6;">关闭</button>
+</div>
+</div>
+</div>
+
+<!-- 退料/补料数量弹窗 -->
+<div id="material-qty-modal" class="modal-overlay">
+<div class="modal-content" style="max-width:320px;">
+<div class="modal-header" id="mat-qty-title">↩ 退料数量</div>
+<div style="padding:16px;">
+<input id="mat-qty-input" type="number" placeholder="输入数量" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:16px;">
+<div style="display:flex;gap:8px;margin-top:12px;">
+<button onclick="submitMaterialQty()" style="flex:1;background:#27ae60;color:#fff;border:none;padding:12px;border-radius:6px;">确认</button>
+<button onclick="closeMaterialQtyModal()" style="flex:1;background:#95a5a6;border:none;padding:12px;border-radius:6px;">取消</button>
+</div>
+</div>
+</div>
+</div>
+
+<div id="qi-detail-modal" class="modal-overlay">
+<div class="modal-content" style="max-width:100%;width:100%;height:100%;border-radius:0;padding:0;overflow-y:auto;">
+<div style="position:sticky;top:0;background:#fff;z-index:10;padding:16px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:12px;">
+  <button onclick="closeQiDetail()" style="width:36px;height:36px;border:none;background:#f5f5f5;border-radius:8px;font-size:18px;padding:0;flex-shrink:0;">✕</button>
+  <div style="flex:1;">
+    <div id="qi-detail-title" style="font-size:18px;font-weight:bold;color:#2c3e50;">质检详情</div>
+    <div id="qi-detail-sub" style="font-size:12px;color:#999;"></div>
+  </div>
+  <div id="qi-judge-toggle" style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+    <span style="font-size:12px;color:#999;">判定</span>
+    <button onclick="toggleJudgeMode()" id="qi-judge-btn" style="width:44px;height:24px;border-radius:12px;border:none;background:#ccc;position:relative;transition:all 0.2s;padding:0;flex-shrink:0;">
+      <span style="position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:white;transition:all 0.2s;" id="qi-judge-dot"></span>
+    </button>
+  </div>
+</div>
+<div id="qi-detail-body" style="padding:16px;"></div>
+<div id="qi-detail-footer" style="position:sticky;bottom:0;background:white;padding:12px 16px;border-top:1px solid #eee;display:none;"></div>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script src="/static/js/html5-qrcode.min.js"></script>
+<script src="/static/js/connection-manager.js"></script>
+<script>
+var API_BASE=(CONN.activeBase||'');
+var QR_API_BASE='https://api.qrserver.com/v1/create-qr-code/';
+var currentUser=null;
+var selectedOrder=null;
+var html5QrCode=null;
+var isAttendanceMode=false;
+var qualityResult='合格';
+var currentOrderFilter='all';
+var reportBatchStore={}; // {key: {uuid, ts}}  3分钟TTL
+
+function asyncApi(url,method,body){
+  return fetch(url,{
+    method:method,
+    headers:{'Content-Type':'application/json'},
+    body:body?JSON.stringify(body):undefined
+  }).then(function(res){return res.json();});
+}
+
+function showToast(msg){
+  var toast=document.getElementById('toast');
+  toast.textContent=msg;
+  toast.style.display='block';
+  setTimeout(function(){toast.style.display='none';},2000);
+}
+
+function showPage(pageId){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  document.getElementById(pageId).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
+  var navMap={'dashboard-page':'nav-item','orders-page':'nav-item','records-page':'nav-item','schedule-page':'nav-item'};
+  if(navMap[pageId]){
+    document.querySelectorAll('.nav-item').forEach(function(n){
+      if(n.textContent.includes('看板')&&pageId==='dashboard-page')n.classList.add('active');
+      if(n.textContent.includes('工单')&&pageId==='orders-page')n.classList.add('active');
+      if(n.textContent.includes('记录')&&pageId==='records-page')n.classList.add('active');
+      if(n.textContent.includes('排产')&&pageId==='schedule-page')n.classList.add('active');
+    });
+  }
+}
+
+function login(){
+  var username=document.getElementById('username').value;
+  if(!username){showToast('请输入用户名');return;}
+  fetch((CONN.activeBase||'')+'/api/login', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({username: username})
+  }).then(function(resp){
+    return resp.json();
+  }).then(function(data){
+    if(data.code !== 0){
+      showToast(data.message || '登录失败');
+      return;
+    }
+    currentUser = data.data;
+    document.getElementById('nav-bar').style.display='flex';
+    showToast('欢迎 '+(currentUser.name||currentUser.username)+'！');
+    showDashboard();
+    loadDashboard();
+  }).catch(function(err){
+    showToast('登录请求失败: '+(err.message||'网络异常'));
+  });
+}
+
+function logout(){
+  currentUser=null;
+  selectedOrder=null;
+  stopScan();
+  document.getElementById('nav-bar').style.display='none';
+  showPage('login-page');
+}
+
+function loadDashboard(){
+  fetch((CONN.activeBase||'')+'/api/dashboard').then(function(response){
+    return response.json();
+  }).then(function(data){
+    document.getElementById('stat-total').textContent=data.totalOrders||0;
+    document.getElementById('stat-pending').textContent=data.pendingOrders||0;
+    document.getElementById('stat-processing').textContent=data.processingOrders||0;
+    document.getElementById('stat-completed').textContent=data.completedOrders||0;
+    document.getElementById('stat-today-checkin').textContent=data.todayCheckins||0;
+    document.getElementById('stat-today-reports').textContent=data.todayReports||0;
+
+    var urgentHtml='';
+    if(data.urgentOrders&&data.urgentOrders.length>0){
+      data.urgentOrders.forEach(function(o){
+        urgentHtml+='<div class="item-list" style="border-left-color:#e74c3c;" onclick="goToOrder(\''+o.order_no+'\')">'+ 
+          '<div class="item-header"><span class="badge badge-red">紧急</span>'+o.order_no+'</div>'+ 
+          '<div class="item-detail">'+o.name+' | '+o.material+'</div>'+ 
+          '<div class="item-detail">'+o.spec+'</div></div>';
+      });
+    }else{
+      urgentHtml='<div class="item-list" style="text-align:center;color:#999;">暂无紧急订单</div>';
+    }
+    document.getElementById('urgent-orders-list').innerHTML=urgentHtml;
+
+    var expectedHtml='';
+    if(data.expectedOrders&&data.expectedOrders.length>0){
+      data.expectedOrders.forEach(function(o){
+        expectedHtml+='<div class="item-list" style="border-left-color:#3498db;" onclick="goToOrder(\''+o.order_no+'\')">'+ 
+          '<div class="item-header"><span class="badge badge-blue">逾期</span>'+o.order_no+'</div>'+ 
+          '<div class="item-detail">产品名称：'+(o.name||'')+'</div>'+ 
+          '<div class="item-detail">客户群：'+(o.customer_group||'')+'</div>'+ 
+          '<div class="item-detail">生产进度：'+(o.completed_qty||0)+'/'+(o.quantity||0)+'</div>'+ 
+          '<div class="item-meta">交付日期: '+o.deliveryDate+'</div></div>';
+      });
+    }else{
+      expectedHtml='<div class="item-list" style="text-align:center;color:#999;">暂无逾期订单</div>';
+    }
+    document.getElementById('expected-orders-list').innerHTML=expectedHtml;
+
+    var shortageHtml='';
+    if(data.materialShortageOrders&&data.materialShortageOrders.length>0){
+      data.materialShortageOrders.forEach(function(o){
+        var materialsHtml='';
+        if(o.materials&&o.materials.length>0){
+          o.materials.forEach(function(m){
+            var shortageNum=parseFloat(m.shortage_qty||0);
+            var requiredNum=parseFloat(m.required_qty||0);
+            var preparedNum=parseFloat(m.prepared_qty||0);
+            materialsHtml+='<div class="item-detail" style="padding-left:8px;font-size:12px;color:#555;">'+
+              (m.material_name||'')+
+              ' 需求:<span style="color:#e67e22;font-weight:bold;">'+requiredNum+'</span>'+
+              ' 已备:<span style="color:#27ae60;font-weight:bold;">'+preparedNum+'</span>'+
+              ' 缺:<span style="color:#e74c3c;font-weight:bold;">'+shortageNum+'</span>'+
+              (m.unit||'')+
+              '</div>';
+            if(m.spec){
+              materialsHtml+='<div class="item-detail" style="padding-left:8px;font-size:11px;color:#999;">规格: '+m.spec+'</div>';
+            }
+          });
+          var lastUpdated=o.materials[o.materials.length-1].updated_at||'';
+          if(lastUpdated){
+            materialsHtml+='<div class="item-meta">更新: '+lastUpdated+'</div>';
+          }
+        }
+        shortageHtml+='<div class="item-list" style="border-left-color:#e67e22;" onclick="goToOrder(\''+o.order_no+'\')">'+ 
+          '<div class="item-header"><span class="badge badge-orange">缺料</span>'+o.order_no+
+          ' <span style="font-size:11px;color:#e74c3c;">缺:'+parseFloat(o.totalShortage||0)+'</span></div>'+ 
+          materialsHtml+'</div>';
+      });
+    }else{
+      shortageHtml='<div class="item-list" style="text-align:center;color:#999;">暂无缺料订单</div>';
+    }
+    document.getElementById('shortage-orders-list').innerHTML=shortageHtml;
+
+    var recentHtml='';
+    if(data.recentRecords&&data.recentRecords.length>0){
+      data.recentRecords.forEach(function(r){
+        recentHtml+='<div class="item-list" onclick="goToOrder(\''+r.order_no+'\')">'+
+          '<div class="item-header">'+r.order_no+' - '+r.orderName+'</div>'+
+          '<div class="item-detail">工序: '+r.processName+'</div>'+
+          '<div class="item-meta">'+r.worker+' | '+(r.completedQty||0)+'件 | '+(r.workHours||0)+'h | '+r.time+'</div></div>';
+      });
+    }else{
+      recentHtml='<div class="item-list" style="text-align:center;color:#999;">暂无今日报工记录</div>';
+    }
+    document.getElementById('recent-records-list').innerHTML=recentHtml;
+  }).catch(function(){
+    showToast('加载看板失败');
+  });
+}
+
+function showDashboard(){
+  loadDashboard();
+  showPage('dashboard-page');
+}
+
+function showOrders(){
+  loadOrders();
+  showPage('orders-page');
+}
+
+function showOrderFilters(){
+  var el=document.getElementById('order-filter-tabs');
+  el.style.display=el.style.display==='none'?'flex':'none';
+}
+
+function filterOrders(status){
+  showToast('请扫码或输入工单号搜索');
+}
+
+function loadOrders(){
+  var el=document.getElementById('manual-search');
+  if(el)el.style.display='block';
+  var container=document.getElementById('orders-list');
+  container.innerHTML='<div style="text-align:center;padding:30px 15px;color:#999;">'+
+    '<div style="font-size:40px;margin-bottom:10px;">🔍</div>'+
+    '<div>请扫码或输入工单号查询</div>'+
+    '<div style="font-size:12px;margin-top:5px;">支持扫码枪 / 手动输入</div></div>';
+}
+
+function scanForProcessTasks(){
+  startQRCodeScan(function(decodedText){
+    stopScan();
+    document.getElementById('pt-filter').value = decodedText;
+    showProcessTasks();
+  });
+}
+
+function showProcessTasks(){
+  showPage('process-tasks-page');
+  var container = document.getElementById('process-tasks-content');
+  container.innerHTML = '<div class="loading">加载中...</div>';
+  var filter = (document.getElementById('pt-filter')||{}).value||'';
+  var url = API_BASE + '/api/all-process-tasks';
+  if(filter) url += '?order_no=' + encodeURIComponent(filter);
+  fetch(url).then(function(r){return r.json();}).then(function(ret){
+    if(ret.code !== 0){container.innerHTML='<div class="error-msg">加载失败</div>';return;}
+    var orders = ret.data || [];
+    if(!orders.length){container.innerHTML='<div style="text-align:center;color:#999;padding:30px;">无匹配订单</div>';return;}
+    var html = '';
+    orders.forEach(function(order){
+      html += '<div class="item-list" onclick="selectOrderForReport(\''+order.order_no+'\')" style="cursor:pointer;">'+
+        '<div class="item-header">'+order.order_no+'</div>'+
+        '<div class="item-detail">产品名称：'+(order.product_name||'')+'</div>'+
+        '<div class="item-detail">客户群：'+(order.customer_group||'')+'</div>'+
+        '<div class="item-detail">生产进度：'+order.total_completed_qty+'/'+order.quantity+'</div>'+
+        '</div>';
+    });
+    container.innerHTML = html;
+  }).catch(function(){container.innerHTML='<div class="error-msg">加载失败</div>';});
+}
+
+function selectOrderForReport(orderNo){
+  goToOrder(orderNo).then(function(){
+    showReport();
+  });
+}
+
+function goToOrder(orderId){
+  return fetch(API_BASE+'/api/scan-info?code='+orderId).then(function(res){
+    return res.json();
+  }).then(function(ret){
+    if(ret.code!==0){
+      showToast('未找到工单');
+      return;
+    }
+    var data=ret.data;
+    selectedOrder={
+      id: data.order_no || data.code,
+      name: data.product_name,
+      quantity: data.quantity,
+      unit: data.unit,
+      customer: data.customer_group || data.customer_name,
+      completed: data.total_completed_qty,
+      remaining: data.total_remaining_qty,
+      processes: data.processes.map(function(p,i){
+        return {
+          key: p.process_id,
+          name: p.process_name,
+          required: p.required_qty,
+          completed: p.completed_qty,
+          remaining: p.remaining_qty,
+          status: p.status,
+          description: '需求:'+p.required_qty+' | 已完工:'+p.completed_qty+' | 剩余:'+p.remaining_qty
+        };
+      }),
+      tasks: data.tasks ? data.tasks.map(function(t){
+        return {
+          id: t.task_id,
+          operator: t.operator || '全员',
+          processName: t.process_name,
+          quantity: t.quantity || 0,
+          unit: t.unit || data.unit,
+          completed: t.completed_qty || 0,
+          status: t.status,
+          createdAt: t.created_at,
+          equipmentName: t.equipment_name || ''
+        };
+      }) : [],
+      currentProcessIndex: 0,
+      currentTaskIndex: 0,
+      raw: data
+    };
+    loadOrderDetail();
+    showPage('detail-page');
+
+    setTimeout(function(){
+      if(selectedOrder.tasks&&selectedOrder.tasks.length>0){
+        var firstTask=selectedOrder.tasks[0];
+        if(firstTask&&firstTask.status!=='completed'){
+          showToast('📍 待报工任务: '+firstTask.operator+' → '+firstTask.processName);
+        }
+      }
+    },500);
+  }).catch(function(){
+    showToast('加载失败');
+  });
+}
+
+function showManualSearch(){
+  var el=document.getElementById('manual-search');
+  el.style.display=el.style.display==='none'?'block':'none';
+}
+
+function searchOrder(){
+  var keyword=document.getElementById('search-input').value.trim();
+  if(!keyword){showToast('请输入搜索内容');return;}
+  var container=document.getElementById('orders-list');
+  container.innerHTML='<div class="loading">正在查询...</div>';
+  fetch(API_BASE+'/api/scan-info?code='+encodeURIComponent(keyword)).then(function(res){
+    return res.json();
+  }).then(function(ret){
+    document.getElementById('search-input').value='';
+    if(ret.code!==0||!ret.data){
+      container.innerHTML='<div class="item-list" style="text-align:center;color:#999;">未找到工单: '+keyword+'</div>';
+      return;
+    }
+    var d=ret.data;
+    container.innerHTML='';
+    var div=document.createElement('div');
+    div.className='item-list';
+    div.innerHTML='<div class="item-header">'+(d.order_no||d.code||'-')+'</div>'+
+      '<div class="item-detail">'+d.product_name+'</div>'+
+      '<div class="item-detail">客户: '+(d.customer_group||d.customer_name)+' | 已完工: '+d.total_completed_qty+'/'+d.quantity+'</div>';
+    div.onclick=function(){goToOrder(keyword);};
+    container.appendChild(div);
+  }).catch(function(){
+    container.innerHTML='<div class="error-msg">查询失败</div>';
+  });
+}
+
+function loadOrderDetail(){
+  if(!selectedOrder)return;
+  var order=selectedOrder;
+  var totalCompleted=order.completed||0;
+  var totalRequired=order.quantity||0;
+  var progress=totalRequired>0?Math.round((totalCompleted/totalRequired)*100):0;
+
+  var statusMap={'pending':'全员分配','distributed':'已分配','acknowledged':'已确认','completed':'已完成'};
+
+  var taskHtml='<h3 style="margin:15px 0 10px;">任务列表</h3>';
+  if(order.tasks&&order.tasks.length>0){
+    var operatorGroups={};
+    order.tasks.forEach(function(t){
+      if(!operatorGroups[t.operator]) operatorGroups[t.operator]=[];
+      operatorGroups[t.operator].push(t);
+    });
+
+    taskHtml+='<div class="task-list">';
+    Object.keys(operatorGroups).forEach(function(op){
+      var tasks=operatorGroups[op];
+      var opTotal=tasks.reduce(function(s,t){return s+(t.quantity||0);},0);
+      var opCompleted=tasks.reduce(function(s,t){return s+(t.completed||0);},0);
+      var opPct=opTotal>0?Math.round((opCompleted/opTotal)*100):0;
+      var allDone=tasks.every(function(t){return t.status==='completed';});
+
+      taskHtml+='<div class="task-group" style="background:#f8f9fa;border-radius:10px;padding:12px;margin-bottom:12px;border-left:4px solid '+(allDone?'#27ae60':'#3498db')+';">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'+
+        '<div style="font-weight:bold;color:#2c3e50;">👤 '+op+'</div>'+
+        '<div style="font-size:12px;color:'+(allDone?'#27ae60':'#e67e22')+';">'+(allDone?'✅ 已完成':'🔄 进行中')+'</div></div>'+
+        '<div style="display:flex;justify-content:space-between;font-size:12px;color:#666;margin-bottom:4px;">'+
+        '<span>进度: '+opCompleted+'/'+opTotal+(order.unit||'')+'</span><span>'+opPct+'%</span></div>'+
+        '<div class="progress-bar" style="margin-bottom:10px;"><div class="progress-fill" style="width:'+opPct+'%;"></div></div>';
+
+      tasks.forEach(function(t,i){
+        var done=t.completed>=t.quantity&&t.quantity>0;
+        var pct=t.quantity>0?Math.round((t.completed/t.quantity)*100):0;
+        var taskStatusText=statusMap[t.status]||t.status;
+        taskHtml+='<div class="task-item" style="background:#fff;border-radius:8px;padding:10px;margin-bottom:6px;border:1px solid #e9ecef;">'+
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start;">'+
+          '<div><div style="font-weight:bold;color:#2c3e50;font-size:14px;">'+(t.processName||'工序')+'</div>'+
+          (t.equipmentName?'<div style="font-size:11px;color:#999;margin-top:2px;">设备: '+t.equipmentName+'</div>':'')+
+          '<div style="font-size:12px;color:#666;margin-top:4px;">数量: '+t.quantity+(t.unit||'')+'</div></div>'+
+          '<div><span class="process-status '+(done||t.status==='completed'?'done':'wait')+'" style="padding:2px 8px;">'+taskStatusText+'</span></div></div>'+
+          '<div class="progress-bar" style="margin-top:6px;"><div class="progress-fill" style="width:'+pct+'%;"></div></div>'+
+          '<div style="font-size:11px;color:#999;margin-top:4px;">已报: '+t.completed+'/'+t.quantity+' | '+pct+'%</div>'+
+          '</div>';
+      });
+
+      taskHtml+='</div>';
+    });
+    taskHtml+='</div>';
+  }else{
+    taskHtml+='<div style="text-align:center;color:#999;padding:30px 0;">暂无分配任务</div>';
+  }
+
+  var qualityBtn='';
+  if(currentUser&&(currentUser.role==='qc'||currentUser.role==='admin')){
+    qualityBtn='<button onclick="showQualityReport()" id="btn-quality" style="display:block;background:#27ae60;margin-top:10px;">✅ 质检报工</button>';
+  }
+
+  document.getElementById('detail-content').innerHTML=
+    '<h2 style="margin-bottom:10px;">'+order.id+'</h2>'+
+    '<div style="background:#f8f9fa;padding:12px;border-radius:10px;margin-bottom:15px;">'+
+    '<div style="font-weight:bold;font-size:16px;color:#2c3e50;margin-bottom:5px;">'+order.name+'</div>'+
+    '<div class="item-detail">客户: '+(order.customer||'')+'</div>'+
+    '<div class="item-detail">已完工: '+totalCompleted+' / '+totalRequired+' '+(order.unit||'')+'</div></div>'+
+    '<div style="margin-bottom:15px;">'+
+    '<div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:13px;color:#666;">'+
+    '<span>总体进度</span><span>'+progress+'% ('+totalCompleted+'/'+totalRequired+')</span></div>'+
+    '<div class="progress-bar"><div class="progress-fill" style="width:'+progress+'%;"></div></div></div>'+
+    taskHtml+qualityBtn;
+}
+
+function showProcessDetail(){
+  if(!selectedOrder)return;
+  var raw = (selectedOrder && selectedOrder.raw) || {};
+  var processes = raw.processes || [];
+  var csi = raw.current_step_index || 0;
+  var container = document.getElementById('process-detail-content');
+
+  // 优先取 processes 中标记 is_current 的节点，否则用 current_step_index 兜底
+  var activeIdx = -1;
+  for (var i = 0; i < processes.length; i++) {
+    if (processes[i].is_current) { activeIdx = i; break; }
+  }
+  if (activeIdx < 0) activeIdx = csi;
+
+  // 总数量：取 order 总数（每个流程节点的 required_qty 都是订单总量）
+  var totalQty = parseFloat(raw.quantity) || 0;
+
+  // 渲染：与 dispatch_center.viewProcess() 排产流程时间线同款视觉
+  // 视觉特征：28px 圆点 + 2px 竖向连接线 + 8px 进度条 + 状态徽章
+  // 配色：已完成 #52c41a / 进行中 #1890ff / 待处理 #e8e8e8
+  var html = '<div class="process-timeline" style="margin-bottom:16px;">';
+
+  if (processes.length === 0) {
+    html += '<div style="text-align:center;color:#999;padding:30px 0;">暂无排产流程信息</div>';
+  } else {
+    processes.forEach(function(step, i){
+      // 三端统一后端真值源（不再前端二次推算）
+      var isComplete = !!step.is_completed;
+      var isActive   = !!step.is_current;
+      var dotBg     = isComplete ? '#52c41a' : (isActive ? '#1890ff' : '#e8e8e8');
+      var dotColor  = isComplete || isActive ? '#fff' : '#999';
+      var dotText   = isComplete ? '✓' : (i + 1);
+      var statusText= isComplete ? '已完成' : (isActive ? '进行中' : '待处理');
+      var badgeBg   = isComplete ? '#e6f7e6' : (isActive ? '#e6f0ff' : '#f5f5f5');
+      var badgeFg   = isComplete ? '#52c41a' : (isActive ? '#1890ff' : '#999');
+
+      // 单步进度（按报工数 / 订单总量 计算）
+      var stepQty = parseFloat(step.completed_qty) || 0;
+      var pct = totalQty > 0 ? Math.min(100, Math.round(stepQty / totalQty * 100)) : (isComplete ? 100 : 0);
+      var stepName = step.process_name || step.step_name || step.name || ('步骤' + (i + 1));
+
+      html += '<div class="process-item" style="margin-bottom:12px;display:flex;gap:10px;">';
+      // 左：圆点 + 连接线
+      html += '<div style="display:flex;flex-direction:column;align-items:center;min-width:28px;">';
+      html += '<div style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;background:'+dotBg+';color:'+dotColor+';">'+dotText+'</div>';
+      if (i < processes.length - 1) {
+        html += '<div style="width:2px;flex:1;background:'+(isComplete ? '#52c41a' : '#e8e8e8')+';margin:4px 0;"></div>';
+      }
+      html += '</div>';
+      // 右：文字
+      html += '<div style="flex:1;padding-bottom:'+(i < processes.length - 1 ? '16px' : '0')+';">';
+      html += '<div style="font-weight:600;font-size:14px;">'+stepName+'</div>';
+      if (step.role) {
+        html += '<div style="font-size:12px;color:#888;">'+step.role+'</div>';
+      }
+      html += '<div class="progress-bar" style="margin:4px 0;height:8px;background:#e8e8e8;border-radius:4px;overflow:hidden;">';
+      html += '<div style="width:'+pct+'%;height:100%;background:'+(isComplete ? '#52c41a' : '#1890ff')+';border-radius:4px;transition:width 0.3s;"></div>';
+      html += '</div>';
+      html += '<div style="font-size:12px;color:#666;">完成: '+stepQty+' / '+totalQty+'（'+pct+'%）</div>';
+      html += '<div style="margin-top:4px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">';
+      html += '<span style="font-size:11px;padding:1px 6px;border-radius:3px;background:'+badgeBg+';color:'+badgeFg+';">'+statusText+'</span>';
+      // 最近报工人
+      if (step.last_report_operator) {
+        html += '<span style="font-size:11px;color:#999;">最近: '+step.last_report_operator+(step.last_report_time ? ' · '+step.last_report_time : '')+'</span>';
+      }
+      html += '</div></div></div>';
+    });
+  }
+  html += '</div>';
+
+  // 底部：订单元信息 + 自动推动提示
+  html += '<div style="padding:12px;background:#f6f8fa;border-radius:6px;border:1px solid #e8e8e8;margin-top:12px;">';
+  html += '<div style="font-size:13px;line-height:1.8;color:#333;">';
+  html += '<div>📋 <strong>订单号:</strong> '+(raw.order_no || selectedOrder.id || '-')+'</div>';
+  html += '<div>📦 <strong>订单总量:</strong> '+(raw.quantity || 0)+' '+(raw.unit || '')+'</div>';
+  html += '<div>🔄 <strong>当前节点:</strong> 第 '+(activeIdx + 1)+' 步 / 共 '+processes.length+' 步</div>';
+  html += '</div>';
+  html += '<div style="margin-top:8px;padding:6px 10px;background:#e6f7ff;border-left:3px solid #1890ff;font-size:12px;color:#333;border-radius:0 4px 4px 0;">💡 工序根据排产流程<strong>自动推动</strong>，无需手动操作</div>';
+  html += '</div>';
+
+  container.innerHTML = html;
+  showPage('process-detail-page');
+}
+
+function getReportBatchNo(orderNo, stepName){
+  var key = orderNo + '|' + stepName;
+  var now = Date.now();
+  var cached = reportBatchStore[key];
+  if(cached && (now - cached.ts) < 180000){ // 3分钟
+    return cached.uuid;
+  }
+  var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c){
+    var r = Math.random()*16|0, v = c==='x' ? r : (r&0x3|0x8);
+    return v.toString(16);
+  });
+  reportBatchStore[key] = {uuid: uuid, ts: now};
+  return uuid;
+}
+
+// 修正记录时间线渲染（与 showProcessDetail() 同款视觉）
+// 配色：amber #faad14（警告/修正）；status 徽章同色系
+// 视觉：28px 圆点 + 2px 竖向连接线 + 状态徽章 + 卡片内容
+function renderHistoryTimeline(container, records){
+  // 修正原因中英文映射（与 dispatch_center.html reasonMap 对齐）
+  var reasonMap = {
+    'self_correct':    '🟢 操作员自改',
+    'self_withdraw':   '🔴 操作员撤回',
+    'admin_force':     '🔵 调度员修正',
+    'admin_withdraw':  '🟠 调度员撤回',
+    'other_override':  '🟡 异人覆盖',
+    'desktop_sync':    '⚪ 桌面端同步',
+    'data_error':      '🟡 数据订正',
+    'quality_redo':    '🟣 质检返工',
+    'process_adjust':  '🔵 排产调整'
+  };
+
+  var html = '<div style="margin:10px 0 6px;font-size:13px;font-weight:600;color:#d48806;">⚠️ 修正记录（'+records.length+' 条）</div>';
+  html += '<div class="process-timeline" style="margin-bottom:16px;">';
+
+  records.forEach(function(h, i){
+    var isLast = (i === records.length - 1);
+    var dotBg = '#faad14';
+    var lineColor = '#faad14';
+
+    var reasonText = reasonMap[h.revert_reason] || (h.revert_reason || '修正');
+    // 时间格式化
+    var ts = h.reverted_at || h.created_at || '';
+    var tsShort = '';
+    if (ts) {
+      try {
+        var d = new Date(ts);
+        if (!isNaN(d.getTime())) {
+          tsShort = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+
+            ' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+        }
+      } catch(e) { tsShort = String(ts).slice(0, 16).replace('T', ' '); }
+    }
+
+    var oldQty = parseFloat(h.old_quantity) || 0;
+    var newQty = parseFloat(h.new_quantity) || 0;
+    var qtyDelta = newQty - oldQty;
+    var qtyDeltaSign = qtyDelta > 0 ? '+' : '';
+
+    html += '<div class="process-item" style="margin-bottom:12px;display:flex;gap:10px;">';
+    // 左：圆点 + 连接线
+    html += '<div style="display:flex;flex-direction:column;align-items:center;min-width:28px;">';
+    html += '<div style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;background:'+dotBg+';color:#fff;">↩</div>';
+    if (!isLast) {
+      html += '<div style="width:2px;flex:1;background:'+lineColor+';margin:4px 0;opacity:0.5;"></div>';
+    }
+    html += '</div>';
+    // 右：内容
+    html += '<div style="flex:1;padding-bottom:'+(isLast ? '0' : '16px')+';">';
+    // 标题：工序名 + 状态徽章
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;">';
+    html += '<div style="font-weight:600;font-size:14px;">'+(h.step_name || '工序')+'</div>';
+    html += '<span style="font-size:11px;padding:1px 6px;border-radius:3px;background:#fff7e6;color:#faad14;white-space:nowrap;">'+reasonText+'</span>';
+    html += '</div>';
+    // 时间
+    if (tsShort) {
+      html += '<div style="font-size:12px;color:#888;margin-top:2px;">🕒 '+tsShort+'</div>';
+    }
+    // 数量变化
+    html += '<div style="font-size:13px;margin-top:6px;color:#333;">';
+    html += '数量: <strong style="color:#999;text-decoration:line-through;">'+oldQty.toFixed(2)+'</strong> → ';
+    html += '<strong style="color:'+(qtyDelta >= 0 ? '#52c41a' : '#ff4d4f')+';">'+newQty.toFixed(2)+'</strong>';
+    if (qtyDelta !== 0) {
+      html += ' <span style="font-size:11px;color:'+(qtyDelta > 0 ? '#52c41a' : '#ff4d4f')+';">('+qtyDeltaSign+qtyDelta.toFixed(2)+')</span>';
+    }
+    html += '</div>';
+    // 操作人变化
+    if (h.operator_before || h.operator_after) {
+      html += '<div style="font-size:12px;color:#666;margin-top:3px;">';
+      html += '操作员: '+(h.operator_before || '-')+' → '+(h.operator_after || '-');
+      if (h.reverted_by && h.reverted_by !== h.operator_after) {
+        html += ' <span style="color:#999;">(执行: '+h.reverted_by+')</span>';
+      }
+      html += '</div>';
+    }
+    // 批次号
+    if (h.batch_no) {
+      html += '<div style="font-size:11px;color:#999;margin-top:2px;">📦 批次: '+h.batch_no+'</div>';
+    }
+    html += '</div></div>';
+  });
+
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function showReport(){
+  if(!selectedOrder)return;
+  // 每次打开报工页面都重新从 API 拉取最新数据
+  goToOrder(selectedOrder.id).then(function(){
+    var order=selectedOrder;
+    showPage('report-page');
+    document.getElementById('report-order-info').innerHTML=
+      '<strong>工单号:</strong> '+order.id+'<br>'+
+      '<strong>产品:</strong> '+order.name+'<br>'+
+      '<strong>已完工:</strong> '+(order.completed||0)+' / '+(order.quantity||0);
+    // 检查已有报工记录
+    var historyBox = document.getElementById('report-history-info');
+    if(historyBox) historyBox.innerHTML = '';
+    fetch(API_BASE+'/api/process_sub_step/history?order_no='+encodeURIComponent(order.id)).then(function(r){
+      return r.json();
+    }).then(function(ret){
+      if(ret.code===0 && ret.data && ret.data.length>0){
+        if(historyBox) renderHistoryTimeline(historyBox, ret.data);
+      }
+    }).catch(function(){});
+
+    var mainSelect=document.getElementById('main-process-select');
+    mainSelect.innerHTML='<option value="">-- 请选择工序 --</option>';
+
+    var processKeyMap={};
+    (order.processes||[]).forEach(function(p){ processKeyMap[p.name]=p.key; });
+
+    var taskProcessMap=[];
+    var seen={};
+    (order.tasks||[]).forEach(function(t){
+      var pn=t.processName;
+      if(!pn||seen[pn])return;
+      seen[pn]=true;
+      taskProcessMap.push({name:pn, totalQty:0, completedQty:0, taskIds:[]});
+    });
+    (order.tasks||[]).forEach(function(t){
+      var pn=t.processName;
+      if(!pn)return;
+      var idx=taskProcessMap.findIndex(function(e){return e.name===pn;});
+      if(idx===-1)return;
+      taskProcessMap[idx].totalQty+=t.quantity||0;
+      taskProcessMap[idx].completedQty+=t.completed||0;
+      if(t.id)taskProcessMap[idx].taskIds.push(t.id);
+    });
+
+    if(taskProcessMap.length>0){
+      taskProcessMap.forEach(function(info,i){
+        var opt=document.createElement('option');
+        opt.value=processKeyMap[info.name]||info.name;
+        opt.dataset.taskIds=info.taskIds.join(',');
+        opt.dataset.processName=info.name;
+        var done=info.completedQty>=info.totalQty&&info.totalQty>0;
+        opt.text=(done?'✓ ':'▶ ')+(i+1)+'. '+info.name+' ('+info.completedQty+'/'+info.totalQty+')';
+        if(done)opt.disabled=true;
+        mainSelect.appendChild(opt);
+      });
+    }else{
+      (order.processes||[]).forEach(function(proc,i){
+        var opt=document.createElement('option');
+        opt.value=proc.key;
+        opt.dataset.processName=proc.name;
+        var done=proc.completed>=proc.required&&proc.required>0;
+        opt.text=(done?'✓ ':'▶ ')+(i+1)+'. '+proc.name+' ('+(proc.completed||0)+'/'+(proc.required||0)+')';
+        if(done)opt.disabled=true;
+        mainSelect.appendChild(opt);
+      });
+    }
+    document.getElementById('quantity').value='';
+    document.getElementById('remark').value='';
+    document.getElementById('equipment_name').value='';
+    document.getElementById('overtime_hours').value='';
+    document.getElementById('qualified_qty').value='';
+  });
+}
+
+async function submitReport(){
+  var mainSelect=document.getElementById('main-process-select');
+  var selectedOpt=mainSelect.selectedIndex>=0?mainSelect.options[mainSelect.selectedIndex]:null;
+  var mainProcess=selectedOpt?selectedOpt.value:'';
+  var quantity=document.getElementById('quantity').value;
+  var remark=document.getElementById('remark').value;
+  var equipment_name=document.getElementById('equipment_name').value;
+  var overtime_hours=parseFloat(document.getElementById('overtime_hours').value)||0;
+  if(!mainProcess){showToast('请选择工序');return;}
+  if(!quantity){showToast('请输入完成数量');return;}
+
+  var processName=selectedOpt?(selectedOpt.dataset.processName||''):'';
+  var taskIds=selectedOpt?(selectedOpt.dataset.taskIds||''):'';
+  var stepName=processName||'扫描报工';
+
+  try {
+    var res=await fetch(API_BASE+'/api/process_sub_step',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        process_id: mainProcess,
+        order_no: selectedOrder.raw ? selectedOrder.raw.order_no : selectedOrder.id,
+        step_name: stepName,
+        quantity: parseFloat(quantity),
+        qualified_qty: parseFloat(document.getElementById('qualified_qty').value)||parseFloat(quantity),
+        operator: currentUser?currentUser.name:'',
+        equipment_name: equipment_name,
+        remark: remark,
+        overtime_hours: overtime_hours,
+        task_ids: taskIds?taskIds.split(','):[],
+        batch_no: getReportBatchNo(selectedOrder.raw ? selectedOrder.raw.order_no : selectedOrder.id, stepName)
+      })
+    });
+    var ret=await res.json();
+    if(ret.code===0){
+      showToast('报工成功！');
+      // 先刷新 selectedOrder 数据
+      await goToOrder(selectedOrder.id);
+      // 如果当前在报工页面，重新渲染工序下拉
+      if(document.getElementById('report-page').classList.contains('active')){
+        showReport();
+        return;
+      }
+      showDetail();
+      loadDashboard();
+      loadRecords();
+    }else{
+      showToast(ret.message||'报工失败');
+    }
+  }catch(e){
+    showToast('提交失败');
+  }
+}
+
+function showQualityReport(){
+  if(!selectedOrder)return;
+  var order=selectedOrder;
+  document.getElementById('quality-order-info').innerHTML=
+    '<strong>工单号:</strong> '+order.id+'<br>'+
+    '<strong>产品:</strong> '+order.name+'<br>'+
+    '<strong>客户:</strong> '+(order.customer||'');
+  document.getElementById('inspection-type').value='巡检';
+  document.getElementById('inspection-items').value='';
+  document.getElementById('defect-desc').value='';
+  document.getElementById('handling-method').value='';
+  document.getElementById('quality-remark').value='';
+  selectQualityResult('合格');
+  showPage('quality-page');
+}
+
+function selectQualityResult(result){
+  qualityResult=result;
+  document.getElementById('quality-pass').className='quality-option'+(result==='合格'?' selected':'');
+  document.getElementById('quality-fail').className='quality-option'+(result==='不合格'?' rejected':'');
+  document.getElementById('defect-section').style.display=result==='不合格'?'block':'none';
+}
+
+function submitQualityReport(){
+  var inspectionType=document.getElementById('inspection-type').value;
+  var items=document.getElementById('inspection-items').value;
+  var result=document.querySelector('.quality-option.selected')?'合格':'不合格';
+  var defectDesc=document.getElementById('defect-desc').value;
+  var handling=document.getElementById('handling-method').value;
+  var remark=document.getElementById('quality-remark').value;
+  if(!items){showToast('请输入检验项目');return;}
+  fetch(API_BASE+'/api/quality',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      orderId:selectedOrder?selectedOrder.id:'',
+      workOrderNo:selectedOrder?selectedOrder.workOrderNo:'',
+      productionId:'',
+      inspectionType:inspectionType,
+      inspectionItems:items,
+      result:result,
+      defectDescription:defectDesc,
+      handlingMethod:handling,
+      inspector:currentUser?currentUser.name:'',
+      remark:remark
+    })
+  }).then(function(r){return r.json();}).then(function(data){
+    if(data.success){
+      showToast('质检提交成功');
+      document.getElementById('inspection-items').value='';
+      document.getElementById('defect-desc').value='';
+      document.getElementById('handling-method').value='';
+      document.getElementById('quality-remark').value='';
+      selectQualityResult('合格');
+      loadQualityRecords();
+    }else{
+      showToast(data.message||'提交失败');
+    }
+  }).catch(function(){showToast('网络异常');});
+}
+
+function showRecords(){
+  loadRecords();
+  showPage('records-page');
+}
+
+function loadRecords(){
+  var container=document.getElementById('records-list');
+  container.innerHTML='<div class="item-list" style="text-align:center;color:#999;padding:30px;">加载中...</div>';
+
+  var worker=document.getElementById('records-worker-filter').value.trim();
+  var dateFrom=document.getElementById('records-date-from').value;
+  var dateTo=document.getElementById('records-date-to').value;
+
+  var params=[];
+  if(worker) params.push('worker='+encodeURIComponent(worker));
+  if(dateFrom) params.push('dateFrom='+encodeURIComponent(dateFrom));
+  if(dateTo) params.push('dateTo='+encodeURIComponent(dateTo));
+
+  fetch(API_BASE+'/api/sub_step_records'+(params.length?'?'+params.join('&'):'')).then(function(res){
+    return res.json();
+  }).then(function(data){
+    if(data&&data.length>0){
+      var html='';
+      data.forEach(function(r){
+        var statusLabel=r.status?' ('+r.status+')':'';
+        var displayId=(r.order_no||'').replace(/^ORD/,'WO');
+        html+='<div class="item-list">'+
+          '<div class="item-header">'+displayId+'</div>'+
+          '<div class="item-detail">工序: '+r.processName+statusLabel+'</div>'+
+          '<div class="item-detail">操作人: '+r.worker+' | '+(r.completedQty||0)+'件 | '+(r.workHours||0)+'h</div>'+
+          '<div class="item-meta">'+r.time+(r.remark?' | 备注: '+r.remark:'')+'</div></div>';
+      });
+      container.innerHTML=html;
+      document.getElementById('records-count').textContent='共 '+data.length+' 条记录';
+    }else{
+      container.innerHTML='<div class="item-list" style="text-align:center;color:#999;padding:30px;">暂无报工记录</div>';
+      document.getElementById('records-count').textContent='';
+    }
+  }).catch(function(){
+    container.innerHTML='<div class="item-list" style="text-align:center;color:#999;padding:30px;">加载失败，请检查网络</div>';
+    document.getElementById('records-count').textContent='';
+  });
+}
+
+function showQualityMenu(){
+  showPage('quality-records-page');
+  loadQualityRecords();
+}
+
+function escapeHtml(str){
+  if(!str)return'';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+
+function loadQualityRecords(){
+  var container=document.getElementById('quality-records-list');
+  container.innerHTML='<div class="item-list" style="text-align:center;color:#999;padding:30px;">加载中...</div>';
+  fetch(API_BASE+'/api/quality').then(function(r){return r.json();}).then(function(data){
+    if(data&&data.length>0){
+      var html='';
+      data.forEach(function(r){
+        var icon=r.result==='合格'?'✅':'❌';
+        html+='<div class="item-list">'+
+          '<div class="item-header">'+icon+' '+r.order_no+' - '+r.orderName+'</div>'+
+          '<div class="item-detail">类型: '+escapeHtml(r.inspectionType)+' | 项目: '+escapeHtml(r.inspectionItems)+'</div>'+
+          '<div class="item-detail">结果: '+r.result+(r.defectDescription?' | 缺陷: '+r.defectDescription:'')+'</div>'+
+          '<div class="item-meta">检验员: '+r.inspector+' | '+r.recordDate+'</div></div>';
+      });
+      container.innerHTML=html;
+    }else{
+      container.innerHTML='<div class="item-list" style="text-align:center;color:#999;padding:30px;">暂无质检记录</div>';
+    }
+  }).catch(function(){
+    container.innerHTML='<div class="item-list" style="text-align:center;color:#999;padding:30px;">加载失败</div>';
+  });
+}
+
+function showProductionOrders(){
+  loadProductionOrders();
+  showPage('production-page');
+}
+
+function loadProductionOrders(){
+  var container=document.getElementById('production-orders-list');
+  container.innerHTML='<div class="item-list" style="text-align:center;color:#999;padding:30px;">加载中...</div>';
+  fetch(API_BASE+'/api/production-orders').then(function(r){return r.json();}).then(function(data){
+    if(data&&data.length>0){
+      var html='';
+      data.forEach(function(o){
+        var statusColor=o.status==='进行中'?'#f39c12':o.status==='已完成'?'#27ae60':'#999';
+        var pendingTag=o.isPendingTask?'<span class="item-badge" style="background:#ff9800;margin-left:8px;font-size:11px;">⏳待排产</span>':'';
+        html+='<div class="item-list">'+
+          '<div class="item-header">'+o.workOrderNo+' - '+o.orderName+pendingTag+'</div>'+
+          '<div class="item-detail">材料: '+o.material+' | 规格: '+o.spec+'</div>'+
+          '<div class="item-detail">负责人: '+o.assignedTo+'</div>'+
+          '<div class="item-meta">状态: <span style="color:'+statusColor+'">'+o.status+'</span> | '+
+          '计划: '+o.planStart+' ~ '+o.planEnd+'</div></div>';
+      });
+      container.innerHTML=html;
+    }else{
+      container.innerHTML='<div class="item-list" style="text-align:center;color:#999;padding:30px;">暂无生产工单</div>';
+    }
+  }).catch(function(){
+    container.innerHTML='<div class="item-list" style="text-align:center;color:#999;padding:30px;">加载失败</div>';
+  });
+}
+
+function loadWorkers(){
+  var container=document.getElementById('workers-list');
+  container.innerHTML='<div class="item-list" style="text-align:center;color:#999;padding:30px;">加载中...</div>';
+  fetch(API_BASE+'/api/workers').then(function(r){return r.json();}).then(function(data){
+    if(data&&data.length>0){
+      var html='';
+      data.forEach(function(w){
+        html+='<div class="item-list">'+
+          '<div class="item-header">'+w.name+'</div>'+
+          '<div class="item-detail">工号: '+w.code+' | 职位: '+w.role+'</div>'+
+          '<div class="item-meta">'+w.phone+'</div></div>';
+      });
+      container.innerHTML=html;
+    }else{
+      container.innerHTML='<div class="item-list" style="text-align:center;color:#999;padding:30px;">暂无人员</div>';
+    }
+  }).catch(function(){
+    container.innerHTML='<div class="item-list" style="text-align:center;color:#999;padding:30px;">加载失败</div>';
+  });
+}
+
+function showDetail(){
+  if(selectedOrder){
+    loadOrderDetail();
+    showPage('detail-page');
+  }else{
+    showOrders();
+  }
+}
+
+function startQualityScan(){
+  document.getElementById('scanner-header').innerHTML='📷 扫描订单二维码（质检）';
+  document.getElementById('qr-reader').style.borderColor='#27ae60';
+  startQRCodeScan(function(decodedText){
+    document.getElementById('qr-result').innerHTML='<p style="color:#27ae60;font-weight:bold;">✓ 扫描成功</p><p>'+decodedText+'</p>';
+    setTimeout(function(){
+      stopScan();
+      showQualityDetail(decodedText);
+    },800);
+  });
+}
+
+function searchQualityOrder(){
+  var keyword=document.getElementById('qi-search-input').value.trim();
+  if(!keyword){showToast('请输入订单号');return;}
+  showQualityDetail(keyword);
+}
+
+// 通用：各任务页扫码
+function scanForPage(page){
+  document.getElementById('scanner-header').innerHTML='📷 扫描订单二维码';
+  startQRCodeScan(function(decodedText){
+    stopScan();
+    openOrderPage(decodedText, page);
+  });
+}
+
+// 通用：各任务页输入查询
+function queryForPage(prefix, page){
+  var input=document.getElementById(prefix+'-search-input');
+  var keyword=input?input.value.trim():'';
+  if(!keyword){showToast('请输入订单号');return;}
+  openOrderPage(keyword, page);
+}
+
+// 通用：根据订单号和页面类型跳转
+async function openOrderPage(orderNo, page){
+  try{
+    await goToOrder(orderNo);
+    if(page==='schedule') showSchedule();
+    else if(page==='material') showMaterial();
+    else if(page==='outsource') showOutsource();
+  }catch(e){}
+}
+
+function startScan(){
+  if(!currentUser){showToast('请先登录');return;}
+  isAttendanceMode=false;
+  document.getElementById('scanner-header').innerHTML='📷 扫描订单二维码';
+  startQRCodeScan(function(decodedText){
+    document.getElementById('qr-result').innerHTML='<p style="color:#27ae60;font-weight:bold;font-size:16px;">✓ 扫描成功!</p><p style="font-size:13px;color:#333;margin-top:5px;">订单号：<strong>'+decodedText+'</strong></p><p style="font-size:11px;color:#666;margin-top:5px;">正在跳转...</p>';
+    setTimeout(function(){
+      stopScan();
+      goToOrder(decodedText);
+    },1500);
+  });
+}
+
+function startAttendanceScan(){
+  if(!currentUser){showToast('请先登录');return;}
+  isAttendanceMode=true;
+  document.getElementById('scanner-header').innerHTML='👤 扫码签到（请扫描个人签到二维码）';
+  document.getElementById('qr-reader').style.borderColor='#f39c12';
+  startQRCodeScan(function(decodedText){
+    document.getElementById('qr-result').innerHTML='<p style="color:#f39c12;font-weight:bold;font-size:16px;">✓ 扫描成功!</p><p style="font-size:13px;color:#333;margin-top:5px;">签到码：<strong>'+decodedText+'</strong></p><p style="font-size:11px;color:#666;margin-top:5px;">正在处理签到...</p>';
+    setTimeout(function(){
+      stopScan();
+      doAttendanceAction(decodedText);
+    },1000);
+  });
+}
+
+function startQRCodeScan(onDecode){
+  document.getElementById('scanner-container').classList.add('active');
+  document.getElementById('qr-result').innerHTML='<p style="color:#3498db;">📷 正在启动相机...</p><p style="font-size:12px;color:#999;">请将二维码对准相机</p>';
+  if(html5QrCode===null){
+    html5QrCode=new Html5Qrcode("qr-reader");
+  }
+  html5QrCode.start({facingMode:"environment"},{fps:10,qrbox:200},function(decodedText){
+    document.getElementById('qr-reader').style.borderColor='#27ae60';
+    document.getElementById('qr-reader').classList.add('scan-success');
+    onDecode(decodedText);
+  },function(){}).catch(function(err){
+    document.getElementById('qr-result').innerHTML='<p style="color:#e74c3c;">相机启动失败</p><p>'+err+'</p>';
+  });
+}
+
+function stopScan(){
+  document.getElementById('scanner-container').classList.remove('active');
+  if(html5QrCode&&html5QrCode.isScanning){
+    html5QrCode.stop().then(function(){}).catch(function(){});
+  }
+}
+
+function doAttendanceAction(workerName){
+  if(!workerName){showToast('无效的签到码');return;}
+  var username=workerName;
+  if(workerName.startsWith('签到:')){
+    username=workerName.substring(3);
+  }
+  fetch(API_BASE+'/api/attendance/'+encodeURIComponent(username),{
+    method:'GET'
+  }).then(function(r){return r.json();}).then(function(data){
+    var checkedIn=data.checkIn;
+    var checkedOut=data.checkOut;
+    if(checkedIn&&checkedOut){
+      showToast('今日已签到签退完成');
+    }else if(checkedIn&&!checkedOut){
+      doCheckout(username);
+    }else{
+      doCheckin(username);
+    }
+  }).catch(function(){
+    doCheckin(username);
+  });
+}
+
+function doCheckin(username){
+  fetch(API_BASE+'/api/attendance',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({worker:username,action:'checkin'})
+  }).then(function(r){return r.json();}).then(function(data){
+    if(data.code===0||data.success){
+      showToast('✅ 签到成功');
+      updateAttendanceStats(username);
+    }else{
+      showToast(data.message||'签到失败','error');
+    }
+  }).catch(function(){
+    showToast('签到请求失败','error');
+  });
+}
+
+function doCheckout(username){
+  fetch(API_BASE+'/api/attendance',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({worker:username,action:'checkout'})
+  }).then(function(r){return r.json();}).then(function(data){
+    if(data.code===0||data.success){
+      showToast('✅ 签退成功');
+      updateAttendanceStats(username);
+    }else{
+      showToast(data.message||'签退失败','error');
+    }
+  }).catch(function(){
+    showToast('签退请求失败','error');
+  });
+}
+
+function updateAttendanceStats(workerName){
+  var name=workerName||(currentUser?currentUser.username:'');
+  fetch(API_BASE+'/api/attendance/'+encodeURIComponent(name)).then(function(r){return r.json();}).then(function(data){
+    var todayEl=document.getElementById('today-stats');
+    if(todayEl){
+      var html='<div style="display:flex;gap:20px;justify-content:center;">';
+      html+='<div><span style="color:#27ae60;">✅ 签到:</span> '+(data.checkIn||'--')+'</div>';
+      html+='<div><span style="color:#e74c3c;">⬇️ 签退:</span> '+(data.checkOut||'--')+'</div>';
+      html+='</div>';
+      todayEl.innerHTML=html;
+    }
+  }).catch(function(){});
+}
+
+function showMyQR(){
+  if(!currentUser){showToast('请先登录');return;}
+  var username=currentUser.username;
+  var qrData='签到:'+username;
+  var qrUrl=QR_API_BASE+'?size=250x250&data='+encodeURIComponent(qrData);
+  document.getElementById('attendance-qr-image').innerHTML='<img src="'+qrUrl+'" style="width:220px;height:220px;border:2px solid #f39c12;border-radius:8px;" onerror="console.log(\'qrcode\')" />';
+  document.getElementById('attendance-qr-info').innerHTML=
+    '<div style="font-weight:bold;font-size:16px;margin-bottom:5px;">👤 '+currentUser.name+'</div>'+
+    '<div style="font-size:13px;color:#666;">用户名：'+username+'</div>'+
+    '<div style="font-size:12px;color:#999;margin-top:8px;padding:6px;background:#e8f5e9;border-radius:4px;">向扫描器出示此码即可完成签到</div>';
+  document.getElementById('attendance-qr-modal').classList.add('active');
+}
+
+function closeAttendanceQRModal(){
+  document.getElementById('attendance-qr-modal').classList.remove('active');
+  document.getElementById('attendance-qr-image').innerHTML='<div class="loading">生成中...</div>';
+  document.getElementById('attendance-qr-info').innerHTML='';
+}
+
+function doPrintAttendanceQR(){
+  var imgEl=document.querySelector('#attendance-qr-image img');
+  if(!imgEl){showToast('二维码未生成');return;}
+  var win=window.open('','_blank');
+  win.document.write('<!DOCTYPE html><html><head><title>签到二维码</title><style>body{text-align:center;padding:40px;font-family:sans-serif;}h2{color:#f39c12;}img{width:250px;height:250px;border:2px solid #333;border-radius:8px;}.info{margin-top:20px;font-size:16px;color:#333;}</style></head><body>');
+  win.document.write('<h2>📱 签到二维码</h2>');
+  win.document.write('<img src="'+imgEl.src+'" />');
+  win.document.write('<div class="info">'+document.getElementById('attendance-qr-info').innerHTML+'</div>');
+  win.document.write('<p style="margin-top:30px;color:#999;font-size:12px;">将此二维码贴在工位或员工卡上，扫码即可签到</p>');
+  win.document.write('</body></html>');
+  win.document.close();
+  setTimeout(function(){win.print();},500);
+}
+
+function printOrderQR(){
+  if(!selectedOrder){
+    showToast('请先选择订单');
+    return;
+  }
+  
+  var orderId=selectedOrder.id;
+  var qrUrl=QR_API_BASE+'?size=200x200&data='+encodeURIComponent(orderId);
+  document.getElementById('qrcode-display').innerHTML='<div class="loading">生成中...</div>';
+  document.getElementById('qrcode-print-container').classList.add('active');
+  
+  document.getElementById('qrcode-image').innerHTML='<img src="'+qrUrl+'" style="width:180px;height:180px;border:2px solid #333;" onerror="closeQRModal();showToast(\'生成失败\');" />';
+  document.getElementById('qrcode-order-info').innerHTML=
+    '<div style="font-weight:bold;font-size:16px;margin-bottom:8px;">'+orderId+'</div>'+
+    '<div style="font-size:13px;color:#666;">'+(selectedOrder.name||'')+'</div>'+
+    '<div style="font-size:12px;color:#999;margin-top:5px;">扫码即可查看订单详情</div>';
+}
+
+function closeQRModal(){
+  document.getElementById('qrcode-print-container').classList.remove('active');
+  document.getElementById('qrcode-image').innerHTML='';
+  document.getElementById('qrcode-order-info').innerHTML='';
+}
+
+function doPrintQR(){
+  var printContent=document.getElementById('qrcode-display').innerHTML;
+  var printWindow=window.open('','_blank','width=400,height=500');
+  printWindow.document.write('<html><head><title>订单二维码</title>');
+  printWindow.document.write('<style>@media print{body{margin:0;padding:20px;font-family:Arial,sans-serif;}.qr-container{text-align:center;}.qr-image img{width:180px;height:180px;border:2px solid #333;}.order-id{font-weight:bold;font-size:16px;margin:15px 0 5px;}.order-name{font-size:13px;color:#666;}.order-material{font-size:12px;color:#999;margin-top:5px;}.tip{font-size:11px;color:#666;margin-top:10px;}.footer{margin-top:30px;font-size:10px;color:#999;}}</style>');
+  printWindow.document.write('</head><body>');
+  printWindow.document.write('<div class="qr-container">');
+  printWindow.document.write(printContent);
+  printWindow.document.write('<div class="footer">晨圣报工系统</div>');
+  printWindow.document.write('</div>');
+  printWindow.document.write('<script>window.onload=function(){window.print();window.close();}<\/script>');
+  printWindow.document.write('</body></html>');
+  printWindow.document.close();
+}
+
+// ── 人脸签到 ──────────────────────────────────────
+function openFaceCheckin(){
+  var nameParam = (currentUser && currentUser.name) ? ('?name=' + encodeURIComponent(currentUser.name)) : '';
+  document.getElementById('face-checkin-modal').classList.add('active');
+  document.getElementById('face-checkin-iframe').src='/face/app/' + nameParam;
+}
+function closeFaceCheckin(){
+  document.getElementById('face-checkin-modal').classList.remove('active');
+  document.getElementById('face-checkin-iframe').src='about:blank';
+}
+
+// ── 工单排产 ──────────────────────────────────────
+function showSchedule(){
+  loadScheduleList();
+  showPage('schedule-page');
+}
+
+function loadScheduleList(){
+  var container=document.getElementById('schedule-list');
+  container.innerHTML='<div class="loading">加载中...</div>';
+  fetch((CONN.activeBase||'')+'/api/schedule/list').then(function(r){
+    return r.json();
+  }).then(function(ret){
+    var list=ret.data||ret||[];
+    if(list.length>0){
+      var html='';
+      list.forEach(function(o){
+        var orderNo=o.workOrderNo||o.order_no||'';
+        var customer=o.customerGroup||o.customer_group_name||o.customerName||'';
+        var productType=o.productType||o.product_type||o.productName||'';
+        var qty=o.quantity||o.orderQty||0;
+        var status=o.status||'pending';
+        var createTime=o.createTime||o.created_at||'';
+        var statusMap={'created':'待排产','pending':'待排产','processing':'生产中','completed':'已完成','confirmed':'已排产','published':'已发布','scheduled':'已排产','in_production':'生产中','reported':'生产中','qc_passed':'生产中','report_complete':'报工完成','warehousing':'成品入库','shipped':'已发货','received':'已收货','order_complete':'订单完成'};
+        var statusText=statusMap[status]||status;
+        var statusClass=status==='confirmed'||status==='in_production'||status==='report_complete'||status==='warehousing'||status==='shipped'||status==='received'?'confirmed':status;
+        html+='<div class="item-list" onclick="showScheduleDetail(\''+orderNo+'\')">'+
+          '<div class="item-header">'+orderNo+'</div>'+
+          '<div class="item-detail">客户: '+customer+' | 产品: '+productType+'</div>'+
+          '<div class="item-detail">数量: '+qty+'</div>'+
+          '<div class="item-meta">'+
+          '<span class="schedule-status '+statusClass+'">'+statusText+'</span>'+
+          ' | '+createTime+'</div></div>';
+      });
+      container.innerHTML=html;
+    }else{
+      container.innerHTML='<div class="schedule-empty">'+
+        '<div class="schedule-empty-icon">📋</div>'+
+        '<div>暂无工单</div></div>';
+    }
+  }).catch(function(){
+    container.innerHTML='<div class="item-list" style="text-align:center;color:#999;padding:30px;">加载失败</div>';
+  });
+}
+
+// ── 成品入库 ──────────────────────────────────────
+function showWarehousing(){
+  showPage('warehousing-page');
+  loadWarehousingList();
+}
+
+function loadWarehousingList(){
+  var container=document.getElementById('warehousing-list');
+  container.innerHTML='<div class="loading">加载中...</div>';
+  fetch((CONN.activeBase||'')+'/api/warehousing/pending').then(function(r){
+    return r.json();
+  }).then(function(ret){
+    var list=ret.data||ret||[];
+    if(list.length>0){
+      var html='';
+      list.forEach(function(o){
+        var createTime=o.created_at?o.created_at.replace('T',' ').substring(0,16):'';
+        html+='<div class="item-card">'+
+          '<div class="item-header">'+
+          '<span class="item-title">'+(o.order_no||o.order_no||'')+'</span>'+
+          '<span class="item-badge" style="background:#27ae60;">待入库</span></div>'+
+          '<div class="item-body">'+
+          '<div class="item-meta">产品：'+(o.product_name||'')+
+          ' | 数量：'+(o.quantity||0)+(o.unit?' '+o.unit:'')+'</div>'+
+          '<div class="item-meta">客户：'+(o.customer_name||'')+'</div>'+
+          '<div class="item-meta">创建：'+createTime+'</div></div>'+
+          '<div style="padding:8px 12px;border-top:1px solid #eee;text-align:right;">'+
+          '<button onclick="confirmWarehousing(\''+o.process_id+'\',\''+(o.order_no||o.order_no||'')+'\')" '+
+          'style="background:#27ae60;padding:6px 16px;font-size:13px;">✅ 确认入库</button></div></div>';
+      });
+      container.innerHTML=html;
+    }else{
+      container.innerHTML='<div class="schedule-empty">'+
+        '<div class="schedule-empty-icon">📦</div>'+
+        '<div>暂无待入库工单</div></div>';
+    }
+  }).catch(function(){
+    container.innerHTML='<div class="item-list" style="text-align:center;color:#999;padding:30px;">加载失败</div>';
+  });
+}
+
+function confirmWarehousing(processId,orderNo){
+  if(!processId){alert('流程ID无效');return;}
+  if(!confirm('确认工单 '+orderNo+' 已完成成品入库？')) return;
+  fetch((CONN.activeBase||'')+'/api/warehousing/confirm',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({process_id:processId})
+  }).then(function(r){
+    return r.json();
+  }).then(function(ret){
+    if(ret.code!==0&&ret.code!==200){alert(ret.message||'入库确认失败');return;}
+    alert('工单 '+orderNo+' 已确认入库');
+    loadWarehousingList();
+  }).catch(function(){
+    alert('入库确认失败，请检查网络连接');
+  });
+}
+
+// ========== 物料任务 ==========
+var currentMaterialTask = null;
+
+function loadMaterialTasks(filterOrder){
+  showMaterial(filterOrder);
+}
+
+function showMaterial(filterOrder){
+  filterOrder = (filterOrder||'').trim();
+  showPage('material-page');
+  var container=document.getElementById('material-list');
+  container.innerHTML='<div class="loading">加载中...</div>';
+  fetch((CONN.activeBase||'')+'/api/tasks?page_route=material').then(function(r){
+    return r.json();
+  }).then(function(ret){
+    var tasks=ret.data?ret.data.tasks:ret.tasks||[];
+    if(filterOrder){tasks=tasks.filter(function(t){return t.related_order===filterOrder;});}
+    if(tasks.length>0){
+      var orders={};
+      tasks.forEach(function(t){
+        var oid=t.related_order||'未知';
+        if(!orders[oid]) orders[oid]={items:[], total:0};
+        orders[oid].items.push(t);
+        orders[oid].total+=1;
+      });
+      var html='';
+      Object.keys(orders).forEach(function(oid){
+        var o=orders[oid];
+        var uid='mat_'+oid.replace(/[^a-zA-Z0-9]/g,'_');
+        html+='<div class="item-list" style="border-left-color:#f39c12;margin-bottom:10px;cursor:pointer;" onclick="var x=document.getElementById(\''+uid+'\');x.style.display=x.style.display==\'none\'?\'\':\'none\';">'+
+          '<div class="item-header">📋 '+oid+' <span style="font-size:11px;color:#999;">▶</span></div>'+
+          '<div class="item-detail">共 '+o.total+' 项物料</div>'+
+          '<div id="'+uid+'" style="display:none;">';
+        o.items.forEach(function(t){
+          var ct=t.content||{};
+          if(typeof ct==='string'){try{ct=JSON.parse(ct);}catch(e){ct={};}}
+          var stMap={'material_requested':'待确认','material_confirmed':'已确认','material_arrived':'已到货','material_delivered':'已出库'};
+          var stText=stMap[t.status]||t.status||'';
+          var pname=(t.related_process||ct.material_name||'物料').replace(/^备料-/, '');
+          var spec=ct.spec?' | '+ct.spec:'';
+          html+='<div class="item-card" onclick="event.stopPropagation();showMaterialDetail(\''+t.id+'\')" style="margin:6px 0;">'+
+            '<div class="item-header">'+
+            '<span class="item-title">📦 '+pname+spec+'</span>'+
+            '<span class="item-badge" style="background:#f39c12;">'+stText+'</span></div>'+
+            '<div class="item-body">'+
+            '<div class="item-meta">数量：'+(ct.quantity||'?')+' '+(ct.unit||'')+'</div></div></div>';
+        });
+        html+='</div></div>';
+      });
+      container.innerHTML=html;
+    }else{
+      container.innerHTML='<div class="empty">'+(filterOrder?'无匹配 '+filterOrder:'暂无物料任务')+'</div>';
+    }
+  }).catch(function(e){
+    container.innerHTML='<div class="empty">加载失败</div>';
+  });
+}
+
+function showMaterialDetail(pkgId){
+  var modal=document.getElementById('material-detail-modal');
+  var body=document.getElementById('material-detail-body');
+  var footer=document.getElementById('material-detail-footer');
+  body.innerHTML='<div class="loading">加载中...</div>';
+  footer.innerHTML='<button onclick="closeMaterialDetail()" style="background:#95a5a6;">关闭</button>';
+  modal.classList.add('active');
+
+  fetch((CONN.activeBase||'')+'/api/material/'+pkgId).then(function(r){
+    return r.json();
+  }).then(function(ret){
+    var d=ret.data||ret;
+    if(!d){body.innerHTML='<div class="error-msg">未找到物料信息</div>';return;}
+    currentMaterialTask=d;
+    var ct=d.content||{};
+    if(typeof ct==='string'){try{ct=JSON.parse(ct);}catch(e){ct={};}}
+    var mname=(ct.material_name||d.related_process||'').replace(/^备料-/, '');
+    var oid=d.related_order||ct.order_no||'';
+    if(ct.spec) mname+=' | '+ct.spec;
+
+    // 基本信息
+    var html='<div style="padding:10px 0;">'+
+      '<div class="schedule-detail-row"><span class="schedule-detail-label">物料名称</span><span class="schedule-detail-value">'+mname+'</span></div>'+
+      '<div class="schedule-detail-row"><span class="schedule-detail-label">关联工单</span><span class="schedule-detail-value">'+oid+'</span></div>'+
+      '<div class="schedule-detail-row"><span class="schedule-detail-label">规格</span><span class="schedule-detail-value">'+(ct.spec||'-')+'</span></div>'+
+      '<div class="schedule-detail-row"><span class="schedule-detail-label">数量</span><span class="schedule-detail-value">'+(ct.quantity||'?')+' '+(ct.unit||'件')+'</span></div>';
+
+    if(ct.deadline) html+='<div class="schedule-detail-row"><span class="schedule-detail-label">采购期限</span><span class="schedule-detail-value">'+ct.deadline+'</span></div>';
+    if(ct.arrival_date) html+='<div class="schedule-detail-row"><span class="schedule-detail-label">预计到货</span><span class="schedule-detail-value">'+ct.arrival_date+'</span></div>';
+    if(ct.actual_qty) html+='<div class="schedule-detail-row"><span class="schedule-detail-label">实际入库</span><span class="schedule-detail-value">'+ct.actual_qty+' '+(ct.unit||'件')+'</span></div>';
+    if(ct.replenish_count) html+='<div class="schedule-detail-row"><span class="schedule-detail-label">补料次数</span><span class="schedule-detail-value" style="color:#f39c12;">第 '+ct.replenish_count+' 次 共 +'+(ct.replenish_qty||0)+' '+(ct.unit||'件')+'</span></div>';
+    if(ct.return_qty) html+='<div class="schedule-detail-row"><span class="schedule-detail-label">退料量</span><span class="schedule-detail-value" style="color:#e74c3c;">-'+(ct.return_qty||0)+' '+(ct.unit||'件')+'</span></div>';
+    if(ct.receiver) html+='<div class="schedule-detail-row"><span class="schedule-detail-label">领用人</span><span class="schedule-detail-value">'+ct.receiver+'</span></div>';
+    html+='</div>';
+
+    // 流程步骤
+    var flowSteps=[
+      {name:'物料申请', key:'material_requested'},
+      {name:'任务确认', key:'material_confirmed'},
+      {name:'入库通知', key:'material_arrived'},
+      {name:'物料出库', key:'material_delivered'},
+    ];
+    var curStatus=d.status||'material_requested';
+    var statusKeys=flowSteps.map(function(s){return s.key;});
+    var curIdx=statusKeys.indexOf(curStatus);
+    if(curIdx===-1) curIdx=0;
+
+    html+='<div class="flow-timeline"><div class="flow-timeline-title">🏭 物料流程</div>';
+    flowSteps.forEach(function(step,i){
+      var state=i<curIdx?'completed':(i===curIdx?'active':'pending');
+      var icon=state==='completed'?'✓':(state==='active'?'●':'○');
+      html+='<div class="flow-step"><span class="flow-step-dot '+state+'">'+icon+'</span>'+
+        '<span class="flow-step-body '+state+'"><span class="flow-step-name">'+step.name+'</span></span></div>';
+    });
+    html+='</div>';
+
+    body.innerHTML=html;
+
+    // 步骤2：可确认
+    if(curStatus==='material_requested'){
+      var today=new Date().toISOString().split('T')[0];
+      html='<div style="width:100%;">'+
+        '<div style="display:flex;gap:8px;margin-bottom:8px;">'+
+        '<div style="flex:1;"><label style="font-size:11px;color:#666;">采购期限</label><input type="date" id="mat-deadline" value="'+today+'" style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;font-size:13px;"></div>'+
+        '<div style="flex:1;"><label style="font-size:11px;color:#666;">预计到货</label><input type="date" id="mat-arrival" value="'+today+'" style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;font-size:13px;"></div>'+
+        '</div>'+
+        '<button onclick="confirmMaterialTask()" style="background:#27ae60;width:100%;">✅ 确认接收并填报日期</button></div>';
+      footer.innerHTML=html+
+        '<button onclick="closeMaterialDetail()" style="background:#95a5a6;margin-top:5px;width:100%;">关闭</button>';
+    }else{
+      // 已确认后可以退料、补料
+      footer.innerHTML='<div style="display:flex;gap:8px;">'+
+        '<button onclick="showMaterialQtyModal(\'return\')" style="flex:1;background:#e74c3c;color:#fff;border:none;padding:12px;border-radius:6px;">↩ 退料</button>'+
+        '<button onclick="showMaterialQtyModal(\'replenish\')" style="flex:1;background:#f39c12;color:#fff;border:none;padding:12px;border-radius:6px;">➕ 补料</button></div>'+
+        '<button onclick="closeMaterialDetail()" style="background:#95a5a6;margin-top:5px;width:100%;">关闭</button>';
+    }
+  }).catch(function(e){
+    body.innerHTML='<div class="error-msg">加载失败</div>';
+  });
+}
+
+function confirmMaterialTask(){
+  if(!currentMaterialTask){showToast('请先加载任务');return;}
+  var deadline=document.getElementById('mat-deadline');
+  var arrival=document.getElementById('mat-arrival');
+  fetch((CONN.activeBase||'')+'/api/material/confirm',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      id: currentMaterialTask.id,
+      deadline: deadline?deadline.value:'',
+      arrival_date: arrival?arrival.value:'',
+      operator: currentUser?currentUser.username:''
+    })
+  }).then(function(r){return r.json();}).then(function(ret){
+    if(ret.code===0){
+      showToast('✅ 物料任务已确认');
+      closeMaterialDetail();
+      showMaterial();
+    }else{
+      showToast(ret.message||'确认失败');
+    }
+  }).catch(function(){
+    showToast('网络异常，请重试');
+  });
+}
+
+var materialActionType='';
+function showMaterialQtyModal(type){
+  materialActionType=type;
+  document.getElementById('mat-qty-title').textContent=type==='return'?'↩ 退料数量':'➕ 补料数量';
+  document.getElementById('mat-qty-input').value='';
+  document.getElementById('material-qty-modal').classList.add('active');
+}
+function submitMaterialQty(){
+  var qty=parseFloat(document.getElementById('mat-qty-input').value)||0;
+  if(qty<=0){showToast('请输入数量');return;}
+  if(!currentMaterialTask){showToast('请先选择任务');return;}
+  var isReturn=materialActionType==='return';
+  fetch((CONN.activeBase||'')+'/api/material/'+(isReturn?'return':'replenish'),{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({pkg_id:currentMaterialTask.id,
+      return_qty:isReturn?qty:0, add_qty:isReturn?0:qty,
+      operator:currentUser?currentUser.name:''})
+  }).then(function(r){return r.json();}).then(function(ret){
+    if(ret.code===0){
+      showToast(isReturn?'退料成功':'补料成功');
+      document.getElementById('material-qty-modal').classList.remove('active');
+      setTimeout(function(){showMaterialDetail(currentMaterialTask.id);showMaterial();},500);
+    }else{showToast(ret.message||'操作失败');}
+  }).catch(function(){showToast('提交失败');});
+}
+function closeMaterialQtyModal(){document.getElementById('material-qty-modal').classList.remove('active');}
+
+function closeMaterialDetail(){
+  document.getElementById('material-detail-modal').classList.remove('active');
+  currentMaterialTask=null;
+}
+
+// ========== 质检任务 ==========
+var qiJudgeMode=false;
+var qiCurrentTask=null;
+
+function toggleJudgeMode(){
+  qiJudgeMode=!qiJudgeMode;
+  var btn=document.getElementById('qi-judge-btn');
+  var dot=document.getElementById('qi-judge-dot');
+  if(qiJudgeMode){
+    btn.style.background='#27ae60';
+    dot.style.left='22px';
+  }else{
+    btn.style.background='#ccc';
+    dot.style.left='2px';
+  }
+  if(qiCurrentTask){showQualityDetail(qiCurrentTask,true);}
+}
+
+function showQuality(){
+  showPage('quality-inspection-page');
+  var container=document.getElementById('qi-list');
+  container.innerHTML='<div class="loading">🔄 加载中...</div>';
+  fetch((CONN.activeBase||'')+'/api/quality-inspection/tasks').then(function(r){return r.json();}).then(function(d){
+    if(d.code!==0){container.innerHTML='<div class="empty">❌ 加载失败</div>';return;}
+    if(d.data.tasks.length===0){
+      container.innerHTML='<div class="empty" style="text-align:center;padding:40px 15px;"><span style="font-size:48px;">📋</span><p style="margin-top:10px;color:#999;">暂无质检任务</p><p style="font-size:12px;color:#bbb;">等待调度中心发布</p></div>';
+      return;
+    }
+    var statusMap={pending:'待检测',quality_reported:'已提交',quality_reviewed:'已审核',completed:'已完成'};
+    var html='';
+    d.data.tasks.forEach(function(t){
+      var statusColor={pending:'#f39c12',quality_reported:'#27ae60',completed:'#27ae60',quality_reviewed:'#3498db'};
+      html+=
+        '<div class="qi-task-card" onclick="showQualityDetail(\''+(t.order_no||t.id)+'\')">'+
+          '<div style="display:flex;align-items:center;gap:10px;">'+
+            '<div style="width:42px;height:42px;border-radius:10px;background:#667eea15;display:flex;align-items:center;justify-content:center;font-size:20px;">📋</div>'+
+            '<div style="flex:1;min-width:0;">'+
+              '<div style="font-size:15px;font-weight:600;color:#2c3e50;">'+t.order_no+'</div>'+
+              '<div style="font-size:12px;color:#888;">'+(t.task_count||1)+'个工序</div>'+
+            '</div>'+
+            '<span class="qi-status-badge" style="background:'+(statusColor[t.status]||'#999')+'15;color:'+(statusColor[t.status]||'#999')+';">'+(statusMap[t.status]||t.status)+'</span>'+
+          '</div>'+
+        '</div>';
+    });
+    container.innerHTML=html;
+  }).catch(function(){container.innerHTML='<div class="empty">网络错误</div>';});
+}
+
+function showQualityDetail(orderNo,skipReload){
+  if(!skipReload) qiCurrentTask=orderNo;
+  var modal=document.getElementById('qi-detail-modal');
+  var body=document.getElementById('qi-detail-body');
+  var footer=document.getElementById('qi-detail-footer');
+  if(!skipReload){body.innerHTML='<div class="loading">🔄 加载中...</div>';footer.style.display='none';}
+  modal.classList.add('active');
+  if(skipReload){renderQiForm(window._qiCachedData);return;}
+  fetch((CONN.activeBase||'')+'/api/quality-inspection/tasks/'+encodeURIComponent(orderNo)).then(function(r){return r.json();}).then(function(d){
+    if(d.code!==0){body.innerHTML='<div class="empty">❌ 加载失败</div>';return;}
+    window._qiCachedData=d.data;
+    renderQiForm(d.data);
+  }).catch(function(){body.innerHTML='<div class="empty">网络错误</div>';});
+}
+
+var qiActiveProc=0;
+function renderQiForm(data){
+  var body=document.getElementById('qi-detail-body');
+  var title=document.getElementById('qi-detail-title');
+  var sub=document.getElementById('qi-detail-sub');
+  var footer=document.getElementById('qi-detail-footer');
+  footer.style.display='none';
+
+  title.textContent='📋 '+data.order_no;
+  sub.textContent=data.processes.length+'个工序 | 质检员：苑岗彪';
+  
+  var procs=data.processes||[], html='';
+  
+  // 流程条
+  if(data.flow&&data.flow.length>0){
+    html+='<div class="qi-flow-bar">';
+    data.flow.forEach(function(s){html+='<span class="qi-flow-step '+s.status+'">'+s.label+'</span>';});
+    html+='</div>';
+  }
+  
+  // 工序Tab
+  html+='<div class="qi-process-tabs">';
+  procs.forEach(function(p,i){
+    var cls=(i===qiActiveProc?'active':'')+' '+(p.submitted?'submitted':'');
+    html+='<div class="qi-process-tab '+cls+'" onclick="switchQiProcess('+i+')">'+
+      (p.inspection_type==='终检'?'🏁':p.inspection_type==='首检'?'🔰':'🔍')+' '+
+      p.process_name+(p.submitted?' ✅':'')+'</div>';
+  });
+  html+='</div>';
+  
+  // 当前工序表单
+  var p=procs[qiActiveProc]||{};
+  if(p.submitted){
+    html+='<div style="text-align:center;padding:30px;color:#27ae60;font-size:16px;">✅ 该工序已提交</div>';
+  }else{
+    html+='<div class="qi-info-grid">'+
+      '<div class="qi-info-item"><span class="qi-info-label">类型</span><span class="qi-info-val">'+p.inspection_type+'</span></div>'+
+      '<div class="qi-info-item"><span class="qi-info-label">工序</span><span class="qi-info-val">'+p.process_name+'</span></div>'+
+      '<div class="qi-info-item"><span class="qi-info-label">模式</span><span class="qi-info-val">'+(qiJudgeMode?'⚡ 判定':'📝 记录')+'</span></div>'+
+      '<div class="qi-info-item"><span class="qi-info-label">包ID</span><span class="qi-info-val" style="font-size:10px;">'+p.pkg_id+'</span></div>'+
+    '</div>';
+    
+    var items=p.inspection_items||[];
+    if(items.length){
+      html+='<div class="qi-section-title">📋 检查项 ('+items.reduce(function(s,c){return s+c.items.length;},0)+')</div>';
+      html+=qiJudgeMode?renderJudgeFormV2(items):renderRecordFormV2(items);
+    }
+    html+='<div class="qi-section-title" style="margin-top:20px;">📊 整体判定</div>'+
+      '<div class="qi-result-toggle">'+
+        '<button class="qi-result-btn pass selected" onclick="setQiOverall(this,\'合格\')" id="qi-result-pass">✅ 合格</button>'+
+        '<button class="qi-result-btn fail" onclick="setQiOverall(this,\'不合格\')" id="qi-result-fail">❌ 不合格</button>'+
+        '<button class="qi-result-btn pending" onclick="setQiOverall(this,\'待复检\')" id="qi-result-pending">⚠️ 待复检</button>'+
+      '</div>'+
+      '<div style="margin-top:10px;">'+
+        '<input id="qi-defect-desc" placeholder="不合格描述（选填）" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:14px;">'+
+      '</div>';
+    
+    footer.style.display='block';
+    footer.innerHTML='<button onclick="confirmQualityReport()" style="background:#27ae60;color:#fff;width:100%;padding:14px;border:none;border-radius:10px;font-size:16px;font-weight:bold;">✅ 提交此工序质检</button>';
+  }
+  
+  body.innerHTML=html;
+}
+
+function switchQiProcess(idx){
+  qiActiveProc=idx;
+  renderQiForm(window._qiCachedData);
+}
+
+var qiOverallResult='合格';
+function setQiOverall(btn,result){
+  qiOverallResult=result;
+  document.querySelectorAll('.qi-result-btn').forEach(function(b){b.classList.remove('selected');});
+  btn.classList.add('selected');
+}
+
+function renderRecordFormV2(items){
+  var html='';
+  items.forEach(function(cat,ci){
+    html+='<div class="qi-category">'+
+      '<div class="qi-cat-header" onclick="this.nextElementSibling.classList.toggle(\'collapsed\')">'+
+        '<span>📌 '+cat.category+'</span><span style="font-size:12px;color:#999;">'+(cat.items||[]).length+'项</span>'+
+      '</div>'+
+      '<div class="qi-cat-body">';
+    (cat.items||[]).forEach(function(it){
+      html+=
+        '<div class="qi-item-row">'+
+          '<div class="qi-item-name">'+it.name+'</div>'+
+          '<input type="text" placeholder="实测值" data-item="'+it.name+'" class="qi-input">'+
+        '</div>';
+    });
+    html+='</div></div>';
+  });
+  return html;
+}
+
+function renderJudgeFormV2(items){
+  var html='';
+  items.forEach(function(cat,ci){
+    html+='<div class="qi-category">'+
+      '<div class="qi-cat-header">'+
+        '<span>📌 '+cat.category+'</span><span style="font-size:12px;color:#999;">'+(cat.items||[]).length+'项</span>'+
+      '</div>'+
+      '<div class="qi-cat-body">';
+    (cat.items||[]).forEach(function(it){
+      html+=
+        '<div class="qi-item-row judge">'+
+          '<div class="qi-item-name">'+it.name+'</div>'+
+          '<div class="qi-standard">标准：'+it.standard_value+(it.tolerance&&it.tolerance!=='无'?' ±'+it.tolerance:'')+'</div>'+
+          '<div style="display:flex;gap:8px;align-items:center;">'+
+            '<input type="text" placeholder="实测值" data-item="'+it.name+'" onchange="onQiItemChangeV2(this)" '+
+              'data-standard="'+it.standard_value+'" data-tolerance="'+(it.tolerance||'')+'" '+
+              'class="qi-input" style="flex:1;">'+
+            '<span class="qi-judge-icon" id="qi-icon-'+it.name.replace(/[^a-zA-Z0-9\\u4e00-\\u9fff]/g,'')+'"></span>'+
+          '</div>'+
+        '</div>';
+    });
+    html+='</div></div>';
+  });
+  return html;
+}
+
+function onQiItemChangeV2(input){
+  var measured=input.value;
+  var standard=input.getAttribute('data-standard');
+  var tolerance=input.getAttribute('data-tolerance');
+  var itemName=input.getAttribute('data-item');
+  if(!measured||measured.trim()===''){return;}
+  var passed=_judge(standard,measured,tolerance);
+  var iconEl=document.getElementById('qi-icon-'+itemName.replace(/[^a-zA-Z0-9\u4e00-\u9fff]/g,''));
+  if(!iconEl) return;
+  if(passed===null){iconEl.textContent='⚠️';iconEl.style.color='#f39c12';}
+  else if(passed){iconEl.textContent='✅';iconEl.style.color='#27ae60';}
+  else{iconEl.textContent='❌';iconEl.style.color='#e74c3c';}
+}
+
+function _judge(standard,measured,tolerance){
+  if(!measured||String(measured).trim()==='')return null;
+  var sv=String(standard).trim(),mv=String(measured).trim();
+  if(!tolerance||tolerance==='无')return mv===sv;
+  if(tolerance.indexOf('≥')===0||tolerance.indexOf('≤')===0){
+    var num=Number(tolerance.substring(1));
+    if(isNaN(num))return null;
+    var mvNum=Number(mv);if(isNaN(mvNum))return null;
+    return tolerance.indexOf('≥')===0?mvNum>=num:mvNum<=num;
+  }
+  var tv=Number(tolerance.replace('±',''));
+  var svNum=Number(sv),mvNum=Number(mv);
+  if(isNaN(tv)||isNaN(svNum)||isNaN(mvNum))return null;
+  return mvNum>=svNum-tv&&mvNum<=svNum+tv;
+}
+
+function confirmQualityReport(){
+  var items=[];
+  var allPassed=true;
+  var hasUnfilled=false;
+  
+  document.querySelectorAll('#qi-detail-body input[data-item]').forEach(function(inp){
+    var name=inp.getAttribute('data-item');
+    var measured=inp.value||'';
+    var standard=qiJudgeMode?(inp.getAttribute('data-standard')||''):'';
+    var tolerance=qiJudgeMode?(inp.getAttribute('data-tolerance')||''):'';
+    if(!measured){hasUnfilled=true;}
+    var passed=qiJudgeMode?_judge(standard,measured,tolerance):true;
+    if(qiJudgeMode&&!passed)allPassed=false;
+    items.push({inspection_item:name,measured_value:measured,standard_value:standard,tolerance:tolerance,is_passed:!!passed});
+  });
+  
+  if(hasUnfilled){showToast('请填写所有检查项的实测值');return;}
+  
+  var cached=window._qiCachedData||{};
+  var procs=cached.processes||[];
+  var p=procs[qiActiveProc]||{};
+  var data={
+    task_id:p.pkg_id||qiCurrentTask||'',
+    order_no:cached.order_no||'',
+    inspector:'苑岗彪',
+    inspection_type:p.inspection_type||'终检',
+    process_name:p.process_name||'',
+    judge_mode:qiJudgeMode?'judge':'record',
+    items:items,
+    overall_result:qiOverallResult||(allPassed?'合格':'不合格'),
+  };
+  
+  if(qiOverallResult==='不合格'||!allPassed){
+    data.defect_description=(document.getElementById('qi-defect-desc')||{}).value||'';
+    data.defect_qty=1;
+    data.handling_method='返工';
+  }
+  
+  var btn=document.querySelector('#qi-detail-footer button');
+  if(btn){btn.textContent='提交中...';btn.disabled=true;}
+  
+  fetch((CONN.activeBase||'')+'/api/quality-inspection/submit',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(data)
+  }).then(function(r){return r.json();}).then(function(d){
+    if(d.code===0){
+      showToast('质检报告已提交');
+      closeQiDetail();
+      showQuality();
+    }else if(d.code===409){
+      showToast('该任务已被提交，请刷新');
+      closeQiDetail();
+      showQuality();
+    }else{
+      showToast('提交失败：'+(d.message||'未知错误'));
+      if(btn){btn.textContent='提交报告';btn.disabled=false;}
+    }
+  });
+}
+
+function closeQiDetail(){
+  document.getElementById('qi-detail-modal').classList.remove('active');
+  qiCurrentTask=null;
+}
+
+// ========== 外协任务 ==========
+function showOutsource(){
+  showPage('outsource-page');
+  var container=document.getElementById('outsource-list');
+  container.innerHTML='<div class="loading">加载中...</div>';
+  fetch((CONN.activeBase||'')+'/api/tasks?page_route=outsource').then(function(r){
+    return r.json();
+  }).then(function(ret){
+    var tasks=ret.data?ret.data.tasks:ret.tasks||[];
+    if(tasks.length>0){
+      var orders={};
+      tasks.forEach(function(t){
+        var oid=t.related_order||'未知';
+        if(!orders[oid]) orders[oid]={items:[], total:0};
+        orders[oid].items.push(t);
+        orders[oid].total+=1;
+      });
+      var html='';
+      Object.keys(orders).forEach(function(oid){
+        var o=orders[oid];
+        html+='<div class="item-card" onclick="toggleOutDetail(\''+oid.replace(/'/g,"\\'")+'\')">'+
+          '<div class="item-header">'+
+          '<span class="item-title">🔗 '+oid+'</span>'+
+          '<span class="item-badge" style="background:#e67e22;">'+o.total+'项</span></div>'+
+          '<div class="item-body">'+
+          '<div class="item-meta">外协任务共 '+o.total+' 种</div></div>'+
+          '<div id="out-detail-'+oid+'" style="display:none;">'+
+          o.items.map(function(t){return '<div class="item-meta" style="padding:4px 12px;">🔹 '+t.related_process+'</div>';}).join('')+
+          '</div></div>';
+      });
+      container.innerHTML=html;
+    }else{
+      container.innerHTML='<div class="empty">暂无外协任务</div>';
+    }
+  }).catch(function(e){
+    container.innerHTML='<div class="empty">加载失败</div>';
+  });
+}
+
+function toggleOutDetail(oid){
+  var el=document.getElementById('out-detail-'+oid);
+  if(el) el.style.display=el.style.display==='none'?'block':'none';
+}
+
+var scheduleDetailCache=null;
+
+function showScheduleDetail(orderNo){  closeScheduleDetail();
+  var modal=document.getElementById('schedule-detail-modal');
+  var body=document.getElementById('schedule-detail-body');
+  var footer=document.getElementById('schedule-detail-footer');
+  body.innerHTML='<div class="loading">加载中...</div>';
+  modal.classList.add('active');
+  fetch((CONN.activeBase||'')+'/api/schedule/list?orderNo='+orderNo).then(function(r){
+    return r.json();
+  }).then(function(ret){
+    var list=ret.data||ret||[];
+    var order=null;
+    if(list.length>0){order=list[0];}
+    if(!order){body.innerHTML='<div class="error-msg">未找到工单信息</div>';return;}
+    scheduleDetailCache=order;
+    var orderId=order.workOrderNo||order.order_no||'';
+    var customer=order.customerGroup||order.customer_group_name||order.customerName||'';
+    var productType=order.productType||order.product_type||order.productName||'';
+    var spec=order.spec||order.specification||'';
+    var material=order.material||'';
+    var qty=order.quantity||order.orderQty||0;
+    var unit=order.unit||'';
+    var status=order.status||'pending';
+    var createTime=order.createTime||order.created_at||'';
+    var deliveryDate=order.deliveryDate||order.delivery_date||'';
+    var remark=order.remark||'';
+    var statusMap={'created':'待排产','pending':'待排产','processing':'生产中','completed':'已完成','confirmed':'已排产','published':'已发布','scheduled':'已排产','in_production':'生产中','reported':'生产中','qc_passed':'生产中','report_complete':'报工完成','warehousing':'成品入库','shipped':'已发货','received':'已收货','order_complete':'订单完成'};
+    var statusText=statusMap[status]||status;
+    var statusClass=status==='confirmed'||status==='in_production'||status==='report_complete'||status==='warehousing'||status==='shipped'||status==='received'?'confirmed':status;
+    var rows=[
+      {label:'工单号',value:orderId},
+      {label:'客户',value:customer},
+      {label:'产品类型',value:productType},
+    ];
+    if(spec) rows.push({label:'规格',value:spec});
+    if(material) rows.push({label:'材料',value:material});
+    rows.push({label:'长度',value:qty+(unit?' '+unit:'')});
+    rows.push({label:'状态',value:'<span class="schedule-status '+statusClass+'">'+statusText+'</span>'});
+    if(deliveryDate) rows.push({label:'交付日期',value:deliveryDate});
+    if(order.plan_start) rows.push({label:'计划开始时间',value:order.plan_start});
+    if(order.plan_end) rows.push({label:'计划完成时间',value:order.plan_end});
+    if(order.plan_start&&order.plan_end){
+      var sd=Math.max(0,Math.ceil((new Date(order.plan_end)-new Date(order.plan_start))/(1000*60*60*24)));
+      rows.push({label:'计划天数',value:sd+'天'});
+    }
+    rows.push({label:'创建时间',value:createTime});
+    if(remark) rows.push({label:'备注',value:remark});
+    var html='<div style="margin:10px 0;">';
+    rows.forEach(function(r){
+      html+='<div class="schedule-detail-row">'+
+        '<span class="schedule-detail-label">'+r.label+'</span>'+
+        '<span class="schedule-detail-value">'+r.value+'</span></div>';
+    });
+    // 可排产状态（已发布/待排产）显示排产表单
+    var schedulable=(status==='published'||status==='pending'||status==='created');
+    if(schedulable){
+      var today=new Date().toISOString().split('T')[0];
+      var planStart=order.plan_start||today;
+      var planEnd=order.plan_end||'';
+      html+='<div style="margin:15px 0;border-top:1px solid #e0e0e0;padding-top:12px;">'+
+        '<div style="font-weight:bold;margin-bottom:10px;color:#e67e22;">📅 排产设置</div>'+
+        '<div class="schedule-detail-row">'+
+          '<span class="schedule-detail-label">排产开始</span>'+
+          '<span class="schedule-detail-value"><input type="date" id="plan-start" value="'+planStart+'" style="width:160px;padding:6px;border:1px solid #ccc;border-radius:4px;" onchange="calcScheduleDays()"></span></div>'+
+        '<div class="schedule-detail-row">'+
+          '<span class="schedule-detail-label">排产结束</span>'+
+          '<span class="schedule-detail-value"><input type="date" id="plan-end" value="'+planEnd+'" style="width:160px;padding:6px;border:1px solid #ccc;border-radius:4px;" onchange="calcScheduleDays()"></span></div>'+
+        '<div class="schedule-detail-row">'+
+          '<span class="schedule-detail-label">排产天数</span>'+
+          '<span class="schedule-detail-value"><span id="schedule-days" style="font-weight:bold;color:#e67e22;font-size:16px;">0</span> 天</span></div>'+
+        '</div>';
+    }
+    // 7 个生产流程步骤状态
+    var flowSteps=[
+      {name:'工单发布',role:'计划部',key:'published'},
+      {name:'已排产',role:'计划部',key:'confirmed'},
+      {name:'生产中',role:'生产部',key:'in_production'},
+      {name:'报工完成',role:'自动',key:'report_complete'},
+      {name:'成品入库',role:'库存管理',key:'warehousing'},
+      {name:'发货',role:'仓库',key:'shipped'},
+      {name:'确认收货',role:'客户',key:'received'}
+    ];
+    var statusOrder=['created','pending','published','confirmed','in_production','report_complete','warehousing','shipped','received','order_complete'];
+    var curIdx=statusOrder.indexOf(status);
+    if(curIdx===-1) curIdx=0;
+    var flowHtml='<div class="flow-timeline"><div class="flow-timeline-title">🏭 生产流程</div>';
+    flowSteps.forEach(function(step,i){
+      var stepIdx=statusOrder.indexOf(step.key);
+      var state=stepIdx<curIdx?'completed':(stepIdx===curIdx?'active':'pending');
+      var dotIcon=state==='completed'?'✓':(state==='active'?'●':'○');
+      flowHtml+='<div class="flow-step">'+
+        '<div class="flow-step-dot '+state+'">'+dotIcon+'</div>'+
+        '<div class="flow-step-line '+state+'"></div>'+
+        '<div class="flow-step-body '+state+'">'+
+          '<div class="flow-step-name">'+step.name+'</div>'+
+          '<div class="flow-step-role">'+step.role+'</div>'+
+        '</div></div>';
+    });
+    flowHtml+='</div>';
+    html+=flowHtml;
+    html+='</div>';
+    body.innerHTML=html;
+    // 初始化天数计算
+    if(schedulable){calcScheduleDays();}
+    footer.innerHTML='';
+    if(schedulable){
+      footer.innerHTML='<button class="confirm-btn" onclick="confirmSchedule(\''+orderId+'\')">✅ 确认排产</button>';
+    }
+    var closeBtn=document.createElement('button');
+    closeBtn.textContent='关闭';
+    closeBtn.style.background='#95a5a6';
+    closeBtn.onclick=closeScheduleDetail;
+    footer.appendChild(closeBtn);
+  }).catch(function(){
+    body.innerHTML='<div class="error-msg">加载失败</div>';
+  });
+}
+
+function closeScheduleDetail(){
+  document.getElementById('schedule-detail-modal').classList.remove('active');
+  scheduleDetailCache=null;
+}
+
+function calcScheduleDays(){
+  var start=document.getElementById('plan-start');
+  var end=document.getElementById('plan-end');
+  var days=document.getElementById('schedule-days');
+  if(!start||!end||!days) return;
+  if(start.value&&end.value){
+    var s=new Date(start.value),e=new Date(end.value);
+    var diff=Math.max(0,Math.ceil((e-s)/(1000*60*60*24)));
+    days.textContent=diff;
+  }else{
+    days.textContent='0';
+  }
+}
+
+function confirmSchedule(orderNo){
+  var planStart=document.getElementById('plan-start');
+  var planEnd=document.getElementById('plan-end');
+  var btn=document.querySelector('#schedule-detail-footer .confirm-btn');
+  if(btn){btn.disabled=true;btn.textContent='处理中...';}
+  var body={order_no:orderNo};
+  if(planStart&&planStart.value) body.plan_start=planStart.value;
+  if(planEnd&&planEnd.value) body.plan_end=planEnd.value;
+  fetch((CONN.activeBase||'')+'/api/workorder/confirm_schedule',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(body)
+  }).then(function(r){
+    return r.json();
+  }).then(function(ret){
+    if(ret.code===0||ret.success){
+      showToast('✅ 排产确认成功，工单已进入生产中');
+      closeScheduleDetail();
+      loadScheduleList();
+    }else{
+      showToast(ret.message||'排产确认失败');
+      if(btn){btn.disabled=false;btn.textContent='✅ 确认排产';}
+    }
+  }).catch(function(){
+    showToast('网络异常，请重试');
+    if(btn){btn.disabled=false;btn.textContent='✅ 确认排产';}
+  });
+}
+
+document.addEventListener('DOMContentLoaded',function(){
+  showPage('login-page');
+  var codeMatch=location.search.match(/[?&]code=([^&]+)/);
+  if(codeMatch&&codeMatch[1]){
+    var code=decodeURIComponent(codeMatch[1]);
+    var origLogin=window.login;
+    window.login=function(){
+      var username=document.getElementById('username').value;
+      if(!username){showToast('请输入用户名');return;}
+      currentUser={
+        name: username,
+        username: username,
+        role: 'worker'
+      };
+      document.getElementById('nav-bar').style.display='flex';
+      showToast('欢迎 '+username+'！');
+      showDashboard();
+      loadDashboard();
+      setTimeout(function(){goToOrder(code);},300);
+    };
+    document.getElementById('username').value='管理员';
+  }
+});
+
+// ========== 摄像头扫码功能（集成自 mobile_scanner.html） ==========
+let scanVideoStream = null;
+let scanAnimFrame = null;
+let scanActive = false;
+
+function openScanner() {
+    if (!currentUser) { showToast('请先登录'); return; }
+    document.getElementById('scanner-modal').style.display = 'flex';
+    startScanCamera();
+}
+
+function closeScanner() {
+    stopScanCamera();
+    document.getElementById('scanner-modal').style.display = 'none';
+}
+
+async function startScanCamera() {
+    try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            showToast('您的浏览器不支持摄像头');
+            return;
+        }
+        scanVideoStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+        });
+        const video = document.getElementById('scan-video');
+        video.srcObject = scanVideoStream;
+        video.play();
+        scanActive = true;
+        scanCodeLoop();
+    } catch(err) {
+        showToast('摄像头访问失败: ' + (err.message || ''));
+        closeScanner();
+    }
+}
+
+function stopScanCamera() {
+    scanActive = false;
+    if (scanAnimFrame) { cancelAnimationFrame(scanAnimFrame); scanAnimFrame = null; }
+    if (scanVideoStream) {
+        scanVideoStream.getTracks().forEach(t => t.stop());
+        scanVideoStream = null;
+    }
+    const video = document.getElementById('scan-video');
+    if (video) video.srcObject = null;
+}
+
+function scanCodeLoop() {
+    if (!scanActive) return;
+    const video = document.getElementById('scan-video');
+    const canvas = document.getElementById('scan-canvas');
+    const ctx = canvas.getContext('2d');
+    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+        if (code) {
+            stopScanCamera();
+            handleScanResult(code.data);
+            return;
+        }
+    }
+    scanAnimFrame = requestAnimationFrame(scanCodeLoop);
+}
+
+function handleScanResult(data) {
+    let orderNo = data.trim();
+    if (orderNo.includes('wo=')) {
+        const m = orderNo.match(/wo=([A-Z0-9]+)/i);
+        if (m) orderNo = m[1];
+    }
+    // 显示成功提示
+    document.getElementById('scan-result-text').textContent = '识别成功: ' + orderNo;
+    document.getElementById('scan-result-hint').style.display = 'block';
+    setTimeout(function() {
+        document.getElementById('scan-result-hint').style.display = 'none';
+        closeScanner();
+        // 填入搜索框并触发跳转到工单
+        document.getElementById('search-input').value = orderNo;
+        searchOrder();
+    }, 1000);
+}
+</script>
+<div id="mode-indicator" onclick="switchMode(CONN.mode==='local'?'cloud':'local')" style="position:fixed;bottom:20px;right:20px;z-index:99999;padding:4px 14px;border-radius:12px;font-size:13px;cursor:pointer;user-select:none;font-weight:600;background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7;box-shadow:0 1px 4px rgba(0,0,0,0.15);display:none;">⏳ 检测中...</div>
+</body>
+</html>

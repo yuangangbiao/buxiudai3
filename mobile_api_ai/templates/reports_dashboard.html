@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>报表中心</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community@31.3.1/dist/ag-grid-community.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@31.3.1/styles/ag-grid.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@31.3.1/styles/ag-theme-alpine.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Microsoft YaHei","Segoe UI",Roboto,sans-serif;background:#f0f2f5;color:#333;min-height:100vh;font-size:14px}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:#f0f2f5}
+::-webkit-scrollbar-thumb{background:#c0c4cc;border-radius:3px}
+
+/* ── Header ── */
+.header{background:#fff;border-bottom:1px solid #e8e8e8;padding:0 24px;display:flex;align-items:center;height:56px;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.header-logo{display:flex;align-items:center;gap:10px}
+.header-logo .icon{width:32px;height:32px;background:linear-gradient(135deg,#1890ff,#096dd9);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:700}
+.header-logo .title{font-size:18px;font-weight:600;color:#1a1a1a}
+.header-logo .subtitle{font-size:12px;color:#999;border-left:1px solid #e8e8e8;padding-left:12px;margin-left:6px}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.header-time{font-size:13px;color:#666}
+.btn{display:inline-flex;align-items:center;gap:4px;padding:6px 16px;border:1px solid #d9d9d9;border-radius:4px;cursor:pointer;font-size:13px;background:#fff;color:#333;transition:all .2s;user-select:none}
+.btn:hover{border-color:#1890ff;color:#1890ff}
+.btn-primary{background:#1890ff;border-color:#1890ff;color:#fff}
+.btn-primary:hover{background:#40a9ff;border-color:#40a9ff;color:#fff}
+.btn-success{background:#52c41a;border-color:#52c41a;color:#fff}
+.btn-success:hover{background:#73d13d;border-color:#73d13d;color:#fff}
+.btn-danger{background:#ff4d4f;border-color:#ff4d4f;color:#fff}
+.btn-danger:hover{background:#ff7875;border-color:#ff7875;color:#fff}
+.btn-sm{padding:3px 10px;font-size:12px}
+.btn-text{border:none;background:transparent;color:#1890ff;padding:4px 8px}
+.btn-text:hover{background:#e6f7ff}
+.btn-group{display:inline-flex;gap:4px}
+
+/* ── Layout ── */
+.layout{display:flex;height:calc(100vh - 56px)}
+.sidebar{width:180px;background:#fff;border-right:1px solid #e8e8e8;padding:8px 0;flex-shrink:0;overflow-y:auto}
+.sidebar-group{padding:8px 16px 4px;font-size:11px;color:#999;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.sidebar-item{padding:9px 16px 9px 24px;cursor:pointer;font-size:13px;color:#555;display:flex;align-items:center;gap:8px;transition:all .15s;border-left:3px solid transparent;user-select:none}
+.sidebar-item:hover{background:#f5f5f5;color:#1890ff}
+.sidebar-item.active{background:#e6f7ff;color:#1890ff;border-left-color:#1890ff;font-weight:500}
+.sidebar-item .badge{background:#ff4d4f;color:#fff;font-size:11px;padding:0 6px;border-radius:8px;line-height:16px;margin-left:auto}
+.main-area{flex:1;overflow-y:auto;padding:20px 24px}
+.tab-pane{display:none}
+.tab-pane.active{display:block}
+
+/* ── Cards ── */
+.card{background:#fff;border-radius:6px;border:1px solid #e8e8e8;padding:20px;margin-bottom:16px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #f0f0f0}
+.card-header h3{font-size:15px;font-weight:600;color:#1a1a1a}
+.card-header .actions{display:flex;gap:8px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px}
+.stat-card{background:#fff;border:1px solid #e8e8e8;border-radius:6px;padding:16px 20px;text-align:center;transition:box-shadow .2s}
+.stat-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.stat-card .value{font-size:28px;font-weight:700;line-height:1.2}
+.stat-card .label{font-size:12px;color:#999;margin-top:4px}
+.stat-card .trend{font-size:12px;margin-top:4px}
+.trend-up{color:#52c41a}
+.trend-down{color:#ff4d4f}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.chart-box{background:#fff;border:1px solid #e8e8e8;border-radius:6px;padding:16px}
+.chart-box h4{font-size:14px;font-weight:600;color:#333;margin-bottom:12px}
+.chart-container{height:300px}
+.chart-container-sm{height:240px}
+
+/* ── AG Grid overrides ── */
+.ag-theme-alpine{--ag-font-size:13px;--ag-header-height:36px;--ag-row-height:38px;--ag-border-color:#e8e8e8;--ag-header-background-color:#fafafa;--ag-odd-row-background-color:#fafafa;--ag-row-hover-color:#e6f7ff;--ag-selected-row-background-color:#bae7ff;border-radius:4px;border:1px solid #e8e8e8}
+.ag-theme-alpine .ag-header-cell{font-weight:600;color:#555}
+.ag-theme-alpine .ag-cell{padding:0 8px}
+.ag-theme-alpine .ag-paging-panel{font-size:12px;color:#666;height:40px;border-top:1px solid #e8e8e8}
+
+/* ── Modal ── */
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.35);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay.active{display:flex}
+.modal-box{background:#fff;border-radius:8px;width:90%;max-width:640px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.12)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid #f0f0f0}
+.modal-header h3{font-size:16px;font-weight:600}
+.modal-close{width:28px;height:28px;border:none;background:transparent;font-size:20px;cursor:pointer;color:#999;border-radius:4px;display:flex;align-items:center;justify-content:center}
+.modal-close:hover{background:#f5f5f5;color:#333}
+.modal-body{padding:20px 24px;overflow-y:auto;flex:1}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;padding:12px 24px;border-top:1px solid #f0f0f0}
+
+/* ── Form ── */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group.full{grid-column:1/-1}
+.form-group label{font-size:13px;color:#555;font-weight:500}
+.form-group input,.form-group select,.form-group textarea{padding:7px 11px;border:1px solid #d9d9d9;border-radius:4px;font-size:13px;outline:none;transition:border-color .2s;font-family:inherit}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:#1890ff;box-shadow:0 0 0 2px rgba(24,144,255,.1)}
+.form-group textarea{resize:vertical;min-height:80px}
+.form-group .help{font-size:11px;color:#999;margin-top:2px}
+
+/* ── Status tags ── */
+.tag{display:inline-flex;align-items:center;padding:1px 8px;border-radius:3px;font-size:12px;line-height:20px}
+.tag-success{background:#f6ffed;color:#52c41a;border:1px solid #b7eb8f}
+.tag-warning{background:#fffbe6;color:#faad14;border:1px solid #ffe58f}
+.tag-danger{background:#fff2f0;color:#ff4d4f;border:1px solid #ffccc7}
+.tag-info{background:#e6f7ff;color:#1890ff;border:1px solid #91d5ff}
+.tag-default{background:#fafafa;color:#999;border:1px solid #d9d9d9}
+
+/* ── Loading ── */
+.loading{text-align:center;padding:40px;color:#999}
+.loading::after{content:'';display:block;width:28px;height:28px;border:3px solid #e8e8e8;border-top-color:#1890ff;border-radius:50%;animation:spin .7s linear infinite;margin:8px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty-state{text-align:center;padding:40px;color:#bbb;font-size:14px}
+.empty-state .icon{font-size:48px;margin-bottom:8px;opacity:.5}
+
+/* ── Toast ── */
+.toast-container{position:fixed;top:68px;right:20px;z-index:2000;display:flex;flex-direction:column;gap:8px}
+.toast{padding:10px 20px;border-radius:4px;font-size:13px;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.12);animation:slideIn .25s ease;min-width:200px}
+.toast-success{background:#52c41a}
+.toast-error{background:#ff4d4f}
+.toast-info{background:#1890ff}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* ── Misc ── */
+.flex{display:flex;align-items:center;gap:8px}
+.flex-wrap{flex-wrap:wrap}
+.flex-1{flex:1}
+.gap-4{gap:4px}
+.gap-8{gap:8px}
+.gap-12{gap:12px}
+.mb-16{margin-bottom:16px}
+.mt-8{margin-top:8px}
+.text-right{text-align:right}
+.text-center{text-align:center}
+.w-full{width:100%}
+.nowrap{white-space:nowrap}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">
+    <div class="icon">R</div>
+    <span class="title">报表中心</span>
+    <span class="subtitle">Report Center</span>
+  </div>
+  <div class="header-right">
+    <span class="header-time" id="headerTime"></span>
+    <button class="btn btn-sm" onclick="refreshCurrentTab()">🔄 刷新</button>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-group">📊 数据看板</div>
+    <div class="sidebar-item active" data-tab="production" onclick="switchTab('production')">📈 生产看板</div>
+    <div class="sidebar-item" data-tab="cost" onclick="switchTab('cost')">💰 成本看板</div>
+    <div class="sidebar-item" data-tab="worker" onclick="switchTab('worker')">👤 人员效率</div>
+    <div class="sidebar-item" data-tab="overview" onclick="switchTab('overview')">📋 综合看板</div>
+    <div class="sidebar-group" style="margin-top:12px">⚙️ 报表管理</div>
+    <div class="sidebar-item" data-tab="definitions" onclick="switchTab('definitions')">📄 报表定义</div>
+    <div class="sidebar-item" data-tab="profiles" onclick="switchTab('profiles')">📎 导出配置</div>
+    <div class="sidebar-item" data-tab="schedules" onclick="switchTab('schedules')">⏱ 定时计划</div>
+    <div class="sidebar-item" data-tab="outputs" onclick="switchTab('outputs')">📁 执行记录</div>
+  </div>
+
+  <div class="main-area">
+
+    <!-- ═══ 生产看板 ═══ -->
+    <div id="pane-production" class="tab-pane active">
+      <div class="stats-grid" id="prodStats"></div>
+      <div style="text-align:right;margin-bottom:12px">
+        <button class="btn btn-sm" onclick="exportProd()">📥 导出 Excel</button>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-box"><h4>📈 生产趋势</h4><div id="chartProdTrend" class="chart-container"></div></div>
+        <div class="chart-box"><h4>🏆 产品排名</h4><div id="chartProdRanking" class="chart-container"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>📋 生产明细</h3></div>
+        <div id="gridProdDetail" class="ag-theme-alpine" style="height:320px"></div>
+      </div>
+    </div>
+
+    <!-- ═══ 成本看板 ═══ -->
+    <div id="pane-cost" class="tab-pane">
+      <div class="stats-grid" id="costStats"></div>
+      <div style="text-align:right;margin-bottom:12px">
+        <button class="btn btn-sm" onclick="exportCost()">📥 导出 Excel</button>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-box"><h4>💰 成本构成</h4><div id="chartCostPie" class="chart-container"></div></div>
+        <div class="chart-box"><h4>📉 损耗分析</h4><div id="chartCostLoss" class="chart-container"></div></div>
+      </div>
+    </div>
+
+    <!-- ═══ 人员效率 ═══ -->
+    <div id="pane-worker" class="tab-pane">
+      <div class="stats-grid" id="workerStats"></div>
+      <div style="text-align:right;margin-bottom:12px">
+        <button class="btn btn-sm" onclick="exportWorker()">📥 导出 Excel</button>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-box"><h4>👤 操作员效率排行</h4><div id="chartWorkerEff" class="chart-container"></div></div>
+        <div class="chart-box"><h4>📊 产出对比</h4><div id="chartWorkerOutput" class="chart-container"></div></div>
+      </div>
+    </div>
+
+    <!-- ═══ 综合看板 ═══ -->
+    <div id="pane-overview" class="tab-pane">
+      <div class="stats-grid" id="overviewStats"></div>
+      <div style="text-align:right;margin-bottom:12px">
+        <button class="btn btn-sm" onclick="exportOverview()">📥 导出 Excel</button>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-box"><h4>📊 综合趋势</h4><div id="chartOverviewTrend" class="chart-container"></div></div>
+        <div class="chart-box"><h4>🎯 核心指标</h4><div id="chartOverviewGauge" class="chart-container"></div></div>
+      </div>
+    </div>
+
+    <!-- ═══ 报表定义 ═══ -->
+    <div id="pane-definitions" class="tab-pane">
+      <div class="card">
+        <div class="card-header"><h3>📄 报表定义</h3><div class="actions"><button class="btn btn-primary btn-sm" onclick="openDefModal()">+ 新建</button></div></div>
+        <div id="gridDefinitions" class="ag-theme-alpine" style="height:480px"></div>
+      </div>
+    </div>
+
+    <!-- ═══ 导出配置 ═══ -->
+    <div id="pane-profiles" class="tab-pane">
+      <div class="card">
+        <div class="card-header"><h3>📎 导出配置</h3><div class="actions"><button class="btn btn-primary btn-sm" onclick="openProfileModal()">+ 新建</button></div></div>
+        <div id="gridProfiles" class="ag-theme-alpine" style="height:480px"></div>
+      </div>
+    </div>
+
+    <!-- ═══ 定时计划 ═══ -->
+    <div id="pane-schedules" class="tab-pane">
+      <div class="card">
+        <div class="card-header"><h3>⏱ 定时计划</h3><div class="actions"><button class="btn btn-primary btn-sm" onclick="openScheduleModal()">+ 新建</button></div></div>
+        <div id="gridSchedules" class="ag-theme-alpine" style="height:480px"></div>
+      </div>
+    </div>
+
+    <!-- ═══ 执行记录 ═══ -->
+    <div id="pane-outputs" class="tab-pane">
+      <div class="card">
+        <div class="card-header"><h3>📁 执行记录</h3></div>
+        <div id="gridOutputs" class="ag-theme-alpine" style="height:480px"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Modal ── -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="modalTitle">标题</h3>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" id="modalSubmitBtn" onclick="submitModal()">确定</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ── 工具函数 ──
+const API = {base:'/api'};
+function toast(msg, type='success'){const c=document.getElementById('toastContainer'),t=document.createElement('div');t.className='toast toast-'+type;t.textContent=msg;c.appendChild(t);setTimeout(()=>t.remove(),2500)}
+function api(url, opts={}){return fetch(url,{headers:{'Content-Type':'application/json',...opts.headers},...opts}).then(r=>r.json())}
+function el(id){return document.getElementById(id)}
+function closeModal(){el('modalOverlay').classList.remove('active')}
+
+// ── 数据缓存 ──
+let cacheData={dashboard:null,production:null,cost:null,worker:null};
+
+// ── 导出 Excel ──
+function downloadXLSX(sheets,filename){
+  const wb=XLSX.utils.book_new();
+  sheets.forEach(s=>{const ws=XLSX.utils.aoa_to_sheet(s.data);XLSX.utils.book_append_sheet(wb,ws,s.name||'Sheet1')});
+  const wbout=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+  const blob=new Blob([wbout],{type:'application/octet-stream'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=filename+'.xlsx';a.click();
+  URL.revokeObjectURL(url);
+}
+function exportDashboard(name,sheets){
+  downloadXLSX(sheets,'报表_'+name+'_'+new Date().toISOString().slice(0,10));
+}
+
+// ── 时间 ──
+function updateTime(){
+  const n=new Date();
+  el('headerTime').textContent=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0')+' '+String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0')
+}
+setInterval(updateTime,1000);updateTime();
+
+// ── Tab 切换 ──
+let currentTab='production';
+function switchTab(tab){
+  currentTab=tab;
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));
+  el('pane-'+tab).classList.add('active');
+  document.querySelector('.sidebar-item[data-tab="'+tab+'"]').classList.add('active');
+  refreshCurrentTab();
+}
+function refreshCurrentTab(){
+  const map={
+    production:loadProduction,
+    cost:loadCost,
+    worker:loadWorker,
+    overview:loadOverview,
+    definitions:loadDefinitions,
+    profiles:loadProfiles,
+    schedules:loadSchedules,
+    outputs:loadOutputs,
+  };
+  if(map[currentTab])map[currentTab]();
+}
+
+// ── ECharts 工具 ──
+function initChart(id){const c=echarts.init(el(id));window.addEventListener('resize',()=>c.resize());return c}
+function renderPie(chart,data,title){
+  chart.setOption({
+    tooltip:{trigger:'item',formatter:'{b}: {c} ({d}%)'},
+    legend:{bottom:0,textStyle:{fontSize:12}},
+    series:[{type:'pie',radius:['35%','60%'],center:['50%','45%'],data,label:{fontSize:12},itemStyle:{borderRadius:4,borderColor:'#fff',borderWidth:2},emphasis:{itemStyle:{shadowBlur:10,shadowColor:'rgba(0,0,0,.2)'}}}],title:{text:title||'',left:'center',top:0,textStyle:{fontSize:14}}}
+  )
+}
+function renderBar(chart,data,title){
+  const cats=data.map(d=>d.name),vals=data.map(d=>d.value);
+  chart.setOption({
+    tooltip:{trigger:'axis'},
+    xAxis:{type:'category',data:cats,axisLabel:{fontSize:11,rotate:cats.length>6?30:0}},
+    yAxis:{type:'value',axisLabel:{fontSize:11}},
+    grid:{left:'3%',right:'4%',bottom:'15%',top:'15%',containLabel:true},
+    series:[{type:'bar',data:vals.map((v,i)=>({value:v,itemStyle:{color:['#1890ff','#52c41a','#faad14','#ff4d4f','#722ed1','#13c2c2','#eb2f96'][i%7]}}))}],
+    title:{text:title||'',left:'center',top:0,textStyle:{fontSize:14}}
+  })
+}
+function renderLine(chart,data,title){
+  const cats=data.map(d=>d.name);
+  chart.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{bottom:0,textStyle:{fontSize:12}},
+    xAxis:{type:'category',data:cats,axisLabel:{fontSize:11}},
+    yAxis:{type:'value',axisLabel:{fontSize:11}},
+    grid:{left:'3%',right:'4%',bottom:'20%',top:'15%',containLabel:true},
+    series:(data[0]&&data[0].series?data[0].series:['值']).map((s,i)=>({name:s,type:'line',smooth:true,data:data.map(d=>d.values?d.values[i]:d.value),lineStyle:{width:2},symbol:'circle',symbolSize:6})),
+    title:{text:title||'',left:'center',top:0,textStyle:{fontSize:14}}
+  })
+}
+function renderGauge(chart,data,title){
+  chart.setOption({
+    series:data.map((d,i)=>({type:'gauge',center:['50%',i===0?'40%':'75%'],radius:'45%',startAngle:220,endAngle:-40,min:0,max:d.max||100,title:{fontSize:12,offsetCenter:['0%','30%']},detail:{fontSize:18,fontWeight:700,offsetCenter:['0%','50%'],formatter:'{value}'+d.unit},data:[{value:d.value,name:d.name}],axisLine:{lineStyle:{width:15,color:[[.6,'#52c41a'],[.85,'#faad14'],[1,'#ff4d4f']]}},pointer:{length:'60%',width:6}})),
+    title:{text:title||'',left:'center',top:0,textStyle:{fontSize:14}}
+  })
+}
+
+// ── Grid 工具 ──
+const gridOpts={defaultColDef:{sortable:true,filter:true,resizable:true,minWidth:80},pagination:true,paginationPageSize:20,paginationPageSizeSelector:[20,50,100],suppressMenuHide:true,enableCellTextSelection:true,ensureDomOrder:true};
+function createGrid(id,cols,data,extra){
+  const opts=Object.assign({},gridOpts,{columnDefs:cols,rowData:data},extra||{});
+  return new agGrid.Grid(el(id),opts);
+}
+
+// 定义 Modal 回调
+let modalCallback=null;
+function openModal(title,html,cb){
+  el('modalTitle').textContent=title;
+  el('modalBody').innerHTML=html;
+  el('modalOverlay').classList.add('active');
+  modalCallback=cb;
+}
+function submitModal(){
+  if(modalCallback){modalCallback();modalCallback=null}
+}
+
+// ── 看板数据加载 ──
+function renderStatCards(container,items){
+  el(container).innerHTML=items.map(i=>'<div class="stat-card"><div class="value" style="color:'+(i.color||'#333')+'">'+(i.value??'-')+'</div><div class="label">'+i.label+'</div>'+(i.trend?'<div class="trend '+(i.trend>0?'trend-up':'trend-down')+'">'+(i.trend>0?'↑':'↓')+Math.abs(i.trend)+'%</div>':'')+'</div>').join('')
+}
+
+async function loadProduction(){
+  const d=await api(API.base+'/stats/dashboard');
+  if(d.code!==0)return;
+  cacheData.dashboard=d.data||{};
+  const data=d.data||{};
+  renderStatCards('prodStats',[
+    {label:'今日报工数',value:data.today_reports??0,color:'#1890ff'},
+    {label:'完成率',value:data.efficiency?data.efficiency+'%':'0%',color:'#52c41a',trend:2},
+    {label:'待审批',value:data.pending_approvals??0,color:'#faad14'},
+    {label:'异常工单',value:data.loss_orders??0,color:'#ff4d4f',trend:-5},
+  ]);
+  // 生产趋势
+  const prod=await api(API.base+'/stats/production');
+  if(prod.code===0&&prod.data){
+    cacheData.production=prod.data;
+    const p=prod.data;
+    const c1=initChart('chartProdTrend');
+    if(p.trend&&p.trend.length)renderLine(c1,p.trend,'生产趋势');
+    else c1.setOption({title:{text:'暂无数据',left:'center',top:'center',textStyle:{fontSize:14,color:'#ccc'}}});
+    const c2=initChart('chartProdRanking');
+    if(p.product_ranking&&p.product_ranking.length)renderBar(c2,p.product_ranking,'产品排名');
+    else c2.setOption({title:{text:'暂无数据',left:'center',top:'center',textStyle:{fontSize:14,color:'#ccc'}}});
+    // 明细 Grid
+    if(p.overview&&p.overview.length){
+      if(window.gridProdDetail)window.gridProdDetail.api.setGridOption('rowData',p.overview);
+      else window.gridProdDetail=createGrid('gridProdDetail',[
+        {field:'工序名称',headerName:'工序',width:120},
+        {field:'报工数',headerName:'报工数',width:100,type:'numericColumn'},
+        {field:'合格数',headerName:'合格数',width:100,type:'numericColumn'},
+        {field:'不合格数',headerName:'不合格数',width:100,type:'numericColumn'},
+        {field:'完成率',headerName:'完成率',width:90},
+      ],p.overview);
+    }
+  }
+}
+
+async function loadCost(){
+  const d=await api(API.base+'/stats/cost');
+  if(d.code!==0)return;
+  cacheData.cost=d.data||{};
+  const data=d.data||{};
+  renderStatCards('costStats',[
+    {label:'总成本',value:data.overview?.total_cost?formatMoney(data.overview.total_cost):'¥0',color:'#ff4d4f'},
+    {label:'材料成本',value:data.overview?.material_cost?formatMoney(data.overview.material_cost):'¥0',color:'#1890ff'},
+    {label:'人工成本',value:data.overview?.labor_cost?formatMoney(data.overview.labor_cost):'¥0',color:'#722ed1'},
+    {label:'损耗率',value:data.loss_analysis?.length?data.loss_analysis[0].损耗率||'0%':'0%',color:'#faad14'},
+  ]);
+  const c1=initChart('chartCostPie');
+  if(data.breakdown&&data.breakdown.length)renderPie(c1,data.breakdown.map(d=>({name:d.name||d.类别||'其他',value:d.value||d.金额||0})),'成本构成');
+  else c1.setOption({title:{text:'暂无数据',left:'center',top:'center',textStyle:{fontSize:14,color:'#ccc'}}});
+  const c2=initChart('chartCostLoss');
+  if(data.loss_analysis&&data.loss_analysis.length)renderBar(c2,data.loss_analysis.map(d=>({name:d.类别||d.name||'其他',value:d.损耗金额||d.value||0})),'损耗分析');
+  else c2.setOption({title:{text:'暂无数据',left:'center',top:'center',textStyle:{fontSize:14,color:'#ccc'}}});
+}
+
+async function loadWorker(){
+  const d=await api(API.base+'/stats/worker');
+  if(d.code!==0)return;
+  cacheData.worker=d.data||{};
+  const data=d.data||{};
+  renderStatCards('workerStats',[
+    {label:'操作员数',value:data.efficiency?.length||0,color:'#1890ff'},
+    {label:'总任务数',value:data.efficiency?.reduce((s,r)=>s+(r.总任务数||0),0)||0,color:'#52c41a'},
+  ]);
+  const c1=initChart('chartWorkerEff');
+  if(data.efficiency&&data.efficiency.length)renderBar(c1,data.efficiency.map(d=>({name:d.操作员||d.name||'未知',value:d.已完成||d.completed||0})),'效率排行');
+  else c1.setOption({title:{text:'暂无数据',left:'center',top:'center',textStyle:{fontSize:14,color:'#ccc'}}});
+  const c2=initChart('chartWorkerOutput');
+  if(data.output&&data.output.length)renderBar(c2,data.output.map(d=>({name:d.name||'未知',value:d.value||0})),'产出对比');
+  else c2.setOption({title:{text:'暂无数据',left:'center',top:'center',textStyle:{fontSize:14,color:'#ccc'}}});
+}
+
+async function loadOverview(){
+  const d=await api(API.base+'/stats/dashboard');
+  if(d.code!==0)return;
+  cacheData.dashboard=d.data||{};
+  const data=d.data||{};
+  renderStatCards('overviewStats',[
+    {label:'今日报工',value:data.today_reports??0,color:'#1890ff'},
+    {label:'效率',value:data.efficiency?data.efficiency+'%':'0%',color:'#52c41a'},
+    {label:'待审批',value:data.pending_approvals??0,color:'#faad14'},
+    {label:'异常',value:data.loss_orders??0,color:'#ff4d4f'},
+    {label:'进行中',value:data.in_progress??0,color:'#722ed1'},
+    {label:'已完成',value:data.completed??0,color:'#13c2c2'},
+  ]);
+  // 综合趋势 (复用生产趋势数据)
+  const prod=await api(API.base+'/stats/production');
+  if(prod.code===0)cacheData.production=prod.data;
+  const c1=initChart('chartOverviewTrend');
+  if(prod.code===0&&prod.data?.trend?.length)renderLine(c1,prod.data.trend,'综合趋势');
+  else c1.setOption({title:{text:'暂无数据',left:'center',top:'center',textStyle:{fontSize:14,color:'#ccc'}}});
+  // 仪表盘
+  const c2=initChart('chartOverviewGauge');
+  renderGauge(c2,[
+    {name:'生产完成率',value:parseFloat(data.efficiency)||0,max:100,unit:'%'},
+    {name:'设备利用率',value:data.utilization||75,max:100,unit:'%'},
+  ],'核心指标');
+}
+
+function formatMoney(v){const n=parseFloat(v);if(isNaN(n))return'¥0';return'¥'+n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',')}
+function formatTime(iso){if(!iso)return'-';const d=new Date(iso);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
+function statusTag(v,m){if(v===1||v==='1'||v===true)return'<span class="tag tag-success">'+(m?.on||'启用')+'</span>';return'<span class="tag tag-default">'+(m?.off||'停用')+'</span>'}
+
+// ── 导出看板数据 ──
+function exportProd(){
+  const d=cacheData.dashboard,p=cacheData.production;
+  if(!d&&!p){toast('暂无数据可导出','error');return}
+  const sheets=[];
+  if(d) sheets.push({name:'统计概览',data:[['指标','数值'],['今日报工',d.today_reports||0],['完成率',d.efficiency?d.efficiency+'%':'0%'],['待审批',d.pending_approvals||0],['异常工单',d.loss_orders||0]]});
+  if(p?.overview) sheets.push({name:'生产明细',data:[['工序','报工数','合格数','不合格数','完成率'],...p.overview.map(r=>[r['工序名称'],r['报工数'],r['合格数'],r['不合格数'],r['完成率']])]});
+  if(p?.trend) sheets.push({name:'生产趋势',data:[['日期','数值'],...p.trend.map(r=>[r.name||r.日期,r.value||r.数值])]});
+  if(!sheets.length){toast('暂无数据','error');return}
+  exportDashboard('生产看板',sheets);
+}
+function exportCost(){
+  const d=cacheData.cost;
+  if(!d){toast('暂无数据可导出','error');return}
+  const sheets=[];
+  const ov=d.overview||{};
+  sheets.push({name:'成本概览',data:[['指标','数值'],['总成本',ov.total_cost||0],['材料成本',ov.material_cost||0],['人工成本',ov.labor_cost||0]]});
+  if(d.breakdown?.length) sheets.push({name:'成本构成',data:[['类别','金额'],...d.breakdown.map(r=>[r.name||r.类别||'其他',r.value||r.金额||0])]});
+  if(d.loss_analysis?.length) sheets.push({name:'损耗分析',data:[['类别','损耗金额'],...d.loss_analysis.map(r=>[r.类别||r.name||'其他',r.损耗金额||r.value||0])]});
+  exportDashboard('成本看板',sheets);
+}
+function exportWorker(){
+  const d=cacheData.worker;
+  if(!d){toast('暂无数据可导出','error');return}
+  const sheets=[];
+  if(d.efficiency?.length) sheets.push({name:'效率排行',data:[['操作员','已完成任务','总任务数'],...d.efficiency.map(r=>[r.操作员||r.name||'未知',r.已完成||r.completed||0,r.总任务数||0])]});
+  if(d.output?.length) sheets.push({name:'产出对比',data:[['操作员','产出量'],...d.output.map(r=>[r.name||'未知',r.value||0])]});
+  if(!sheets.length){toast('暂无数据','error');return}
+  exportDashboard('人员效率',sheets);
+}
+function exportOverview(){
+  const d=cacheData.dashboard,p=cacheData.production;
+  if(!d&&!p){toast('暂无数据可导出','error');return}
+  const sheets=[];
+  if(d) sheets.push({name:'综合概览',data:[['指标','数值'],['今日报工',d.today_reports||0],['效率',d.efficiency?d.efficiency+'%':'0%'],['待审批',d.pending_approvals||0],['异常',d.loss_orders||0],['进行中',d.in_progress||0],['已完成',d.completed||0]]});
+  if(p?.trend) sheets.push({name:'综合趋势',data:[['日期','数值'],...p.trend.map(r=>[r.name||r.日期,r.value||r.数值])]});
+  if(!sheets.length){toast('暂无数据','error');return}
+  exportDashboard('综合看板',sheets);
+}
+
+// ── 报表定义 CRUD ──
+let gridDefs=new Map();
+function defCols(cb){
+  return [
+    {field:'name',headerName:'名称',width:140},
+    {field:'category',headerName:'分类',width:90,cellRenderer:p=>{const m={production:'生产',cost:'成本',worker:'人员',overview:'综合'};return m[p.value]||p.value}},
+    {field:'description',headerName:'描述',width:180,flex:1},
+    {field:'chart_config',headerName:'图表',width:70,cellRenderer:p=>{try{const c=JSON.parse(p.value||'{}');const m={bar:'柱状图',line:'趋势图',pie:'饼图',gauge:'仪表盘'};return m[c.type]||'-'}catch{return'-'}}},
+    {field:'created_at',headerName:'创建时间',width:150,cellRenderer:p=>formatTime(p.value)},
+    {field:'id',headerName:'操作',width:160,sortable:false,filter:false,cellRenderer:p=>{
+      const id=p.value;
+      return '<div class="btn-group">'+
+        '<button class="btn btn-text btn-sm" onclick="executeDef(\''+id+'\')">▶ 执行</button>'+
+        '<button class="btn btn-text btn-sm" onclick="editDef(\''+id+'\')">✎ 编辑</button>'+
+        '<button class="btn btn-text btn-sm" style="color:#ff4d4f" onclick="deleteDef(\''+id+'\')">✕ 删除</button>'+
+        '</div>'
+    }},
+  ]
+}
+async function loadDefinitions(){
+  const d=await api(API.base+'/reports/definitions');
+  if(d.code!==0)return;
+  const data=d.data||[];
+  if(gridDefs.has('defs'))gridDefs.get('defs').api.setGridOption('rowData',data);
+  else gridDefs.set('defs',createGrid('gridDefinitions',defCols(),data));
+}
+function openDefModal(){openDefModalFor(null)}
+function editDef(id){api(API.base+'/reports/definitions/'+id).then(d=>{if(d.code===0)openDefModalFor(d.data)})}
+function openDefModalFor(data){
+  const isEdit=data&&data.id;
+  openModal(isEdit?'编辑报表定义':'新建报表定义',
+    '<div class="form-grid">'+
+      '<div class="form-group full"><label>名称</label><input id="f_def_name" value="'+(data?.name||'')+'" placeholder="报表名称"></div>'+
+      '<div class="form-group"><label>分类</label><select id="f_def_cat"><option value="production" '+(data?.category==='production'?'selected':'')+'>生产</option><option value="cost" '+(data?.category==='cost'?'selected':'')+'>成本</option><option value="worker" '+(data?.category==='worker'?'selected':'')+'>人员</option><option value="overview" '+(data?.category==='overview'?'selected':'')+'>综合</option></select></div>'+
+      '<div class="form-group"><label>图表类型</label><select id="f_def_chart"><option value="">无</option><option value="bar" '+(()=>{try{return JSON.parse(data?.chart_config||'{}').type==='bar'?'selected':''}catch{return ''}})()+'>柱状图</option><option value="line" '+(()=>{try{return JSON.parse(data?.chart_config||'{}').type==='line'?'selected':''}catch{return ''}})()+'>趋势图</option><option value="pie" '+(()=>{try{return JSON.parse(data?.chart_config||'{}').type==='pie'?'selected':''}catch{return ''}})()+'>饼图</option></select></div>'+
+      '<div class="form-group full"><label>SQL 模板</label><textarea id="f_def_sql" rows="5" placeholder="SELECT ...">'+(data?.sql_template||'')+'</textarea></div>'+
+      '<div class="form-group full"><label>描述</label><textarea id="f_def_desc" rows="2">'+(data?.description||'')+'</textarea></div>'+
+    '</div>',
+    ()=>{
+      const body={name:el('f_def_name').value,category:el('f_def_cat').value,sql_template:el('f_def_sql').value,description:el('f_def_desc').value};
+      const chartType=el('f_def_chart').value;
+      if(chartType)body.chart_config=JSON.stringify({type:chartType});
+      if(isEdit)body.id=data.id;
+      const url=data&&data.id?API.base+'/reports/definitions/'+data.id:API.base+'/reports/definitions';
+      const method=data&&data.id?'PUT':'POST';
+      api(url,{method,body:JSON.stringify(body)}).then(r=>{if(r.code===0){toast(isEdit?'已更新':'已创建');closeModal();loadDefinitions()}else toast(r.message,'error')});
+    }
+  )
+}
+function deleteDef(id){
+  if(!confirm('确认删除此报表定义？'))return;
+  api(API.base+'/reports/definitions/'+id,{method:'DELETE'}).then(r=>{if(r.code===0){toast('已删除');loadDefinitions()}else toast(r.message,'error')});
+}
+function executeDef(id){
+  api(API.base+'/stats/report/'+id,{method:'POST',body:JSON.stringify({params:{}})}).then(r=>{
+    if(r.code===0)toast('执行成功，返回 '+((r.data?.rows||[]).length||0)+' 条数据');
+    else toast(r.message||'执行失败','error');
+  });
+}
+
+// ── 导出配置 CRUD ──
+function profileCols(){
+  return [
+    {field:'name',headerName:'名称',width:140},
+    {field:'format',headerName:'格式',width:80,cellRenderer:p=>p.value==='xlsx'?'Excel':'CSV'},
+    {field:'columns_config',headerName:'列数',width:70,cellRenderer:p=>{try{const c=JSON.parse(p.value||'[]');return c.length}catch{return 0}}},
+    {field:'sheet_name',headerName:'工作表',width:100},
+    {field:'created_at',headerName:'创建时间',width:150,cellRenderer:p=>formatTime(p.value)},
+    {field:'id',headerName:'操作',width:140,sortable:false,filter:false,cellRenderer:p=>{
+      return '<div class="btn-group">'+
+        '<button class="btn btn-text btn-sm" onclick="editProfile(\''+p.value+'\')">✎ 编辑</button>'+
+        '<button class="btn btn-text btn-sm" style="color:#ff4d4f" onclick="deleteProfile(\''+p.value+'\')">✕ 删除</button>'+
+        '</div>'
+    }},
+  ]
+}
+async function loadProfiles(){
+  const d=await api(API.base+'/reports/profiles');
+  if(d.code!==0)return;
+  const data=d.data||[];
+  if(gridDefs.has('prof'))gridDefs.get('prof').api.setGridOption('rowData',data);
+  else gridDefs.set('prof',createGrid('gridProfiles',profileCols(),data));
+}
+function openProfileModal(){openProfileModalFor(null)}
+function editProfile(id){api(API.base+'/reports/profiles/'+id).then(d=>{if(d.code===0)openProfileModalFor(d.data)})}
+function openProfileModalFor(data){
+  const isEdit=data&&data.id;
+  let colsStr='[]';
+  try{colsStr=data&&data.columns_config?JSON.stringify(JSON.parse(data.columns_config),null,2):'[]'}catch(e){}
+  openModal(isEdit?'编辑导出配置':'新建导出配置',
+    '<div class="form-grid">'+
+      '<div class="form-group"><label>名称</label><input id="f_pf_name" value="'+(data?.name||'')+'" placeholder="配置名称"></div>'+
+      '<div class="form-group"><label>格式</label><select id="f_pf_fmt"><option value="xlsx" '+(data?.format==='xlsx'?'selected':'')+'>Excel</option><option value="csv" '+(data?.format==='csv'?'selected':'')+'>CSV</option></select></div>'+
+      '<div class="form-group"><label>工作表名</label><input id="f_pf_sheet" value="'+(data?.sheet_name||'Sheet1')+'"></div>'+
+      '<div class="form-group full"><label>列配置 (JSON)</label><textarea id="f_pf_cols" rows="6" placeholder="[{&quot;header&quot;:&quot;列名&quot;,&quot;field&quot;:&quot;字段&quot;}]">'+colsStr+'</textarea><div class="help">格式: [{"header":"列名","field":"字段","formatter":"amount/percent"}]</div></div>'+
+    '</div>',
+    ()=>{
+      let cols;
+      try{cols=JSON.parse(el('f_pf_cols').value)}catch{e=>toast('列配置 JSON 格式错误','error');return}
+      const body={name:el('f_pf_name').value,format:el('f_pf_fmt').value,sheet_name:el('f_pf_sheet').value,columns_config:JSON.stringify(cols)};
+      if(isEdit)body.id=data.id;
+      const url=data&&data.id?API.base+'/reports/profiles/'+data.id:API.base+'/reports/profiles';
+      const method=data&&data.id?'PUT':'POST';
+      api(url,{method,body:JSON.stringify(body)}).then(r=>{if(r.code===0){toast(isEdit?'已更新':'已创建');closeModal();loadProfiles()}else toast(r.message,'error')});
+    }
+  )
+}
+function deleteProfile(id){
+  if(!confirm('确认删除此导出配置？'))return;
+  api(API.base+'/reports/profiles/'+id,{method:'DELETE'}).then(r=>{if(r.code===0){toast('已删除');loadProfiles()}else toast(r.message,'error')});
+}
+
+// ── 定时计划 CRUD ──
+function schedCols(){
+  return [
+    {field:'name',headerName:'名称',width:140},
+    {field:'report_id',headerName:'关联报表',width:160},
+    {field:'cron_expression',headerName:'执行频率',width:110,cellRenderer:p=>{
+      const m={daily:'每天',weekly:'每周',monthly:'每月',hourly:'每小时',every_30min:'每30分钟'};
+      return m[p.value]||p.value
+    }},
+    {field:'enabled',headerName:'状态',width:70,cellRenderer:p=>statusTag(p.value,{on:'启用',off:'停用'})},
+    {field:'last_run_at',headerName:'上次运行',width:150,cellRenderer:p=>formatTime(p.value)},
+    {field:'next_run_at',headerName:'下次运行',width:150,cellRenderer:p=>formatTime(p.value)},
+    {field:'id',headerName:'操作',width:130,sortable:false,filter:false,cellRenderer:p=>{
+      return '<div class="btn-group">'+
+        '<button class="btn btn-text btn-sm" onclick="editSched(\''+p.value+'\')">✎ 编辑</button>'+
+        '<button class="btn btn-text btn-sm" style="color:#ff4d4f" onclick="deleteSched(\''+p.value+'\')">✕ 删除</button>'+
+        '</div>'
+    }},
+  ]
+}
+async function loadSchedules(){
+  const d=await api(API.base+'/reports/schedules');
+  if(d.code!==0)return;
+  const data=d.data||[];
+  if(gridDefs.has('sched'))gridDefs.get('sched').api.setGridOption('rowData',data);
+  else gridDefs.set('sched',createGrid('gridSchedules',schedCols(),data));
+}
+function openScheduleModal(){openSchedModalFor(null)}
+function editSched(id){api(API.base+'/reports/schedules/'+id).then(d=>{if(d.code===0)openSchedModalFor(d.data)})}
+function openSchedModalFor(data){
+  const isEdit=data&&data.id;
+  openModal(isEdit?'编辑定时计划':'新建定时计划',
+    '<div class="form-grid">'+
+      '<div class="form-group"><label>计划名称</label><input id="f_sch_name" value="'+(data?.name||'')+'" placeholder="每日生产报表"></div>'+
+      '<div class="form-group"><label>关联报表 ID</label><input id="f_sch_rid" value="'+(data?.report_id||'')+'" placeholder="builtin_dashboard"></div>'+
+      '<div class="form-group"><label>执行频率</label><select id="f_sch_cron"><option value="daily" '+(data?.cron_expression==='daily'?'selected':'')+'>每天</option><option value="weekly" '+(data?.cron_expression==='weekly'?'selected':'')+'>每周</option><option value="monthly" '+(data?.cron_expression==='monthly'?'selected':'')+'>每月</option><option value="hourly" '+(data?.cron_expression==='hourly'?'selected':'')+'>每小时</option><option value="every_30min" '+(data?.cron_expression==='every_30min'?'selected':'')+'>每30分钟</option></select></div>'+
+      '<div class="form-group"><label>导出格式</label><select id="f_sch_fmt"><option value="xlsx" '+(data?.export_format==='xlsx'?'selected':'')+'>Excel</option><option value="csv" '+(data?.export_format==='csv'?'selected':'')+'>CSV</option></select></div>'+
+      '<div class="form-group"><label>参数 (JSON)</label><input id="f_sch_params" value="'+(data?.params||'{}')+'" placeholder="{}"></div>'+
+      '<div class="form-group"><label>启用</label><select id="f_sch_ena"><option value="1" '+(data?.enabled!=0?'selected':'')+'>是</option><option value="0" '+(data?.enabled===0?'selected':'')+'>否</option></select></div>'+
+    '</div>',
+    ()=>{
+      const body={name:el('f_sch_name').value,report_id:el('f_sch_rid').value,cron_expression:el('f_sch_cron').value,export_format:el('f_sch_fmt').value,params:el('f_sch_params').value,enabled:parseInt(el('f_sch_ena').value)};
+      if(isEdit)body.id=data.id;
+      const url=data&&data.id?API.base+'/reports/schedules/'+data.id:API.base+'/reports/schedules';
+      const method=data&&data.id?'PUT':'POST';
+      api(url,{method,body:JSON.stringify(body)}).then(r=>{if(r.code===0){toast(isEdit?'已更新':'已创建');closeModal();loadSchedules()}else toast(r.message,'error')});
+    }
+  )
+}
+function deleteSched(id){
+  if(!confirm('确认删除此定时计划？'))return;
+  api(API.base+'/reports/schedules/'+id,{method:'DELETE'}).then(r=>{if(r.code===0){toast('已删除');loadSchedules()}else toast(r.message,'error')});
+}
+
+// ── 执行记录 ──
+function outputCols(){
+  return [
+    {field:'report_name',headerName:'报表名称',width:160},
+    {field:'format',headerName:'格式',width:70,cellRenderer:p=>p.value==='xlsx'?'Excel':'CSV'},
+    {field:'row_count',headerName:'行数',width:70,type:'numericColumn'},
+    {field:'status',headerName:'状态',width:80,cellRenderer:p=>{
+      const m={success:'<span class="tag tag-success">成功</span>',pending:'<span class="tag tag-warning">生成中</span>',failed:'<span class="tag tag-danger">失败</span>'};
+      return m[p.value]||p.value
+    }},
+    {field:'created_at',headerName:'生成时间',width:160,cellRenderer:p=>formatTime(p.value)},
+    {field:'file_path',headerName:'文件路径',width:200,flex:1,cellRenderer:p=>p.value||'-'},
+    {field:'error_message',headerName:'错误信息',width:160,cellRenderer:p=>{if(!p.value)return'';return'<span style="color:#ff4d4f">'+p.value+'</span>'}},
+  ]
+}
+async function loadOutputs(){
+  const d=await api(API.base+'/reports/outputs');
+  if(d.code!==0)return;
+  const data=d.data||[];
+  if(gridDefs.has('outs'))gridDefs.get('outs').api.setGridOption('rowData',data);
+  else gridDefs.set('outs',createGrid('gridOutputs',outputCols(),data));
+}
+
+// ── 初始加载 ──
+loadProduction();
+</script>
+</body>
+</html>

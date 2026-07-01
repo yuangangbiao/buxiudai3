@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>报工审计管理</title>
+<style>
+body{font:14px/1.6 Arial;max-width:960px;margin:20px auto;padding:20px;background:#f5f5f5}
+h2{color:#333}.card{background:#fff;border-radius:8px;padding:16px;margin:12px 0;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+input,button,select{padding:8px 12px;font-size:14px;border:1px solid #ccc;border-radius:4px}
+button{cursor:pointer;color:#fff;border:none}
+.btn-query{background:#3b82f6}.btn-rollback{background:#ef4444;font-size:12px;padding:4px 8px}
+.btn-rollback:hover{background:#dc2626}
+table{width:100%;border-collapse:collapse;margin-top:12px}
+th{background:#f0f0f0;text-align:left;padding:8px}
+td{padding:8px;border-bottom:1px solid #eee}
+.tag{display:inline-block;padding:2px 6px;border-radius:3px;font-size:12px}
+.tag-insert{background:#d1fae5;color:#065f46}
+.tag-rollback{background:#fee2e2;color:#991b1b}
+#orderSelect{min-width:200px}
+</style></head>
+<body>
+<h2>🔐 报工审计管理</h2>
+<div class="card">
+  <label>订单号:</label>
+  <select id="orderSelect" onchange="onSelect()">
+    <option value="">-- 选择订单 --</option>
+  </select>
+  <input id="orderNo" placeholder="或手动输入" size="20">
+  <button class="btn-query" onclick="loadAudit()">审计日志</button>
+  <button class="btn-query" style="background:#8b5cf6" onclick="loadSubSteps()">报工列表</button>
+</div>
+
+<div class="card" id="result"></div>
+
+<script>
+const KEY = 'steel_admin_2024';
+
+// 加载订单下拉列表
+fetch('/api/admin/orders?key='+KEY).then(r=>r.json()).then(d=>{
+  if(d.code===0) {
+    const sel = document.getElementById('orderSelect');
+    d.data.forEach(o => {
+      const opt = document.createElement('option');
+      opt.value = o.order_no;
+      opt.textContent = o.order_no + ' - ' + (o.product_name || '');
+      sel.appendChild(opt);
+    });
+  }
+});
+
+function onSelect(){
+  document.getElementById('orderNo').value = document.getElementById('orderSelect').value;
+}
+
+function getOrder(){
+  return document.getElementById('orderNo').value.trim() || document.getElementById('orderSelect').value;
+}
+
+function loadAudit(){
+  const ono = getOrder();
+  if(!ono) return alert('请选择或输入订单号');
+  fetch('/api/admin/audit/'+ono+'?key='+KEY).then(r=>r.json()).then(d=>{
+    if(d.code!==0) return document.getElementById('result').innerHTML='<p style=color:red>请求失败</p>';
+    let h = '<h3>审计日志</h3><table><tr><th>时间</th><th>工序</th><th>数量</th><th>操作员</th><th>操作</th><th>操作人</th><th>原因</th></tr>';
+    d.data.forEach(r=>{
+      const tag = r.action==='insert'?'<span class="tag tag-insert">报工</span>':'<span class="tag tag-rollback">回退</span>';
+      h += '<tr><td>'+r.created_at+'</td><td>'+r.step_name+'</td><td>'+r.quantity+'</td><td>'+r.operator+'</td><td>'+tag+'</td><td>'+(r.action_by||'')+'</td><td>'+(r.reason||'')+'</td></tr>';
+    });
+    h += '</table>';
+    document.getElementById('result').innerHTML = h;
+  });
+}
+function loadSubSteps(){
+  const ono = getOrder();
+  if(!ono) return alert('请选择或输入订单号');
+  fetch('/api/admin/sub-steps/'+ono+'?key='+KEY).then(r=>r.json()).then(d=>{
+    if(d.code!==0) return document.getElementById('result').innerHTML='<p style=color:red>请求失败或权限不足</p>';
+    let h = '<h3>报工记录</h3><table><tr><th>时间</th><th>工序</th><th>数量</th><th>操作员</th><th>操作</th></tr>';
+    d.data.forEach(r=>{
+      h += '<tr><td>'+r.created_at+'</td><td>'+r.step_name+'</td><td>'+r.quantity+'</td><td>'+r.operator+'</td>';
+      h += '<td><button class=btn-rollback onclick="doRollback(\''+r.id+'\')">回退</button></td></tr>';
+    });
+    h += '</table>';
+    document.getElementById('result').innerHTML = h;
+  });
+}
+function doRollback(subStepId){
+  const reason = prompt('请输入回退原因:','误操作');
+  if(!reason) return;
+  if(!confirm('确认回退 '+subStepId+'？')) return;
+  fetch('/api/admin/rollback?key='+KEY, {
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({sub_step_id:subStepId, reason:reason, action_by:'admin_ui'})
+  }).then(r=>r.json()).then(d=>{
+    alert(d.message||'完成');
+    loadSubSteps();
+  });
+}
+</script>
+</body>
+</html>

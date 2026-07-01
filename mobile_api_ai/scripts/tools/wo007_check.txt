@@ -1,0 +1,21 @@
+=== 检查 WO-202605007 在两个页面的情况 ===
+
+[1] 调度中心 5003 /processes
+  总返回 5 条，含 WO-202605007: 1 条
+    wo=WO-202605007 order=ORD-202605007 product= source=
+
+[2] 晨圣报工 5008 /schedule/list
+  总返回 9 条，含 WO-202605007: 5 条
+    wo=WO-202605007 order= product=
+    wo=WO-202605007 order= product=
+    wo=WO-202605007 order= product=
+    wo=WO-202605007 order= product=
+    wo=WO-202605007 order= product=
+
+[3] 数据库 process_records
+  数据库中 WO-202605007 记录数: 5
+    wo=WO-202605007 order=ORD-202605007 product= created=2026-05-21T14:58:24.540206
+    wo=WO-202605007 order=ORD-202605007 product= created=2026-05-21T14:58:38.326869
+    wo=WO-202605007 order=ORD-202605007 product= created=2026-05-21T14:59:11.561652
+    wo=WO-202605007 order=ORD-202605007 product= created=2026-05-21T14:59:32.721540
+    wo=WO-202605007 order=ORD-202605007 product= created=2026-05-21T14:59:32.744851

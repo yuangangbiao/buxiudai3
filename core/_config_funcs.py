@@ -1,8 +1,17 @@
 # ========== 工具函数 ==========
 import os
 import sys
+from datetime import datetime, timezone
 from core._config_infra import *
 from core._config_ui import *
+
+
+def now():
+    """返回当前时间（datetime 对象），支持 .isoformat() / .strftime() / timedelta 运算"""
+    try:
+        return datetime.now(timezone.utc)
+    except Exception:
+        return datetime.now()
 
 
 def get_default_backup_dir():

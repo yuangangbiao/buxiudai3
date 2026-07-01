@@ -145,12 +145,11 @@ def test_cross_service_mirror():
     test_order = f'TEST-CROSS-{_next_test_id()}'
 
     # 1. 直接走 5008 worker 路径（写入 process_sub_steps）
-    # 我们手动走 worker 等价的 DB 操作（写入 process_sub_steps + 累加 data_packages）
+    # [v3.8.1 重构] 不再写 data_packages，直接写 process_sub_steps
     test_substep_uuid = _next_test_id(32)
 
     with _db() as conn:
         with conn.cursor() as cur:
-            # 模拟 worker 写 process_sub_steps（用真实表结构 - 无 source 字段）
             cur.execute(
                 "INSERT INTO process_sub_steps (id, order_no, step_name, "
                 "batch_no, quantity, qualified_qty, operator, process_id) "
@@ -159,12 +158,6 @@ def test_cross_service_mirror():
                  f'BATCH-{test_substep_uuid[:6]}',
                  test_qty, test_qty, test_op, 'PROC-TEST')
             )
-            # 查 data_packages
-            cur.execute(
-                "SELECT id, completed_qty FROM data_packages WHERE related_order=%s LIMIT 1",
-                (test_order,)
-            )
-            pkg_row = cur.fetchone()
 
     # 验证 process_sub_steps 写入
     with _db() as conn:

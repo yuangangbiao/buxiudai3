@@ -82,7 +82,7 @@
 │                                                                                                      │
 │  ┌────────────────────────┐  ┌────────────────────────┐  ┌────────────────────────┐                 │
 │  │   云端微信 Cloud         │  │   企业微信机器人         │  │   增强模块集             │                 │
-│  │   wechat_cloud.py      │  │   wechat_server.py     │  │   enhanced_modules.py │                 │
+│  │   wechat_cloud.py      │  │   standalone_dispatch_server │  │   enhanced_modules.py │
 │  │   (公网回调接收)         │  │   (内网指令处理)         │  │   (7大组件:CB/QM/HC/    │                 │
 │  │   cloud_poller.py      │  │   cloud_matching.py    │  │    DM/AL/BM/CS)        │                 │
 │  │   云端-本地双轨架构       │  │   (32种命令类型)         │  │   客户端/服务端双模式    │                 │
@@ -104,7 +104,7 @@
 ┌────────────── 公网 ──────────────┬────────────── 内网 ──────────────────┐
 │                                   │                                      │
 │  企业微信服务器                     │  后端微服务集群 (mobile_api_ai/)       │
-│  (回调消息)                        │  ├── wechat_server.py :5003          │
+│  (回调消息)                        │  ├── standalone_dispatch_server.py :5003   │
 │       │                           │  ├── container_center_api :5002      │
 │       ▼                           │  ├── inventory_api_server :5010      │
 │  ┌─────────────────┐              │  ├── 人脸考勤 server.py :8000        │
@@ -504,7 +504,7 @@ completed → 已完成
 
 #### 相关文件
 - `wechat_cloud.py` - 云端服务（回调接收 + 消息队列 + 主动发送）（1227行）
-- `wechat_server.py` - 企业微信应用机器人服务器（主服务）（3068行）
+- `standalone_dispatch_server.py` - 企业微信应用机器人服务器（主服务，整合了原 wechat_server.py 功能）
 - `cloud_matching.py` - 指令匹配引擎（32种命令类型）
 - `cloud_poller.py` - 云端轮询模块
 
@@ -518,7 +518,7 @@ completed → 已完成
                              │
                              ▼
                 ┌──────────────────────────────────┐
-                │  wechat_server.py                 │
+                │  standalone_dispatch_server.py      │
                 │  (企业微信应用机器人主服务)          │
                 │  ├── 消息解密(WXBizMsgCrypt)       │
                 │  ├── 消息解析(XML → 命令)          │
@@ -576,7 +576,7 @@ class MatchMethod(Enum):
 
 #### 消息架构
 ```
-企业微信消息 → XML解密(wechat_server) → 消息解析 → 指令匹配
+企业微信消息 → XML解密(standalone_dispatch_server) → 消息解析 → 指令匹配
 → 命令分发 → 业务处理 → 响应组装 → XML加密 → 返回企业微信
 ```
 
@@ -713,7 +713,7 @@ class MatchMethod(Enum):
          │ 轮询拉取 (cloud_poller)
          ▼
 ┌─────────────────┐
-│ 本地消息处理层     │  wechat_server.py (内网)
+│ 本地消息处理层     │  standalone_dispatch_server.py (内网)
 │ 指令匹配引擎       │  cloud_matching.py: PREFIX匹配
 │ 命令分发          │  CommandType: 32种命令
 └────────┬────────┘
@@ -777,7 +777,7 @@ Main Software / Mobile API (报工触发)
 ┌─────────────────────────┐     ┌──────────────────────────┐
 │      云端 (Cloud)         │     │     本地 (Local)           │
 │                          │     │                           │
-│  wechat_cloud.py         │     │  wechat_server.py         │
+│  wechat_cloud.py         │     │  standalone_dispatch_server │
 │  ├── 微信回调接收         │◀────│  ├── 容器中心集成           │
 │  ├── 消息队列             │     │  ├── 指令匹配引擎           │
 │  ├── 主动发送             │────▶│  ├── 调度中心              │
@@ -1267,7 +1267,7 @@ def register_all_blueprints(app):
 | 模式 | 调用场景 | 启动组件数 |
 |------|---------|-----------|
 | 客户端 | 仅需要API调用的模块（如容器中心客户端） | 2个(CB+QM) |
-| 服务端 | 完整服务（如wechat_server.py主服务） | 7个(CB+QM+HC+DM+EAL+EBM+CS) |
+| 服务端 | 完整服务（如standalone_dispatch_server主服务） | 7个(CB+QM+HC+DM+EAL+EBM+CS) |
 
 ---
 
@@ -1628,7 +1628,7 @@ COLORS = {
 | 端口 | 服务 | 所在模块 | 协议 |
 |------|------|---------|------|
 | 5002 | 容器中心API服务 | [container_center_api.py](file:///d:/yuan/不锈钢网带跟单3.0/mobile_api_ai/container_center_api.py) | HTTP |
-| 5003 | 微信机器人主服务 | [wechat_server.py](file:///d:/yuan/不锈钢网带跟单3.0/mobile_api_ai/wechat_server.py) | HTTP |
+| 5003 | 微信机器人主服务 | [standalone_dispatch_server.py](file:///d:/yuan/不锈钢网带跟单3.0/mobile_api_ai/standalone_dispatch_server.py) | HTTP |
 | 5003 | 云端微信服务 | [wechat_cloud.py](file:///d:/yuan/不锈钢网带跟单3.0/mobile_api_ai/wechat_cloud.py) | HTTP |
 | 5010 | 库存管理API | [inventory_api_server.py](file:///d:/yuan/不锈钢网带跟单3.0/mobile_api_ai/inventory_api_server.py) | HTTP |
 | 5000 | 调度中心(默认Flask端口) | [dispatch_center.py](file:///d:/yuan/不锈钢网带跟单3.0/mobile_api_ai/dispatch_center.py) | HTTP |
@@ -1648,7 +1648,7 @@ COLORS = {
                     ▼                               ▼
           ┌─────────────────┐           ┌─────────────────────┐
           │ wechat_cloud.py │           │  企业微信回调 → 内网   │
-          │  (公网/云端)    │           │  wechat_server.py    │
+          │  (公网/云端)    │           │  standalone_dispatch_server.py  │
           │  端口:5003      │           │  (内网服务)           │
           └───────┬─────────┘           │  端口:5003            │
                   │                     └──────────┬──────────┘
@@ -1696,7 +1696,7 @@ COLORS = {
 企业微信服务器（公网回调）
        │
        ▼
-内网 wechat_server.py:5003
+内网 standalone_dispatch_server.py:5003
   → WXBizMsgCrypt解密(XML)
   → 指令匹配(cloud_matching)
   → 路由到对应handler
@@ -1805,7 +1805,7 @@ d:\yuan\
 │       ├── container_center_api.py  # 容器中心Flask API(2135行)
 │       ├── container_center_client.py # 容器中心客户端(968行)
 │       ├── storage_layer.py    # 存储抽象层(4127行)
-│       ├── wechat_server.py    # 企业微信内网服务(3068行)
+│       ├── standalone_dispatch_server.py  # 企业微信内网服务（整合原 wechat_server.py）
 │       ├── wechat_cloud.py     # 企业微信云端服务(1227行)
 │       ├── cloud_matching.py   # 指令匹配引擎(32种命令)
 │       ├── cloud_poller.py     # 云端轮询同步
@@ -1847,7 +1847,7 @@ d:\yuan\
 | 容器中心API | `mobile_api_ai/container_center_api.py` | 2135 |
 | 容器中心客户端 | `mobile_api_ai/container_center_client.py` | 968 |
 | 存储抽象层 | `mobile_api_ai/storage_layer.py` | 4127 |
-| 微信内网服务 | `mobile_api_ai/wechat_server.py` | 3068 |
+| 微信内网服务 | `mobile_api_ai/standalone_dispatch_server.py` | 3068 |
 | 微信云端服务 | `mobile_api_ai/wechat_cloud.py` | 1227 |
 | 配置中心 | `mobile_api_ai/config_center.py` | 461 |
 | 蓝图注册 | `mobile_api_ai/blueprint_registry.py` | 43 |
@@ -1943,7 +1943,7 @@ cd d:\yuan\不锈钢网带跟单3.0\mobile_api_ai
 python container_center_api.py
 
 # 启动微信内网服务 (端口5003)
-python wechat_server.py
+python standalone_dispatch_server.py
 
 # 启动云端服务 (端口5003)
 python wechat_cloud.py

@@ -93,7 +93,10 @@ def _get_existing_columns(cursor, table_name: str, is_sqlite: bool) -> Set[str]:
         return {row[1] for row in cursor.fetchall()}
     else:
         cursor.execute(f"SHOW COLUMNS FROM `{table_name}`")
-        return {row['Field'] for row in cursor.fetchall()}
+        rows = cursor.fetchall()
+        if rows and isinstance(rows[0], dict):
+            return {row['Field'] for row in rows}
+        return {row[0] for row in rows}
 
 
 def _create_table_ddl(ddl_conn, table_name: str, columns: Dict[str, str], is_sqlite: bool):

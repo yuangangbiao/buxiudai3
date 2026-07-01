@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>库存管理登录</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #1a1a2e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-box {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 360px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        h3 { color: #1a1a2e; margin-bottom: 1.5rem; }
+        .error-msg {
+            color: #dc3545;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h3>📦 库存管理系统</h3>
+        {% if error %}
+        <div class="error-msg">{{ error }}</div>
+        {% endif %}
+        <form method="post" autocomplete="off">
+            <input class="form-control mb-3" type="password" name="password"
+                   placeholder="输入管理密码" autofocus required>
+            <button class="btn btn-primary w-100" type="submit">登录</button>
+        </form>
+    </div>
+</body>
+</html>

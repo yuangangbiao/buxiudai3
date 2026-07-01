@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>可视化配置中心</title>
+    <script>window.__CONN_CONFIG__ = {localHost: '{{ LOCAL_HOST }}', localPort: 5008, cloudHost: '{{ CLOUD_HOST }}', cloudPort: 5008};</script>
+    <script src="/static/js/connection-manager.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; color: #333; }
+        .header { background: linear-gradient(135deg, #1a237e 0%, #283593 100%); color: white; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+        .header h1 { font-size: 22px; display: flex; align-items: center; gap: 10px; }
+        .header .subtitle { font-size: 13px; opacity: 0.8; margin-top: 4px; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .header-status { display: flex; align-items: center; gap: 6px; font-size: 13px; background: rgba(255,255,255,0.15); padding: 6px 14px; border-radius: 20px; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        .status-dot.online { background: #4caf50; }
+        .layout { display: flex; min-height: calc(100vh - 64px); }
+        .sidebar { width: 220px; background: #fff; border-right: 1px solid #e0e0e0; padding: 16px 0; flex-shrink: 0; }
+        .sidebar-item { display: flex; align-items: center; gap: 10px; padding: 12px 24px; cursor: pointer; transition: all 0.2s; font-size: 14px; color: #555; border-left: 3px solid transparent; }
+        .sidebar-item:hover { background: #f5f5f5; color: #1a237e; }
+        .sidebar-item.active { background: #e8eaf6; color: #1a237e; border-left-color: #1a237e; font-weight: 600; }
+        .sidebar-item .icon { font-size: 18px; }
+        .sidebar-item .badge { margin-left: auto; background: #e0e0e0; color: #666; font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+        .main-content { flex: 1; padding: 24px; overflow-y: auto; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #1a237e; }
+        .card-header h3 { font-size: 17px; display: flex; align-items: center; gap: 8px; }
+        .card-header .actions { display: flex; gap: 8px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-group label { font-size: 13px; font-weight: 600; color: #444; }
+        .form-group .hint { font-size: 11px; color: #999; margin-bottom: 2px; }
+        .form-group input, .form-group select { padding: 9px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; transition: border-color 0.2s; outline: none; }
+        .form-group input:focus, .form-group select:focus { border-color: #1a237e; box-shadow: 0 0 0 3px rgba(26,35,126,0.1); }
+        .form-group input.password { font-family: 'Courier New', monospace; letter-spacing: 2px; }
+        .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #ccc; border-radius: 24px; transition: 0.3s; }
+        .toggle-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; }
+        .toggle-switch input:checked + .toggle-slider { background: #1a237e; }
+        .toggle-switch input:checked + .toggle-slider:before { transform: translateX(20px); }
+        .form-row { display: flex; align-items: center; gap: 12px; }
+        .form-row label { min-width: 160px; }
+        .form-row .toggle-label { font-size: 14px; color: #555; }
+        .btn { padding: 8px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+        .btn:active { transform: scale(0.97); }
+        .btn-primary { background: #1a237e; color: white; }
+        .btn-primary:hover { background: #283593; }
+        .btn-success { background: #2e7d32; color: white; }
+        .btn-success:hover { background: #388e3c; }
+        .btn-outline { background: transparent; color: #555; border: 1px solid #ddd; }
+        .btn-outline:hover { background: #f5f5f5; border-color: #bbb; }
+        .btn-danger { background: #c62828; color: white; }
+        .btn-danger:hover { background: #d32f2f; }
+        .btn-warning { background: #e65100; color: white; }
+        .btn-warning:hover { background: #ef6c00; }
+        .btn-sm { padding: 5px 12px; font-size: 12px; }
+        .toast { position: fixed; top: 20px; right: 20px; z-index: 10000; min-width: 280px; max-width: 420px; padding: 14px 20px; border-radius: 8px; color: white; font-size: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); transform: translateX(120%); transition: transform 0.4s ease; display: flex; align-items: center; gap: 10px; }
+        .toast.show { transform: translateX(0); }
+        .toast.success { background: #2e7d32; }
+        .toast.error { background: #c62828; }
+        .toast.warning { background: #e65100; }
+        .toast.info { background: #1565c0; }
+        .toast .close-btn { margin-left: auto; cursor: pointer; opacity: 0.7; font-size: 18px; background: none; border: none; color: white; }
+        .toast .close-btn:hover { opacity: 1; }
+        .loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.7); z-index: 9999; justify-content: center; align-items: center; }
+        .loading-overlay.active { display: flex; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #e0e0e0; border-top-color: #1a237e; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .test-result { margin-top: 10px; padding: 10px 14px; border-radius: 6px; font-size: 13px; display: none; }
+        .test-result.success { display: block; background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+        .test-result.error { display: block; background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
+        .env-viewer { background: #263238; color: #e0e0e0; padding: 16px 20px; border-radius: 8px; font-family: 'Consolas', 'Courier New', monospace; font-size: 12px; line-height: 1.7; overflow-x: auto; white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
+        .env-viewer .comment { color: #546e7a; }
+        .env-viewer .key { color: #82aaff; }
+        .env-viewer .eq { color: #546e7a; }
+        .env-viewer .val { color: #c3e88d; }
+        .env-viewer .sensitive { color: #f07178; }
+        table.config-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        table.config-table th { background: #f5f5f5; padding: 10px 12px; text-align: left; font-weight: 600; color: #555; border-bottom: 2px solid #e0e0e0; }
+        table.config-table td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; }
+        table.config-table tr:hover { background: #fafafa; }
+        .inline-form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .inline-form input, .inline-form select { padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
+        .inline-form input:focus { border-color: #1a237e; outline: none; }
+        .empty-state { text-align: center; padding: 40px; color: #999; font-size: 14px; }
+        .section-desc { font-size: 13px; color: #666; margin-bottom: 16px; }
+        @media (max-width: 768px) {
+            .sidebar { width: 60px; }
+            .sidebar-item span:not(.icon) { display: none; }
+            .sidebar-item { justify-content: center; padding: 12px; }
+            .form-grid { grid-template-columns: 1fr; }
+            .header { padding: 12px 16px; flex-direction: column; gap: 8px; }
+            .layout { flex-direction: column; }
+            .sidebar { width: 100%; display: flex; overflow-x: auto; padding: 0; border-right: none; border-bottom: 1px solid #e0e0e0; }
+            .sidebar-item { white-space: nowrap; border-left: none; border-bottom: 2px solid transparent; padding: 10px 16px; }
+            .sidebar-item.active { border-bottom-color: #1a237e; }
+        }
+    </style>
+</head>
+<body>
+<div id="loadingOverlay" class="loading-overlay"><div class="spinner"></div></div>
+<div id="toastContainer" style="position:fixed;top:20px;right:20px;z-index:10000;"></div>
+
+<div class="header">
+    <div>
+        <h1>⚙️ 可视化配置中心</h1>
+        <div class="subtitle">统一管理所有接口参数、系统配置、业务规则</div>
+    </div>
+    <div class="header-right">
+        <div class="header-status">
+            <span class="status-dot online"></span>
+            <span id="envStatus">已加载</span>
+        </div>
+        <button class="btn btn-success" onclick="saveAll()">💾 保存全部</button>
+    </div>
+</div>
+
+<div class="layout">
+    <div class="sidebar" id="sidebarNav"></div>
+    <div class="main-content" id="mainContent"></div>
+</div>
+
+<script>
+const API_PATH = '/api/config-center';
+let schema = {};
+let values = {};
+let containerConfig = null;
+
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+    toast.innerHTML = `<span>${icons[type] || ''}</span><span>${message}</span><button class="close-btn" onclick="this.parentElement.remove()">✕</button>`;
+    container.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 3000);
+}
+
+function showLoading(show) {
+    document.getElementById('loadingOverlay').classList.toggle('active', show);
+}
+
+async function apiGet(path) {
+    const resp = await fetch((CONN.activeBase || '') + API_PATH + path);
+    return resp.json();
+}
+
+async function apiPost(path, data) {
+    const resp = await fetch((CONN.activeBase || '') + API_PATH + path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+    return resp.json();
+}
+
+async function apiPut(path, data) {
+    const resp = await fetch((CONN.activeBase || '') + API_PATH + path, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+    return resp.json();
+}
+
+async function apiDelete(path) {
+    const resp = await fetch((CONN.activeBase || '') + API_PATH + path, { method: 'DELETE' });
+    return resp.json();
+}
+
+async function init() {
+    showLoading(true);
+    try {
+        const [schemaResp, valuesResp] = await Promise.all([
+            apiGet('/schema'),
+            apiGet('/values')
+        ]);
+        if (schemaResp.code === 0) schema = schemaResp.data;
+        if (valuesResp.code === 0) values = valuesResp.data;
+        renderSidebar();
+        if (Object.keys(schema).length > 0) {
+            const firstTab = Object.keys(schema)[0];
+            switchTab(firstTab);
+        }
+    } catch (e) {
+        showToast('加载配置失败: ' + e.message, 'error');
+    }
+    showLoading(false);
+}
+
+function renderSidebar() {
+    const nav = document.getElementById('sidebarNav');
+    const categoryKeys = Object.keys(schema);
+    nav.innerHTML = categoryKeys.map((key, idx) => {
+        const cat = schema[key];
+        const fieldCount = cat.fields ? cat.fields.length : 0;
+        return `<div class="sidebar-item" data-tab="${key}" onclick="switchTab('${key}')">
+            <span class="icon">${cat.icon || '📋'}</span>
+            <span>${cat.label}</span>
+            ${fieldCount > 0 ? `<span class="badge">${fieldCount}</span>` : '<span class="badge">管理</span>'}
+        </div>`;
+    }).join('');
+}
+
+function switchTab(tabKey) {
+    document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+    document.querySelector(`.sidebar-item[data-tab="${tabKey}"]`).classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+
+    const cat = schema[tabKey];
+    if (!cat) return;
+
+    let existing = document.getElementById(`tab-${tabKey}`);
+    if (!existing) {
+        const main = document.getElementById('mainContent');
+        const div = document.createElement('div');
+        div.id = `tab-${tabKey}`;
+        div.className = 'tab-content';
+        main.appendChild(div);
+        existing = div;
+    }
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    existing.classList.add('active');
+
+    if (tabKey === 'container') {
+        renderContainerTab(existing);
+    } else {
+        renderEnvTab(existing, tabKey, cat);
+    }
+}
+
+function renderEnvTab(container, tabKey, cat) {
+    const fields = cat.fields || [];
+    const testAction = cat.test;
+
+    container.innerHTML = `
+        <div class="card">
+            <div class="card-header">
+                <h3>${cat.icon || '📋'} ${cat.label}</h3>
+                <div class="actions">
+                    <button class="btn btn-primary btn-sm" onclick="saveCategory('${tabKey}')">💾 保存</button>
+                </div>
+            </div>
+            ${cat.description ? `<div class="section-desc">${cat.description}</div>` : ''}
+            <div class="form-grid" id="formGrid-${tabKey}">
+                ${fields.map(f => renderField(f)).join('')}
+            </div>
+            ${testAction ? `
+                <div style="margin-top:20px;padding-top:16px;border-top:1px solid #eee;">
+                    <button class="btn btn-outline btn-sm" onclick="testConnection('${testAction.action}', '${tabKey}')">🔌 ${testAction.label}</button>
+                    <div id="testResult-${tabKey}" class="test-result"></div>
+                </div>
+            ` : ''}
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h3>📄 .env 配置文件</h3>
+                <button class="btn btn-outline btn-sm" onclick="refreshEnvFile()">🔄 刷新</button>
+            </div>
+            <div id="envFileContent" class="env-viewer">加载中...</div>
+        </div>
+    `;
+
+    fields.forEach(f => {
+        const input = container.querySelector(`[name="${f.key}"]`);
+        if (input) {
+            const val = values[f.key] !== undefined ? values[f.key] : (f.default || '');
+            if (f.type === 'boolean') {
+                input.checked = val === 'true' || val === true;
+            } else {
+                input.value = val;
+            }
+        }
+    });
+
+    refreshEnvFile();
+}
+
+function renderField(f) {
+    if (f.type === 'boolean') {
+        return `
+            <div class="form-group">
+                <label>${f.label}</label>
+                <div class="form-row">
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="${f.key}" onchange="markChanged('${f.key}')">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="toggle-label" id="toggleLabel-${f.key}">关闭</span>
+                </div>
+            </div>
+        `;
+    }
+    const inputType = f.type === 'password' ? 'password' : (f.type === 'number' ? 'number' : 'text');
+    const cls = f.type === 'password' ? 'password' : '';
+    const ph = f.placeholder || '';
+    return `
+        <div class="form-group">
+            <label>${f.label}</label>
+            ${f.hint ? `<span class="hint">${f.hint}</span>` : ''}
+            <input type="${inputType}" name="${f.key}" class="${cls}" placeholder="${ph}" onchange="markChanged('${f.key}')">
+        </div>
+    `;
+}
+
+function markChanged(key) {
+}
+
+function collectCategoryValues(tabKey) {
+    const container = document.getElementById(`tab-${tabKey}`);
+    const data = {};
+    const cat = schema[tabKey];
+    if (!cat || !cat.fields) return data;
+    cat.fields.forEach(f => {
+        const input = container.querySelector(`[name="${f.key}"]`);
+        if (input) {
+            if (f.type === 'boolean') {
+                data[f.key] = input.checked ? 'true' : 'false';
+            } else {
+                data[f.key] = input.value;
+            }
+        }
+    });
+    return data;
+}
+
+async function saveCategory(tabKey) {
+    const data = collectCategoryValues(tabKey);
+    if (Object.keys(data).length === 0) {
+        showToast('没有可保存的配置项', 'warning');
+        return;
+    }
+    showLoading(true);
+    try {
+        const result = await apiPost('/save', data);
+        if (result.code === 0) {
+            showToast(result.message, 'success');
+            Object.assign(values, data);
+        } else {
+            showToast(result.message || '保存失败', 'error');
+        }
+    } catch (e) {
+        showToast('保存失败: ' + e.message, 'error');
+    }
+    showLoading(false);
+}
+
+async function saveAll() {
+    const allData = {};
+    for (const key of Object.keys(schema)) {
+        if (key === 'container') continue;
+        const data = collectCategoryValues(key);
+        Object.assign(allData, data);
+    }
+    if (Object.keys(allData).length === 0) {
+        showToast('没有可保存的配置项', 'warning');
+        return;
+    }
+    showLoading(true);
+    try {
+        const result = await apiPost('/save', allData);
+        if (result.code === 0) {
+            showToast(result.message, 'success');
+            Object.assign(values, allData);
+        } else {
+            showToast(result.message || '保存失败', 'error');
+        }
+    } catch (e) {
+        showToast('保存失败: ' + e.message, 'error');
+    }
+    showLoading(false);
+}
+
+async function testConnection(action, tabKey) {
+    const resultDiv = document.getElementById(`testResult-${tabKey}`);
+    if (!resultDiv) return;
+    resultDiv.className = 'test-result';
+    resultDiv.textContent = '测试中...';
+    resultDiv.style.display = 'block';
+
+    const data = collectCategoryValues(tabKey);
+    try {
+        const result = await apiPost(`/test/${action}`, data);
+        if (result.message) {
+            resultDiv.textContent = result.message;
+            resultDiv.className = `test-result ${result.code === 0 ? 'success' : 'error'}`;
+        }
+    } catch (e) {
+        resultDiv.textContent = '测试请求失败: ' + e.message;
+        resultDiv.className = 'test-result error';
+    }
+}
+
+async function refreshEnvFile() {
+    const el = document.getElementById('envFileContent');
+    if (!el) return;
+    try {
+        const result = await apiGet('/config-file');
+        if (result.code === 0) {
+            const content = result.data || '# .env 配置文件为空';
+            el.innerHTML = syntaxHighlightEnv(content);
+        } else {
+            el.textContent = '加载失败: ' + (result.message || '');
+        }
+    } catch (e) {
+        el.textContent = '加载失败: ' + e.message;
+    }
+}
+
+function syntaxHighlightEnv(content) {
+    return content.split('\n').map(line => {
+        if (line.trim().startsWith('#')) {
+            return `<span class="comment">${escapeHtml(line)}</span>`;
+        }
+        if (line.includes('=')) {
+            const idx = line.indexOf('=');
+            const key = line.substring(0, idx);
+            const val = line.substring(idx + 1);
+            const isSensitive = /SECRET|PASSWORD|KEY|TOKEN|AES/i.test(key);
+            return `<span class="key">${escapeHtml(key)}</span><span class="eq">=</span><span class="${isSensitive ? 'sensitive' : 'val'}">${escapeHtml(val)}</span>`;
+        }
+        return escapeHtml(line);
+    }).join('\n');
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+async function renderContainerTab(container) {
+    showLoading(true);
+    try {
+        const result = await apiGet('/container-config');
+        if (result.code === 0) {
+            containerConfig = result.data;
+        }
+    } catch (e) {
+        showToast('加载容器配置失败', 'error');
+    }
+
+    const operators = containerConfig ? Object.values(containerConfig.operators || {}) : [];
+    const processes = containerConfig ? Object.values(containerConfig.processes || {}) : [];
+    const notification = containerConfig ? (containerConfig.notification || {}) : {};
+
+    container.innerHTML = `
+        <div class="card">
+            <div class="card-header">
+                <h3>👥 操作员管理</h3>
+                <button class="btn btn-primary btn-sm" onclick="showOperatorForm()">➕ 添加操作员</button>
+            </div>
+            ${operators.length === 0 ? '<div class="empty-state">暂无操作员配置</div>' : `
+            <table class="config-table">
+                <thead><tr><th>ID</th><th>姓名</th><th>角色</th><th>部门</th><th>状态</th><th>操作</th></tr></thead>
+                <tbody>
+                    ${operators.map(op => `
+                        <tr>
+                            <td><strong>${op.id}</strong></td>
+                            <td>${op.name}</td>
+                            <td>${op.role}</td>
+                            <td>${op.department || '-'}</td>
+                            <td>${op.enabled !== false ? '<span style="color:#2e7d32">● 启用</span>' : '<span style="color:#999">● 停用</span>'}</td>
+                            <td>
+                                <button class="btn btn-outline btn-sm" onclick="editOperator('${op.id}')">✏️</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteOperator('${op.id}')">🗑️</button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>`}
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3>⚙️ 工序管理</h3>
+                <button class="btn btn-primary btn-sm" onclick="showProcessForm()">➕ 添加工序</button>
+            </div>
+            ${processes.length === 0 ? '<div class="empty-state">暂无工序配置</div>' : `
+            <table class="config-table">
+                <thead><tr><th>ID</th><th>名称</th><th>编码</th><th>序号</th><th>质检</th><th>状态</th><th>操作</th></tr></thead>
+                <tbody>
+                    ${processes.sort((a,b) => (a.sequence||0) - (b.sequence||0)).map(p => `
+                        <tr>
+                            <td><strong>${p.id}</strong></td>
+                            <td>${p.name}</td>
+                            <td>${p.code}</td>
+                            <td>${p.sequence}</td>
+                            <td>${p.quality_check_required ? '✅' : '-'}</td>
+                            <td>${p.enabled !== false ? '<span style="color:#2e7d32">● 启用</span>' : '<span style="color:#999">● 停用</span>'}</td>
+                            <td>
+                                <button class="btn btn-outline btn-sm" onclick="editProcess('${p.id}')">✏️</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteProcess('${p.id}')">🗑️</button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>`}
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3>🔔 通知配置</h3>
+                <button class="btn btn-primary btn-sm" onclick="saveNotification()">💾 保存</button>
+            </div>
+            <div class="form-grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr));">
+                <div class="form-group">
+                    <label>启用通知</label>
+                    <div class="form-row">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="notif_enabled" ${notification.enabled !== false ? 'checked' : ''}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>创建时通知</label>
+                    <div class="form-row">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="notif_create" ${notification.notify_on_create !== false ? 'checked' : ''}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>分发时通知</label>
+                    <div class="form-row">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="notif_distribute" ${notification.notify_on_distribute !== false ? 'checked' : ''}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>完成时通知</label>
+                    <div class="form-row">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="notif_complete" ${notification.notify_on_complete !== false ? 'checked' : ''}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>超时通知</label>
+                    <div class="form-row">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="notif_overdue" ${notification.notify_on_overdue !== false ? 'checked' : ''}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    showLoading(false);
+}
+
+function showOperatorForm(existingData) {
+    const data = existingData || {};
+    const isEdit = !!existingData;
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+    modal.innerHTML = `
+        <div style="background:white;border-radius:12px;padding:28px;width:90%;max-width:480px;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+            <h3 style="margin-bottom:20px;font-size:18px;">${isEdit ? '✏️ 编辑操作员' : '➕ 添加操作员'}</h3>
+            <div class="form-grid" style="grid-template-columns:1fr;">
+                <div class="form-group"><label>ID</label><input id="op_id" value="${data.id || ''}" ${isEdit ? 'readonly style="background:#f5f5f5;"' : ''} placeholder="如 OP005"></div>
+                <div class="form-group"><label>姓名</label><input id="op_name" value="${data.name || ''}" placeholder="张三"></div>
+                <div class="form-group"><label>角色</label><input id="op_role" value="${data.role || '工人'}" placeholder="工人/班组长/质检员"></div>
+                <div class="form-group"><label>部门</label><input id="op_dept" value="${data.department || ''}" placeholder="生产部"></div>
+            </div>
+            <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end;">
+                <button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">取消</button>
+                <button class="btn btn-primary" onclick="saveOperator(this)">${isEdit ? '更新' : '添加'}</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    window._opEditId = isEdit ? data.id : null;
+}
+
+async function saveOperator(btn) {
+    const modal = btn.closest('.modal-overlay');
+    const data = {
+        id: document.getElementById('op_id').value.trim(),
+        name: document.getElementById('op_name').value.trim(),
+        role: document.getElementById('op_role').value.trim() || '工人',
+        department: document.getElementById('op_dept').value.trim()
+    };
+    if (!data.id || !data.name) { showToast('请填写ID和姓名', 'warning'); return; }
+
+    showLoading(true);
+    try {
+        if (window._opEditId) {
+            const result = await apiPut(`/container-config/operators/${window._opEditId}`, data);
+            if (result.code === 0) showToast('操作员更新成功', 'success');
+            else showToast(result.message || '更新失败', 'error');
+        } else {
+            const result = await apiPost('/container-config/operators', data);
+            if (result.code === 0) showToast('操作员添加成功', 'success');
+            else showToast(result.message || '添加失败', 'error');
+        }
+    } catch (e) {
+        showToast('操作失败: ' + e.message, 'error');
+    }
+    showLoading(false);
+    modal.remove();
+    switchTab('container');
+}
+
+async function editOperator(id) {
+    const ops = containerConfig ? Object.values(containerConfig.operators || {}) : [];
+    const op = ops.find(o => o.id === id);
+    if (op) showOperatorForm(op);
+}
+
+async function deleteOperator(id) {
+    if (!confirm(`确定删除操作员 ${id} 吗？`)) return;
+    showLoading(true);
+    try {
+        const result = await apiDelete(`/container-config/operators/${id}`);
+        if (result.code === 0) {
+            showToast('操作员已删除', 'success');
+            switchTab('container');
+        } else {
+            showToast(result.message || '删除失败', 'error');
+        }
+    } catch (e) {
+        showToast('删除失败: ' + e.message, 'error');
+    }
+    showLoading(false);
+}
+
+function showProcessForm(existingData) {
+    const data = existingData || {};
+    const isEdit = !!existingData;
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+    modal.innerHTML = `
+        <div style="background:white;border-radius:12px;padding:28px;width:90%;max-width:480px;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+            <h3 style="margin-bottom:20px;font-size:18px;">${isEdit ? '✏️ 编辑工序' : '➕ 添加工序'}</h3>
+            <div class="form-grid" style="grid-template-columns:1fr;">
+                <div class="form-group"><label>ID</label><input id="proc_id" value="${data.id || ''}" ${isEdit ? 'readonly style="background:#f5f5f5;"' : ''} placeholder="如 P10"></div>
+                <div class="form-group"><label>名称</label><input id="proc_name" value="${data.name || ''}" placeholder="编织"></div>
+                <div class="form-group"><label>编码</label><input id="proc_code" value="${data.code || ''}" placeholder="WEAVING"></div>
+                <div class="form-group"><label>序号</label><input id="proc_seq" type="number" value="${data.sequence || 0}" placeholder="10"></div>
+                <div class="form-group">
+                    <label>需要质检</label>
+                    <div class="form-row">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="proc_qc" ${data.quality_check_required ? 'checked' : ''}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end;">
+                <button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">取消</button>
+                <button class="btn btn-primary" onclick="saveProcess(this)">${isEdit ? '更新' : '添加'}</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    window._procEditId = isEdit ? data.id : null;
+}
+
+async function saveProcess(btn) {
+    const modal = btn.closest('.modal-overlay');
+    const data = {
+        id: document.getElementById('proc_id').value.trim(),
+        name: document.getElementById('proc_name').value.trim(),
+        code: document.getElementById('proc_code').value.trim(),
+        sequence: parseInt(document.getElementById('proc_seq').value) || 0,
+        quality_check_required: document.getElementById('proc_qc').checked
+    };
+    if (!data.id || !data.name) { showToast('请填写ID和名称', 'warning'); return; }
+
+    showLoading(true);
+    try {
+        if (window._procEditId) {
+            const result = await apiPut(`/container-config/processes/${window._procEditId}`, data);
+            if (result.code === 0) showToast('工序更新成功', 'success');
+            else showToast(result.message || '更新失败', 'error');
+        } else {
+            const result = await apiPost('/container-config/processes', data);
+            if (result.code === 0) showToast('工序添加成功', 'success');
+            else showToast(result.message || '添加失败', 'error');
+        }
+    } catch (e) {
+        showToast('操作失败: ' + e.message, 'error');
+    }
+    showLoading(false);
+    modal.remove();
+    switchTab('container');
+}
+
+async function editProcess(id) {
+    const procs = containerConfig ? Object.values(containerConfig.processes || {}) : [];
+    const p = procs.find(x => x.id === id);
+    if (p) showProcessForm(p);
+}
+
+async function deleteProcess(id) {
+    if (!confirm(`确定删除工序 ${id} 吗？`)) return;
+    const result = await apiDelete(`/container-config/processes/${id}`);
+    if (result.code === 0) {
+        showToast('工序已删除', 'success');
+        switchTab('container');
+    } else {
+        showToast(result.message || '删除失败', 'error');
+    }
+}
+
+async function saveNotification() {
+    const data = {
+        enabled: document.getElementById('notif_enabled').checked,
+        notify_on_create: document.getElementById('notif_create').checked,
+        notify_on_distribute: document.getElementById('notif_distribute').checked,
+        notify_on_complete: document.getElementById('notif_complete').checked,
+        notify_on_overdue: document.getElementById('notif_overdue').checked
+    };
+    showLoading(true);
+    try {
+        const result = await apiPut('/container-config/notification', data);
+        if (result.code === 0) showToast('通知配置保存成功', 'success');
+        else showToast(result.message || '保存失败', 'error');
+    } catch (e) {
+        showToast('保存失败: ' + e.message, 'error');
+    }
+    showLoading(false);
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

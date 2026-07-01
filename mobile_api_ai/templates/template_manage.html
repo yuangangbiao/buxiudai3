@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>消息模板管理</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #333; }
+.header { background: #2b5797; color: #fff; padding: 16px 24px; }
+.header h1 { font-size: 20px; }
+.container { max-width: 1000px; margin: 24px auto; padding: 0 16px; }
+.card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.1); margin-bottom: 24px; padding: 20px; }
+.card h2 { font-size: 16px; margin-bottom: 12px; border-bottom: 2px solid #2b5797; padding-bottom: 8px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid #eee; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
+.badge-builtin { background: #e3f2fd; color: #1565c0; }
+.badge-custom { background: #fff3e0; color: #e65100; }
+.btn { border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+.btn-edit { background: #2b5797; color: #fff; }
+.btn-reset { background: #f44336; color: #fff; }
+.btn-del { background: #999; color: #fff; }
+textarea { width: 100%; height: 120px; font-family: monospace; font-size: 12px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+.preview { background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; padding: 12px; white-space: pre-wrap; font-size: 12px; margin-top: 8px; }
+.tab { display: flex; gap: 8px; margin-bottom: 16px; }
+.tab button { padding: 6px 16px; border: 1px solid #ddd; background: #fff; border-radius: 4px; cursor: pointer; }
+.tab button.active { background: #2b5797; color: #fff; border-color: #2b5797; }
+</style>
+</head>
+<body>
+<div class="header"><h1>消息模板管理</h1></div>
+<div class="container">
+
+<div class="tab">
+  <button class="active" onclick="showTab('list')">模板列表</button>
+  <button onclick="showTab('add')">新增自定义模板</button>
+  <button onclick="showTab('status')">系统状态</button>
+</div>
+
+<div class="card">
+  <h2>内置模板 ({{ builtin|length }})</h2>
+  <table>
+    <tr><th>ID</th><th>名称</th><th>分类</th><th>标题</th><th>操作</th></tr>
+    {% for t in builtin %}
+    <tr>
+      <td><code>{{ t.id }}</code></td>
+      <td>{{ t.name }}</td>
+      <td>{{ t.category }}</td>
+      <td>{{ t.title }}</td>
+      <td>
+        <button class="btn btn-edit" onclick="editBuiltin('{{ t.id }}')">查看/重置</button>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+<div class="card">
+  <h2>自定义模板 ({{ custom|length }})</h2>
+  <table>
+    <tr><th>ID</th><th>名称</th><th>分类</th><th>版本</th><th>操作</th></tr>
+    {% for t in custom %}
+    <tr>
+      <td><code>{{ t.id }}</code></td>
+      <td>{{ t.name }}</td>
+      <td>{{ t.category }}</td>
+      <td>{{ t.version }}</td>
+      <td>
+        <button class="btn btn-del" onclick="deleteTemplate('{{ t.id }}')">停用</button>
+      </td>
+    </tr>
+    {% endfor %}
+    {% if not custom %}
+    <tr><td colspan="5" style="color:#999; text-align:center;">暂无自定义模板</td></tr>
+    {% endif %}
+  </table>
+</div>
+
+</div>
+
+<script>
+function editBuiltin(id) {
+  let c = prompt('修改「' + id + '」的内容:');
+  if (!c) return;
+  fetch('/api/dispatch-center/templates/' + id, {
+    method: 'PUT', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({content: c, name: id, category: 'custom'})
+  }).then(r => r.json()).then(d => { alert(d.message); location.reload(); });
+}
+function deleteTemplate(id) {
+  if (!confirm('确认停用 ' + id + '?')) return;
+  fetch('/api/dispatch-center/templates/' + id, {method: 'DELETE'})
+    .then(r => r.json()).then(d => { alert(d.message); location.reload(); });
+}
+function resetTemplate(id) {
+  fetch('/api/dispatch-center/templates/' + id + '/reset', {method: 'POST'})
+    .then(r => r.json()).then(d => { alert(d.message); location.reload(); });
+}
+function showTab(t) {}
+</script>
+</body>
+</html>

@@ -27,8 +27,8 @@ print()
 if not ok:
     sys.exit(1)
 
-print('[2/4] Compile check: wechat_server.py ...')
-ok = check_file('wechat_server.py')
+print('[2/4] Compile check: standalone_dispatch_server.py ...')
+ok = check_file('standalone_dispatch_server.py')
 print()
 
 if not ok:
