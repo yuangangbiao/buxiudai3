@@ -2092,10 +2092,10 @@ def create_app():
                 from core.config import CONTAINER_MYSQL_CFG, DB_CONNECT_TIMEOUT
                 try:
                     try:
-                    from core._db_pools import get_container_connection
-                    _dc = get_container_connection(autocommit=True)
-                except Exception:
-                    _dc = pymysql.connect(**CONTAINER_MYSQL_CFG, connect_timeout=DB_CONNECT_TIMEOUT)
+                        from core._db_pools import get_container_connection
+                        _dc = get_container_connection(autocommit=True)
+                    except Exception:
+                        _dc = pymysql.connect(**CONTAINER_MYSQL_CFG, connect_timeout=DB_CONNECT_TIMEOUT)
                     _dc_c = _dc.cursor()
                     _dc_c.execute(
                         "SELECT id FROM process_sub_steps WHERE order_no=%s AND step_name=%s AND batch_no=%s AND quantity > 0 LIMIT 1",
