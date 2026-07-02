@@ -36,7 +36,7 @@ from services.order_service import OrderService  # noqa: E402
 from services.wechat_report_service import WeChatReportService  # noqa: E402
 
 # ── mobile_api_ai 独有的 API 服务（6 个）──
-from .notifier import WeChatNotifier, get_notifier  # noqa: E402
+from .notifier import WeChatNotifier, get_notifier, wechat_notifier  # noqa: E402
 from .session import SessionManager, get_session_manager  # noqa: E402
 from .cost_service import CostService  # noqa: E402
 from .stats_engine import StatsEngine  # noqa: E402
@@ -51,6 +51,7 @@ __all__ = [
     # mobile_api_ai 独有的 6 个 API 服务
     'WeChatNotifier',
     'get_notifier',
+    'wechat_notifier',
     'SessionManager',
     'get_session_manager',
     'CostService',

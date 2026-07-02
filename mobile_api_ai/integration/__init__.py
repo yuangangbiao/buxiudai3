@@ -3,7 +3,7 @@
 [v3.6 迁移] 集成服务模块
 
 DEPRECATED: 所有模块已迁移到新位置：
-- wechat_notifier.py      → services/notifier.py  (API 不完全兼容，保留原版)
+- wechat_notifier.py      → services/notifier.py (wechat_notifier 单例已指向新版)
 - desktop_callback.py     → container_center/desktop_callback.py (别名重定向)
 - instruction_handler.py  → services/instruction_handler.py (别名重定向)
 
@@ -13,8 +13,8 @@ DEPRECATED: 所有模块已迁移到新位置：
 from .wechat_notifier import (
     WeChatNotifier,
     TaskPollingNotifier,
-    wechat_notifier,
 )
+from services.notifier import wechat_notifier as notifier_singleton
 from .desktop_callback import (
     DesktopCallbackManager,
     DesktopClientListener,

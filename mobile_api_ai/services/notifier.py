@@ -332,6 +332,157 @@ class WeChatNotifier:
             'message_hub_initialized': self._message_hub is not None,
         }
 
+    def _ensure_initialized(self):
+        if not self._message_hub:
+            self.initialize()
+
+    def notify_task_completed(self, task_data: Dict[str, Any]) -> bool:
+        if not self._enabled or not self._notify_task_completed:
+            return False
+        self._ensure_initialized()
+        if not self._message_hub:
+            return False
+        order_no = task_data.get('order_no', '未知')
+        process = task_data.get('process', '未知')
+        completed_qty = task_data.get('completed_qty', 0)
+        task_id = task_data.get('task_id', '')
+        content = _render_template('tmpl_task_completed', {
+            '操作员': task_data.get('operator_id', ''),
+            '任务标题': process,
+            '订单号': order_no,
+            '数量': completed_qty,
+        })
+        try:
+            success = self._message_hub.broadcast(content)
+            if success:
+                logger.info(f"[WeChatNotifier] 任务完成通知发送成功: {task_id}")
+            else:
+                logger.warning(f"[WeChatNotifier] 任务完成通知发送失败: {task_id}")
+            return success
+        except Exception as e:
+            logger.error(f"[WeChatNotifier] 发送任务完成通知异常: {e}")
+            return False
+
+    def notify_task_completed_kwargs(self, task_id: str, operator_id: str,
+                                    task_title: str, result: str = None) -> bool:
+        return self.notify_task_completed({
+            'task_id': task_id,
+            'operator_id': operator_id,
+            'process': task_title,
+            'completed_qty': 0,
+        })
+
+    def notify_quality_result(self, order_no: str, process: str,
+                             result: str, operator_id: str = None) -> bool:
+        if not self._enabled:
+            return False
+        self._ensure_initialized()
+        if not self._message_hub:
+            return False
+        status_icon = '✅' if result == '合格' else ('⚠️' if result == '需复检' else '❌')
+        issue_lines = ''
+        content = _render_template('tmpl_quality_result', {
+            '状态图标': status_icon,
+            '订单号': order_no,
+            '质检员': operator_id or '',
+            '结果': result,
+            '问题行': '',
+            '通知时间': __import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        })
+        try:
+            success = self._message_hub.broadcast(content)
+            if success:
+                logger.info(f"[WeChatNotifier] 质检结果通知发送成功: {order_no}")
+            else:
+                logger.warning(f"[WeChatNotifier] 质检结果通知发送失败: {order_no}")
+            return success
+        except Exception as e:
+            logger.error(f"[WeChatNotifier] 发送质检结果通知异常: {e}")
+            return False
+
+    def notify_order_progress(self, order_no: str, customer: str = None,
+                            processes: list = None) -> bool:
+        if not self._enabled:
+            return False
+        self._ensure_initialized()
+        if not self._message_hub:
+            return False
+        process_lines = ''
+        if processes:
+            for p in processes:
+                icon = '✅' if p.get('status') == '已完成' else ('🔄' if p.get('status') == '进行中' else '⏳')
+                process_lines += f'{icon} {p.get("name", "-")} - {p.get("status", "-")}\n'
+        content = _render_template('tmpl_order_progress', {
+            '订单号': order_no,
+            '客户': customer or '-',
+            '工序行': process_lines,
+            '通知时间': __import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        })
+        try:
+            success = self._message_hub.broadcast(content)
+            if success:
+                logger.info(f"[WeChatNotifier] 订单进度通知发送成功: {order_no}")
+            else:
+                logger.warning(f"[WeChatNotifier] 订单进度通知发送失败: {order_no}")
+            return success
+        except Exception as e:
+            logger.error(f"[WeChatNotifier] 发送订单进度通知异常: {e}")
+            return False
+
+    def notify_report_success(self, order_no: str, process_name: str,
+                            quantity: float, operator_id: str) -> bool:
+        return self.notify_report_submitted({
+            'order_no': order_no,
+            'process': process_name,
+            'quantity': quantity,
+            'operator': operator_id,
+        })
+
+    def notify_system_status(self, status: str, message: str) -> bool:
+        if not self._enabled:
+            return False
+        self._ensure_initialized()
+        if not self._message_hub:
+            return False
+        content = _render_template('tmpl_system_status', {
+            '状态': status,
+            '消息': message,
+            '通知时间': __import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        })
+        try:
+            success = self._message_hub.broadcast(content)
+            if success:
+                logger.info(f"[WeChatNotifier] 系统状态通知发送成功: {status}")
+            else:
+                logger.warning(f"[WeChatNotifier] 系统状态通知发送失败: {status}")
+            return success
+        except Exception as e:
+            logger.error(f"[WeChatNotifier] 发送系统状态通知异常: {e}")
+            return False
+
+    def send_notification(self, content: str, title: str = None) -> bool:
+        if not self._enabled:
+            return False
+        self._ensure_initialized()
+        if not self._message_hub:
+            return False
+        try:
+            success = self._message_hub.broadcast(content)
+            if success:
+                logger.info(f"[WeChatNotifier] 自定义通知发送成功")
+            else:
+                logger.warning(f"[WeChatNotifier] 自定义通知发送失败")
+            return success
+        except Exception as e:
+            logger.error(f"[WeChatNotifier] 发送自定义通知异常: {e}")
+            return False
+
+    def start(self):
+        self._ensure_initialized()
+
+    def stop(self):
+        pass
+
 
 _notifier_instance: Optional[WeChatNotifier] = None
 
