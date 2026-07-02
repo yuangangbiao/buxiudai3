@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-企业微信通知集成服务
-容器中心通过此服务向企业微信群发送通知
+[v3.6 迁移] 企业微信通知集成服务
 
-@deprecated: 请使用 services/notifier.py 中的 WeChatNotifier 替代
-             此版本保留供 container_center_v5.py 和 timeout_reminder.py 兼容使用
+DEPRECATED: 请使用 services/notifier.py 中的 WeChatNotifier
+API 不完全兼容（新版缺少 TaskPollingNotifier），当前保留原版保证功能完整
+将在 CI 验证通过后完成完全迁移
 """
 import os
 import requests
@@ -23,7 +23,6 @@ except ImportError:
     pass
 
 logger = logging.getLogger(__name__)
-logger.warning("[DEPRECATED] integration/wechat_notifier.py 已弃用，请迁移到 services/notifier.py")
 
 
 class WeChatNotifier:
