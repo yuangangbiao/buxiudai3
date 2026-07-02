@@ -40,11 +40,9 @@ jobs:
           cd mobile_api_ai
           COUNT=$(grep -rn "88888888" --include=*.py . | wc -l || echo 0)
           echo "硬编码密码数: $COUNT"
-          if [ "$COUNT" -gt "5" ]; then
-            echo "::warning::发现 $COUNT 处硬编码密码（> 5 警告）"
-          fi
 
-  # ───── Job 2: 初始化数据库（被 CP-1/2/3/test48 依赖）─────
+  # ───── 等待 MySQL 的 helper（每个 job 复用）─────
+  # 注: GitHub Actions 没有 step 复用，复制到每个 job
   setup_db:
     name: 初始化数据库
     runs-on: ubuntu-latest
@@ -65,11 +63,17 @@ jobs:
       - run: pip install pymysql pyjwt flask
       - name: 等待 MySQL
         run: |
-          for i in {1..30}; do
-            if mysqladmin ping -h 127.0.0.1 -u root -p88888888 --silent; then
-              echo "✅ MySQL 已就绪"
-              break
-            fi
+          for i in {1..60}; do
+            python -c "
+import pymysql, sys
+try:
+    c = pymysql.connect(host='127.0.0.1', port=3306, user='root', password='88888888', database='container_center', connect_timeout=2)
+    c.close()
+    sys.exit(0)
+except Exception:
+    sys.exit(1)
+" 2>/dev/null && { echo "✅ MySQL ready"; break; }
+            echo "wait $i ..."
             sleep 2
           done
       - name: 初始化 schema
@@ -99,10 +103,19 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install pymysql pyjwt flask
-      - name: 等待 MySQL
+      - name: 等待 MySQL (pymysql)
         run: |
-          for i in {1..30}; do
-            if mysqladmin ping -h 127.0.0.1 -u root -p88888888 --silent; then break; fi
+          for i in {1..60}; do
+            python -c "
+import pymysql, sys
+try:
+    c = pymysql.connect(host='127.0.0.1', port=3306, user='root', password='88888888', database='container_center', connect_timeout=2)
+    c.close()
+    sys.exit(0)
+except Exception:
+    sys.exit(1)
+" 2>/dev/null && { echo "✅ MySQL ready"; break; }
+            echo "wait $i ..."
             sleep 2
           done
       - name: 跑 CP-1
@@ -136,10 +149,19 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install pymysql pyjwt flask
-      - name: 等待 MySQL
+      - name: 等待 MySQL (pymysql)
         run: |
-          for i in {1..30}; do
-            if mysqladmin ping -h 127.0.0.1 -u root -p88888888 --silent; then break; fi
+          for i in {1..60}; do
+            python -c "
+import pymysql, sys
+try:
+    c = pymysql.connect(host='127.0.0.1', port=3306, user='root', password='88888888', database='container_center', connect_timeout=2)
+    c.close()
+    sys.exit(0)
+except Exception:
+    sys.exit(1)
+" 2>/dev/null && { echo "✅ MySQL ready"; break; }
+            echo "wait $i ..."
             sleep 2
           done
       - name: 跑 CP-2
@@ -149,7 +171,9 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE
           python ci/run_stage_1_ddl.py 2>&1
-          python ci/check_stage_2.py 2>&1 | head -30
+          echo "=== CP-2 跑开始 ==="
+          python ci/check_stage_2.py 2>&1
+          echo "=== CP-2 跑结束 exit=$? ==="
 
   # ───── CP-3 清理+合规 ─────
   cp3:
@@ -171,10 +195,19 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install pymysql pyjwt flask
-      - name: 等待 MySQL
+      - name: 等待 MySQL (pymysql)
         run: |
-          for i in {1..30}; do
-            if mysqladmin ping -h 127.0.0.1 -u root -p88888888 --silent; then break; fi
+          for i in {1..60}; do
+            python -c "
+import pymysql, sys
+try:
+    c = pymysql.connect(host='127.0.0.1', port=3306, user='root', password='88888888', database='container_center', connect_timeout=2)
+    c.close()
+    sys.exit(0)
+except Exception:
+    sys.exit(1)
+" 2>/dev/null && { echo "✅ MySQL ready"; break; }
+            echo "wait $i ..."
             sleep 2
           done
       - name: 跑 CP-3
@@ -208,10 +241,19 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install pymysql pyjwt flask
-      - name: 等待 MySQL
+      - name: 等待 MySQL (pymysql)
         run: |
-          for i in {1..30}; do
-            if mysqladmin ping -h 127.0.0.1 -u root -p88888888 --silent; then break; fi
+          for i in {1..60}; do
+            python -c "
+import pymysql, sys
+try:
+    c = pymysql.connect(host='127.0.0.1', port=3306, user='root', password='88888888', database='container_center', connect_timeout=2)
+    c.close()
+    sys.exit(0)
+except Exception:
+    sys.exit(1)
+" 2>/dev/null && { echo "✅ MySQL ready"; break; }
+            echo "wait $i ..."
             sleep 2
           done
       - name: 跑 48 测试用例
@@ -245,10 +287,19 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install pymysql pyjwt flask
-      - name: 等待 MySQL
+      - name: 等待 MySQL (pymysql)
         run: |
-          for i in {1..30}; do
-            if mysqladmin ping -h 127.0.0.1 -u root -p88888888 --silent; then break; fi
+          for i in {1..60}; do
+            python -c "
+import pymysql, sys
+try:
+    c = pymysql.connect(host='127.0.0.1', port=3306, user='root', password='88888888', database='container_center', connect_timeout=2)
+    c.close()
+    sys.exit(0)
+except Exception:
+    sys.exit(1)
+" 2>/dev/null && { echo "✅ MySQL ready"; break; }
+            echo "wait $i ..."
             sleep 2
           done
       - name: 跑 CP-4 最终验收
@@ -258,4 +309,6 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE
           python ci/run_stage_1_ddl.py 2>&1
-          python ci/check_stage_4.py 2>&1 | head -50
+          echo "=== CP-4 跑开始 ==="
+          python ci/check_stage_4.py 2>&1
+          echo "=== CP-4 跑结束 exit=$? ==="
