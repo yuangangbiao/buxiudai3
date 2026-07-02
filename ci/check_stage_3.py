@@ -161,19 +161,14 @@ def check_t26_readme():
 
 
 def check_archive_count():
-    """archive/ 目录归档统计"""
+    """archive/ 目录归档统计（递归统计所有文件，含直接文件和子目录）"""
     print(f'\n{C.B}[8/8] archive/ 归档统计{C.E}')
     archive = os.path.join(PROJECT_ROOT, 'archive')
     if not os.path.exists(archive):
         failed('archive/', '不存在')
         return False
-    total = 0
-    for d in os.listdir(archive):
-        full = os.path.join(archive, d)
-        if os.path.isdir(full):
-            count = sum(len(files) for _, _, files in os.walk(full))
-            total += count
-            print(f'       {d}: {count} 个文件')
+    # 递归统计 archive/ 下所有文件（与 check_t12 逻辑一致）
+    total = sum(len(files) for _, _, files in os.walk(archive))
     if total >= 1:
         passed('archive/', f'共 {total} 个文件已归档')
         return True
