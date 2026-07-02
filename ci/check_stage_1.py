@@ -6,7 +6,7 @@ import os
 import sys
 import pymysql
 
-PROJECT_ROOT = r'd:\yuan\不锈钢网带跟单3.0'
+PROJECT_ROOT = os.getenv('GITHUB_WORKSPACE', os.getcwd())
 MOBILE_API = os.path.join(PROJECT_ROOT, 'mobile_api_ai')
 
 class C:

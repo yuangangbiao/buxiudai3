@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import os, re
-PROJECT_ROOT = r'd:\yuan\不锈钢网带跟单3.0'
+PROJECT_ROOT = os.getenv('GITHUB_WORKSPACE', os.getcwd())
 EXCLUDE = ['archive', '__pycache__', '.pyc', 'final_verify', 'find_real_sql']
 for root, dirs, files in os.walk(PROJECT_ROOT):
     dirs[:] = [d for d in dirs if d not in ('archive', '__pycache__', '.git', 'node_modules', '.trae', '.workbuddy')]

@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 
 # 配置
 os.environ['JWT_SECRET_KEY'] = 'x' * 64  # DEV 测试 secret
-PROJECT_ROOT = r'd:\yuan\不锈钢网带跟单3.0'
+PROJECT_ROOT = os.getenv('GITHUB_WORKSPACE', os.getcwd())
 sys.path.insert(0, os.path.join(PROJECT_ROOT, 'mobile_api_ai'))
 
 import pymysql

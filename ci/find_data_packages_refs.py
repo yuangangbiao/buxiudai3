@@ -1,7 +1,7 @@
 import os
 import re
 
-PROJECT_ROOT = r'd:\yuan\不锈钢网带跟单3.0'
+PROJECT_ROOT = os.getenv('GITHUB_WORKSPACE', os.getcwd())
 EXCLUDE = ['archive', '__pycache__', '.pyc', 'data_packages_inventory',
            'data_type_router', 'check_data_packages', 'find_data_packages',
            'split_data_packages', 'data_packages_split',

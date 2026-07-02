@@ -10,7 +10,7 @@ import re
 import subprocess
 from datetime import datetime
 
-PROJECT_ROOT = r'd:\yuan\不锈钢网带跟单3.0'
+PROJECT_ROOT = os.getenv('GITHUB_WORKSPACE', os.getcwd())
 TESTS_DIRS = [
     os.path.join(PROJECT_ROOT, 'mobile_api_ai', 'tests'),
     os.path.join(PROJECT_ROOT, 'tests'),

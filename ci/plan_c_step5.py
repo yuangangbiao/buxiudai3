@@ -2,7 +2,7 @@
 import os, shutil
 from datetime import datetime
 
-PROJECT_ROOT = r'd:\yuan\不锈钢网带跟单3.0'
+PROJECT_ROOT = os.getenv('GITHUB_WORKSPACE', os.getcwd())
 ARCHIVE = os.path.join(PROJECT_ROOT, 'archive', f'scripts_c5_{datetime.now().strftime("%Y%m%d")}')
 os.makedirs(ARCHIVE, exist_ok=True)
 
