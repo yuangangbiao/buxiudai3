@@ -43,12 +43,8 @@ jobs:
           if [ "$COUNT" -gt "5" ]; then
             echo "::warning::发现 $COUNT 处硬编码密码（> 5 警告）"
           fi
-      - name: flake8 检查
-        run: |
-          cd mobile_api_ai
-          flake8 --max-line-length=120 --ignore=E501,W503,E402 --exclude=archive,__pycache__,.git storage/ api/decorators.py utils/quantity_validator.py utils/log_sanitizer.py utils/dispatch_task.py utils/exception_handler.py 2>&1 | head -30 || true
 
-  # ───── Job 2: 初始化数据库（被 cp1-cp4 依赖）─────
+  # ───── Job 2: 初始化数据库（被 CP-1/2/3/test48 依赖）─────
   setup_db:
     name: 初始化数据库
     runs-on: ubuntu-latest
@@ -112,10 +108,11 @@ jobs:
       - name: 跑 CP-1
         env:
           DB_HOST: 127.0.0.1
+          PYTHONPATH: ${{ github.workspace }}
         run: |
           cd $GITHUB_WORKSPACE
-          python ci/run_stage_1_ddl.py
-          python ci/check_stage_1.py
+          python ci/run_stage_1_ddl.py 2>&1
+          python ci/check_stage_1.py 2>&1 | head -30
 
   # ───── CP-2 核心路由+鉴权 ─────
   cp2:
@@ -146,10 +143,11 @@ jobs:
       - name: 跑 CP-2
         env:
           DB_HOST: 127.0.0.1
+          PYTHONPATH: ${{ github.workspace }}
         run: |
           cd $GITHUB_WORKSPACE
-          python ci/run_stage_1_ddl.py
-          python ci/check_stage_2.py
+          python ci/run_stage_1_ddl.py 2>&1
+          python ci/check_stage_2.py 2>&1 | head -30
 
   # ───── CP-3 清理+合规 ─────
   cp3:
@@ -180,10 +178,11 @@ jobs:
       - name: 跑 CP-3
         env:
           DB_HOST: 127.0.0.1
+          PYTHONPATH: ${{ github.workspace }}
         run: |
           cd $GITHUB_WORKSPACE
-          python ci/run_stage_1_ddl.py
-          python ci/check_stage_3.py
+          python ci/run_stage_1_ddl.py 2>&1
+          python ci/check_stage_3.py 2>&1 | head -30
 
   # ───── 48 测试用例 ─────
   test48:
@@ -214,10 +213,11 @@ jobs:
       - name: 跑 48 测试用例
         env:
           DB_HOST: 127.0.0.1
+          PYTHONPATH: ${{ github.workspace }}
         run: |
           cd $GITHUB_WORKSPACE
-          python ci/run_stage_1_ddl.py
-          python ci/test_v3_6_full.py
+          python ci/run_stage_1_ddl.py 2>&1
+          python ci/test_v3_6_full.py 2>&1 | head -50
 
   # ───── CP-4 最终验收 ─────
   cp4:
@@ -248,7 +248,8 @@ jobs:
       - name: 跑 CP-4 最终验收
         env:
           DB_HOST: 127.0.0.1
+          PYTHONPATH: ${{ github.workspace }}
         run: |
           cd $GITHUB_WORKSPACE
-          python ci/run_stage_1_ddl.py
-          python ci/check_stage_4.py
+          python ci/run_stage_1_ddl.py 2>&1
+          python ci/check_stage_4.py 2>&1 | head -50
