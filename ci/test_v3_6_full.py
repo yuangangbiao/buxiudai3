@@ -15,6 +15,8 @@ from datetime import datetime, timedelta
 os.environ['JWT_SECRET_KEY'] = 'x' * 64  # DEV 测试 secret
 PROJECT_ROOT = os.getenv('GITHUB_WORKSPACE', os.getcwd())
 sys.path.insert(0, os.path.join(PROJECT_ROOT, 'mobile_api_ai'))
+sys.path.insert(0, PROJECT_ROOT)  # 确保项目根目录可导入（core, utils 等）
+sys.stdout.reconfigure(line_buffering=True)  # 确保输出实时刷新
 
 import pymysql
 from pymysql.cursors import DictCursor
@@ -34,24 +36,39 @@ def _direct_import(module_name, file_path):
     return mod
 
 # 注入 quantity_validator（跳过 utils/__init__.py）
-_qv = _direct_import(
-    'utils.quantity_validator',
-    os.path.join(PROJECT_ROOT, 'mobile_api_ai', 'utils', 'quantity_validator.py')
-)
-validate_quantity = _qv.validate_quantity
+try:
+    _qv = _direct_import(
+        'utils.quantity_validator',
+        os.path.join(PROJECT_ROOT, 'mobile_api_ai', 'utils', 'quantity_validator.py')
+    )
+    validate_quantity = _qv.validate_quantity
+    print('[DIAG] _direct_import utils.quantity_validator: OK')
+except Exception as e:
+    print(f'[DIAG] _direct_import utils.quantity_validator: FAIL - {e}')
+    raise
 # 注入 dispatch_task
-_dt = _direct_import(
-    'utils.dispatch_task',
-    os.path.join(PROJECT_ROOT, 'mobile_api_ai', 'utils', 'dispatch_task.py')
-)
-dispatch_task = _dt.dispatch_task
+try:
+    _dt = _direct_import(
+        'utils.dispatch_task',
+        os.path.join(PROJECT_ROOT, 'mobile_api_ai', 'utils', 'dispatch_task.py')
+    )
+    dispatch_task = _dt.dispatch_task
+    print('[DIAG] _direct_import utils.dispatch_task: OK')
+except Exception as e:
+    print(f'[DIAG] _direct_import utils.dispatch_task: FAIL - {e}')
+    raise
 # 注入 log_sanitizer
-_ls = _direct_import(
-    'utils.log_sanitizer',
-    os.path.join(PROJECT_ROOT, 'mobile_api_ai', 'utils', 'log_sanitizer.py')
-)
-sanitize_phone = _ls.sanitize_phone
-sanitize_id_card = _ls.sanitize_id_card
+try:
+    _ls = _direct_import(
+        'utils.log_sanitizer',
+        os.path.join(PROJECT_ROOT, 'mobile_api_ai', 'utils', 'log_sanitizer.py')
+    )
+    sanitize_phone = _ls.sanitize_phone
+    sanitize_id_card = _ls.sanitize_id_card
+    print('[DIAG] _direct_import utils.log_sanitizer: OK')
+except Exception as e:
+    print(f'[DIAG] _direct_import utils.log_sanitizer: FAIL - {e}')
+    raise
 
 DB = dict(host='localhost', port=3306, user='root',
           password='88888888', database='container_center')
@@ -555,11 +572,17 @@ def test_doc_2():
 # ==============================
 def main():
     print('\033[1m\033[92m===================================================\033[0m')
-    print('\033[1m\033[92m  v3.6 完整测试套件 - 51 用例\033[0m')
+    print('\033[1m\033[92m  v3.6 完整测试套件 - 48 用例\033[0m')
     print('\033[1m\033[92m===================================================\033[0m')
+    print(f'[DIAG] PROJECT_ROOT={PROJECT_ROOT}')
+    print(f'[DIAG] sys.path[0:3]={sys.path[0:3]}')
+    print(f'[DIAG] DB={DB}')
+    sys.stdout.flush()
 
     # 执行所有测试
     test_funcs = [v for k, v in globals().items() if k.startswith('test_') and callable(v)]
+    print(f'[DIAG] 共 {len(test_funcs)} 个测试函数')
+    sys.stdout.flush()
     for tf in test_funcs:
         tf()
 
@@ -577,7 +600,7 @@ def main():
         return 0
     else:
         print(f'\n  \033[1m\033[91m❌ {RESULTS["FAIL"]} 个失败：\033[0m')
-        for f in FAILURES[:5]:  # 只打印前 5 个
+        for f in FAILURES:  # 打印所有失败
             print(f'    - {f}')
         return 1
 
