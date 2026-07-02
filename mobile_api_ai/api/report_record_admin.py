@@ -22,6 +22,17 @@ from .decorators import require_admin
 from .limiter import limiter
 from storage.mysql_storage import MySQLStorage
 
+
+def _escape_like(value):
+    if value is None:
+        return '%'
+    s = str(value)
+    s = s.replace('\\', '\\\\')
+    s = s.replace('%', '\\%')
+    s = s.replace('_', '\\_')
+    return f'%{s}%'
+
+
 logger = logging.getLogger(__name__)
 bp = Blueprint('report_record_admin', __name__, url_prefix='/api')
 
@@ -289,11 +300,11 @@ def quality_record_list():
         where = ["qr.status IS NULL OR qr.status NOT IN ('withdrawn')"]
         params = []
         if order_no:
-            where.append("qr.order_no LIKE %s"); params.append(f"%{order_no}%")
+            where.append("qr.order_no LIKE %s"); params.append(_escape_like(order_no))
         if inspection_type:
-            where.append("qr.inspection_type LIKE %s"); params.append(f"%{inspection_type}%")
+            where.append("qr.inspection_type LIKE %s"); params.append(_escape_like(inspection_type))
         if operator:
-            where.append("qr.inspector LIKE %s"); params.append(f"%{operator}%")
+            where.append("qr.inspector LIKE %s"); params.append(_escape_like(operator))
         if start_date:
             where.append("qr.record_date >= %s"); params.append(start_date)
         if end_date:
@@ -504,11 +515,11 @@ def material_record_list():
         params = []
         if order_no:
             where.append("(dp.order_no LIKE %s OR dp.title LIKE %s)")
-            params.append(f"%{order_no}%"); params.append(f"%{order_no}%")
+            params.append(_escape_like(order_no)); params.append(_escape_like(order_no))
         if material_name:
-            where.append("dp.title LIKE %s"); params.append(f"%{material_name}%")
+            where.append("dp.title LIKE %s"); params.append(_escape_like(material_name))
         if operator:
-            where.append("dp.operator_id LIKE %s"); params.append(f"%{operator}%")
+            where.append("dp.operator_id LIKE %s"); params.append(_escape_like(operator))
         if start_date:
             where.append("dp.created_at >= %s"); params.append(start_date)
         if end_date:
@@ -688,9 +699,9 @@ def outsource_record_list():
         params = []
         if order_no:
             where.append("(dp.order_no LIKE %s OR dp.title LIKE %s)")
-            params.append(f"%{order_no}%"); params.append(f"%{order_no}%")
+            params.append(_escape_like(order_no)); params.append(_escape_like(order_no))
         if operator:
-            where.append("dp.operator_id LIKE %s"); params.append(f"%{operator}%")
+            where.append("dp.operator_id LIKE %s"); params.append(_escape_like(operator))
         if start_date:
             where.append("dp.created_at >= %s"); params.append(start_date)
         if end_date:
@@ -868,9 +879,9 @@ def schedule_record_list():
         params = []
         if order_no:
             where.append("(dp.order_no LIKE %s OR dp.product_name LIKE %s)")
-            params.append(f"%{order_no}%"); params.append(f"%{order_no}%")
+            params.append(_escape_like(order_no)); params.append(_escape_like(order_no))
         if operator:
-            where.append("dp.operator_id LIKE %s"); params.append(f"%{operator}%")
+            where.append("dp.operator_id LIKE %s"); params.append(_escape_like(operator))
         if start_date:
             where.append("dp.created_at >= %s"); params.append(start_date)
         if end_date:
