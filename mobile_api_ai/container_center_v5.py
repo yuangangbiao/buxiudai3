@@ -1389,6 +1389,23 @@ class ContainerCenter:
         """获取流程的最后一条子步骤记录"""
         return self.storage.get_last_sub_step(order_no)
 
+    def get_sub_step_summary_batch(self, order_nos: List[str]) -> Dict[str, Dict]:
+        """批量获取子步骤汇总（避免多次查询）
+
+        Args:
+            order_nos: 订单号列表
+
+        Returns:
+            Dict: {order_no: summary_dict} 映射
+        """
+        result = {}
+        for order_no in order_nos:
+            try:
+                result[order_no] = self.storage.get_sub_step_summary(order_no)
+            except Exception:
+                result[order_no] = {}
+        return result
+
     # ───── workers 代理 ─────
 
     def get_all_workers(self) -> List[Dict]:

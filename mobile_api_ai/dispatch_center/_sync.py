@@ -76,7 +76,7 @@ def get_cached_work_orders(page: int = 1, size: int = 2000, data_type: str = Non
         logger.warning(f'[分页] size={size} 超过上限({max_size}), 已截断为 {capped}')
     # 延迟导入避免循环
     try:
-        from dispatch_center.dispatch_context import DispatchContext
+        from dispatch_center._core import DispatchContext
         return DispatchContext.get_instance().get_cached_work_orders(page, capped, data_type)
     except ImportError:
         logger.warning('[Sync] DispatchContext 不可用，返回空列表')
