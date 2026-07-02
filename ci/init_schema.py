@@ -205,7 +205,18 @@ DDL_STATEMENTS = [
         KEY idx_sfl_order_no (order_no)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4""",
 
-    # 9. process_records
+    # 9. tbl_configs (needed by CP-2 check_real_db_query)
+    """CREATE TABLE IF NOT EXISTS tbl_configs (
+        config_name VARCHAR(128) PRIMARY KEY,
+        config_data LONGTEXT NOT NULL,
+        version INTEGER DEFAULT 1,
+        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+        created_by VARCHAR(64) NOT NULL DEFAULT 'system',
+        updated_by VARCHAR(64) NOT NULL DEFAULT 'system'
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4""",
+
+    # 10. process_records
     """CREATE TABLE IF NOT EXISTS process_records (
         id VARCHAR(64) NOT NULL PRIMARY KEY,
         process_type VARCHAR(50) DEFAULT 'production',
@@ -237,7 +248,7 @@ DDL_STATEMENTS = [
 
 
 def main():
-    print('===== CI Init Schema: Create 9 business tables =====')
+    print('===== CI Init Schema: Create 10 business tables =====')
     conn = pymysql.connect(**DB_CONFIG)
     cur = conn.cursor()
 
@@ -247,13 +258,13 @@ def main():
         try:
             cur.execute(ddl)
             conn.commit()
-            print('  [%d/9] %s: OK' % (i, table_name))
+            print('  [%d/10] %s: OK' % (i, table_name))
         except Exception as e:
-            print('  [%d/9] %s: SKIP (%s)' % (i, table_name, e))
+            print('  [%d/10] %s: SKIP (%s)' % (i, table_name, e))
 
     cur.close()
     conn.close()
-    print('\nDone: 9 tables ready')
+    print('\nDone: 10 tables ready')
 
 
 if __name__ == '__main__':
