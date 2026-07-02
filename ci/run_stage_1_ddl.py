@@ -97,25 +97,39 @@ def migrate_status(c):
 
 
 def drop_data_packages(c):
-    """T0.6 DROP data_packages"""
+    """T0.6 DROP data_packages（幂等）"""
     cur = c.cursor()
-    try:
+    # 检查 data_packages 是否存在
+    cur.execute("SHOW TABLES LIKE 'data_packages'")
+    has_data_packages = cur.fetchone() is not None
+    cur.execute("SHOW TABLES LIKE 'data_packages_deprecated'")
+    has_data_packages_deprecated = cur.fetchone() is not None
+
+    if has_data_packages and not has_data_packages_deprecated:
         cur.execute("RENAME TABLE data_packages TO data_packages_deprecated")
         c.commit()
         print('  ✅ data_packages → data_packages_deprecated')
-    except Exception as e:
-        print(f'  ⚠️ RENAME: {e}')
+    elif not has_data_packages and not has_data_packages_deprecated:
+        print('  ⏭ data_packages 已不存在（无需 RENAME）')
+        return
+    else:
+        print('  ⏭ data_packages_deprecated 已存在')
 
-    cur.execute("""
-        CREATE TRIGGER block_write_deprecated
-        BEFORE INSERT ON data_packages_deprecated
-        FOR EACH ROW
-        BEGIN
-            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'data_packages 已废弃，请使用 11 业务表';
+    # 触发器（如果不存在）
+    cur.execute("SHOW TRIGGERS WHERE `Table` = 'data_packages_deprecated'")
+    if not cur.fetchone():
+        cur.execute("""
+            CREATE TRIGGER block_write_deprecated
+            BEFORE INSERT ON data_packages_deprecated
+            FOR EACH ROW
+            BEGIN
+                SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'data_packages 已废弃，请使用 11 业务表';
         END
-    """)
-    c.commit()
-    print('  ✅ 触发器已创建（阻止写入）')
+        """)
+        c.commit()
+        print('  ✅ 触发器已创建（阻止写入）')
+    else:
+        print('  ⏭ 触发器已存在')
 
     cur.execute("DROP TABLE IF EXISTS process_packages")
     c.commit()

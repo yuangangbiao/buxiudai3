@@ -112,7 +112,9 @@ jobs:
       - name: 跑 CP-1
         env:
           DB_HOST: 127.0.0.1
-        run: python ci/check_stage_1.py
+        run: |
+          python ci/run_stage_1_ddl.py
+          python ci/check_stage_1.py
 
   # ───── CP-2 ─────
   cp2:
@@ -236,4 +238,6 @@ jobs:
       - name: 跑 CP-4 最终验收
         env:
           DB_HOST: 127.0.0.1
-        run: python ci/check_stage_4.py
+        run: |
+          python ci/run_stage_1_ddl.py
+          python ci/check_stage_4.py
