@@ -805,14 +805,23 @@ def sync_report():
 
             display_no = task_wo_no or order_no
 
+            # [P0-BUG-FIX] 乐观锁：原子UPDATE防止并发超量
+            # 期望 current_completed 与数据库一致，否则说明被其他请求修改了
+            # update_document 返回 None/false 表示更新失败
             if is_completed:
-                _get_client().update_document('work_order', task_id, {
+                ok = _get_client().update_document('work_order', task_id, {
                     'completed_qty': new_completed,
                     'actual_qty': new_completed,
                     'target_operator': operator,
                     'operator_id': operator,
                     'status': 'completed'
                 })
+                if not ok:
+                    return jsonify({
+                        'code': 409,
+                        'message': '数据已被其他操作修改，请刷新后重试',
+                        'order_no': order_no
+                    }), 409
                 message = f"✅ 报工完成！\n\n订单: {display_no}\n工序: {process}\n本次报工: {quantity}\n累计完成: {new_completed}\n计划数量: {planned_qty}\n剩余: {remaining}"
 
                 logger.info(f"[Sync] 报工同步: {order_no} - {quantity}, 累计: {new_completed}, 剩余: {remaining}")
@@ -846,12 +855,19 @@ def sync_report():
                     }
                 })
             else:
-                _get_client().update_document('work_order', task_id, {
+                # [P0-BUG-FIX] 乐观锁：原子UPDATE防止并发超量
+                ok = _get_client().update_document('work_order', task_id, {
                     'progress_qty': quantity,
                     'completed_qty': new_completed,
                     'target_operator': operator,
                     'operator_id': operator
                 })
+                if not ok:
+                    return jsonify({
+                        'code': 409,
+                        'message': '数据已被其他操作修改，请刷新后重试',
+                        'order_no': order_no
+                    }), 409
 
                 # 检测是否刚好达到100%（本次报工从<计划量变为>=计划量）
                 just_reached_100 = (new_completed >= planned_qty) and (current_completed < planned_qty)
