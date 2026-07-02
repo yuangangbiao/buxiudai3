@@ -43,6 +43,28 @@ JWT_SECRET = _get_jwt_secret()
 JWT_ALGORITHM = 'HS256'
 
 
+# [P0修复] require_admin: admin专属（复用量级：10处）
+def require_admin(f):
+    return require_role('admin')(f)
+
+
+# [P0修复] require_api_key: API Key鉴权（5002容器中心）
+def require_api_key(f):
+    """API Key 鉴权：检查 X-API-Key 请求头"""
+    @wraps(f)
+    def wrapped(*args, **kwargs):
+        api_key = request.headers.get('X-API-Key', '')
+        expected = os.getenv('CONTAINER_CENTER_API_KEY', '')
+        if not expected:
+            if os.getenv('FLASK_ENV') != 'production':
+                return f(*args, **kwargs)
+            return jsonify({'code': 401, 'message': 'CONTAINER_CENTER_API_KEY 未配置'}), 401
+        if not api_key or api_key != expected:
+            return jsonify({'code': 401, 'message': 'API Key 无效'}), 401
+        return f(*args, **kwargs)
+    return wrapped
+
+
 # T2b.1: require_auth 装饰器（JWT 校验）
 def require_auth(f):
     """JWT 鉴权：解析 Authorization 头，验证 JWT"""
