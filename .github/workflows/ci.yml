@@ -44,7 +44,7 @@ jobs:
         continue-on-error: true
 
       - name: Initialize database schema
-        run: python ci/run_stage_1_ddl.py 2>&1 || echo "some objects already exist, ignoring"
+        run: python ci/init_schema.py && python ci/run_stage_1_ddl.py 2>&1 || echo "some objects already exist, ignoring"
 
       - name: LINT-1 check data_packages SQL remnants
         run: python ci/lint_data_packages.py
