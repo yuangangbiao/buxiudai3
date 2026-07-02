@@ -91,11 +91,12 @@ def check_full_test():
     print(f'\n{C.B}[4/4] 跑完整测试套件（48 用例）{C.E}')
     path = os.path.join(PROJECT_ROOT, 'ci', 'test_v3_6_full.py')
     ok, out = run_test(path)
-    if '全部 48 个用例通过' in out:
-        passed('48 测试用例', '全部通过')
-        return True
+    # 用返回码判断（更可靠，避免CI中ANSI色码/编码干扰字符串匹配）
     if ok:
-        passed('48 测试用例', '通过')
+        if '全部' in out and '个用例通过' in out:
+            passed('48 测试用例', '全部通过')
+        else:
+            passed('48 测试用例', f'返回码=0')
         return True
     failed('48 测试用例', out[-500:])
     return False
