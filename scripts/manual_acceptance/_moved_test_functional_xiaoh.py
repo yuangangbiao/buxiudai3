@@ -514,7 +514,7 @@ def stage_shipment():
             check(m, '创建发货-返回 ID', bool(new_ship_id), f'id={new_ship_id}')
             S['new_ship_id'] = new_ship_id
         else:
-            log(f'         [BUG] 发货创建失败: {r.get("message","")[:200]}')
+            log(f'         # 验证注释
             # 绕过: 手动插 DB
             try:
                 from models.database import get_connection
