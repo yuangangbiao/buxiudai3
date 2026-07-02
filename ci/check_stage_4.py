@@ -43,10 +43,16 @@ def run_test(file_path):
     try:
         r = subprocess.run(
             ['python', file_path],
-            capture_output=True, text=True, timeout=60
+            capture_output=True, text=True, timeout=60,
+            cwd=PROJECT_ROOT
         )
-        return r.returncode == 0, r.stdout
+        ok = r.returncode == 0
+        snippet = r.stdout[-300:] if len(r.stdout) >= 300 else r.stdout
+        snippet_repr = repr(snippet)
+        print(f'[CP-4 DIAG] run_test({file_path}) rc={r.returncode} ok={ok} stdout_len={len(r.stdout)} snippet={snippet_repr}')
+        return ok, r.stdout
     except Exception as e:
+        print(f'[CP-4 DIAG] run_test({file_path}) EXCEPTION: {e}')
         return False, str(e)
 
 
