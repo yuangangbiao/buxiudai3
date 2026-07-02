@@ -397,6 +397,29 @@ jobs:
           path: /tmp/dataflow_output.txt
           retention-days: 1
 
+      # ── Stage 4: Critical Fixes Regression ──────────────────
+      - name: CI-CriticalFixes P0 regression test
+        run: |
+          echo "[CI-CriticalFixes] Starting critical fixes regression..."
+          python ci/test_critical_fixes.py 2>&1 | tee /tmp/critical_output.txt
+          echo "Exit code: $?"
+        env:
+          DISPATCH_5003_URL: 'http://127.0.0.1:5003'
+          WEB_5001_URL: 'http://127.0.0.1:5001'
+          MOBILE_5008_URL: 'http://127.0.0.1:5008'
+          CONTAINER_5002_URL: 'http://127.0.0.1:5002'
+          INVENTORY_5010_URL: 'http://127.0.0.1:5010'
+          SYNC_8008_URL: 'http://127.0.0.1:8008'
+          JWT_SECRET_KEY: ci_test_secret_64_bytes_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+      - name: Upload critical fixes output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: critical-output-${{ github.run_number }}
+          path: /tmp/critical_output.txt
+          retention-days: 1
+
       # ── Final Acceptance ────────────────────────────────────
       - name: CP-4 final acceptance
         run: python ci/check_stage_4.py 2>&1 | tee cp4_output.txt
