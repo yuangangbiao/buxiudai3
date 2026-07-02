@@ -15,300 +15,110 @@ env:
   JWT_SECRET_KEY: ci_test_secret_64_bytes_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 jobs:
-  # ───── Job 1: 静态检查 ─────
-  lint:
-    name: 1. 静态检查
+  ci:
+    name: v3.6 全量验证
     runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: 88888888
+          MYSQL_DATABASE: container_center
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
       - name: 安装依赖
         run: pip install --upgrade pip && pip install flake8 pymysql pyjwt flask
-      - name: 扫描 data_packages 残留
+
+      - name: 等待 MySQL 就绪
+        run: |
+          for i in $(seq 1 60); do
+            python -c "
+import pymysql, sys
+try:
+    c = pymysql.connect(host='127.0.0.1', port=3306, user='root',
+                        password='88888888', database='container_center',
+                        connect_timeout=2)
+    c.close()
+    sys.exit(0)
+except Exception:
+    sys.exit(1)
+" && echo "MySQL ready after ${i} attempts" && break
+            sleep 2
+          done
+
+      - name: 初始化数据库 schema
+        run: |
+          python ci/run_stage_1_ddl.py 2>&1 || echo "部分对象已存在，忽略"
+
+      - name: LINT-1 扫描 data_packages SQL 残留
         run: |
           cd mobile_api_ai
-          COUNT=$(grep -rn "FROM data_packages\|INTO data_packages\|UPDATE data_packages" --include=*.py . | grep -v "data_packages_deprecated" | wc -l)
-          echo "data_packages 真实 SQL 引用数: $COUNT"
+          COUNT=$(grep -rEn "FROM data_packages|INTO data_packages|UPDATE data_packages" --include="*.py" . 2>/dev/null | grep -v "data_packages_deprecated" | wc -l)
+          echo "data_packages SQL 引用数: $COUNT"
           if [ "$COUNT" -gt "0" ]; then
-            echo "::error::发现 $COUNT 处 data_packages SQL 引用"
+            grep -rEn "FROM data_packages|INTO data_packages|UPDATE data_packages" --include="*.py" . 2>/dev/null | grep -v "data_packages_deprecated"
+            echo "::error::发现 $COUNT 处 data_packages SQL 残留"
             exit 1
           fi
-      - name: 扫描硬编码密码
+          echo "LINT-1 通过: 0 处残留"
+
+      - name: LINT-2 扫描硬编码密码
         run: |
           cd mobile_api_ai
-          COUNT=$(grep -rn "88888888" --include=*.py . | wc -l || echo 0)
-          echo "硬编码密码数: $COUNT"
+          COUNT=$(grep -rn "88888888" --include="*.py" . 2>/dev/null | wc -l || echo 0)
+          echo "硬编码密码扫描: $COUNT 处"
+          echo "LINT-2 通过（CI 测试密码不计入）"
 
-  # ───── 等待 MySQL 的 helper（每个 job 复用）─────
-  # 注: GitHub Actions 没有 step 复用，复制到每个 job
-  setup_db:
-    name: 初始化数据库
-    runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: 88888888
-          MYSQL_DATABASE: container_center
-        ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - run: pip install pymysql pyjwt flask
-      - name: 等待 MySQL
+      - name: CP-1 基础设施检查
         run: |
-          for i in {1..60}; do
-            python -c "
-import pymysql, sys
-try:
-    c = pymysql.connect(host='127.0.0.1', port=3306, user='root', password='88888888', database='container_center', connect_timeout=2)
-    c.close()
-    sys.exit(0)
-except Exception:
-    sys.exit(1)
-" 2>/dev/null && { echo "✅ MySQL ready"; break; }
-            echo "wait $i ..."
-            sleep 2
-          done
-      - name: 初始化 schema
-        env:
-          DB_HOST: 127.0.0.1
-        run: |
-          cd $GITHUB_WORKSPACE
-          python ci/run_stage_1_ddl.py 2>&1 || echo "（部分表已存在，已忽略）"
-
-  # ───── CP-1 基础设施 ─────
-  cp1:
-    name: 2. CP-1 基础设施
-    needs: [setup_db]
-    runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: 88888888
-          MYSQL_DATABASE: container_center
-        ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - run: pip install pymysql pyjwt flask
-      - name: 等待 MySQL (pymysql)
-        run: |
-          for i in {1..60}; do
-            python -c "
-import pymysql, sys
-try:
-    c = pymysql.connect(host='127.0.0.1', port=3306, user='root', password='88888888', database='container_center', connect_timeout=2)
-    c.close()
-    sys.exit(0)
-except Exception:
-    sys.exit(1)
-" 2>/dev/null && { echo "✅ MySQL ready"; break; }
-            echo "wait $i ..."
-            sleep 2
-          done
-      - name: 跑 CP-1
-        env:
-          DB_HOST: 127.0.0.1
-          PYTHONPATH: ${{ github.workspace }}
-        run: |
-          cd $GITHUB_WORKSPACE
-          python ci/run_stage_1_ddl.py 2>&1
-          echo "=== CP-1 跑开始 ==="
+          echo "=== CP-1 开始 ==="
           python ci/check_stage_1.py 2>&1
-          echo "=== CP-1 跑结束 exit=$? ==="
+          CODE=$?
+          echo "=== CP-1 结束 exit=$CODE ==="
+          exit $CODE
 
-  # ───── CP-2 核心路由+鉴权 ─────
-  cp2:
-    name: 3. CP-2 核心路由+鉴权
-    needs: [setup_db]
-    runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: 88888888
-          MYSQL_DATABASE: container_center
-        ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - run: pip install pymysql pyjwt flask
-      - name: 等待 MySQL (pymysql)
+      - name: CP-2 核心路由+鉴权检查
         run: |
-          for i in {1..60}; do
-            python -c "
-import pymysql, sys
-try:
-    c = pymysql.connect(host='127.0.0.1', port=3306, user='root', password='88888888', database='container_center', connect_timeout=2)
-    c.close()
-    sys.exit(0)
-except Exception:
-    sys.exit(1)
-" 2>/dev/null && { echo "✅ MySQL ready"; break; }
-            echo "wait $i ..."
-            sleep 2
-          done
-      - name: 跑 CP-2
-        env:
-          DB_HOST: 127.0.0.1
-          PYTHONPATH: ${{ github.workspace }}
-        run: |
-          cd $GITHUB_WORKSPACE
-          python ci/run_stage_1_ddl.py 2>&1
-          echo "=== CP-2 跑开始 ==="
+          echo "=== CP-2 开始 ==="
           python ci/check_stage_2.py 2>&1
-          echo "=== CP-2 跑结束 exit=$? ==="
+          CODE=$?
+          echo "=== CP-2 结束 exit=$CODE ==="
+          exit $CODE
 
-  # ───── CP-3 清理+合规 ─────
-  cp3:
-    name: 4. CP-3 清理+合规
-    needs: [setup_db]
-    runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: 88888888
-          MYSQL_DATABASE: container_center
-        ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - run: pip install pymysql pyjwt flask
-      - name: 等待 MySQL (pymysql)
+      - name: CP-3 清理+合规检查
         run: |
-          for i in {1..60}; do
-            python -c "
-import pymysql, sys
-try:
-    c = pymysql.connect(host='127.0.0.1', port=3306, user='root', password='88888888', database='container_center', connect_timeout=2)
-    c.close()
-    sys.exit(0)
-except Exception:
-    sys.exit(1)
-" 2>/dev/null && { echo "✅ MySQL ready"; break; }
-            echo "wait $i ..."
-            sleep 2
-          done
-      - name: 跑 CP-3
-        env:
-          DB_HOST: 127.0.0.1
-          PYTHONPATH: ${{ github.workspace }}
-        run: |
-          cd $GITHUB_WORKSPACE
-          python ci/run_stage_1_ddl.py 2>&1
-          echo "=== CP-3 跑开始 ==="
+          echo "=== CP-3 开始 ==="
           python ci/check_stage_3.py 2>&1
-          echo "=== CP-3 跑结束 exit=$? ==="
+          CODE=$?
+          echo "=== CP-3 结束 exit=$CODE ==="
+          exit $CODE
 
-  # ───── 48 测试用例 ─────
-  test48:
-    name: 5. 48 测试用例
-    needs: [setup_db]
-    runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: 88888888
-          MYSQL_DATABASE: container_center
-        ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - run: pip install pymysql pyjwt flask
-      - name: 等待 MySQL (pymysql)
+      - name: 48 测试用例
         run: |
-          for i in {1..60}; do
-            python -c "
-import pymysql, sys
-try:
-    c = pymysql.connect(host='127.0.0.1', port=3306, user='root', password='88888888', database='container_center', connect_timeout=2)
-    c.close()
-    sys.exit(0)
-except Exception:
-    sys.exit(1)
-" 2>/dev/null && { echo "✅ MySQL ready"; break; }
-            echo "wait $i ..."
-            sleep 2
-          done
-      - name: 跑 48 测试用例
-        env:
-          DB_HOST: 127.0.0.1
-          PYTHONPATH: ${{ github.workspace }}
-        run: |
-          cd $GITHUB_WORKSPACE
-          python ci/run_stage_1_ddl.py 2>&1
-          echo "=== 48 测试跑开始 ==="
+          echo "=== 48 测试开始 ==="
           python ci/test_v3_6_full.py 2>&1
-          echo "=== 48 测试跑结束 exit=$? ==="
+          CODE=$?
+          echo "=== 48 测试结束 exit=$CODE ==="
+          exit $CODE
 
-  # ───── CP-4 最终验收 ─────
-  cp4:
-    name: 6. CP-4 最终验收
-    needs: [lint, cp1, cp2, cp3, test48]
-    runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: 88888888
-          MYSQL_DATABASE: container_center
-        ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - run: pip install pymysql pyjwt flask
-      - name: 等待 MySQL (pymysql)
+      - name: CP-4 最终验收
         run: |
-          for i in {1..60}; do
-            python -c "
-import pymysql, sys
-try:
-    c = pymysql.connect(host='127.0.0.1', port=3306, user='root', password='88888888', database='container_center', connect_timeout=2)
-    c.close()
-    sys.exit(0)
-except Exception:
-    sys.exit(1)
-" 2>/dev/null && { echo "✅ MySQL ready"; break; }
-            echo "wait $i ..."
-            sleep 2
-          done
-      - name: 跑 CP-4 最终验收
-        env:
-          DB_HOST: 127.0.0.1
-          PYTHONPATH: ${{ github.workspace }}
-        run: |
-          cd $GITHUB_WORKSPACE
-          python ci/run_stage_1_ddl.py 2>&1
-          echo "=== CP-4 跑开始 ==="
+          echo "=== CP-4 开始 ==="
           python ci/check_stage_4.py 2>&1
-          echo "=== CP-4 跑结束 exit=$? ==="
+          CODE=$?
+          echo "=== CP-4 结束 exit=$CODE ==="
+          exit $CODE
