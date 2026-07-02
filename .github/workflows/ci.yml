@@ -112,7 +112,9 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE
           python ci/run_stage_1_ddl.py 2>&1
-          python ci/check_stage_1.py 2>&1 | head -30
+          echo "=== CP-1 跑开始 ==="
+          python ci/check_stage_1.py 2>&1
+          echo "=== CP-1 跑结束 exit=$? ==="
 
   # ───── CP-2 核心路由+鉴权 ─────
   cp2:
@@ -182,7 +184,9 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE
           python ci/run_stage_1_ddl.py 2>&1
-          python ci/check_stage_3.py 2>&1 | head -30
+          echo "=== CP-3 跑开始 ==="
+          python ci/check_stage_3.py 2>&1
+          echo "=== CP-3 跑结束 exit=$? ==="
 
   # ───── 48 测试用例 ─────
   test48:
@@ -217,7 +221,9 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE
           python ci/run_stage_1_ddl.py 2>&1
-          python ci/test_v3_6_full.py 2>&1 | head -50
+          echo "=== 48 测试跑开始 ==="
+          python ci/test_v3_6_full.py 2>&1
+          echo "=== 48 测试跑结束 exit=$? ==="
 
   # ───── CP-4 最终验收 ─────
   cp4:
