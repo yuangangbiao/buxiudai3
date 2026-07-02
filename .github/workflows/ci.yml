@@ -137,7 +137,18 @@ jobs:
           JWT_SECRET_KEY: ci_test_secret_64_bytes_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
       - name: CI-5001 desktop web check
-        run: python ci/check_5001.py
+        run: |
+          echo "[CI-5001] Starting check_5001.py..."
+          python ci/check_5001.py 2>&1 | tee /tmp/check_5001_output.txt
+          echo "Exit code: $?"
+
+      - name: Upload 5001 check output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: 5001-check-output-${{ github.run_number }}
+          path: /tmp/check_5001_output.txt
+          retention-days: 1
 
       - name: Upload 5001 log
         if: always()

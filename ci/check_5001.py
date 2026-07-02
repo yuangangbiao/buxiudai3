@@ -199,16 +199,27 @@ def main():
     print(f'{C.B}  CI-5001 检查：desktop_web (5001) 启动验证{C.E}')
     print(f'{C.B}{"="*60}{C.E}')
 
+    result_file = os.path.join(PROJECT_ROOT, 'check_5001_result.txt')
+    with open(result_file, 'w') as f:
+        f.write(f'CI-5001 check starting at {time.strftime("%Y-%m-%d %H:%M:%S")}\n')
+
     proc = None
+    all_passed = False
     try:
         if not check_5001_file():
+            with open(result_file, 'a') as f:
+                f.write('FAILED: check_5001_file\n')
             return 1
 
         if not check_5003_running():
             print(f'{C.Y}       警告: 5003 未运行, 5001 部分功能受限{C.E}')
+            with open(result_file, 'a') as f:
+                f.write('WARNING: 5003 not running\n')
 
         proc = check_5001_startup()
         if proc is None:
+            with open(result_file, 'a') as f:
+                f.write('FAILED: check_5001_startup\n')
             return 1
 
         health_ok = check_5001_health(proc)
@@ -217,7 +228,11 @@ def main():
         print(f'{C.B}  CI-5001 检查结果汇总{C.E}')
         print(f'{C.B}{"="*60}{C.E}')
 
+        with open(result_file, 'a') as f:
+            f.write(f'health_ok={health_ok}\n')
+
         if health_ok:
+            all_passed = True
             print(f'\n{C.G}{"="*60}{C.E}')
             print(f'{C.G}  ✅ CI-5001 全部通过 - desktop_web 健康{C.E}')
             print(f'{C.G}{"="*60}{C.E}')
@@ -225,8 +240,18 @@ def main():
         else:
             print(f'\n{C.R}❌ CI-5001 部分失败{C.E}')
             return 1
+    except Exception as e:
+        import traceback
+        tb = traceback.format_exc()
+        print(f'{C.R}❌ CI-5001 异常: {e}{C.E}')
+        print(tb)
+        with open(result_file, 'a') as f:
+            f.write(f'EXCEPTION: {e}\n{tb}\n')
+        return 1
     finally:
         cleanup(proc)
+        with open(result_file, 'a') as f:
+            f.write(f'CI-5001 completed at {time.strftime("%Y-%m-%d %H:%M:%S")}, all_passed={all_passed}\n')
 
 
 if __name__ == '__main__':
