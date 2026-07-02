@@ -61,7 +61,15 @@ jobs:
         run: python ci/check_stage_3.py
 
       - name: Run 48 test cases
-        run: python ci/test_v3_6_full.py
+        run: python ci/test_v3_6_full.py 2>&1 | tee test_output.txt
+
+      - name: Upload test output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-output-${{ github.run_number }}
+          path: test_output.txt
+          retention-days: 1
 
       - name: CP-4 final acceptance
         run: python ci/check_stage_4.py
