@@ -21,7 +21,7 @@ MOCK_PATH = os.path.join(os.path.dirname(__file__))
 TABLES_IN_CONTAINER_CENTER = {
     'report_queue', 'process_records', 'process_sub_steps',
     'enterprise_structure', 'workers', 'attendance',
-    'data_packages', 'data_flow_logs', 'sync_logs',
+    'process_sub_steps', 'data_flow_logs', 'sync_logs',
     'return_records', 'product_flow_map', 'data_collection_records',
 }
 

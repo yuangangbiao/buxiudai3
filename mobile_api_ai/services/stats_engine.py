@@ -99,7 +99,7 @@ class StatsEngine(StatsServiceInterface):
                 'name': '近7天产量趋势',
                 'category': 'production',
                 'description': '最近7天每日报工趋势',
-                'sql_template': "SELECT date(created_at) AS 日期, COUNT(*) AS 报工数 FROM data_packages WHERE date(created_at) >= date('now', '-7 days') GROUP BY date(created_at) ORDER BY 日期",
+                'sql_template': "SELECT date(created_at) AS 日期, COUNT(*) AS 报工数 FROM process_sub_steps WHERE date(created_at) >= date('now', '-7 days') GROUP BY date(created_at) ORDER BY 日期",
                 'params_config': '[]',
                 'chart_config': json.dumps({'type': 'line', 'title': '产量趋势'}, ensure_ascii=False),
                 'column_config': json.dumps([
@@ -182,7 +182,7 @@ class StatsEngine(StatsServiceInterface):
                 'name': '操作员效率排名',
                 'category': 'worker',
                 'description': '各操作员任务完成量与效率',
-                'sql_template': "SELECT COALESCE(target_operator, '未分配') AS 操作员, COUNT(*) AS 总任务数, SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS 已完成, ROUND(100.0 * SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) / CASE WHEN COUNT(*) = 0 THEN 1 ELSE COUNT(*) END, 1) || '%' AS 完成率 FROM data_packages WHERE target_operator IS NOT NULL AND target_operator != '' GROUP BY target_operator ORDER BY 已完成 DESC",
+                'sql_template': "SELECT COALESCE(target_operator, '未分配') AS 操作员, COUNT(*) AS 总任务数, SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS 已完成, ROUND(100.0 * SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) / CASE WHEN COUNT(*) = 0 THEN 1 ELSE COUNT(*) END, 1) || '%' AS 完成率 FROM process_sub_steps WHERE target_operator IS NOT NULL AND target_operator != '' GROUP BY target_operator ORDER BY 已完成 DESC",
                 'params_config': '[]',
                 'chart_config': json.dumps({'type': 'bar', 'title': '操作员效率排行'}, ensure_ascii=False),
                 'column_config': json.dumps([
@@ -253,10 +253,10 @@ class StatsEngine(StatsServiceInterface):
             conn = get_direct_connection(**CONTAINER_MYSQL_CFG, connect_timeout=DB_CONNECT_TIMEOUT)
             try:
                 with conn.cursor() as cursor:
-                    cursor.execute("SELECT COUNT(*) AS c FROM data_packages WHERE DATE(created_at) = CURDATE()")
+                    cursor.execute("SELECT COUNT(*) AS c FROM process_sub_steps WHERE DATE(created_at) = CURDATE()")
                     today_reports = cursor.fetchone()['c']
 
-                    cursor.execute("SELECT COUNT(*) AS c, SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS done FROM data_packages WHERE DATE(created_at) = CURDATE()")
+                    cursor.execute("SELECT COUNT(*) AS c, SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS done FROM process_sub_steps WHERE DATE(created_at) = CURDATE()")
                     row = cursor.fetchone()
                     today_done = row['done'] or 0
                     efficiency = round(100.0 * today_done / row['c'], 1) if row['c'] > 0 else 0

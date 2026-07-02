@@ -84,7 +84,7 @@ def _build_cc(packages):
 
 
 def _make_pkg(pid, target_operator, is_public, process_code='P1', content=None):
-    """构造 data_packages 字典"""
+    """构造 process_sub_steps 字典"""
     return {
         'id': pid,
         'target_operator': target_operator,

@@ -19,7 +19,7 @@ from core.config import get_process_code, PROCESS_CODES
 # ============================================================
 
 class TestSQLiteBackfill:
-    """SQLite data_packages 回填逻辑"""
+    """SQLite process_sub_steps 回填逻辑"""
 
     def test_backfill_missing_process_code(self, sqlite_with_data):
         """回填缺失 process_code 的数据包"""
@@ -27,7 +27,7 @@ class TestSQLiteBackfill:
         cur = conn.cursor()
 
         # 查找缺失 process_code 的包
-        cur.execute("SELECT id, content, related_process FROM data_packages")
+        cur.execute("SELECT id, content, related_process FROM process_sub_steps")
         target = None
         for row in cur.fetchall():
             content = json.loads(row['content']) if isinstance(row['content'], str) else row['content']
@@ -44,12 +44,12 @@ class TestSQLiteBackfill:
         assert pcode, f"process_name={pname!r} 应生成有效编码"
 
         content['process_code'] = pcode
-        cur.execute("UPDATE data_packages SET content=? WHERE id=?",
+        cur.execute("UPDATE process_sub_steps SET content=? WHERE id=?",
                    (json.dumps(content, ensure_ascii=False), rowid))
         conn.commit()
 
         # 验证回填结果
-        cur.execute("SELECT content FROM data_packages WHERE id=?", (rowid,))
+        cur.execute("SELECT content FROM process_sub_steps WHERE id=?", (rowid,))
         new_row = cur.fetchone()
         assert new_row is not None, f"id={rowid} 的记录应该存在"
         new_content = json.loads(new_row['content']) if isinstance(new_row['content'], str) else new_row['content']
@@ -61,7 +61,7 @@ class TestSQLiteBackfill:
         cur = conn.cursor()
 
         # 找一条已有 process_code 的包
-        cur.execute("SELECT rowid, content FROM data_packages")
+        cur.execute("SELECT rowid, content FROM process_sub_steps")
         target = None
         for row in cur.fetchall():
             content = json.loads(row['content']) if isinstance(row['content'], str) else row['content']
@@ -82,7 +82,7 @@ class TestSQLiteBackfill:
         conn = sqlite_with_data
         cur = conn.cursor()
 
-        cur.execute('''SELECT rowid, content FROM data_packages
+        cur.execute('''SELECT rowid, content FROM process_sub_steps
             WHERE json_extract(content, '$.flow_type') = 'created' LIMIT 1''')
         row = cur.fetchone()
         content = json.loads(row['content']) if isinstance(row['content'], str) else row['content']
@@ -205,13 +205,13 @@ class TestEndToEndProcessCodeFlow:
         }, ensure_ascii=False)
 
         cur.execute(
-            "INSERT INTO data_packages (target_operator, related_order, related_process, content, status, created_at) VALUES (?,?,?,?,?,?)",
+            "INSERT INTO process_sub_steps (target_operator, related_order, related_process, content, status, created_at) VALUES (?,?,?,?,?,?)",
             ('OP001', order_no, process_name, new_content, 'packaged', '2025-06-01')
         )
         conn.commit()
 
         # 验证可以读取并匹配
-        cur.execute("SELECT content FROM data_packages WHERE related_order=? AND related_process=?",
+        cur.execute("SELECT content FROM process_sub_steps WHERE related_order=? AND related_process=?",
                    (order_no, process_name))
         row = cur.fetchone()
         content = json.loads(row['content']) if isinstance(row['content'], str) else row['content']
@@ -240,12 +240,12 @@ class TestEndToEndProcessCodeFlow:
         }, ensure_ascii=False)
 
         cur.execute(
-            "INSERT INTO data_packages (target_operator, related_order, related_process, content, status, created_at) VALUES (?,?,?,?,?,?)",
+            "INSERT INTO process_sub_steps (target_operator, related_order, related_process, content, status, created_at) VALUES (?,?,?,?,?,?)",
             ('OP002', order_no, process_name, new_content, 'packaged', '2025-06-01')
         )
         conn.commit()
 
-        cur.execute("SELECT content FROM data_packages WHERE related_order=? AND related_process=?",
+        cur.execute("SELECT content FROM process_sub_steps WHERE related_order=? AND related_process=?",
                    (order_no, process_name))
         row = cur.fetchone()
         content = json.loads(row['content']) if isinstance(row['content'], str) else row['content']
@@ -265,7 +265,7 @@ class TestFallbackLogic:
         cur = conn.cursor()
 
         # 找一条缺少 process_code 的包
-        cur.execute("SELECT rowid, content, related_process FROM data_packages")
+        cur.execute("SELECT rowid, content, related_process FROM process_sub_steps")
         target = None
         for row in cur.fetchall():
             content = json.loads(row['content']) if isinstance(row['content'], str) else row['content']

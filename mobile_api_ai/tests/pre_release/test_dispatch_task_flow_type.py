@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-T4 前测: dispatch_task L1059-1096 接受 flow_type 入参 + L1042 后写 data_packages.flow_type 列
+T4 前测: dispatch_task L1059-1096 接受 flow_type 入参 + L1042 后写 process_sub_steps.flow_type 列
 
 修复点 (SPEC v1.1 F4 + Bug2 修补):
   1. L1059-1096 三处写死 flow_type 改用'请求体 > 推断 > 默认'优先级
-  2. L1042 后追加 UPDATE data_packages SET flow_type=%s WHERE id=%s
+  2. L1042 后追加 UPDATE process_sub_steps SET flow_type=%s WHERE id=%s
 
 设计契约 (5 用例):
   1. 请求体 flow_type='outsource' + process_code='P001' → 期望 process_records.flow_type='outsource'
@@ -42,7 +42,7 @@ def _infer_flow_type(process_code: str, request_flow_type: str = "") -> str:
 def _should_update_flow_type_column(flow_type: str) -> bool:
     """修复后 (F4.2) 模拟 L1042 后追加 UPDATE 逻辑
 
-    返回是否应执行 UPDATE data_packages SET flow_type=...
+    返回是否应执行 UPDATE process_sub_steps SET flow_type=...
     """
     return bool(flow_type)
 
@@ -87,10 +87,10 @@ class TestPrefixInferenceFallback(unittest.TestCase):
 
 
 class TestFlowTypeColumnWrite(unittest.TestCase):
-    """F4.2: L1042 后追加 UPDATE 写入 data_packages.flow_type 列"""
+    """F4.2: L1042 后追加 UPDATE 写入 process_sub_steps.flow_type 列"""
 
     def test_should_update_column_when_flow_type_provided(self):
-        """6. data_packages.flow_type 列必写"""
+        """6. process_sub_steps.flow_type 列必写"""
         self.assertTrue(_should_update_flow_type_column('outsource'))
 
     def test_should_update_column_for_default_production(self):

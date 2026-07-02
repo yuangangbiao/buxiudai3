@@ -785,7 +785,7 @@ def api_sync_process():
         cur = cc_conn.cursor()
 
         # 读取 process_report 类型的 data_packages(旧值 'report' 已迁移)
-        cur.execute("SELECT * FROM data_packages WHERE data_type='process_report' ORDER BY id DESC LIMIT 20")
+        cur.execute("SELECT * FROM process_sub_steps WHERE data_type='process_report' ORDER BY id DESC LIMIT 20")
         packages = cur.fetchall()
         cc_conn.close()
 

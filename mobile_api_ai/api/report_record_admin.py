@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 调度中心管理员记录管理 API
 
@@ -29,7 +29,7 @@ bp = Blueprint('report_record_admin', __name__, url_prefix='/api')
 def _sync_completed_qty_to_package(order_no, step_name, cur):
     """[v3.8.1] 重算并回写 completed_qty 到 process_sub_steps（SSOT）
     
-    修复前: UPDATE data_packages.completed_qty（死代码，无读者）
+    修复前: UPDATE process_sub_steps.completed_qty（死代码，无读者）
     修复后: UPDATE process_sub_steps.completed_qty（前端展示唯一真值源）
     """
     try:
@@ -1015,7 +1015,7 @@ def schedule_record_history_full():
         conn = MySQLStorage.get_connection()
         try:
             cur = conn.cursor()
-            cur.execute("SELECT * FROM container_center.data_packages WHERE id=%s", (record_id,))
+            cur.execute("SELECT * FROM container_center.process_sub_steps WHERE id=%s", (record_id,))
             row = cur.fetchone()
             if not row:
                 conn.close()
@@ -1032,3 +1032,4 @@ def schedule_record_history_full():
         return jsonify({'code': 0, 'data': {'record': rec, 'history': history}})
     except Exception as e:
         return jsonify({'code': 500, 'message': '查询失败'}), 500
+

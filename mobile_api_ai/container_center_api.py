@@ -1497,10 +1497,10 @@ def dispatch_task():
         # 同时检查 data_packages（兼容保护）
         try:
             existing_dp = container_center.storage.fetch_one(
-                'SELECT id FROM data_packages WHERE related_order=%s AND related_process=%s AND status!=%s LIMIT 1',
+                'SELECT id FROM process_sub_steps WHERE related_order=%s AND related_process=%s AND status!=%s LIMIT 1',
                 (order_no, process, 'completed'))
             if existing_dp and not existing:
-                logger.info(f'[派工] data_packages 兼容跳过: order={order_no} process={process}')
+                logger.info(f'[派工] process_sub_steps 兼容跳过: order={order_no} process={process}')
                 return success(data={'duplicate': True, 'message': '该工序已派工，跳过'})
         except Exception:
             pass
@@ -1554,10 +1554,10 @@ def dispatch_task():
         })
         if process_code:
             container_center.storage.execute(
-                'UPDATE data_packages SET process_code=%s WHERE id=%s',
+                'UPDATE process_sub_steps SET process_code=%s WHERE id=%s',
                 (process_code, pkg.id))
             container_center.storage.execute(
-                "UPDATE data_packages SET content=JSON_SET(content, '$.process_code', %s) "
+                "UPDATE process_sub_steps SET content=JSON_SET(content, '$.process_code', %s) "
                 "WHERE related_order=%s AND related_process=%s AND data_type='process_task' AND content->>'$.source'='collect_report'",
                 (process_code, order_no, process))
         if data.get('is_public'):
@@ -1577,7 +1577,7 @@ def dispatch_task():
             is_pub_val = 1 if data.get('is_public') else 0
             is_bc_val = 1 if data.get('is_broadcast') else 0
             container_center.storage.execute(
-                "UPDATE data_packages SET is_public=%s, is_broadcast=%s "
+                "UPDATE process_sub_steps SET is_public=%s, is_broadcast=%s "
                 "WHERE related_order=%s AND related_process=%s AND data_type='process_task'",
                 (is_pub_val, is_bc_val, order_no, process)
             )
@@ -1589,11 +1589,11 @@ def dispatch_task():
         effective_flow_type = flow_type or 'production'
         try:
             container_center.storage.execute(
-                'UPDATE data_packages SET flow_type=%s WHERE id=%s',
+                'UPDATE process_sub_steps SET flow_type=%s WHERE id=%s',
                 (effective_flow_type, pkg.id)
             )
         except Exception as e:
-            logger.warning(f'[T4] 写 data_packages.flow_type 列失败: {e}')
+            logger.warning(f'[T4] 写 process_sub_steps.flow_type 列失败: {e}')
 
 
         if operator_id:
@@ -1845,7 +1845,7 @@ def schedule_publish():
         exists_pr = container_center.storage.fetch_one(
             'SELECT id FROM process_records WHERE order_no=%s LIMIT 1', (order_no,))
         exists_pkg = container_center.storage.fetch_one(
-            'SELECT id FROM data_packages WHERE related_order=%s AND related_process=%s LIMIT 1',
+            'SELECT id FROM process_sub_steps WHERE related_order=%s AND related_process=%s LIMIT 1',
             (order_no, data.get('process', '')))
         if exists_pkg:
             logger.info(f'[排产发布] 工序任务已存在: order={order_no} process={data.get("process","")}')
@@ -1954,7 +1954,7 @@ def schedule_publish():
                 logger.info(f'[排产发布] schedule_record 已创建: id={pkg_id}')
             else:
                 # 兼容旧逻辑，写入 data_packages
-                container_center.storage.insert('data_packages', {
+                container_center.storage.insert('process_sub_steps', {
                     'id': pkg_id,
                     'data_type': flow_type,
                     'title': title,
@@ -2841,7 +2841,7 @@ def publish_task():
     if related_order and related_process:
         try:
             existing = container_center.storage.fetch_one(
-                'SELECT id FROM data_packages WHERE related_order=%s AND related_process=%s '
+                'SELECT id FROM process_sub_steps WHERE related_order=%s AND related_process=%s '
                 "AND status NOT IN ('completed', 'withdrawn') LIMIT 1",
                 (related_order, related_process))
             if existing:
@@ -3400,7 +3400,7 @@ def api_create_sub_step():
         try:
             cur_find = conn.cursor()
             cur_find.execute(
-                "SELECT id FROM data_packages WHERE related_order=%s AND related_process=%s LIMIT 1",
+                "SELECT id FROM process_sub_steps WHERE related_order=%s AND related_process=%s LIMIT 1",
                 (order_no, step_name))
             found = cur_find.fetchone()
             cur_find.close()
@@ -3839,7 +3839,7 @@ def api_rollback_sub_step():
     cur = conn.cursor()
     t_sal = container_center.storage._table('sub_step_audit_log')
     t_pss = container_center.storage._table('process_sub_steps')
-    t_dp = container_center.storage._table('data_packages')
+    t_dp = container_center.storage._table('process_sub_steps')
     
     # 幂等检查
     cur.execute(f"SELECT id FROM {t_sal} WHERE sub_step_id=%s AND action='rollback' LIMIT 1", (sub_step_id,))
@@ -3951,7 +3951,7 @@ def api_material_create():
         'order_no': order_no,
         'ordered_by': data.get('ordered_by', ''),
     }
-    container_center.storage.insert('data_packages', {
+    container_center.storage.insert('process_sub_steps', {
         'id': pkg_id,
         'data_type': 'material_purchase',
         'title': f'{order_no} - {material_name}',

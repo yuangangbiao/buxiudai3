@@ -48,7 +48,7 @@ def my_tasks():
         cur = CCAdapter()
         # dispatch_commands 表已删除，直接读 data_packages
         cur.execute("""
-            SELECT id, title, content, data_type FROM data_packages
+            SELECT id, title, content, data_type FROM process_sub_steps
             WHERE data_type IN ('report','task','work_order')
             ORDER BY id DESC LIMIT 20
         """)
@@ -99,7 +99,7 @@ def report_progress(record_id):
         cur = CCAdapter()
         
         # 读取当前包
-        cur.execute("SELECT * FROM data_packages WHERE id=%s", (str(record_id),))
+        cur.execute("SELECT * FROM process_sub_steps WHERE id=%s", (str(record_id),))
         pkg = cur.fetchone()
         if not pkg:
             return fail(message=f"任务 {record_id} 不存在")
@@ -122,7 +122,7 @@ def report_progress(record_id):
             content['status'] = '进行中'
         
         # 更新容器中心
-        cur.execute("UPDATE data_packages SET content=%s, title=%s, status=%s, updated_at=NOW() WHERE id=%s",
+        cur.execute("UPDATE process_sub_steps SET content=%s, title=%s, status=%s, updated_at=NOW() WHERE id=%s",
                     (json.dumps(content, ensure_ascii=False), f"{content.get('process_name','')}:{content['completed_qty']}/{planned}", content['status'], str(record_id)))
         
         # 记录同步日志
@@ -185,7 +185,7 @@ def history():
         cur = CCAdapter()
         cur.execute("""
             SELECT sl.*, dp.title=%s FROM sync_logs sl
-            LEFT JOIN data_packages dp ON sl.package_id = dp.id
+            LEFT JOIN process_sub_steps dp ON sl.package_id = dp.id
             WHERE sl.action='REPORT'
             ORDER BY sl.created_at DESC LIMIT 50
         """)

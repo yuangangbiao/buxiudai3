@@ -164,7 +164,7 @@ def _refresh_operators():
                 database='container_center', charset='utf8mb4')
             cur = conn.cursor(pymysql.cursors.DictCursor)
             cur.execute(
-                "SELECT DISTINCT target_operator FROM data_packages "
+                "SELECT DISTINCT target_operator FROM process_sub_steps "
                 "WHERE target_operator IS NOT NULL AND target_operator != '' LIMIT 200")
             for row in cur.fetchall():
                 op_id = row['target_operator']

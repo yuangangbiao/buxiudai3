@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 手机端质检报工 API 蓝图 — 10 端点
 """
@@ -115,14 +115,14 @@ def task_list():
         with get_connection_context() as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT COUNT(DISTINCT related_order) as cnt FROM container_center.data_packages "
+                "SELECT COUNT(DISTINCT related_order) as cnt FROM container_center.process_sub_steps "
                 "WHERE data_type = 'quality_task' "
                 "AND related_order IS NOT NULL AND related_order != ''")
             total = cursor.fetchone()['cnt']
             cursor.execute(
                 "SELECT related_order, COUNT(*) as task_cnt, "
                 "MAX(created_at) as latest, MAX(status) as status "
-                "FROM container_center.data_packages "
+                "FROM container_center.process_sub_steps "
                 "WHERE data_type = 'quality_task' "
                 "AND related_order IS NOT NULL AND related_order != '' "
                 "GROUP BY related_order ORDER BY latest DESC LIMIT %s OFFSET %s",
@@ -153,7 +153,7 @@ def task_detail(order_no):
         with get_connection_context() as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT * FROM container_center.data_packages WHERE related_order=%s "
+                "SELECT * FROM container_center.process_sub_steps WHERE related_order=%s "
                 "AND data_type = 'quality_task' "
                 "ORDER BY created_at DESC",
                 (order_no,))
@@ -297,23 +297,23 @@ def submit():
             status='quality_reported',
         )
 
-        # 原子锁 data_packages（兼容按 id / order_no+process_name）
+        # 原子锁 process_sub_steps（兼容按 id / order_no+process_name）
         data_pkg_updated = False
         with get_connection_context() as conn:
             cursor = conn.cursor()
             if pkg_id:
                 result = cursor.execute(
-                    'UPDATE container_center.data_packages SET status=%s WHERE id=%s AND status != %s',
+                    'UPDATE container_center.process_sub_steps SET status=%s WHERE id=%s AND status != %s',
                     ('quality_reported', pkg_id, 'quality_reported'))
                 if result == 0:
                     result = cursor.execute(
-                        'UPDATE container_center.data_packages SET status=%s WHERE related_order=%s AND status != %s',
+                        'UPDATE container_center.process_sub_steps SET status=%s WHERE related_order=%s AND status != %s',
                         ('quality_reported', pkg_id, 'quality_reported'))
                 if result > 0:
                     data_pkg_updated = True
             else:
                 result = cursor.execute(
-                    'UPDATE container_center.data_packages SET status=%s WHERE related_order=%s AND data_type=%s AND status NOT IN %s LIMIT 1',
+                    'UPDATE container_center.process_sub_steps SET status=%s WHERE related_order=%s AND data_type=%s AND status NOT IN %s LIMIT 1',
                     ('quality_reported', order_no, 'quality_task', ('quality_reported', 'quality_reported')))
                 if result > 0:
                     data_pkg_updated = True
@@ -394,12 +394,12 @@ def review():
 
             conn.commit()
 
-        # 退回时重置 data_packages 状态
+        # 退回时重置 process_sub_steps 状态
         if action == 'rejected':
             with get_connection_context() as conn:
                 cursor = conn.cursor()
                 cursor.execute(
-                    "UPDATE container_center.data_packages SET status='pending' WHERE related_order=%s AND data_type = 'quality_task'",
+                    "UPDATE container_center.process_sub_steps SET status='pending' WHERE related_order=%s AND data_type = 'quality_task'",
                     (rec.get('order_no'),))
 
         logger.info('质检审核: record_id=%s action=%s by=%s', record_id, action, reviewer)
@@ -601,3 +601,4 @@ def _notify_8008(payload):
             conn.commit()
     except Exception:
         pass
+

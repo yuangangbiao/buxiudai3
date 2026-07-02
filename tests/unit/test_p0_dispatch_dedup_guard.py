@@ -64,7 +64,7 @@ class TestK22BUG4DataCollectorDedup:
     r"""守护 BUG 4: DataCollector.collect 加 (order, process, operator) 去重
 
     修复前: 直接 self.storage.save_package(pkg.to_dict()),无任何去重
-    修复后: 先查 data_packages 同 (order, process, operator) 已存在则跳过
+    修复后: 先查 process_sub_steps 同 (order, process, operator) 已存在则跳过
     """
 
     @pytest.fixture
@@ -83,7 +83,7 @@ class TestK22BUG4DataCollectorDedup:
         body = match.group(0)
         # 必须有 fetch_one 或类似去重查询
         assert 'fetch_one' in body or 'find_one' in body or 'SELECT id' in body, (
-            "DataCollector.collect 必须包含去重查询(SELECT id FROM data_packages)"
+            "DataCollector.collect 必须包含去重查询(SELECT id FROM process_sub_steps)"
         )
         # 必须有 related_order / related_process / target_operator 三要素
         for key in ('related_order', 'related_process', 'target_operator'):

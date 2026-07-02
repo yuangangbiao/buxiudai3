@@ -60,7 +60,7 @@ TEST_DATA_TABLES = [
     'order_logs',      # 订单日志
     'process_records', # 工序记录
     'production_orders',  # 生产单
-    'data_packages',   # 数据包
+    'process_sub_steps',   # 数据包
     'quality_records', # 质检记录
     'material_records',  # 物料记录
     'material_requests',  # 物料申请

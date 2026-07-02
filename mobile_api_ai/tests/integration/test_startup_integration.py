@@ -32,7 +32,7 @@ REQUIRED_TABLES = [
     (STEEL_BELT,      'production_orders',    ['id', 'order_no', 'status']),
     (STEEL_BELT,      'process_records',      ['id', 'process_code', 'status']),
     (STEEL_BELT,      'process_sub_steps',    ['id', 'order_no', 'step_name']),
-    (CONTAINER_CENTER, 'data_packages',        ['id', 'order_no', 'data_type', 'related_order']),
+    (CONTAINER_CENTER, 'process_sub_steps',        ['id', 'order_no', 'data_type', 'related_order']),
     (CONTAINER_CENTER, 'process_records',      ['id', 'order_no', 'status']),
 ]
 

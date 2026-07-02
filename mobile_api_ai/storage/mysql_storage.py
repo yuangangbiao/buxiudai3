@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """MySQL 存储后端 — 容器中心专用，无 cc_ 前缀"""
 import os, json, logging, uuid as _uuid
 from datetime import datetime, date
@@ -27,6 +27,7 @@ if not ENV_FILE.exists():
 load_dotenv(str(ENV_FILE), override=True)
 
 from core.exceptions import safe_cursor_execute, safe_cursor_insert
+from storage.data_type_router import TASK_TYPE_TABLE_MAP  # [v3.6 T1.2]
 
 _mysql_cfg_cache = None
 _db_timeout_cache = None
@@ -138,13 +139,7 @@ class MySQLStorage:
                 ('process_type', 'ALTER TABLE process_records ADD COLUMN process_type VARCHAR(50) NOT NULL DEFAULT \'production\''),
                 ('flow_type', 'ALTER TABLE process_records ADD COLUMN flow_type VARCHAR(100) DEFAULT \'production\''),
             ],
-            # R12: data_packages 加 process_code 列(SSOT 分类主键)
-            # 配合 ETL 脚本 fill_data_packages_process_code.py 回填老数据
-            'data_packages': [
-                ('process_code', 'ALTER TABLE data_packages ADD COLUMN process_code VARCHAR(10) DEFAULT \'\''),
-                ('idx_pkg_process_code', 'ALTER TABLE data_packages ADD INDEX idx_pkg_process_code (process_code)'),
-                ('updated_at', 'ALTER TABLE data_packages ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'),
-            ],
+            # [v3.6] process_sub_steps 已 RENAME + 触发器, 业务全部走 11 业务表
             # F17: workers 加企业微信字段(同步权限相关)
             'workers': [
                 ('wechat_userid', 'ALTER TABLE workers ADD COLUMN wechat_userid VARCHAR(64) DEFAULT \'\''),
@@ -229,12 +224,8 @@ class MySQLStorage:
             pass  # 查询失败则走完整建表流程
 
         ddl_list = [
-            '''CREATE TABLE IF NOT EXISTS enterprise_structure (
-                id INT NOT NULL PRIMARY KEY,
-                departments LONGTEXT,
-                users LONGTEXT,
-                updated_at DATETIME
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4''',
+            '''-- [v3.6] enterprise_structure F6 P9 已 DROP，改用 data/enterprise_structure.json
+            -- 不再 CREATE TABLE''',
 
             '''CREATE TABLE IF NOT EXISTS workers (
                 id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -300,33 +291,47 @@ class MySQLStorage:
                 step_name VARCHAR(100),
                 quantity DECIMAL(10,2) DEFAULT 0.00,
                 operator VARCHAR(50),
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+                created_by VARCHAR(64) NOT NULL DEFAULT 'system',
+                updated_by VARCHAR(64) NOT NULL DEFAULT 'system',
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                status VARCHAR(20) NOT NULL DEFAULT 'pending',
+                completed_qty DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                qualified_qty DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                flow_type VARCHAR(64) NOT NULL DEFAULT 'production',
+                target_operator VARCHAR(64) NOT NULL DEFAULT '',
+                KEY idx_status (status),
+                KEY idx_target_operator (target_operator),
+                KEY idx_created_by (created_by)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4''',
 
-            '''CREATE TABLE IF NOT EXISTS data_packages (
+            '''CREATE TABLE IF NOT EXISTS approval_records (
                 id VARCHAR(64) NOT NULL PRIMARY KEY,
-                data_type VARCHAR(64) NOT NULL,
-                title TEXT, content TEXT,
-                source VARCHAR(128) DEFAULT '',
-                priority VARCHAR(32) DEFAULT 'normal',
-                status VARCHAR(32) DEFAULT '',
+                order_no VARCHAR(64),
+                approval_type VARCHAR(32) NOT NULL,
+                title VARCHAR(255),
+                applicant VARCHAR(64),
+                approver VARCHAR(64),
+                status VARCHAR(32) NOT NULL DEFAULT 'pending',
+                content JSON,
+                related_order VARCHAR(64),
+                related_process VARCHAR(100),
+                reject_reason TEXT,
+                created_by VARCHAR(64) NOT NULL DEFAULT 'system',
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                distributed_at DATETIME,
-                acknowledged_at DATETIME,
+                updated_by VARCHAR(64) NOT NULL DEFAULT 'system',
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 completed_at DATETIME,
-                completed_qty INT DEFAULT 0,
-                actual_qty INT DEFAULT 0,
-                target_operator VARCHAR(64) DEFAULT '',
-                operator_id VARCHAR(64) DEFAULT '',
-                target_device VARCHAR(64) DEFAULT '',
-                tags TEXT,
-                related_order VARCHAR(64) DEFAULT '',
-                related_process VARCHAR(64) DEFAULT '',
-                KEY idx_pkg_type (data_type),
-                KEY idx_pkg_status (status),
-                KEY idx_pkg_operator (target_operator),
-                KEY idx_pkg_order (related_order)
+                is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+                KEY idx_order_no (order_no),
+                KEY idx_status (status),
+                KEY idx_approver (approver),
+                KEY idx_created_by (created_by)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4''',
+
+            '''-- [v3.6] process_sub_steps 表已废弃，不再 CREATE
+            -- 业务数据迁移到 11 业务表（process_sub_steps/material_records/...）''',
 
             '''CREATE TABLE IF NOT EXISTS data_flow_logs (
                 id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -614,7 +619,7 @@ class MySQLStorage:
             logger.warning(f'[SLOW SQL] {elapsed_ms:.2f}ms{extra} | {sql_first_line} | params={params_str}')
 
     # 无 id 的表自动生成 UUID（pymysql 无自增 insert_id 返回）
-    _UUID_TABLES = {'process_records', 'process_sub_steps', 'data_packages'}  # id 为 varchar 的表
+    _UUID_TABLES = {'process_records', 'process_sub_steps', 'process_sub_steps'}  # id 为 varchar 的表
 
     def insert(self, table: str, data: dict) -> Optional[int]:
         self._ensure_conn()
@@ -895,55 +900,150 @@ class MySQLStorage:
 
         return self.fetch_all(sql, tuple(params)) or []
 
-    # ───── 数据包 ─────
+    # ───── [v3.6] 数据包 → process_sub_steps SSOT ─────
     def save_package(self, package: Dict) -> bool:
+        """[v3.6] 派工写入 process_sub_steps（11 业务表 SSOT）
+
+        兼容: data_type + related_order + related_process 仍用于去重
+        """
         pkg_id = package.get('id', str(_uuid.uuid4())[:8])
-        # 去重
+        # 去重: 用 process_sub_steps 替代 process_sub_steps
         existing = self.fetch_one(
-            "SELECT id FROM data_packages WHERE data_type=%s AND related_order=%s AND related_process=%s LIMIT 1",
-            (package.get('data_type', ''), package.get('related_order', ''), package.get('related_process', '')))
+            "SELECT id FROM process_sub_steps WHERE order_no=%s AND process_code=%s AND batch_no=%s LIMIT 1",
+            (package.get('related_order', ''),
+             package.get('process_code', package.get('related_process', '')),
+             package.get('batch_no', '')))
         if existing:
-            self.update('data_packages', {k: v for k, v in package.items() if k != 'id'},
+            self.update('process_sub_steps',
+                        {k: v for k, v in package.items() if k != 'id'},
                         "id=%s", (existing['id'],))
             return True
-        self.insert('data_packages', {**package, 'id': pkg_id})
+        # 字段映射
+        sub_step = {
+            'id': pkg_id,
+            'order_no': package.get('related_order', ''),
+            'process_code': package.get('process_code', package.get('related_process', '')),
+            'batch_no': package.get('batch_no', ''),
+            'quantity': package.get('quantity', 0),
+            'status': package.get('status', 'pending'),
+            'created_by': package.get('created_by', 'system'),
+        }
+        self.insert('process_sub_steps', sub_step)
         return True
 
     def get_packages(self, limit=500, offset=0, fields=None, **kwargs):
-        """[优化 2026-06-12] 增加 offset 和 fields 参数
+        """[v3.6 T1.3] 11 路由白名单查询
 
         Args:
             limit: 每页数量
             offset: 偏移量
             fields: 字段列表，None=全部字段
-            **kwargs: 支持 data_type, status, related_order, operator
+            **kwargs: 支持 data_type, status, order_no, target_operator
+
+        Returns:
+            业务表数据列表
+
+        Raises:
+            ValueError: 不支持 data_type
         """
-        # [优化] 字段裁剪，减少网络传输
+        from storage.data_type_router import validate_data_type, NEW_DATA_TYPES
+
+        # T1.5: 异常值处理
+        data_type = kwargs.get('data_type')
+        if not data_type:
+            raise ValueError('data_type 必填，合法值: ' + str(sorted(NEW_DATA_TYPES)))
+        table = validate_data_type(data_type)
+
+        # 字段裁剪
         if fields:
             select_fields = ','.join(fields)
         else:
             select_fields = '*'
 
-        sql = f"SELECT {select_fields} FROM data_packages WHERE 1=1"
+        # 通用 WHERE 条件
+        where_clauses = ['is_deleted=0']
         params = []
-        for k in ('data_type', 'status', 'related_order'):
-            if v := kwargs.get(k):
-                sql += f" AND {k}=%s"
-                params.append(v)
-        operator = kwargs.get('operator')
-        if operator:
-            sql += " AND (target_operator=%s OR status='distributed')"
-            params.append(operator)
+
+        # order_no 过滤（业务关联）
+        if v := kwargs.get('order_no'):
+            where_clauses.append('order_no=%s')
+            params.append(v)
+
+        # target_operator 过滤
+        if v := kwargs.get('target_operator'):
+            where_clauses.append('target_operator=%s')
+            params.append(v)
+
+        # status 过滤（如有）
+        if v := kwargs.get('status'):
+            where_clauses.append('status=%s')
+            params.append(v)
+
+        sql = f"SELECT {select_fields} FROM {table} WHERE {' AND '.join(where_clauses)}"
         sql += " ORDER BY created_at DESC LIMIT %s OFFSET %s"
         params.extend([limit, offset])
         return self.fetch_all(sql, tuple(params)) or []
 
+    def get_packages_batch(self, data_types: list, order_no: str = None, limit: int = 10) -> dict:
+        """[v3.6 T1.4] 批量查询（1 次 UNION ALL 跨多表）
+
+        Args:
+            data_types: list of data_type
+            order_no: 业务订单号（可选）
+            limit: 每种最多返回多少行
+
+        Returns:
+            {data_type: [rows]}
+
+        Raises:
+            ValueError: 不支持 data_type
+        """
+        from storage.data_type_router import validate_data_type
+
+        if not data_types:
+            return {}
+
+        # 白名单校验
+        for dt in data_types:
+            validate_data_type(dt)  # 异常就抛
+
+        # UNION ALL 跨多表
+        # 注: MySQL 不支持 UNION 中 SELECT *, 用具体列名
+        # 注: MySQL 5.x 要求每个 SELECT 用 (...) 包裹，且 LIMIT 在子查询内
+        union_parts = []
+        params = []
+        # 通用列名（10 业务表共有字段）
+        common_cols = 'id, order_no, status, created_at, created_by, updated_at, is_deleted'
+        for dt in data_types:
+            table = TASK_TYPE_TABLE_MAP[dt]
+            if order_no:
+                union_parts.append(
+                    f"(SELECT '{dt}' AS data_type, {common_cols} FROM {table} "
+                    f"WHERE is_deleted=0 AND order_no=%s LIMIT %s)"
+                )
+                params.extend([order_no, limit])
+            else:
+                union_parts.append(
+                    f"(SELECT '{dt}' AS data_type, {common_cols} FROM {table} "
+                    f"WHERE is_deleted=0 LIMIT %s)"
+                )
+                params.append(limit)
+
+        sql = ' UNION ALL '.join(union_parts)
+        rows = self.fetch_all(sql, tuple(params)) or []
+
+        # 按 data_type 分组返回
+        grouped = {dt: [] for dt in data_types}
+        for row in rows:
+            grouped[row['data_type']].append(row)
+        return grouped
+
     def get_packages_count_group(self) -> Dict:
-        """[T24 修复 2026-06-14] SQL 聚合统计容器池状态
+        """[T24 + v3.6 修复] SQL 聚合统计容器池状态
 
         之前 get_pool_status() 拉 1000 行所有字段到 Python 内存聚合 → 5s+
-        现在：单条 SQL GROUP BY data_type, status 一次拿全 → < 10ms
-        不受 data_packages 行数影响（O(N) → O(GROUP)，G << N）
+        现在：单条 SQL GROUP BY 一次拿全 → < 10ms
+        不受数据行数影响（O(N) → O(GROUP)，G << N）
 
         Returns:
             {
@@ -952,13 +1052,14 @@ class MySQLStorage:
               'by_status': {status: int},     # 按状态分组
             }
         """
+        # [v3.6] process_sub_steps 已废弃，改查 process_sub_steps（最大的业务表）
         sql = """
             SELECT
               COUNT(*) AS cnt,
-              data_type,
               status
-            FROM data_packages
-            GROUP BY data_type, status
+            FROM process_sub_steps
+            WHERE is_deleted=0
+            GROUP BY status
         """
         rows = self.fetch_all(sql) or []
         by_type: Dict[str, int] = {}
@@ -986,26 +1087,26 @@ class MySQLStorage:
     def package_exists(self, order_no: str = None, process_name: str = None,
                         data_type: str = None) -> bool:
         """高效检查任务是否已存在（不走 SELECT * 全字段）"""
-        sql = "SELECT 1 FROM data_packages WHERE 1=1"
+        # [v3.6] process_sub_steps 已废弃, 改查 process_sub_steps
+        sql = "SELECT 1 FROM process_sub_steps WHERE is_deleted=0"
         params = []
         if order_no:
-            sql += " AND (related_order=%s OR order_no=%s)"
-            params.extend([order_no, order_no])
+            sql += " AND order_no=%s"
+            params.append(order_no)
         if process_name:
-            sql += " AND (process_name=%s OR JSON_EXTRACT(content, '$.process_name')=%s)"
+            sql += " AND (process_code=%s OR step_name=%s)"
             params.extend([process_name, process_name])
-        if data_type:
-            sql += " AND data_type=%s"
-            params.append(data_type)
         sql += " LIMIT 1"
         result = self.fetch_one(sql, tuple(params))
         return result is not None
 
     def get_package(self, pkg_id):
-        return self.fetch_one("SELECT * FROM data_packages WHERE id=%s", (str(pkg_id),))
+        # [v3.6] process_sub_steps 已废弃, 改查 process_sub_steps
+        return self.fetch_one("SELECT * FROM process_sub_steps WHERE id=%s AND is_deleted=0", (str(pkg_id),))
 
     def delete_package(self, pkg_id):
-        return self.execute("DELETE FROM data_packages WHERE id=%s", (str(pkg_id),))
+        # [v3.6] 软删除 process_sub_steps
+        return self.execute("UPDATE process_sub_steps SET is_deleted=1 WHERE id=%s", (str(pkg_id),))
 
     # ───── 工序编码映射 ─────
     def get_process_names(self):
@@ -1158,12 +1259,12 @@ class MySQLStorage:
 
     def save_process_sub_step_with_pkg_update(
             self, data: dict, pkg_order: str, pkg_process: str, qty_delta: float):
-        """v4.0 改造（F6 P6 修复）: 原子化保存 process_sub_steps + 累加 data_packages.
+        """v4.0 改造（F6 P6 修复）: 原子化保存 process_sub_steps + 累加 process_sub_steps.
 
         与 save_process_sub_step 的关键差异:
-        - 本方法在**单次连接**内完成 process_sub_steps 的 3 键去重/合并 + data_packages
+        - 本方法在**单次连接**内完成 process_sub_steps 的 3 键去重/合并 + process_sub_steps
           累加 + 显式 commit, 保证两个写入的原子性 (要么都成功, 要么都回滚).
-        - save_process_sub_step 不传 pkg 参数时, 调用方须自行负责 data_packages 累加, 但
+        - save_process_sub_step 不传 pkg 参数时, 调用方须自行负责 process_sub_steps 累加, 但
           那样会形成两次独立 commit, 数据一致性存在风险 (F6 悲观审计发现).
 
         设计决策（[v4.0 / 2026-06-10] 审计项 N3）: 本方法**故意**不走
@@ -1175,8 +1276,8 @@ class MySQLStorage:
 
         Args:
             data: 工序子步骤数据, 必含 order_no/step_name/operator/quantity.
-            pkg_order: data_packages.related_order 关联订单号.
-            pkg_process: data_packages.related_process 关联工序.
+            pkg_order: process_sub_steps.related_order 关联订单号.
+            pkg_process: process_sub_steps.related_process 关联工序.
             qty_delta: 本次累加数量 (通常 = data['quantity']).
 
         Returns:
@@ -1213,7 +1314,7 @@ class MySQLStorage:
                             (order_no, step_name))
                     row = cur.fetchone()
                     if row:
-                        # 已存在 → 合并 operator（【P0修复 2026-06-18 Bug #1+#2】不再累加 data_packages.completed_qty）
+                        # 已存在 → 合并 operator（【P0修复 2026-06-18 Bug #1+#2】不再累加 process_sub_steps.completed_qty）
                         # 修复前: 命中时仍 UPDATE completed_qty + qty_delta → 重复报工暴增 20 万倍
                         # 修复后: 命中时只合并 operator, 不再累加 completed_qty
                         # 累加只在"未命中 → 新插入行"时执行
@@ -1243,10 +1344,10 @@ class MySQLStorage:
                         cur.execute(
                             f"INSERT INTO `process_sub_steps` ({cols}) VALUES ({vals})",
                             params)
-                        # 2. 【P0修复 2026-06-18 Bug #1+#2】累加 data_packages.completed_qty
+                        # 2. 【P0修复 2026-06-18 Bug #1+#2】累加 process_sub_steps.completed_qty
                         # 仅当新增行时累加, 去重命中时不再累加（避免重复报工导致 completed_qty 暴增）
                         cur.execute(
-                            "UPDATE data_packages SET completed_qty = COALESCE(completed_qty, 0) + %s "
+                            "UPDATE process_sub_steps SET completed_qty = COALESCE(completed_qty, 0) + %s "
                             "WHERE related_order=%s AND related_process=%s",
                             (qty_delta, pkg_order, pkg_process))
                 # 3. 一次 commit, 原子性保证
@@ -1339,8 +1440,9 @@ class MySQLStorage:
 
     # ───── 其他 ─────
     def cleanup_expired_packages(self, retention_days=30):
+        # [v3.6] process_sub_steps 已废弃, 改软删除 process_sub_steps
         return self.execute(
-            "DELETE FROM data_packages WHERE created_at < DATE_SUB(NOW(), INTERVAL %s DAY)",
+            "UPDATE process_sub_steps SET is_deleted=1 WHERE created_at < DATE_SUB(NOW(), INTERVAL %s DAY) AND is_deleted=0",
             (retention_days,))
 
     def get_process_records_by_work_order(self, order_no):
@@ -1740,10 +1842,10 @@ class MySQLStorage:
 
     # ───── 包管理补充 ─────
     def update_package(self, pkg_id, pkg_dict):
-        return self.update('data_packages', pkg_dict, 'id=%s', (pkg_id,))
+        return self.update('process_sub_steps', pkg_dict, 'id=%s', (pkg_id,))
 
     def update_package_status(self, pkg_id, status, remark=''):
-        return self.update('data_packages', {'status': status}, 'id=%s', (pkg_id,))
+        return self.update('process_sub_steps', {'status': status}, 'id=%s', (pkg_id,))
 
     # ───── 数据流日志 ─────
     def save_data_flow_log(self, log):
@@ -1912,3 +2014,4 @@ def _patch_local_table_methods():
 _patch_local_table_methods()
 
 _patch_report_methods()
+

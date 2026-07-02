@@ -1,0 +1,58 @@
+22:11:21 [INFO] dispatch_server:104 ==================================================
+22:11:21 [INFO] dispatch_server:105   µ÷¶ÈÖÐÐÄ·þÎñÆ÷Æô¶¯
+22:11:21 [INFO] dispatch_server:106   µØÖ·: http://0.0.0.0:5003
+22:11:21 [INFO] dispatch_server:107   Ò³Ãæ: http://0.0.0.0:5003/api/dispatch-center/
+22:11:21 [INFO] dispatch_server:108   CONTAINER_CENTER_URL: http://127.0.0.1:5002
+22:11:21 [INFO] dispatch_server:109   ÆóÒµ¼Ü¹¹»º´æ: D:\yuan\²»Ðâ¸ÖÍø´ø¸úµ¥3.0\mobile_api_ai\data\enterprise_structure.json
+22:11:21 [INFO] dispatch_server:110 ==================================================
+22:11:21 [INFO] werkzeug:97 [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5003
+ * Running on http://192.168.1.21:5003
+22:11:21 [INFO] werkzeug:97 [33mPress CTRL+C to quit[0m
+22:34:41 [INFO] werkzeug:97 127.0.0.1 - - [17/May/2026 22:34:41] "GET /api/dispatch-center/ HTTP/1.1" 200 -
+22:34:42 [INFO] werkzeug:97 127.0.0.1 - - [17/May/2026 22:34:42] "GET /static/js/dispatch_center.js?v=20260515.5 HTTP/1.1" 200 -
+22:34:42 [INFO] werkzeug:97 127.0.0.1 - - [17/May/2026 22:34:42] "GET /static/css/dispatch_center.css HTTP/1.1" 200 -
+22:34:42 [INFO] werkzeug:97 127.0.0.1 - - [17/May/2026 22:34:42] "[33mGET /container/api/stats HTTP/1.1[0m" 404 -
+22:34:42 [INFO] werkzeug:97 127.0.0.1 - - [17/May/2026 22:34:42] "[35m[1mGET /favicon.ico HTTP/1.1[0m" 204 -
+22:34:43 [WARNING] integration.wechat_notifier:26 [DEPRECATED] integration/wechat_notifier.py ÒÑÆúÓÃ£¬ÇëÇ¨ÒÆµ½ services/notifier.py
+22:34:43 [WARNING] integration.wechat_notifier:43 [DEPRECATED] WeChatNotifier(integration) ÒÑÆúÓÃ£¬ÇëÊ¹ÓÃ services.notifier.WeChatNotifier
+22:34:43 [INFO] storage_layer:442 SQLiteÁ¬½Ó³É¹¦: D:\yuan\²»Ðâ¸ÖÍø´ø¸úµ¥3.0\mobile_api_ai\wechat_container.db
+22:34:43 [WARNING] dispatch_center:743 »ñÈ¡²Ù×÷Ô±Ó³Éä±íÒì³£: 'id'
+22:34:43 [INFO] werkzeug:97 127.0.0.1 - - [17/May/2026 22:34:43] "GET /api/dispatch-center/status HTTP/1.1" 200 -
+22:34:47 [INFO] container_config:242 [_load_operators_from_file] ´ÓÎÄ¼þ¼ÓÔØ 4 ¸ö²Ù×÷Ô±
+22:34:47 [INFO] container_config:201 [_load_default_repair_categories] ´ÓÎÄ¼þ¼ÓÔØ 4 ¸ö×Ô¶¨Òå±¨ÐÞÖÖÀà
+22:34:47 [INFO] werkzeug:97 127.0.0.1 - - [17/May/2026 22:34:47] "GET /api/dispatch-center/operators HTTP/1.1" 200 -
+22:34:47 [INFO] dispatch_center:1920 [²¿ÃÅ¼Ü¹¹] ´ÓÈÝÆ÷ÖÐÐÄ¶ÁÈ¡»º´æ: 3 ¸ö²¿ÃÅ, 7 ÃûÓÃ»§
+22:34:47 [INFO] werkzeug:97 127.0.0.1 - - [17/May/2026 22:34:47] "GET /api/dispatch-center/operators/wechat-departments HTTP/1.1" 200 -
+22:34:56 [INFO] werkzeug:97 127.0.0.1 - - [17/May/2026 22:34:56] "[35m[1mPOST /api/dispatch-center/operators/sync-wechat HTTP/1.1[0m" 500 -
+22:34:58 [INFO] dispatch_center:1872 [²¿ÃÅ¼Ü¹¹] ÇëÇóÈÝÆ÷ÖÐÐÄ´ÓÔÆ¶ËÍ¬²½...
+22:34:58 [INFO] werkzeug:97 127.0.0.1 - - [17/May/2026 22:34:58] "[35m[1mGET /api/dispatch-center/operators/wechat-departments?force_cloud=1 HTTP/1.1[0m" 500 -
+22:35:13 [INFO] werkzeug:97 127.0.0.1 - - [17/May/2026 22:35:13] "GET /api/dispatch-center/operators HTTP/1.1" 200 -
+22:35:13 [INFO] dispatch_center:1920 [²¿ÃÅ¼Ü¹¹] ´ÓÈÝÆ÷ÖÐÐÄ¶ÁÈ¡»º´æ: 3 ¸ö²¿ÃÅ, 7 ÃûÓÃ»§
+22:35:13 [INFO] werkzeug:97 127.0.0.1 - - [17/May/2026 22:35:13] "GET /api/dispatch-center/operators/wechat-departments HTTP/1.1" 200 -
+22:35:43 [INFO] werkzeug:97 127.0.0.1 - - [17/May/2026 22:35:43] "GET /api/dispatch-center/operators HTTP/1.1" 200 -
+22:36:13 [INFO] werkzeug:97 127.0.0.1 - - [17/May/2026 22:36:13] "GET /api/dispatch-center/operators HTTP/1.1" 200 -
+22:36:43 [INFO] werkzeug:97 127.0.0.1 - - [17/May/2026 22:36:43] "GET /api/dispatch-center/operators HTTP/1.1" 200 -
+22:36:43 [INFO] dispatch_center:1920 [²¿ÃÅ¼Ü¹¹] ´ÓÈÝÆ÷ÖÐÐÄ¶ÁÈ¡»º´æ: 3 ¸ö²¿ÃÅ, 7 ÃûÓÃ»§
+22:36:43 [INFO] werkzeug:97 127.0.0.1 - - [17/May/2026 22:36:43] "GET /api/dispatch-center/operators/wechat-departments HTTP/1.1" 200 -
+22:37:13 [INFO] werkzeug:97 127.0.0.1 - - [17/May/2026 22:37:13] "GET /api/dispatch-center/operators HTTP/1.1" 200 -
+22:37:45 [INFO] werkzeug:97 127.0.0.1 - - [17/May/2026 22:37:45] "GET /api/dispatch-center/operators HTTP/1.1" 200 -
+22:37:45 [INFO] dispatch_center:1920 [²¿ÃÅ¼Ü¹¹] ´ÓÈÝÆ÷ÖÐÐÄ¶ÁÈ¡»º´æ: 3 ¸ö²¿ÃÅ, 7 ÃûÓÃ»§
+22:37:45 [INFO] werkzeug:97 127.0.0.1 - - [17/May/2026 22:37:45] "GET /api/dispatch-center/operators/wechat-departments HTTP/1.1" 200 -
+22:38:45 [INFO] werkzeug:97 127.0.0.1 - - [17/May/2026 22:38:45] "GET /api/dispatch-center/operators HTTP/1.1" 200 -
+22:39:45 [INFO] werkzeug:97 127.0.0.1 - - [17/May/2026 22:39:45] "GET /api/dispatch-center/operators HTTP/1.1" 200 -
+22:39:45 [INFO] dispatch_center:1920 [²¿ÃÅ¼Ü¹¹] ´ÓÈÝÆ÷ÖÐÐÄ¶ÁÈ¡»º´æ: 3 ¸ö²¿ÃÅ, 7 ÃûÓÃ»§
+22:39:45 [INFO] werkzeug:97 127.0.0.1 - - [17/May/2026 22:39:45] "GET /api/dispatch-center/operators/wechat-departments HTTP/1.1" 200 -
+22:40:45 [INFO] werkzeug:97 127.0.0.1 - - [17/May/2026 22:40:45] "GET /api/dispatch-center/operators HTTP/1.1" 200 -
+22:41:45 [INFO] werkzeug:97 127.0.0.1 - - [17/May/2026 22:41:45] "GET /api/dispatch-center/operators HTTP/1.1" 200 -
+22:41:45 [INFO] dispatch_center:1920 [²¿ÃÅ¼Ü¹¹] ´ÓÈÝÆ÷ÖÐÐÄ¶ÁÈ¡»º´æ: 3 ¸ö²¿ÃÅ, 7 ÃûÓÃ»§
+22:41:45 [INFO] werkzeug:97 127.0.0.1 - - [17/May/2026 22:41:45] "GET /api/dispatch-center/operators/wechat-departments HTTP/1.1" 200 -
+22:42:45 [INFO] werkzeug:97 127.0.0.1 - - [17/May/2026 22:42:45] "GET /api/dispatch-center/operators HTTP/1.1" 200 -
+22:43:45 [INFO] werkzeug:97 127.0.0.1 - - [17/May/2026 22:43:45] "GET /api/dispatch-center/operators HTTP/1.1" 200 -
+22:43:45 [INFO] dispatch_center:1920 [²¿ÃÅ¼Ü¹¹] ´ÓÈÝÆ÷ÖÐÐÄ¶ÁÈ¡»º´æ: 3 ¸ö²¿ÃÅ, 7 ÃûÓÃ»§
+22:43:45 [INFO] werkzeug:97 127.0.0.1 - - [17/May/2026 22:43:45] "GET /api/dispatch-center/operators/wechat-departments HTTP/1.1" 200 -
+22:44:45 [INFO] werkzeug:97 127.0.0.1 - - [17/May/2026 22:44:45] "GET /api/dispatch-center/operators HTTP/1.1" 200 -
+22:45:45 [INFO] werkzeug:97 127.0.0.1 - - [17/May/2026 22:45:45] "GET /api/dispatch-center/operators HTTP/1.1" 200 -
+22:45:45 [INFO] dispatch_center:1920 [²¿ÃÅ¼Ü¹¹] ´ÓÈÝÆ÷ÖÐÐÄ¶ÁÈ¡»º´æ: 3 ¸ö²¿ÃÅ, 7 ÃûÓÃ»§
+22:45:45 [INFO] werkzeug:97 127.0.0.1 - - [17/May/2026 22:45:45] "GET /api/dispatch-center/operators/wechat-departments HTTP/1.1" 200 -

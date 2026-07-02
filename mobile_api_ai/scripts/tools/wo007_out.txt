@@ -1,8 +1,0 @@
-=== 模拟发布 WO-202605007 ===
-POST result: status=200 code=0 msg=排产任务已发布: WO-202605007
-process_records found: 5
-  wo=WO-202605007 order=ORD-202605007 product= created=2026-05-21T14:58:24.540206
-  wo=WO-202605007 order=ORD-202605007 product= created=2026-05-21T14:58:38.326869
-  wo=WO-202605007 order=ORD-202605007 product= created=2026-05-21T14:59:11.561652
-  wo=WO-202605007 order=ORD-202605007 product= created=2026-05-21T14:59:32.721540
-  wo=WO-202605007 order=ORD-202605007 product= created=2026-05-21T14:59:32.744851

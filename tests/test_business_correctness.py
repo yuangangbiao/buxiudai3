@@ -135,7 +135,7 @@ def test_exception_rollback():
 
 # === T41.4 跨服务镜像：5008 报工 → 8008 sync → 5002 应有数据 ===
 def test_cross_service_mirror():
-    """真实业务流：5008 报工 → 8008 收 sync_queue → 5002 应镜像到 data_packages"""
+    """真实业务流：5008 报工 → 8008 收 sync_queue → 5002 应镜像到 process_sub_steps"""
     from storage.mysql_storage import MySQLStorage
     s = MySQLStorage()
     s.connect()
@@ -145,7 +145,7 @@ def test_cross_service_mirror():
     test_order = f'TEST-CROSS-{_next_test_id()}'
 
     # 1. 直接走 5008 worker 路径（写入 process_sub_steps）
-    # [v3.8.1 重构] 不再写 data_packages，直接写 process_sub_steps
+    # [v3.8.1 重构] 不再写 process_sub_steps，直接写 process_sub_steps
     test_substep_uuid = _next_test_id(32)
 
     with _db() as conn:

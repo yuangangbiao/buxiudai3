@@ -178,7 +178,7 @@ class TestScheduleCorrectRollback:
         sqls = _strip_sqls(fake_conn._cursor)
         assert any('START TRANSACTION' in s for s in sqls), \
             f"缺少 START TRANSACTION, 实际: {sqls}"
-        assert any('UPDATE container_center.data_packages SET' in s and 'WHERE id=%s' in s for s in sqls), \
+        assert any('UPDATE container_center.process_sub_steps SET' in s and 'WHERE id=%s' in s for s in sqls), \
             f"缺少 UPDATE 主表, 实际: {sqls}"
         assert any('INSERT INTO container_center.data_regression_history' in s for s in sqls), \
             f"缺少 INSERT history, 实际: {sqls}"
@@ -257,7 +257,7 @@ class TestScheduleWithdrawRollback:
         sqls = _strip_sqls(fake_conn._cursor)
         assert any('START TRANSACTION' in s for s in sqls), \
             f"缺少 START TRANSACTION, 实际: {sqls}"
-        assert any("UPDATE container_center.data_packages SET status='withdrawn'" in s for s in sqls), \
+        assert any("UPDATE container_center.process_sub_steps SET status='withdrawn'" in s for s in sqls), \
             f"缺少 UPDATE 软删除, 实际: {sqls}"
         assert any('INSERT INTO container_center.data_regression_history' in s for s in sqls), \
             f"缺少 INSERT history, 实际: {sqls}"

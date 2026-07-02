@@ -4,10 +4,10 @@ T13 监控告警: flow_type 不匹配 5 中心埋点
 
 监控目标 (5 中心):
   1. 调度中心 _core.py:  workorder.flow_type 与 process_records.flow_type 不一致
-  2. 容器中心 API:        dispatch_task 写 data_packages.flow_type 与已有记录不一致
+  2. 容器中心 API:        dispatch_task 写 process_sub_steps.flow_type 与已有记录不一致
   3. 容器中心 V5:         DataCollector.collect 推断的 flow_type 与显式入参冲突
   4. 移动端 dispatcher:   TaskPool.get_tasks_by_flow_type 索引 vs 实际 task_type 分布异常
-  5. 移动端 sync_bridge:  process_records.flow_type 与 data_packages.flow_type 跨表不一致
+  5. 移动端 sync_bridge:  process_records.flow_type 与 process_sub_steps.flow_type 跨表不一致
 
 接收人: 苑岗彪 (wechat_userid 占位, 待运维提供实际 ID)
 

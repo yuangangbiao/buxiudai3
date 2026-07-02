@@ -32,7 +32,7 @@ def my_tasks():
         cur.execute("""
             SELECT id, title, content, data_type, related_process, related_order,
                    target_operator, status, completed_qty, is_public
-            FROM data_packages
+            FROM process_sub_steps
             WHERE (target_operator = %s OR is_public = 1)
               AND data_type IN ('report','task','work_order','flow_step','process_report','quality_task')
               AND status != 'completed'
@@ -56,7 +56,7 @@ def my_tasks():
                 'planned_qty': content.get('planned_qty', content.get('quantity', 0)),
                 'completed_qty': content.get('completed_qty', 0),
                 'status': r.get('status', '进行中'),
-                'source': 'data_packages',
+                'source': 'process_sub_steps',
             })
 
         return success(data={'tasks': task_list, 'total': len(task_list)})

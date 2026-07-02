@@ -1,126 +1,83 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+# ============================================================
+# [v3.6] .gitignore - 不上传到 GitHub
+# ============================================================
 
-# C extensions
+# ───── 归档目录（v3.6 清理的 426 个文件）─────
+archive/
+
+# ───── Python 缓存 ─────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
 *.so
 
-# Distribution / packaging
-build/
-build_*/
-dist/
-*.egg-info/
-*.egg
-MANIFEST
-
-# PyInstaller
-*.spec
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-pytest_cache/
-tests/reports/
-tests/.pytest_cache/
-
-# Translations
-*.mo
-*.pot
-
-# Environments
-.env
-.venv
-env/
+# ───── 虚拟环境 ─────
+.venv/
 venv/
+env/
 ENV/
-env.bak/
-venv.bak/
-*.env
 
-# IDEs
-.idea/
+# ───── IDE 配置 ─────
 .vscode/
+.idea/
 *.swp
 *.swo
 *~
+
+# ───── OS 文件 ─────
 .DS_Store
 Thumbs.db
+desktop.ini
 
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# MySQL
-*.frm
-*.ibd
-*.MYD
-*.MYI
-
-# Logs
-logs/
+# ───── 临时文件 ─────
 *.log
-
-# Build outputs
-final_inventory_build/
-temp_inventory_build/
-build_dashboard_launcher/
-build_dashboard_new/
-build_license_temp/
-build_with_license_temp/
-visualization_app/
-
-# Playwright
-playwright-report/
-test-results/
-videos/
-traces/
-
-# node
-node_modules/
-
-# Mobile API - 已移出gitignore (2026-07-01)，由主仓库统一管理
-# mobile_api_ai/
-
-# Mobile API 临时文件（排除）
-mobile_api_ai/.pytest_cache/
-mobile_api_ai/.sandbox_pkgs/
-mobile_api_ai/build/
-mobile_api_ai/dist/
-mobile_api_ai/logs/
-mobile_api_ai/node_modules/
-mobile_api_ai/modules/
-mobile_api_ai/specs/
-mobile_api_ai/data/*.db*
-mobile_api_ai/DAT/
-
-# Misc
+*.tmp
 *.bak
 *.orig
 *.old
-*.tmp
-*.temp
-*.swp
-*.swo
+*.pid
+*.seed
+*.pid.lock
+nul  # Windows 保留字
+
+# ───── 敏感信息 ─────
+.env
+.env.local
+*.pem
+*.key
+secrets/
+
+# ───── 数据库 / 备份 ─────
 *.db
 *.sqlite
 *.sqlite3
-nul
-con
-prn
-aux
+*.sql.bak
+
+# ───── Node ─────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json.bak
+
+# ───── 文档生成器 ─────
+node_modules/
+docs_build/
+public/
+
+# ───── 测试报告 ─────
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+.pytest_cache/
+.tox/
+.mypy_cache/
+
+# ───── 项目特殊（v3.6 新增）─────
+.workbuddy/  # AI 助手工作区
+generate_summary_docx.js
+"docs/6月30日-7月2日任务总结.docx"
+!docs/CHANGELOG.md  # 但保留 CHANGELOG

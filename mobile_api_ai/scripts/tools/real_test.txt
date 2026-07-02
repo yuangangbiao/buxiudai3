@@ -1,8 +1,0 @@
-=== 测试 POST /api/schedule/publish ===
-POST status: 200
-POST code: 0
-POST message: 排产任务已发布: WO-REAL-TEST
-POST full: {"code": 0, "data": {"order_no": "ORD-REAL-TEST", "record_id": "4ab221a8", "work_order_no": "WO-REAL-TEST"}, "message": "排产任务已发布: WO-REAL-TEST", "success": true}
-端口 5002: 监听中
-端口 5003: 监听中
-端口 5008: 监听中

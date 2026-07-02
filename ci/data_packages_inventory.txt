@@ -1,0 +1,749 @@
+共 102 个文件
+
+mobile_api_ai/__pre_tests__/test_5_center_integration.py
+   L7: 2. 容器中心 API: dispatch_task 接受 flow_type + 写 data_packages.flow_type
+   L16: 3. 容器中心 API dispatch_task 写 data_packages.flow_type
+   L55: def test_dispatch_task_writes_data_packages_flow_type(self):
+   L56: """3. container_center_api.py L976 读 flow_type + L1042 写 data_packages.flow_type
+
+mobile_api_ai/__pre_tests__/test_dispatch_task_flow_type.py
+   L3: T4 前测: dispatch_task L1059-1096 接受 flow_type 入参 + L1042 后写 data_packages.flow_type 列
+   L7: 2. L1042 后追加 UPDATE data_packages SET flow_type=%s WHERE id=%s
+   L45: 返回是否应执行 UPDATE data_packages SET flow_type=...
+   L90: """F4.2: L1042 后追加 UPDATE 写入 data_packages.flow_type 列"""
+   L93: """6. data_packages.flow_type 列必写"""
+
+mobile_api_ai/api/legacy_routes.py
+   L406: logger.warning(f'查询 data_packages 失败(非致命): {e}')
+   L780: # - data_packages 旧方案: title/content 字段不存在 → 500
+
+mobile_api_ai/api/process.py
+   L31: # 查 data_packages: 分配给该工人的 + 全员派发的
+   L35: FROM data_packages
+   L59: 'source': 'data_packages',
+
+mobile_api_ai/api/process_v2.py
+   L49: # dispatch_commands 表已删除，直接读 data_packages
+   L51: SELECT id, title, content, data_type FROM data_packages
+   L102: cur.execute("SELECT * FROM data_packages WHERE id=%s", (str(record_id),))
+   L125: cur.execute("UPDATE data_packages SET content=%s, title=%s, status=%s, updated_at=NOW() WHERE id=%s"
+   L188: LEFT JOIN data_packages dp ON sl.package_id = dp.id
+
+mobile_api_ai/api/quality_inspection.py
+   L118: "SELECT COUNT(DISTINCT related_order) as cnt FROM container_center.data_packages "
+   L125: "FROM container_center.data_packages "
+   L156: "SELECT * FROM container_center.data_packages WHERE related_order=%s "
+   L300: # 原子锁 data_packages（兼容按 id / order_no+process_name）
+   L306: 'UPDATE container_center.data_packages SET status=%s WHERE id=%s AND status != %s',
+   L310: 'UPDATE container_center.data_packages SET status=%s WHERE related_order=%s AND status != %s',
+   L316: 'UPDATE container_center.data_packages SET status=%s WHERE related_order=%s AND data_type=%s AND sta
+   L397: # 退回时重置 data_packages 状态
+   L402: "UPDATE container_center.data_packages SET status='pending' WHERE related_order=%s AND data_type = '
+
+mobile_api_ai/api/report_record_admin.py
+   L32: 修复前: UPDATE data_packages.completed_qty（死代码，无读者）
+   L1018: cur.execute("SELECT * FROM container_center.data_packages WHERE id=%s", (record_id,))
+
+mobile_api_ai/app.py
+   L339: # [v3.8.1 废弃] 不再写 data_packages.completed_qty（SSOT 已切换到 process_sub_steps）
+   L383: # SSOT: 所有 completed_qty 均以 process_sub_steps 表为准，data_packages.completed_qty 已废弃
+   L387: 修复前: UPDATE data_packages.completed_qty（死代码，无读者）
+   L452: # 3. 同步 data_packages.completed_qty（重算）
+   L614: # 4. 同步 data_packages.completed_qty（重算）
+   L689: # 3. 同步 data_packages.completed_qty（重算）
+   L2112: # [v3.8.1 废弃] 不再写 data_packages.completed_qty（SSOT 已切换到 process_sub_steps）
+   L2365: # [v3.8.1 废弃] 旧: 更新 data_packages.completed_qty
+   L2366: # add_sub_step 已写 process_sub_steps（SSOT），不再需要同步到 data_packages
+
+mobile_api_ai/container_center/v5_compatible_client.py
+   L90: # 文档 CRUD（映射到 V5 data_packages）
+   L113: # 注意: work_order 类型不通过 HTTP 回退，因为 /api/v4/work_order 会返回所有 data_packages 记录，
+   L139: # 获取全部 data_packages（调度中心 list_tasks/list_processes 依赖此路径）
+
+mobile_api_ai/container_center_api.py
+   L1497: # 同时检查 data_packages（兼容保护）
+   L1500: 'SELECT id FROM data_packages WHERE related_order=%s AND related_process=%s AND status!=%s LIMIT 1',
+   L1503: logger.info(f'[派工] data_packages 兼容跳过: order={order_no} process={process}')
+   L1557: 'UPDATE data_packages SET process_code=%s WHERE id=%s',
+   L1560: "UPDATE data_packages SET content=JSON_SET(content, '$.process_code', %s) "
+   L1580: "UPDATE data_packages SET is_public=%s, is_broadcast=%s "
+   L1587: # 修补 T4 (F4.2): 同步写入 data_packages.flow_type 列 (T1 DDL 加的列)
+   L1592: 'UPDATE data_packages SET flow_type=%s WHERE id=%s',
+   L1596: logger.warning(f'[T4] 写 data_packages.flow_type 列失败: {e}')
+   L1844: # 去重：同 order_no 的 process_record 只创建一次（后续步骤只写 data_packages）
+   L1848: 'SELECT id FROM data_packages WHERE related_order=%s AND related_process=%s LIMIT 1',
+   L1956: # 兼容旧逻辑，写入 data_packages
+   L1957: container_center.storage.insert('data_packages', {
+   L2844: 'SELECT id FROM data_packages WHERE related_order=%s AND related_process=%s '
+   L3403: "SELECT id FROM data_packages WHERE related_order=%s AND related_process=%s LIMIT 1",
+   L3727: # total_sub_qty: 从 data_packages 汇总真实完成量
+   L3842: t_dp = container_center.storage._table('data_packages')
+   L3954: container_center.storage.insert('data_packages', {
+
+mobile_api_ai/dispatch_center/_core.py
+   L1483: """全员派发 — 从 data_packages (MySQL) 读取待发送任务"""
+   L1492: # 将 data_packages 字段转换为 _do_send_process_task 所需格式
+   L1558: # T9 迁移完成: 工序名来源改为 process_sub_steps 表，不再查询 data_packages
+   L2275: 从 data_packages 迁移到独立任务表：
+   L2369: [P0 修复 2026-06-18 Bug #5] 原代码查 container_center.data_packages, 引用了不存在的
+   L3906: """回退查询 product_name/quantity（当 data_packages 中缺失时）"""
+   L8110: # T14 迁移完成: 质检任务直接写入 quality_packages 表，不再写入 data_packages
+   L8501: 架构依据: ARCHITECTURE_v3.6.md 1.10.2 节 - 任务类型必须使用独立表，禁止混用 data_packages
+
+mobile_api_ai/migrations/0610_data_packages_flow_type.py
+   L3: 迁移: data_packages 加 flow_type 列 + process_records 补 flow_type 列
+   L9: - data_packages （加列）
+   L15: 1. data_packages 表加 flow_type VARCHAR(64) DEFAULT '' 列
+   L36: 1. DROP INDEX data_packages.idx_pkg_flow_order
+   L37: 2. DROP INDEX data_packages.idx_pkg_flow
+   L38: 3. DROP COLUMN data_packages.flow_type
+   L83: 1. data_packages 加 flow_type 列 + 2 索引
+   L87: # 1. data_packages 加列
+   L89: ALTER TABLE data_packages
+   L94: print('[0610] data_packages ADD COLUMN flow_type OK')
+   L96: # 2. data_packages 加索引 1: (flow_type, status)
+   L98: ALTER TABLE data_packages
+   L101: print('[0610] data_packages ADD INDEX idx_pkg_flow OK')
+   L103: # 3. data_packages 加索引 2: (flow_type, related_order)
+   L105: ALTER TABLE data_packages
+   L108: print('[0610] data_packages ADD INDEX idx_pkg_flow_order OK')
+   L122: # 1. data_packages 删索引（按反序）
+   L123: cur.execute("ALTER TABLE data_packages DROP INDEX idx_pkg_flow_order")
+   L124: print('[0610] data_packages DROP INDEX idx_pkg_flow_order OK')
+   L126: cur.execute("ALTER TABLE data_packages DROP INDEX idx_pkg_flow")
+   L127: print('[0610] data_packages DROP INDEX idx_pkg_flow OK')
+   L129: # 2. data_packages 删列
+   L130: cur.execute("ALTER TABLE data_packages DROP COLUMN flow_type")
+   L131: print('[0610] data_packages DROP COLUMN flow_type OK')
+
+mobile_api_ai/migrations/__pre_tests__/test_0610_data_packages_flow_type.py
+   L3: T1 前测：验证 0610_data_packages_flow_type.py 的 SQL 语法与执行路径
+   L6: 2. upgrade() 路径对 data_packages 执行了 ADD COLUMN flow_type
+   L7: 3. upgrade() 路径对 data_packages 执行了 2 个索引 idx_pkg_flow + idx_pkg_flow_order
+   L13: py -m unittest __pre_tests__.test_0610_data_packages_flow_type -v
+   L48: migration_file = MIGRATIONS_DIR / '0610_data_packages_flow_type.py'
+   L71: def test_upgrade_adds_flow_type_to_data_packages(self):
+   L72: """upgrade() 对 data_packages 执行 ADD COLUMN flow_type"""
+   L74: # 找 ALTER TABLE data_packages ADD COLUMN flow_type
+   L77: and 'data_packages' in s
+   L81: f'期望 data_packages ADD COLUMN flow_type 1 次, 实际 {len(matched)} 次. SQL: {stmts}')
+   L91: """upgrade() 对 data_packages 添加 2 索引"""
+   L93: # 找 data_packages 的 ADD INDEX
+   L96: and 'data_packages' in s
+   L99: f'期望 data_packages 2 个索引, 实际 {len(idx_stmts)} 个. SQL: {idx_stmts}')
+   L130: # data_packages 应有 DROP COLUMN + DROP INDEX
+   L133: and 'data_packages' in s
+   L137: and 'data_packages' in s
+   L139: self.assertEqual(len(drop_col_data), 1, f'data_packages DROP COLUMN 应 1 次, 实际 {len(drop_col_data)}')
+   L140: self.assertEqual(len(drop_idx_data), 2, f'data_packages DROP INDEX 应 2 次, 实际 {len(drop_idx_data)}')
+   L152: migration_file = MIGRATIONS_DIR / '0610_data_packages_flow_type.py'
+
+mobile_api_ai/scripts/0610_drop_legacy_tables.py
+   L4: - steel_belt.enterprise_structure, attendance, data_packages, product_flow_map (这 4 张应在 container_ce
+   L37: ('data_packages', 'MySQLStorage 行 238 DDL 历史建表'),
+
+mobile_api_ai/scripts/archive/debug_analyze.py
+   L29: cur.execute("SELECT id, title, status, related_order FROM data_packages WHERE data_type='order_produ
+   L35: cur.execute("SELECT content FROM data_packages WHERE data_type='report' LIMIT 3")
+
+mobile_api_ai/scripts/archive/debug_compare.py
+   L20: cur.execute('SELECT data_type, COUNT(*) FROM data_packages GROUP BY data_type')
+   L27: cur.execute('SELECT DISTINCT content FROM data_packages')
+
+mobile_api_ai/scripts/archive/debug_compare2.py
+   L9: cur.execute("SELECT id, related_order, title, status, created_at FROM data_packages WHERE data_type=
+   L14: cur.execute("SELECT id, related_order, title, status, created_at FROM data_packages WHERE data_type=
+   L19: cur.execute("SELECT id, related_order, title, status, created_at FROM data_packages WHERE data_type=
+   L24: cur.execute("SELECT id, related_order, title, status, created_at FROM data_packages WHERE data_type=
+
+mobile_api_ai/scripts/archive/debug_compare3.py
+   L8: cur.execute("SELECT id, data_type, title, status, created_at FROM data_packages WHERE data_type='ord
+   L14: cur2.execute("SELECT content FROM data_packages WHERE id=?", (row[0],))
+
+mobile_api_ai/scripts/archive/debug_compare5.py
+   L9: cur.execute("SELECT id, data_type, content FROM data_packages LIMIT 2")
+   L36: cur.execute(f"SELECT COUNT(*) FROM data_packages WHERE data_type=?", (dtype,))
+   L38: cur.execute(f"SELECT content FROM data_packages WHERE data_type=? LIMIT 3", (dtype,))
+
+mobile_api_ai/scripts/archive/debug_fields.py
+   L8: print("=== data_packages 表结构 ===")
+   L9: cur.execute("PRAGMA table_info(data_packages)")
+   L14: cur.execute("SELECT id, data_type, title, source, status, created_at FROM data_packages WHERE data_t
+   L19: cur.execute("SELECT content FROM data_packages WHERE data_type='report' LIMIT 3")
+
+mobile_api_ai/scripts/archive/debug_reports.py
+   L10: cur.execute("SELECT content FROM data_packages WHERE data_type='report'")
+
+mobile_api_ai/scripts/archive/debug_reports2.py
+   L9: cur.execute("SELECT id, content FROM data_packages WHERE data_type='report'")
+
+mobile_api_ai/scripts/check/check_db.py
+   L13: cur.execute('SELECT COUNT(*) FROM data_packages')
+   L17: cur.execute('SELECT COUNT(*) FROM data_packages WHERE status != "completed"')
+   L21: cur.execute('SELECT COUNT(*) FROM data_packages WHERE status = "pending"')
+
+mobile_api_ai/scripts/check_pkg_detail2.py
+   L7: cur.execute('PRAGMA table_info(data_packages)')
+   L9: print(f'data_packages 字段: {cols}')
+   L12: cur.execute(f"SELECT {col_str} FROM data_packages WHERE related_order IN ('WO-202605005', 'ORD-20260
+   L35: # 查看 data_packages 的 order_no 分布
+   L36: cur.execute("SELECT DISTINCT related_order, related_process FROM data_packages ORDER BY related_orde
+   L37: print('\n=== data_packages 所有工单/工序 ===')
+   L41: print(f'\n总记录数: {cur.execute("SELECT COUNT(*) FROM data_packages").fetchone()[0]}')
+
+mobile_api_ai/scripts/check_proc_detail.py
+   L25: # 查看 data_packages 中 WO-202605005 的所有数据包
+   L26: print('\n=== WO-202605005 所有 data_packages ===')
+   L27: cur.execute('SELECT id, related_order, related_process, data, content FROM data_packages WHERE relat
+
+mobile_api_ai/scripts/check_proc_records.py
+   L24: # 检查 data_packages 查看是否有 WO-202605005 数据
+   L25: print('=== data_packages related_order 分布 ===')
+   L26: cur.execute('SELECT DISTINCT related_order FROM data_packages')
+   L31: print('=== 从data_packages查看WO-202605005的content ===')
+   L32: cur.execute('SELECT content FROM data_packages WHERE related_order LIKE ? LIMIT 1', ('%WO-202605005%
+
+mobile_api_ai/scripts/check_process_names.py
+   L8: print('=== data_packages related_process ===')
+   L9: cur.execute('SELECT DISTINCT related_process FROM data_packages WHERE related_process IS NOT NULL AN
+
+mobile_api_ai/scripts/check_wo_006_data.py
+   L39: print('\n--- ORD-202604290001 的 data_packages ---')
+   L40: cur.execute('SELECT related_process FROM data_packages WHERE related_order=?', ('WO-202605006',))
+
+mobile_api_ai/scripts/check_workorder_source.py
+   L7: # 检查 data_packages 的 related_order 分布
+   L8: print('=== data_packages related_order 全部 ===')
+   L9: cur.execute('SELECT DISTINCT related_order FROM data_packages')
+   L14: print('=== data_packages 总数 ===')
+   L15: cur.execute('SELECT COUNT(*) FROM data_packages')
+   L21: # 这个函数查询的是 data_packages 表，看看有哪些状态
+   L22: cur.execute('SELECT DISTINCT status FROM data_packages')
+   L27: cur.execute('SELECT id, related_order, related_process, status FROM data_packages WHERE related_orde
+   L28: print(f'\n=== data_packages 中的 WO-SCAN 记录 ===')
+   L36: cur.execute("SELECT DISTINCT related_order FROM data_packages WHERE related_order LIKE '%TEST%' OR r
+   L38: print(f'\n=== data_packages 中的 TEST 记录 ===')
+
+mobile_api_ai/scripts/list_all_orders.py
+   L7: # 1) data_packages 中所有工单
+   L8: print('=== data_packages 工单汇总 ===')
+   L15: FROM data_packages
+
+mobile_api_ai/scripts/list_all_orders3.py
+   L25: # 检查data_packages
+   L26: dp = conn.execute("SELECT COUNT(*) as cnt, MIN(created_at) as first, MAX(created_at) as last FROM da
+   L28: print(f'  {wo}: 仅 data_packages {dp["cnt"]}条, {dp["first"]}~{dp["last"]}')
+
+mobile_api_ai/scripts/monitor.py
+   L141: (CONTAINER_DB, ['data_packages', 'process_records'])]:
+
+mobile_api_ai/scripts/preflight_check.py
+   L60: check_table(CC_DB, 'data_packages', ['id', 'order_no', 'data_type', 'related_order'])
+
+mobile_api_ai/scripts/rebuild_proc_record.py
+   L21: # 查看 data_packages 的 content 中 WO-202605005 的 fields
+
+mobile_api_ai/scripts/test_api_logic.py
+   L25: cursor.execute("SELECT DISTINCT related_process FROM data_packages WHERE related_process IS NOT NULL
+   L27: print('data_packages rows:', len(rows))
+
+mobile_api_ai/scripts/tools/check_008_data.py
+   L24: elif tn == 'data_packages':
+   L25: rows = conn.execute("SELECT * FROM data_packages WHERE related_order LIKE '%008%' OR related_order L
+
+mobile_api_ai/scripts/tools/check_data2.py
+   L14: cur.execute('SELECT DISTINCT data_type FROM data_packages')
+   L23: cur.execute("SELECT id, data_type, title, status, content, related_order, source, created_at FROM da
+   L40: cur.execute("SELECT id, data_type, title, status, content, related_order, source, created_at FROM da
+
+mobile_api_ai/scripts/tools/check_order_270003.py
+   L91: # data_packages
+   L92: cur.execute("SELECT COUNT(*) FROM data_packages WHERE related_order = ?", (ORDER_NO,))
+   L94: print(f"\n  data_packages: {pkg_cnt} 条")
+   L97: cur.execute("SELECT * FROM data_packages WHERE related_order = ? ORDER BY created_at DESC LIMIT 5", 
+
+mobile_api_ai/scripts/tools/check_wo007.py
+   L18: # 2. data_packages work_order
+   L20: print("【2】data_packages (work_order)")
+   L21: c.execute("SELECT id, data_type, title, related_order, created_at FROM data_packages WHERE data_type
+
+mobile_api_ai/scripts/tools/check_wo_status.py
+   L28: # 2. data_packages 表
+   L29: print("\n[2] container_center.db - data_packages 表")
+   L33: cursor.execute("SELECT id, package_type, wo_no, created_at FROM data_packages WHERE wo_no LIKE ? ORD
+   L35: print(f"   WO-202605008 data_packages: {'找到 ' + str(len(wo008_pkg)) + ' 条' if wo008_pkg else '未找到'}"
+
+mobile_api_ai/scripts/tools/cleanup_test_data.py
+   L12: 3. data_packages 表中的 work_order 文档
+   L69: # === 2. 清理 data_packages work_order 文档 ===
+   L72: c2.execute("SELECT COUNT(*) FROM data_packages WHERE data_type='work_order'")
+   L75: c2.execute("DELETE FROM data_packages WHERE data_type='work_order'")
+   L77: print(f"[data_packages] 已删除 {deleted_wo} 条 work_order 文档")
+   L78: c2.execute("SELECT data_type, COUNT(*) FROM data_packages GROUP BY data_type")
+
+mobile_api_ai/scripts/tools/compare_db_files.py
+   L104: key_tables = ['process_sub_steps', 'process_records', 'data_packages', 'tasks']
+   L152: elif table == 'data_packages':
+
+mobile_api_ai/scripts/tools/diagnose_slow_load.py
+   L5: 1. data_packages 表数据量
+   L30: # 检查 data_packages
+   L31: c.execute("SELECT COUNT(*) FROM container_center.data_packages")
+   L33: print(f"\n📦 data_packages 表: {pkg_count} 条")
+   L43: FROM container_center.data_packages
+   L48: print(f"\n📈 data_packages 按状态分布:")
+   L55: FROM container_center.data_packages
+   L60: print(f"\n📈 data_packages 按类型分布:")
+   L190: 1. 如果 data_packages 表 > 10000 条:
+
+mobile_api_ai/scripts/tools/diagnose_slow_load_simple.py
+   L57: # 1. data_packages 表
+   L59: result = query("SELECT COUNT(*) FROM data_packages")
+   L61: print(f"\n📦 data_packages 表: {pkg_count} 条")
+   L63: print(f"\n❌ data_packages 查询失败: {e}")
+   L74: print(f"\n📈 data_packages 按状态分布 (Top 5):")
+   L78: FROM data_packages
+   L89: print(f"\n📈 data_packages 按类型分布 (Top 5):")
+   L93: FROM data_packages
+   L106: result = query("SHOW INDEX FROM data_packages")
+   L124: result = query("SELECT * FROM data_packages ORDER BY created_at DESC LIMIT 100")
+   L132: result = query("SELECT * FROM data_packages ORDER BY created_at DESC LIMIT 1000")
+   L140: result = query("SELECT * FROM data_packages WHERE related_order='ORD-202506120001' LIMIT 100")
+   L152: 1. data_packages > 10000 条:
+
+mobile_api_ai/scripts/tools/full_db_compare.py
+   L124: key_tables = ['process_sub_steps', 'process_records', 'data_packages', 'tasks', 'products', 'operato
+
+mobile_api_ai/scripts/tools/quick_compare_db.py
+   L35: key_tables = ['process_sub_steps', 'process_records', 'data_packages', 'tasks']
+
+mobile_api_ai/scripts/verify_fixes.py
+   L94: cursor.execute("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='data_packages'")
+
+mobile_api_ai/services/flow_type_alert.py
+   L7: 2. 容器中心 API:        dispatch_task 写 data_packages.flow_type 与已有记录不一致
+   L10: 5. 移动端 sync_bridge:  process_records.flow_type 与 data_packages.flow_type 跨表不一致
+
+mobile_api_ai/services/stats_engine.py
+   L102: 'sql_template': "SELECT date(created_at) AS 日期, COUNT(*) AS 报工数 FROM data_packages WHERE date(create
+   L185: 'sql_template': "SELECT COALESCE(target_operator, '未分配') AS 操作员, COUNT(*) AS 总任务数, SUM(CASE WHEN sta
+   L256: cursor.execute("SELECT COUNT(*) AS c FROM data_packages WHERE DATE(created_at) = CURDATE()")
+   L259: cursor.execute("SELECT COUNT(*) AS c, SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS done 
+
+mobile_api_ai/standalone_dispatch_server.py
+   L460: # 同步 process_sub_steps.completed_qty (v3.6.1: 已从 data_packages 迁移)
+   L526: # 同步 process_sub_steps.completed_qty（重算） (v3.6.1: 已从 data_packages 迁移)
+
+mobile_api_ai/stats_smart_sheet/mysql_config.py
+   L5: - CONTAINER_CENTER_CFG: 容器中心库 (process_records 完整字段, data_packages, report_queue)
+
+mobile_api_ai/storage/mysql_storage.py
+   L142: # R12: data_packages 加 process_code 列(SSOT 分类主键)
+   L143: # 配合 ETL 脚本 fill_data_packages_process_code.py 回填老数据
+   L144: 'data_packages': [
+   L145: ('process_code', 'ALTER TABLE data_packages ADD COLUMN process_code VARCHAR(10) DEFAULT \'\''),
+   L146: ('idx_pkg_process_code', 'ALTER TABLE data_packages ADD INDEX idx_pkg_process_code (process_code)'),
+   L147: ('updated_at', 'ALTER TABLE data_packages ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP O
+   L339: '''-- [v3.6] data_packages 表已废弃，不再 CREATE
+   L628: _UUID_TABLES = {'process_records', 'process_sub_steps', 'data_packages'}  # id 为 varchar 的表
+   L914: "SELECT id FROM data_packages WHERE data_type=%s AND related_order=%s AND related_process=%s LIMIT 1
+   L917: self.update('data_packages', {k: v for k, v in package.items() if k != 'id'},
+   L920: self.insert('data_packages', {**package, 'id': pkg_id})
+   L1035: 不受 data_packages 行数影响（O(N) → O(GROUP)，G << N）
+   L1049: FROM data_packages
+   L1078: sql = "SELECT 1 FROM data_packages WHERE 1=1"
+   L1094: return self.fetch_one("SELECT * FROM data_packages WHERE id=%s", (str(pkg_id),))
+   L1097: return self.execute("DELETE FROM data_packages WHERE id=%s", (str(pkg_id),))
+   L1250: """v4.0 改造（F6 P6 修复）: 原子化保存 process_sub_steps + 累加 data_packages.
+   L1253: - 本方法在**单次连接**内完成 process_sub_steps 的 3 键去重/合并 + data_packages
+   L1255: - save_process_sub_step 不传 pkg 参数时, 调用方须自行负责 data_packages 累加, 但
+   L1267: pkg_order: data_packages.related_order 关联订单号.
+   L1268: pkg_process: data_packages.related_process 关联工序.
+   L1305: # 已存在 → 合并 operator（【P0修复 2026-06-18 Bug #1+#2】不再累加 data_packages.completed_qty）
+   L1335: # 2. 【P0修复 2026-06-18 Bug #1+#2】累加 data_packages.completed_qty
+   L1338: "UPDATE data_packages SET completed_qty = COALESCE(completed_qty, 0) + %s "
+   L1432: "DELETE FROM data_packages WHERE created_at < DATE_SUB(NOW(), INTERVAL %s DAY)",
+   L1832: return self.update('data_packages', pkg_dict, 'id=%s', (pkg_id,))
+   L1835: return self.update('data_packages', {'status': status}, 'id=%s', (pkg_id,))
+
+mobile_api_ai/sync_bridge.py
+   L787: # 读取 process_report 类型的 data_packages(旧值 'report' 已迁移)
+   L788: cur.execute("SELECT * FROM data_packages WHERE data_type='process_report' ORDER BY id DESC LIMIT 20"
+
+mobile_api_ai/tests/integration/test_cc_core.py
+   L916: """当 data_packages 已存在时返回 duplicate。"""
+
+mobile_api_ai/tests/integration/test_startup_integration.py
+   L35: (CONTAINER_CENTER, 'data_packages',        ['id', 'order_no', 'data_type', 'related_order']),
+
+mobile_api_ai/tests/pre_release/test_0610_data_packages_flow_type.py
+   L3: T1 前测：验证 0610_data_packages_flow_type.py 的 SQL 语法与执行路径
+   L6: 2. upgrade() 路径对 data_packages 执行了 ADD COLUMN flow_type
+   L7: 3. upgrade() 路径对 data_packages 执行了 2 个索引 idx_pkg_flow + idx_pkg_flow_order
+   L13: py -m unittest __pre_tests__.test_0610_data_packages_flow_type -v
+   L48: migration_file = MIGRATIONS_DIR / '0610_data_packages_flow_type.py'
+   L71: def test_upgrade_adds_flow_type_to_data_packages(self):
+   L72: """upgrade() 对 data_packages 执行 ADD COLUMN flow_type"""
+   L74: # 找 ALTER TABLE data_packages ADD COLUMN flow_type
+   L77: and 'data_packages' in s
+   L81: f'期望 data_packages ADD COLUMN flow_type 1 次, 实际 {len(matched)} 次. SQL: {stmts}')
+   L91: """upgrade() 对 data_packages 添加 2 索引"""
+   L93: # 找 data_packages 的 ADD INDEX
+   L96: and 'data_packages' in s
+   L99: f'期望 data_packages 2 个索引, 实际 {len(idx_stmts)} 个. SQL: {idx_stmts}')
+   L130: # data_packages 应有 DROP COLUMN + DROP INDEX
+   L133: and 'data_packages' in s
+   L137: and 'data_packages' in s
+   L139: self.assertEqual(len(drop_col_data), 1, f'data_packages DROP COLUMN 应 1 次, 实际 {len(drop_col_data)}')
+   L140: self.assertEqual(len(drop_idx_data), 2, f'data_packages DROP INDEX 应 2 次, 实际 {len(drop_idx_data)}')
+   L152: migration_file = MIGRATIONS_DIR / '0610_data_packages_flow_type.py'
+
+mobile_api_ai/tests/pre_release/test_5_center_integration.py
+   L7: 2. 容器中心 API: dispatch_task 接受 flow_type + 写 data_packages.flow_type
+   L16: 3. 容器中心 API dispatch_task 写 data_packages.flow_type
+   L55: def test_dispatch_task_writes_data_packages_flow_type(self):
+   L56: """3. container_center_api.py L976 读 flow_type + L1042 写 data_packages.flow_type
+
+mobile_api_ai/tests/pre_release/test_dispatch_task_flow_type.py
+   L3: T4 前测: dispatch_task L1059-1096 接受 flow_type 入参 + L1042 后写 data_packages.flow_type 列
+   L7: 2. L1042 后追加 UPDATE data_packages SET flow_type=%s WHERE id=%s
+   L45: 返回是否应执行 UPDATE data_packages SET flow_type=...
+   L90: """F4.2: L1042 后追加 UPDATE 写入 data_packages.flow_type 列"""
+   L93: """6. data_packages.flow_type 列必写"""
+
+mobile_api_ai/tests/unit/test_atomic_save_sub_step.py
+   L5: 1. 正常情况: 3 键去重 + operator 追加 + data_packages 累加
+   L6: 2. 原子性: data_packages 累加失败时, process_sub_steps 也回滚
+   L40: # data_packages 累加测试, 不删 (无关)
+   L45: """正常派工 1 个工人, 应写入 1 行 + data_packages 累加."""
+   L52: # 1) 确保有 data_packages 行 (atomic_test 假定已存在, 否则 UPDATE 不影响行数)
+   L54: "INSERT IGNORE INTO data_packages (related_order, related_process, completed_qty) "
+   L60: "SELECT completed_qty FROM data_packages WHERE related_order=%s AND related_process=%s",
+   L79: "SELECT completed_qty FROM data_packages WHERE related_order=%s AND related_process=%s",
+   L86: assert after - before == 50, f"data_packages 累加错误: {before} -> {after}"
+   L87: print("  [PASS] 正常派工: 1 行, operator=工人A, data_packages +50")
+   L91: """多人派工, 合并为 1 行, operator 追加, data_packages 累加 N 倍."""
+   L99: "INSERT IGNORE INTO data_packages (related_order, related_process, completed_qty) "
+   L104: "SELECT completed_qty FROM data_packages WHERE related_order=%s AND related_process=%s",
+   L120: "SELECT completed_qty FROM data_packages WHERE related_order=%s AND related_process=%s",
+   L128: assert after - before == 65, f"data_packages 累加错误: {before} -> {after}"
+   L129: print(f"  [PASS] 多人派工: 1 行, operator={op}, data_packages +65")
+   L133: """data_packages 累加失败时, process_sub_steps 也应回滚 (原子性)."""
+   L144: # 故意让 related_process 字段超长触发 data 错误 (data_packages.process 列存在, 但
+   L152: pkg_process=TEST_STEP + '_nonexistent_xxx',  # 故意让 data_packages UPDATE 不命中
+   L163: # 注: data_packages UPDATE 即便未命中行, 也不报错 (UPDATE 无匹配是合法的).
+   L177: # 注入: data_packages.related_process 字段超长触发 Data too long for column
+
+mobile_api_ai/tests/unit/test_build_tasks_is_public.py
+   L87: """构造 data_packages 字典"""
+
+mobile_api_ai/tests/unit/test_cross_db.py
+   L24: 'data_packages', 'data_flow_logs', 'sync_logs',
+
+mobile_api_ai/tests/unit/test_re001_material.py
+   L199: assert any('UPDATE container_center.data_packages SET' in s and 'WHERE id=%s' in s for s in sqls), \
+   L271: assert any("UPDATE container_center.data_packages SET status='withdrawn'" in s for s in sqls), \
+
+mobile_api_ai/tests/unit/test_re001_outsource.py
+   L143: """设置 SELECT * FROM data_packages 返回的模拟行。
+   L203: assert any('UPDATE container_center.data_packages SET priority' in s for s in sqls), \
+   L273: assert any("UPDATE container_center.data_packages SET status='withdrawn'" in s for s in sqls), \
+
+mobile_api_ai/tests/unit/test_re001_schedule.py
+   L181: assert any('UPDATE container_center.data_packages SET' in s and 'WHERE id=%s' in s for s in sqls), \
+   L260: assert any("UPDATE container_center.data_packages SET status='withdrawn'" in s for s in sqls), \
+
+mobile_api_ai/wechat_work_bot_bp.py
+   L167: "SELECT DISTINCT target_operator FROM data_packages "
+
+scripts/__pre_tests__/test_backfill_data_packages_flow_type.py
+   L3: T2 前测: 数据回填脚本 content['flow_type'] -> data_packages.flow_type 列
+   L18: py -m unittest scripts.__pre_tests__.test_backfill_data_packages_flow_type -v
+   L32: * rollback 模式 = DELETE FROM data_packages
+   L49: - T1 DDL 已 commit (fae446bd) -> data_packages.flow_type 列存在
+   L88: from backfill_data_packages_flow_type import parse_flow_type
+   L163: from backfill_data_packages_flow_type import backfill
+   L193: from backfill_data_packages_flow_type import backfill
+   L208: from backfill_data_packages_flow_type import backfill
+   L251: from backfill_data_packages_flow_type import backfill
+   L306: from backfill_data_packages_flow_type import backfill
+   L328: from backfill_data_packages_flow_type import backfill
+   L341: from backfill_data_packages_flow_type import backfill
+   L349: from backfill_data_packages_flow_type import backfill
+   L358: @patch('backfill_data_packages_flow_type.backfill')
+   L359: @patch('backfill_data_packages_flow_type.get_conn')
+   L360: @patch('sys.argv', ['backfill_data_packages_flow_type.py'])
+   L366: from backfill_data_packages_flow_type import main
+   L376: @patch('backfill_data_packages_flow_type.backfill')
+   L377: @patch('backfill_data_packages_flow_type.get_conn')
+   L378: @patch('sys.argv', ['backfill_data_packages_flow_type.py', '--apply'])
+   L384: from backfill_data_packages_flow_type import main
+   L396: @patch('backfill_data_packages_flow_type.rollback')
+   L397: @patch('backfill_data_packages_flow_type.get_conn')
+   L398: @patch('sys.argv', ['backfill_data_packages_flow_type.py', '--rollback'])
+   L405: from backfill_data_packages_flow_type import main
+   L417: @patch('backfill_data_packages_flow_type.rollback')
+   L418: @patch('backfill_data_packages_flow_type.get_conn')
+   L419: @patch('sys.argv', ['backfill_data_packages_flow_type.py', '--rollback', '--rollback-apply', '--yes'
+   L426: from backfill_data_packages_flow_type import main
+   L444: script_path = SCRIPTS_DIR / "backfill_data_packages_flow_type.py"
+
+scripts/_check_schema.py
+   L1: """检查 material_records 和 data_packages 表结构"""
+   L14: print('\n=== data_packages ===')
+   L15: c.execute('DESCRIBE data_packages')
+
+scripts/_debug_db.py
+   L8: print("=== data_packages 最近10条 ===")
+   L9: c.execute('SELECT id, data_type, title, source, related_order, operator, status, created_at FROM dat
+
+scripts/_debug_db2.py
+   L8: print("=== 全部 data_packages ===")
+   L9: c.execute('SELECT id, data_type, title, source, related_order, status, created_at FROM data_packages
+
+scripts/_debug_schema.py
+   L12: print("\n=== data_packages ===")
+   L13: c.execute('DESCRIBE data_packages')
+
+scripts/archive/query_raw_data.py
+   L21: cursor.execute('SELECT * FROM data_packages ORDER BY created_at DESC LIMIT 10')
+
+scripts/audit_today.py
+   L149: ('查 data_packages 表', 'FROM data_packages' in core_text, '应查 data_packages'),
+
+scripts/backfill_data_packages.py
+   L12: # 2. 备份 data_packages
+   L13: cur.execute('CREATE TABLE data_packages_bak_20260612 AS SELECT id, process_code FROM data_packages')
+   L16: print(f'[2] 备份 data_packages {n2} 行 -> data_packages_bak_20260612')
+   L26: cur.execute('UPDATE data_packages SET process_code=%s WHERE id=%s', (code, pkg_id))
+   L30: cur.execute("UPDATE data_packages SET process_code='P15' WHERE id='80e608a5'")
+   L37: cur.execute("SELECT id, data_type, process_code, title FROM data_packages WHERE (data_type='material
+   L41: cur.execute("SELECT COUNT(*) FROM data_packages WHERE data_type IN ('material_request','quality_task
+
+scripts/backfill_data_packages_flow_type.py
+   L3: T2 数据回填脚本: data_packages.content['flow_type'] -> data_packages.flow_type 列
+   L5: 依赖 T1 DDL (commit fae446bd): data_packages.flow_type 列 + 2 索引已存在
+   L9: py scripts/backfill_data_packages_flow_type.py
+   L12: py scripts/backfill_data_packages_flow_type.py --apply
+   L15: py scripts/backfill_data_packages_flow_type.py --apply --batch-size 1000
+   L18: py scripts/backfill_data_packages_flow_type.py --rollback            # dry-run 模式, 列出待删 ID
+   L19: py scripts/backfill_data_packages_flow_type.py --rollback --rollback-apply --yes  # 真删
+   L21: 设计契约 (10 章节 - 与前测 test_backfill_data_packages_flow_type.py 对齐):
+   L101: 解析 data_packages.content (str 或 bytes) JSON, 返回 content['flow_type'] 字段
+   L139: 回填 data_packages.flow_type 列 (从 content['flow_type'])
+   L162: "SELECT id, content FROM data_packages "
+   L192: "UPDATE data_packages "
+   L199: f"[DRY-RUN] UPDATE data_packages SET flow_type="
+   L241: 回滚 data_packages.flow_type 回填操作
+   L257: "SELECT id, flow_type FROM data_packages "
+   L272: "UPDATE data_packages SET flow_type = '' "
+   L311: description="T2 数据回填脚本: content['flow_type'] -> data_packages.flow_type"
+
+scripts/check_cc_setup.py
+   L6: # data_packages 表结构
+   L7: c.execute('SHOW COLUMNS FROM data_packages')
+   L8: print('=== data_packages 表结构 ===')
+
+scripts/cleanup_quality_task.py
+   L5: cur.execute("SELECT id, title FROM data_packages WHERE data_type='quality_task' AND (process_code IS
+   L11: cur.execute("DELETE FROM data_packages WHERE data_type='quality_task' AND (process_code IS NULL OR p
+   L16: cur.execute('SELECT COUNT(*) FROM data_packages WHERE data_type=%s', ('quality_task',))
+   L18: cur.execute('SELECT COUNT(*) FROM data_packages WHERE data_type=%s AND (process_code IS NULL OR proc
+   L22: cur.execute('SELECT id, title, process_code FROM data_packages WHERE data_type=%s', ('quality_task',
+
+scripts/describe_all.py
+   L16: ("container_center", "data_packages"),
+
+scripts/e2e_publish_test.py
+   L248: print(f'     - 三种任务类型均写入独立表，不再依赖 data_packages')
+
+scripts/fill_data_packages_process_code.py
+   L3: R12 ETL: 回填 data_packages.process_code 老数据
+   L6: - data_packages.content JSON (含 process_name / process_code)
+   L7: - data_packages.related_process 字符串
+   L8: - data_packages.data_type 字段
+   L15: 1. data_packages.content.process_code 优先(若已存, 不动)
+   L16: 2. 否则用 data_packages.content.process_name → get_process_code()
+   L17: 3. 否则用 data_packages.related_process → get_process_code()
+   L26: python scripts/fill_data_packages_process_code.py            # 默认回填
+   L27: python scripts/fill_data_packages_process_code.py --dry-run # 只统计, 不写
+   L28: python scripts/fill_data_packages_process_code.py --batch 200
+   L126: parser = argparse.ArgumentParser(description='R12 ETL: 回填 data_packages.process_code')
+   L132: # 1. 连接 MySQL (container_center 库, 跟 data_packages 同库)
+   L159: FROM data_packages
+   L186: FROM data_packages
+   L217: "UPDATE data_packages SET process_code=%s WHERE id=%s",
+   L247: FROM data_packages
+
+scripts/fix_4orders_anomaly.py
+   L8: 4 工单 `container_center.data_packages` 实际全部为 0 条(全空)
+   L15: 真实根因: process_records/process_sub_steps 没同步到 data_packages 派单视图
+   L18: SQL#1 自动备份 data_packages 全表
+   L86: """跨库备份:container_center.data_packages -> container_center.data_packages_backup"""
+   L162: FROM data_packages WHERE order_no IN (%s,%s,%s,%s)
+   L164: print("\n  [data_packages]")
+   L175: """SQL#2: 从 process_records + process_sub_steps 同步生成 data_packages.process_task"""
+   L204: # 检查 data_packages 已存在的同 order+process (避免重复)
+   L206: SELECT order_no, related_process FROM data_packages
+   L210: log(f"data_packages 已存在 process_task: {len(existing)} 条")
+   L212: # 状态映射(process_records.status 中文/英文 → data_packages 标准 status)
+   L269: INSERT INTO data_packages
+   L286: UPDATE data_packages
+   L335: SELECT related_process FROM data_packages
+   L371: INSERT INTO data_packages
+   L466: ("SQL#1", "备份 data_packages -> data_packages_4orders_v2_backup_YYYYMMDD_HHMMSS", "≈0 行(空表)"),
+   L484: backup_name = f"data_packages_4orders_v2_backup_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
+   L485: backup_table("container_center", "data_packages", backup_name)
+   L508: log(f"可执行 --rollback {backup_name} 还原 data_packages", "ERR")
+   L527: rollback_table(backup_table, "container_center", "data_packages")
+
+scripts/inspect_full.py
+   L83: # 5. data_packages
+   L85: print("【4】 container_center.data_packages 4 工单")
+   L92: FROM data_packages WHERE order_no=%s ORDER BY data_type, id""", (o,))
+
+scripts/migrations/migrate_add_task_fields_0620.py
+   L10: 2. data_packages 添加 is_archived 标记字段
+   L14: ALTER TABLE data_packages DROP COLUMN is_archived;
+   L47: print("[T0.2] 检查 data_packages.is_archived 字段...")
+   L51: AND TABLE_NAME = 'data_packages'
+   L59: ALTER TABLE data_packages
+   L78: print("[T0 回滚] 删除 data_packages.is_archived 字段...")
+   L80: storage.execute("ALTER TABLE data_packages DROP COLUMN is_archived")
+
+scripts/migrations/migrate_backfill_completed_qty_0620.py
+   L3: T1: 历史数据回填脚本 - 将 data_packages.completed_qty 回填到 process_sub_steps
+   L9: 从 data_packages 中按 order_no + step_name 汇总 completed_qty，
+   L39: FROM data_packages
+   L60: FROM data_packages
+
+scripts/migrations/migrate_data_type_to_v1.py
+   L6: 将 ``container_center.data_packages`` 表中历史 data_type 重新打标签,
+   L69: BACKUP_TABLE = f"data_packages_dt_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+   L125: """拉取所有 data_packages"""
+   L129: "FROM data_packages"
+   L151: f"FROM data_packages"
+   L163: f"UPDATE data_packages dp "
+   L169: print(f"  ✓ 已回滚 {affected} 条 → data_packages.data_type 恢复为备份值")
+   L226: "UPDATE data_packages SET data_type=%s WHERE id=%s",
+   L263: print(f"\n  data_packages 总记录: {len(rows)} 条")
+
+scripts/p4_scan_legacy.py
+   L3: """RE-006 P4 扫描 data_packages 表残留旧 data_type"""
+   L29: # 1. 列出当前 data_packages 表的所有 data_type 分布
+   L30: cur.execute("SELECT data_type, COUNT(*) FROM data_packages GROUP BY data_type ORDER BY COUNT(*) DESC
+   L31: print("data_packages data_type 分布:")
+   L38: cur.execute("SELECT DISTINCT data_type FROM data_packages WHERE data_type NOT IN %s",
+   L49: cur.execute("SELECT COUNT(*) FROM data_packages WHERE data_type='' OR data_type IS NULL")
+
+scripts/patch_related_order.py
+   L17: UPDATE data_packages
+   L27: SELECT id, order_no, related_process, content FROM data_packages
+   L35: cur.execute("UPDATE data_packages SET content=%s WHERE id=%s",
+   L45: cur.execute("UPDATE data_packages SET content=%s WHERE id=%s",
+
+scripts/q3_db_inspect.py
+   L3: """Q3 看 data_packages 表中 4 工单原始数据 + content"""
+   L25: print(f"\n=== {order} (data_packages 原始) ===")
+   L29: FROM data_packages
+
+scripts/q3_describe.py
+   L3: """Q3 看 data_packages 表结构"""
+   L20: cur.execute("DESCRIBE data_packages")
+
+scripts/sync_task_published.py
+   L5: 转换为 data_packages.process_task
+   L44: FROM data_packages
+   L55: FROM data_packages
+   L113: INSERT INTO data_packages
+   L129: FROM data_packages
+
+scripts/t4.3.1_create_data_packages.py
+   L2: T0.1: 创建 data_packages 表
+   L15: def create_data_packages_table():
+   L28: print('[T0.1] 创建 data_packages 表...\n')
+   L30: c.execute("SHOW TABLES LIKE 'data_packages'")
+   L32: print('[T0.1] data_packages 表已存在，跳过创建')
+   L37: CREATE TABLE `data_packages` (
+   L71: print('[T0.1] data_packages 表创建成功')
+   L72: c.execute("DESC `data_packages`")
+   L84: success = create_data_packages_table()
+
+scripts/tools/.head_core.py
+   L1408: # [v3.8.1 重构] 写入 process_sub_steps（SSOT），不再写 data_packages
+   L1598: """全员派发 — 从 data_packages (MySQL) 读取待发送任务"""
+   L1607: # 将 data_packages 字段转换为 _do_send_process_task 所需格式
+   L2376: """任务列表 — 数据源: data_packages（工序发布后的任务包）
+   L2466: [P0 修复 2026-06-18 Bug #5] 原代码查 container_center.data_packages, 引用了不存在的
+   L3993: """回退查询 product_name/quantity（当 data_packages 中缺失时）"""
+
+scripts/tools/_check_process_records.py
+   L41: # data_packages 对比
+   L42: cur.execute('SELECT COUNT(*) FROM data_packages')
+   L44: cur.execute('SELECT COUNT(*) FROM data_packages WHERE data_type IN (?, ?)', ('report', 'process'))
+   L46: print(f'\ndata_packages 总记录: {dp_cnt}条')
+   L47: print(f'data_packages report/process: {dp_task_cnt}条')
+
+scripts/tools/_check_remaining.py
+   L8: for tbl in ['orders','process_records','process_sub_steps','production_orders','data_packages']:
+
+scripts/tools/_query_container_db.py
+   L13: # data_packages 表结构
+   L14: cur.execute('PRAGMA table_info(data_packages)')
+   L16: print('\n=== data_packages 表结构 ===')
+   L21: cur.execute("SELECT id, data_type, status, related_order, created_at FROM data_packages WHERE data_t
+   L28: cur.execute("SELECT id, data_type, status, related_order, created_at FROM data_packages WHERE data_t
+   L35: cur.execute('SELECT DISTINCT data_type FROM data_packages ORDER BY data_type')
+   L39: cur.execute('SELECT COUNT(*) FROM data_packages WHERE data_type=?', (t[0],))
+   L44: cur.execute("SELECT id, data_type, related_order, length(doc_data) as data_len FROM data_packages WH
+
+scripts/tools/query_local_data.py
+   L22: if tn in ('data_packages', 'process_records', 'dispatch_commands', 'data_flow_logs', 'material_requi
+
+scripts/verify_data_packages.py
+   L6: cur.execute("SELECT id, data_type, order_no, related_order, related_process, status, source FROM dat
+
+tests/core/_config.py
+   L63: 'data_packages',   # 数据包
+
+tests/integration/data_source/test_data_source_direct.py
+   L129: def test_data_packages_status():
+   L130: """检查 data_packages 表状态"""
+   L132: print("data_packages 表状态")
+   L138: cursor.execute("SELECT COUNT(*) as cnt FROM data_packages")
+   L146: AND TABLE_NAME = 'data_packages'
+   L157: FROM data_packages
+   L185: results.append(("data_packages 状态", test_data_packages_status()))
+
+tests/integration/sync/test_independent_tables_sync.py
+   L124: def test_data_packages_archived():
+   L125: """检查 data_packages 表状态（应为归档状态）"""
+   L129: print("测试 3: 检查 data_packages 表状态")
+   L137: AND TABLE_NAME = 'data_packages'
+   L142: total = storage.fetch_one("SELECT COUNT(*) as cnt FROM data_packages")
+   L144: "SELECT COUNT(*) as cnt FROM data_packages WHERE is_archived = 1"
+   L146: print(f"  ✅ data_packages 表已添加 is_archived 字段")
+   L150: print(f"  ⚠️ data_packages 表尚未添加 is_archived 字段")
+   L226: results['data_packages'] = test_data_packages_archived()
+
+tests/test_business_correctness.py
+   L138: """真实业务流：5008 报工 → 8008 收 sync_queue → 5002 应镜像到 data_packages"""
+   L148: # [v3.8.1 重构] 不再写 data_packages，直接写 process_sub_steps
+
+tests/unit/core/test_process_code_integration.py
+   L22: """SQLite data_packages 回填逻辑"""
+   L30: cur.execute("SELECT id, content, related_process FROM data_packages")
+   L47: cur.execute("UPDATE data_packages SET content=? WHERE id=?",
+   L52: cur.execute("SELECT content FROM data_packages WHERE id=?", (rowid,))
+   L64: cur.execute("SELECT rowid, content FROM data_packages")
+   L85: cur.execute('''SELECT rowid, content FROM data_packages
+   L208: "INSERT INTO data_packages (target_operator, related_order, related_process, content, status, create
+   L214: cur.execute("SELECT content FROM data_packages WHERE related_order=? AND related_process=?",
+   L243: "INSERT INTO data_packages (target_operator, related_order, related_process, content, status, create
+   L248: cur.execute("SELECT content FROM data_packages WHERE related_order=? AND related_process=?",
+   L268: cur.execute("SELECT rowid, content, related_process FROM data_packages")
+
+tests/unit/test_p0_dispatch_dedup_guard.py
+   L67: 修复后: 先查 data_packages 同 (order, process, operator) 已存在则跳过
+   L86: "DataCollector.collect 必须包含去重查询(SELECT id FROM data_packages)"
+

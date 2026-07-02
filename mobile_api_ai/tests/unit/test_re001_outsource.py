@@ -140,7 +140,7 @@ class _FakeConnection:
 
 def _setup_existing_outsource_record(cursor, status='active', priority='normal',
                                      target_operator='张三'):
-    """设置 SELECT * FROM data_packages 返回的模拟行。
+    """设置 SELECT * FROM process_sub_steps 返回的模拟行。
 
     列顺序必须与 description 一致,确保 dict(zip(col, row)) 中各 .get(key) 能取到值。
     """
@@ -200,7 +200,7 @@ class TestOutsourceCorrectRollback:
         sqls = _strip_sqls(fake_conn._cursor)
         assert any('START TRANSACTION' in s for s in sqls), \
             f"缺少 START TRANSACTION, 实际: {sqls}"
-        assert any('UPDATE container_center.data_packages SET priority' in s for s in sqls), \
+        assert any('UPDATE container_center.process_sub_steps SET priority' in s for s in sqls), \
             f"缺少 UPDATE 主表 (动态 set_clause), 实际: {sqls}"
         assert any('INSERT INTO container_center.data_regression_history' in s for s in sqls), \
             f"缺少 INSERT history, 实际: {sqls}"
@@ -270,7 +270,7 @@ class TestOutsourceWithdrawRollback:
         sqls = _strip_sqls(fake_conn._cursor)
         assert any('START TRANSACTION' in s for s in sqls), \
             f"缺少 START TRANSACTION, 实际: {sqls}"
-        assert any("UPDATE container_center.data_packages SET status='withdrawn'" in s for s in sqls), \
+        assert any("UPDATE container_center.process_sub_steps SET status='withdrawn'" in s for s in sqls), \
             f"缺少 UPDATE 软删除, 实际: {sqls}"
         assert any('INSERT INTO container_center.data_regression_history' in s for s in sqls), \
             f"缺少 INSERT history, 实际: {sqls}"

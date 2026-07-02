@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 AI增强版移动报工系统 - Flask应用入口
 """
@@ -336,7 +336,7 @@ def create_app():
                 pass
         # ② v4.0 改造: 改走 save_process_sub_step_with_pkg_update
         # [v3.8.1 修复] 原子化: 3 键去重 + process_sub_steps 写入 + 一次 commit.
-        # [v3.8.1 废弃] 不再写 data_packages.completed_qty（SSOT 已切换到 process_sub_steps）
+        # [v3.8.1 废弃] 不再写 process_sub_steps.completed_qty（SSOT 已切换到 process_sub_steps）
         try:
             from storage.mysql_storage import MySQLStorage
             _storage = MySQLStorage()
@@ -380,11 +380,11 @@ def create_app():
         return jsonify({'code': 0, 'message': f'报工已提交 ({step_name} +{quantity})', 'success': True})
 
     # ============= completed_qty SSOT 同步（v3.8.1 修复） =============
-    # SSOT: 所有 completed_qty 均以 process_sub_steps 表为准，data_packages.completed_qty 已废弃
+    # SSOT: 所有 completed_qty 均以 process_sub_steps 表为准，process_sub_steps.completed_qty 已废弃
     def _sync_completed_qty_to_package(order_no, step_name, conn, cur):
         """[v3.8.1] 重算并回写 completed_qty 到 process_sub_steps（SSOT）
         
-        修复前: UPDATE data_packages.completed_qty（死代码，无读者）
+        修复前: UPDATE process_sub_steps.completed_qty（死代码，无读者）
         修复后: UPDATE process_sub_steps.completed_qty（前端展示唯一真值源）
         """
         try:
@@ -449,7 +449,7 @@ def create_app():
                     (sub_step_id, existing.get('order_no', ''), existing.get('step_name', ''),
                      existing.get('batch_no', ''), existing.get('operator', ''), operator,
                      old_qty, 0, 'self_withdraw', operator))
-                # 3. 同步 data_packages.completed_qty（重算）
+                # 3. 同步 process_sub_steps.completed_qty（重算）
                 _sync_completed_qty_to_package(
                     existing.get('order_no', ''), existing.get('step_name', ''), conn, cur)
                 cur.execute("COMMIT")
@@ -611,7 +611,7 @@ def create_app():
                      old_operator, admin_user, old_qty, new_quantity, reason, admin_user))
                 # 3. UPDATE process_records (宽边界: 必须一起提交)
                 cur.execute("UPDATE process_records SET last_reverted_at=NOW() WHERE order_no=%s", (order_no,))
-                # 4. 同步 data_packages.completed_qty（重算）
+                # 4. 同步 process_sub_steps.completed_qty（重算）
                 _sync_completed_qty_to_package(order_no, step_name, conn, cur)
                 cur.execute("COMMIT")
                 logger.info('[RE-001] sub-steps 修正宽边界 OK: order=%s step=%s qty=%s',
@@ -686,7 +686,7 @@ def create_app():
                     "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
                     (sub_step_id, order_no, step_name, batch_no,
                      old_operator, admin_user, old_qty, 0, reason, admin_user))
-                # 3. 同步 data_packages.completed_qty（重算）
+                # 3. 同步 process_sub_steps.completed_qty（重算）
                 _sync_completed_qty_to_package(order_no, step_name, conn, cur)
                 cur.execute("COMMIT")
                 logger.info('[RE-001] sub-steps 撤回(2)事务 OK: sub_step_id=%s', sub_step_id)
@@ -2109,7 +2109,7 @@ def create_app():
 
             # ② v4.0 改造: 改走 save_process_sub_step_with_pkg_update
             # [v3.8.1 修复] 原子化: 3 键去重 + process_sub_steps 写入 + 一次 commit.
-            # [v3.8.1 废弃] 不再写 data_packages.completed_qty（SSOT 已切换到 process_sub_steps）
+            # [v3.8.1 废弃] 不再写 process_sub_steps.completed_qty（SSOT 已切换到 process_sub_steps）
             try:
                 from storage.mysql_storage import MySQLStorage
                 _storage = MySQLStorage()
@@ -2362,8 +2362,8 @@ def _start_report_queue_worker():
                             }
                             cc.add_sub_step(record)
 
-                            # [v3.8.1 废弃] 旧: 更新 data_packages.completed_qty
-                            # add_sub_step 已写 process_sub_steps（SSOT），不再需要同步到 data_packages
+                            # [v3.8.1 废弃] 旧: 更新 process_sub_steps.completed_qty
+                            # add_sub_step 已写 process_sub_steps（SSOT），不再需要同步到 process_sub_steps
                             cc.storage.mark_report_processed(qid)
 
                             # 同步到 8008 → steel_belt
@@ -2401,3 +2401,4 @@ if __name__ == '__main__':
     port = int(os.getenv('PORT', 5008))
     app.config['TEMPLATES_AUTO_RELOAD'] = True
     app.run(host=FLASK_HOST, port=port, debug=False, use_reloader=False)
+

@@ -913,7 +913,7 @@ class TestSchedule:
         assert result['code'] == 0
 
     def test_schedule_publish_duplicate_pkg(self, setup):
-        """当 data_packages 已存在时返回 duplicate。"""
+        """当 process_sub_steps 已存在时返回 duplicate。"""
         client, _, mock_cc = setup
         # 第一个 fetch_one 返回 None(process无重复)，第二个返回记录(pkg有重复)
         existing_pkg = {'id': 'pkg-existing', 'related_order': 'ORD001',
