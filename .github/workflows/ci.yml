@@ -375,6 +375,28 @@ jobs:
           path: /tmp/chain_output.txt
           retention-days: 1
 
+      # ── Stage 3.1: Data Flow & Dispatch Center ──────────────
+      - name: CI-DataFlow dispatch center & report tasks
+        run: |
+          echo "[CI-DataFlow] Starting data flow validation..."
+          python ci/test_dataflow.py 2>&1 | tee /tmp/dataflow_output.txt
+          echo "Exit code: $?"
+        env:
+          DISPATCH_5003_URL: 'http://127.0.0.1:5003'
+          WEB_5001_URL: 'http://127.0.0.1:5001'
+          MOBILE_5008_URL: 'http://127.0.0.1:5008'
+          CONTAINER_5002_URL: 'http://127.0.0.1:5002'
+          INVENTORY_5010_URL: 'http://127.0.0.1:5010'
+          SYNC_8008_URL: 'http://127.0.0.1:8008'
+
+      - name: Upload dataflow test output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dataflow-output-${{ github.run_number }}
+          path: /tmp/dataflow_output.txt
+          retention-days: 1
+
       # ── Final Acceptance ────────────────────────────────────
       - name: CP-4 final acceptance
         run: python ci/check_stage_4.py 2>&1 | tee cp4_output.txt
