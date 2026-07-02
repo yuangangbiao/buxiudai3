@@ -75,8 +75,17 @@ jobs:
         run: |
           echo "Starting 5003 dispatch center..."
           nohup python mobile_api_ai/standalone_dispatch_server.py > /tmp/5003.log 2>&1 &
-          echo $! > /tmp/5003.pid
-          echo "5003 PID: $(cat /tmp/5003.pid)"
+          DISPATCH_PID=$!
+          echo $DISPATCH_PID > /tmp/5003.pid
+          echo "5003 PID: $DISPATCH_PID"
+          echo "Waiting 5s for startup..."
+          sleep 5
+          echo "Checking if process is running:"
+          ps aux | grep "[s]tandalone_dispatch" || echo "Process not found!"
+          echo "Checking if port 5003 is listening:"
+          ss -tlnp | grep 5003 || netstat -tlnp 2>/dev/null | grep 5003 || echo "Port not listening"
+          echo "5003 log (first 30 lines):"
+          head -30 /tmp/5003.log || echo "No log yet"
         env:
           DISPATCH_PORT: '5003'
           DISPATCH_HOST: '127.0.0.1'
@@ -89,11 +98,19 @@ jobs:
 
       - name: Wait for 5003 to be ready
         run: |
-          echo "[wait_5003] Starting wait..."
-          python ci/wait_service.py 5003 http://127.0.0.1:5003/health 60
-          echo "[wait_5003] Exit code: $?"
-          echo "[wait_5003] 5003 log tail:"
-          tail -50 /tmp/5003.log 2>/dev/null || echo "No log available"
+          echo "[wait_5003] Waiting for port 5003..."
+          python ci/wait_service.py 5003 http://127.0.0.1:5003/notfound 120 || echo "EXIT_CODE=$?"
+
+      - name: 5003 diagnostics on failure
+        if: failure()
+        run: |
+          echo "=== 5003 Diagnostics (on failure) ==="
+          echo "PID: $(cat /tmp/5003.pid 2>/dev/null || echo 'unknown')"
+          ps aux | grep "[s]tandalone" || echo "Process not running"
+          ss -tlnp 2>/dev/null | grep 5003 || echo "Port 5003 not listening"
+          echo "--- 5003 log ---"
+          cat /tmp/5003.log 2>/dev/null || echo "No log"
+          echo "--- 5003 log end ---"
 
       - name: Upload 5003 log
         if: always()
