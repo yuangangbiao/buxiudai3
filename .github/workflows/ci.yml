@@ -398,6 +398,27 @@ jobs:
           retention-days: 1
 
       # ── Stage 4: Critical Fixes Regression ──────────────────
+      - name: CI-BusinessChain E2E business flow test
+        run: |
+          echo "[CI-BusinessChain] Starting end-to-end business chain test..."
+          python ci/test_business_chain.py 2>&1 | tee /tmp/business_chain_output.txt
+          echo "Exit code: $?"
+        env:
+          DISPATCH_5003_URL: 'http://127.0.0.1:5003'
+          WEB_5001_URL: 'http://127.0.0.1:5001'
+          MOBILE_5008_URL: 'http://127.0.0.1:5008'
+          CONTAINER_5002_URL: 'http://127.0.0.1:5002'
+          INVENTORY_5010_URL: 'http://127.0.0.1:5010'
+          SYNC_8008_URL: 'http://127.0.0.1:8008'
+
+      - name: Upload business chain output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: business-chain-output-${{ github.run_number }}
+          path: /tmp/business_chain_output.txt
+          retention-days: 1
+
       - name: CI-CriticalFixes P0 regression test
         run: |
           echo "[CI-CriticalFixes] Starting critical fixes regression..."
