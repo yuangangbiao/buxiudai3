@@ -331,6 +331,30 @@ def get_direct_connection(**kwargs):
     return PooledConnection(pool, raw)
 
 
+def escape_like(value):
+    """转义 LIKE 模糊查询中的通配符，防止用户输入破坏查询语义。
+    
+    MySQL LIKE 通配符:
+      %  匹配任意字符（含零个）
+      _  匹配单个任意字符
+    
+    ARC-3 修复：用户输入 "100%" 会误匹配所有 "100" 开头的记录。
+    正确处理：先转义反斜杠，再转义 % 和 _，最后两侧加 %。
+    
+    示例:
+      输入 "100%"  →  "100\\%%"  → 搜索字面量 "100%"
+      输入 "A_B"    →  "A\\_B"   → 搜索字面量 "A_B"
+      输入 "50%"    →  "50\\%%"  → 搜索字面量 "50%"
+    """
+    if value is None:
+        return '%'
+    s = str(value)
+    s = s.replace('\\', '\\\\')
+    s = s.replace('%', '\\%')
+    s = s.replace('_', '\\_')
+    return f'%{s}%'
+
+
 @contextmanager
 def get_connection_context():
     """上下文管理器版 — 兼容旧代码"""

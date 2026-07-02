@@ -40,9 +40,6 @@ def failed(name, details=''):
 
 def run_test(file_path):
     """跑测试脚本，返回 0=通过"""
-    import sys
-    print(f'[CP-4 DIAG] run_test() PROJECT_ROOT={PROJECT_ROOT}')
-    print(f'[CP-4 DIAG] run_test() python={sys.executable}')
     try:
         r = subprocess.run(
             ['python', file_path],
@@ -50,17 +47,12 @@ def run_test(file_path):
             cwd=PROJECT_ROOT
         )
         ok = r.returncode == 0
-        out = r.stdout
-        err = r.stderr
-        print(f'[CP-4 DIAG] run_test({file_path}) rc={r.returncode} ok={ok} stdout_len={len(out)} stderr_len={len(err)}')
-        if not ok:
-            print(f'[CP-4 DIAG] STDERR: {err[-300:]}')
-        return ok, out
+        return ok, r.stdout
     except subprocess.TimeoutExpired:
-        print(f'[CP-4 DIAG] run_test({file_path}) TIMEOUT after 60s')
+        print(f'[CP-4] {file_path} 超时（60s）')
         return False, 'TIMEOUT after 60s'
     except Exception as e:
-        print(f'[CP-4 DIAG] run_test({file_path}) EXCEPTION: {e}')
+        print(f'[CP-4] {file_path} 异常: {e}')
         return False, str(e)
 
 
@@ -69,7 +61,6 @@ def check_cp1():
     print(f'\n{C.B}[1/4] 跑 CP-1 检查{C.E}')
     path = os.path.join(PROJECT_ROOT, 'ci', 'check_stage_1.py')
     ok, out = run_test(path)
-    print(f'[CP-4 DIAG check_cp1] path_exists={os.path.exists(path)} ok={ok} out_len={len(out)}')
     if ok:
         passed('CP-1', '基础设施 8/8')
         return True
@@ -82,7 +73,6 @@ def check_cp2():
     print(f'\n{C.B}[2/4] 跑 CP-2 检查{C.E}')
     path = os.path.join(PROJECT_ROOT, 'ci', 'check_stage_2.py')
     ok, out = run_test(path)
-    print(f'[CP-4 DIAG check_cp2] path_exists={os.path.exists(path)} ok={ok} out_len={len(out)}')
     if ok:
         passed('CP-2', '核心路由 8/8')
         return True
@@ -95,7 +85,6 @@ def check_cp3():
     print(f'\n{C.B}[3/4] 跑 CP-3 检查{C.E}')
     path = os.path.join(PROJECT_ROOT, 'ci', 'check_stage_3.py')
     ok, out = run_test(path)
-    print(f'[CP-4 DIAG check_cp3] path_exists={os.path.exists(path)} ok={ok} out_len={len(out)}')
     if ok:
         passed('CP-3', '清理合规 8/8')
         return True
@@ -108,13 +97,8 @@ def check_full_test():
     print(f'\n{C.B}[4/4] 跑完整测试套件（48 用例）{C.E}')
     path = os.path.join(PROJECT_ROOT, 'ci', 'test_v3_6_full.py')
     ok, out = run_test(path)
-    print(f'[CP-4 DIAG check_full_test] path_exists={os.path.exists(path)} ok={ok} out_len={len(out)}')
-    # 用返回码判断（更可靠，避免CI中ANSI色码/编码干扰字符串匹配）
     if ok:
-        if '全部' in out and '个用例通过' in out:
-            passed('48 测试用例', '全部通过')
-        else:
-            passed('48 测试用例', f'返回码=0')
+        passed('48 测试用例', '全部通过')
         return True
     failed('48 测试用例', out[-500:])
     return False
