@@ -353,6 +353,28 @@ jobs:
           path: /tmp/5010.log
           retention-days: 1
 
+      # ── Stage 3: Cross-Service Chain Tests ──────────────────
+      - name: CI-Chain 6-server integration test
+        run: |
+          echo "[CI-Chain] Starting 6-server chain test..."
+          python ci/test_chain.py 2>&1 | tee /tmp/chain_output.txt
+          echo "Exit code: $?"
+        env:
+          DISPATCH_5003_URL: 'http://127.0.0.1:5003'
+          WEB_5001_URL: 'http://127.0.0.1:5001'
+          MOBILE_5008_URL: 'http://127.0.0.1:5008'
+          CONTAINER_5002_URL: 'http://127.0.0.1:5002'
+          INVENTORY_5010_URL: 'http://127.0.0.1:5010'
+          SYNC_8008_URL: 'http://127.0.0.1:8008'
+
+      - name: Upload chain test output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chain-output-${{ github.run_number }}
+          path: /tmp/chain_output.txt
+          retention-days: 1
+
       # ── Final Acceptance ────────────────────────────────────
       - name: CP-4 final acceptance
         run: python ci/check_stage_4.py 2>&1 | tee cp4_output.txt
