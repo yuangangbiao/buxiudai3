@@ -16,7 +16,7 @@ env:
 
 jobs:
   ci:
-    name: v3.6 鍏ㄩ噺楠岃瘉
+    name: v3.6 full validation
     runs-on: ubuntu-latest
 
     services:
@@ -36,27 +36,32 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: 瀹夎渚濊禆
+      - name: Install dependencies
         run: pip install --upgrade pip && pip install flake8 pymysql pyjwt flask
 
-      - name: 绛夊緟 MySQL 灏辩华
+      - name: Wait for MySQL
         run: python ci/wait_mysql.py
 
-      - name: 鍒濆鍖栨暟鎹簱 schema
-        run: python ci/run_stage_1_ddl.py 2>&1 || echo "閮ㄥ垎瀵硅薄宸插瓨鍦紝蹇界暐"
+      - name: Initialize database schema
+        run: python ci/run_stage_1_ddl.py 2>&1 || echo "some objects already exist, ignoring"
 
-      - name: LINT-1 鎵弿 data_packages SQL 娈嬬暀
+      - name: LINT-1 check data_packages SQL remnants
         run: python ci/lint_data_packages.py
 
-      - name: LINT-2 鎵弿纭紪鐮佸瘑鐮?        run: python ci/lint_passwords.py
+      - name: LINT-2 check hardcoded passwords
+        run: python ci/lint_passwords.py
 
-      - name: CP-1 鍩虹璁炬柦妫€鏌?        run: python ci/check_stage_1.py
+      - name: CP-1 infrastructure check
+        run: python ci/check_stage_1.py
 
-      - name: CP-2 鏍稿績璺敱+閴存潈妫€鏌?        run: python ci/check_stage_2.py
+      - name: CP-2 routes and auth check
+        run: python ci/check_stage_2.py
 
-      - name: CP-3 娓呯悊+鍚堣妫€鏌?        run: python ci/check_stage_3.py
+      - name: CP-3 cleanup and compliance check
+        run: python ci/check_stage_3.py
 
-      - name: 48 娴嬭瘯鐢ㄤ緥
+      - name: Run 48 test cases
         run: python ci/test_v3_6_full.py
 
-      - name: CP-4 鏈€缁堥獙鏀?        run: python ci/check_stage_4.py
+      - name: CP-4 final acceptance
+        run: python ci/check_stage_4.py
