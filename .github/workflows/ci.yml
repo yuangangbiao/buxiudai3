@@ -16,7 +16,7 @@ env:
 
 jobs:
   ci:
-    name: v3.6 full validation
+    name: v3.6 full validation (5 servers)
     runs-on: ubuntu-latest
 
     services:
@@ -71,6 +71,7 @@ jobs:
           path: test_output.txt
           retention-days: 1
 
+      # ── Server 5003: Dispatch Center ──────────────────────────────
       - name: Start 5003 dispatch center
         run: |
           echo "Starting 5003 dispatch center..."
@@ -78,13 +79,9 @@ jobs:
           DISPATCH_PID=$!
           echo $DISPATCH_PID > /tmp/5003.pid
           echo "5003 PID: $DISPATCH_PID"
-          echo "Waiting 5s for startup..."
           sleep 5
-          echo "Checking if process is running:"
           ps aux | grep "[s]tandalone_dispatch" || echo "Process not found!"
-          echo "Checking if port 5003 is listening:"
           ss -tlnp | grep 5003 || netstat -tlnp 2>/dev/null | grep 5003 || echo "Port not listening"
-          echo "5003 log (first 30 lines):"
           head -30 /tmp/5003.log || echo "No log yet"
         env:
           DISPATCH_PORT: '5003'
@@ -110,7 +107,6 @@ jobs:
           ss -tlnp 2>/dev/null | grep 5003 || echo "Port 5003 not listening"
           echo "--- 5003 log ---"
           cat /tmp/5003.log 2>/dev/null || echo "No log"
-          echo "--- 5003 log end ---"
 
       - name: Upload 5003 log
         if: always()
@@ -120,12 +116,17 @@ jobs:
           path: /tmp/5003.log
           retention-days: 1
 
+      # ── Server 5001: Desktop Web ──────────────────────────────
       - name: Start 5001 desktop web
         run: |
           echo "Starting 5001 desktop web..."
           nohup python desktop_web/server.py > /tmp/5001.log 2>&1 &
           echo $! > /tmp/5001.pid
           echo "5001 PID: $(cat /tmp/5001.pid)"
+          sleep 5
+          ps aux | grep "[d]esktop_web" || echo "Process not found!"
+          ss -tlnp | grep 5001 || echo "Port not listening"
+          head -30 /tmp/5001.log || echo "No log yet"
         env:
           DESKTOP_WEB_PORT: '5001'
           DISPATCH_BASE: 'http://127.0.0.1:5003'
@@ -135,6 +136,11 @@ jobs:
           DB_PASSWORD: 88888888
           DB_NAME: container_center
           JWT_SECRET_KEY: ci_test_secret_64_bytes_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+      - name: Wait for 5001 to be ready
+        run: |
+          echo "[wait_5001] Waiting for port 5001..."
+          python ci/wait_service.py 5001 http://127.0.0.1:5001/notfound 120 || echo "EXIT_CODE=$?"
 
       - name: CI-5001 desktop web check
         run: |
@@ -158,6 +164,149 @@ jobs:
           path: /tmp/5001.log
           retention-days: 1
 
+      # ── Server 5008: Mobile API (报工程序) ─────────────────────
+      - name: Start 5008 mobile API
+        run: |
+          echo "Starting 5008 mobile API (app.py)..."
+          nohup python mobile_api_ai/app.py > /tmp/5008.log 2>&1 &
+          echo $! > /tmp/5008.pid
+          echo "5008 PID: $(cat /tmp/5008.pid)"
+          sleep 5
+          ps aux | grep "[a]pp\.py" || echo "Process not found!"
+          ss -tlnp | grep 5008 || echo "Port not listening"
+          head -30 /tmp/5008.log || echo "No log yet"
+        env:
+          PORT: '5008'
+          FLASK_ENV: 'production'
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USER: root
+          DB_PASSWORD: 88888888
+          DB_NAME: container_center
+          JWT_SECRET_KEY: ci_test_secret_64_bytes_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+      - name: Wait for 5008 to be ready
+        run: |
+          echo "[wait_5008] Waiting for port 5008..."
+          python ci/wait_service.py 5008 http://127.0.0.1:5008/notfound 120 || echo "EXIT_CODE=$?"
+
+      - name: CI-5008 mobile API check
+        run: |
+          echo "[CI-5008] Starting check_5008.py..."
+          python ci/check_5008.py 2>&1 | tee /tmp/check_5008_output.txt
+          echo "Exit code: $?"
+
+      - name: Upload 5008 check output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: 5008-check-output-${{ github.run_number }}
+          path: /tmp/check_5008_output.txt
+          retention-days: 1
+
+      - name: Upload 5008 log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: 5008-log-${{ github.run_number }}
+          path: /tmp/5008.log
+          retention-days: 1
+
+      # ── Server 5002: Container Center API ─────────────────────
+      - name: Start 5002 container center API
+        run: |
+          echo "Starting 5002 container center API..."
+          nohup python mobile_api_ai/container_center_api.py > /tmp/5002.log 2>&1 &
+          echo $! > /tmp/5002.pid
+          echo "5002 PID: $(cat /tmp/5002.pid)"
+          sleep 5
+          ps aux | grep "[c]ontainer_center_api" || echo "Process not found!"
+          ss -tlnp | grep 5002 || echo "Port not listening"
+          head -30 /tmp/5002.log || echo "No log yet"
+        env:
+          CONTAINER_CENTER_PORT: '5002'
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USER: root
+          DB_PASSWORD: 88888888
+          DB_NAME: container_center
+          JWT_SECRET_KEY: ci_test_secret_64_bytes_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+      - name: Wait for 5002 to be ready
+        run: |
+          echo "[wait_5002] Waiting for port 5002..."
+          python ci/wait_service.py 5002 http://127.0.0.1:5002/notfound 120 || echo "EXIT_CODE=$?"
+
+      - name: CI-5002 container center check
+        run: |
+          echo "[CI-5002] Starting check_5002.py..."
+          python ci/check_5002.py 2>&1 | tee /tmp/check_5002_output.txt
+          echo "Exit code: $?"
+
+      - name: Upload 5002 check output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: 5002-check-output-${{ github.run_number }}
+          path: /tmp/check_5002_output.txt
+          retention-days: 1
+
+      - name: Upload 5002 log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: 5002-log-${{ github.run_number }}
+          path: /tmp/5002.log
+          retention-days: 1
+
+      # ── Server 8008: Sync Bridge ──────────────────────────────
+      - name: Start 8008 sync bridge
+        run: |
+          echo "Starting 8008 sync bridge..."
+          nohup python mobile_api_ai/sync_bridge_server.py > /tmp/8008.log 2>&1 &
+          echo $! > /tmp/8008.pid
+          echo "8008 PID: $(cat /tmp/8008.pid)"
+          sleep 5
+          ps aux | grep "[s]ync_bridge" || echo "Process not found!"
+          ss -tlnp | grep 8008 || echo "Port not listening"
+          head -30 /tmp/8008.log || echo "No log yet"
+        env:
+          SYNC_BRIDGE_PORT: '8008'
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USER: root
+          DB_PASSWORD: 88888888
+          DB_NAME: container_center
+          JWT_SECRET_KEY: ci_test_secret_64_bytes_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+      - name: Wait for 8008 to be ready
+        run: |
+          echo "[wait_8008] Waiting for port 8008..."
+          python ci/wait_service.py 8008 http://127.0.0.1:8008/notfound 120 || echo "EXIT_CODE=$?"
+
+      - name: CI-8008 sync bridge check
+        run: |
+          echo "[CI-8008] Starting check_8008.py..."
+          python ci/check_8008.py 2>&1 | tee /tmp/check_8008_output.txt
+          echo "Exit code: $?"
+
+      - name: Upload 8008 check output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: 8008-check-output-${{ github.run_number }}
+          path: /tmp/check_8008_output.txt
+          retention-days: 1
+
+      - name: Upload 8008 log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: 8008-log-${{ github.run_number }}
+          path: /tmp/8008.log
+          retention-days: 1
+
+      # ── Final Acceptance ────────────────────────────────────
       - name: CP-4 final acceptance
         run: python ci/check_stage_4.py 2>&1 | tee cp4_output.txt
 
@@ -172,5 +321,7 @@ jobs:
       - name: Cleanup servers
         if: always()
         run: |
-          if [ -f /tmp/5001.pid ]; then kill $(cat /tmp/5001.pid) 2>/dev/null || true; fi
-          if [ -f /tmp/5003.pid ]; then kill $(cat /tmp/5003.pid) 2>/dev/null || true; fi
+          for pid in /tmp/5001.pid /tmp/5002.pid /tmp/5003.pid /tmp/5008.pid /tmp/8008.pid; do
+            if [ -f "$pid" ]; then kill $(cat "$pid") 2>/dev/null || true; fi
+          done
+          echo "All servers stopped."
