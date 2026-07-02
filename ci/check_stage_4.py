@@ -40,6 +40,9 @@ def failed(name, details=''):
 
 def run_test(file_path):
     """跑测试脚本，返回 0=通过"""
+    import sys
+    print(f'[CP-4 DIAG] run_test() PROJECT_ROOT={PROJECT_ROOT}')
+    print(f'[CP-4 DIAG] run_test() python={sys.executable}')
     try:
         r = subprocess.run(
             ['python', file_path],
@@ -47,10 +50,15 @@ def run_test(file_path):
             cwd=PROJECT_ROOT
         )
         ok = r.returncode == 0
-        snippet = r.stdout[-300:] if len(r.stdout) >= 300 else r.stdout
-        snippet_repr = repr(snippet)
-        print(f'[CP-4 DIAG] run_test({file_path}) rc={r.returncode} ok={ok} stdout_len={len(r.stdout)} snippet={snippet_repr}')
-        return ok, r.stdout
+        out = r.stdout
+        err = r.stderr
+        print(f'[CP-4 DIAG] run_test({file_path}) rc={r.returncode} ok={ok} stdout_len={len(out)} stderr_len={len(err)}')
+        if not ok:
+            print(f'[CP-4 DIAG] STDERR: {err[-300:]}')
+        return ok, out
+    except subprocess.TimeoutExpired:
+        print(f'[CP-4 DIAG] run_test({file_path}) TIMEOUT after 60s')
+        return False, 'TIMEOUT after 60s'
     except Exception as e:
         print(f'[CP-4 DIAG] run_test({file_path}) EXCEPTION: {e}')
         return False, str(e)
