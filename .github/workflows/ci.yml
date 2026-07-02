@@ -16,7 +16,7 @@ env:
 
 jobs:
   ci:
-    name: v3.6 full validation (5 servers)
+    name: v3.6 full validation (6 servers)
     runs-on: ubuntu-latest
 
     services:
@@ -306,6 +306,53 @@ jobs:
           path: /tmp/8008.log
           retention-days: 1
 
+      # ── Server 5010: Inventory API (库存管理) ─────────────────
+      - name: Start 5010 inventory API
+        run: |
+          echo "Starting 5010 inventory API..."
+          nohup python start_5010.py > /tmp/5010.log 2>&1 &
+          echo $! > /tmp/5010.pid
+          echo "5010 PID: $(cat /tmp/5010.pid)"
+          sleep 5
+          ps aux | grep "[i]nventory_api" || ps aux | grep "[s]tart_5010" || echo "Process not found!"
+          ss -tlnp | grep 5010 || echo "Port not listening"
+          head -30 /tmp/5010.log || echo "No log yet"
+        env:
+          INVENTORY_API_PORT: '5010'
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USER: root
+          DB_PASSWORD: 88888888
+          DB_NAME: container_center
+          JWT_SECRET_KEY: ci_test_secret_64_bytes_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+      - name: Wait for 5010 to be ready
+        run: |
+          echo "[wait_5010] Waiting for port 5010..."
+          python ci/wait_service.py 5010 http://127.0.0.1:5010/notfound 120 || echo "EXIT_CODE=$?"
+
+      - name: CI-5010 inventory API check
+        run: |
+          echo "[CI-5010] Starting check_5010.py..."
+          python ci/check_5010.py 2>&1 | tee /tmp/check_5010_output.txt
+          echo "Exit code: $?"
+
+      - name: Upload 5010 check output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: 5010-check-output-${{ github.run_number }}
+          path: /tmp/check_5010_output.txt
+          retention-days: 1
+
+      - name: Upload 5010 log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: 5010-log-${{ github.run_number }}
+          path: /tmp/5010.log
+          retention-days: 1
+
       # ── Final Acceptance ────────────────────────────────────
       - name: CP-4 final acceptance
         run: python ci/check_stage_4.py 2>&1 | tee cp4_output.txt
@@ -321,7 +368,7 @@ jobs:
       - name: Cleanup servers
         if: always()
         run: |
-          for pid in /tmp/5001.pid /tmp/5002.pid /tmp/5003.pid /tmp/5008.pid /tmp/8008.pid; do
+          for pid in /tmp/5001.pid /tmp/5002.pid /tmp/5003.pid /tmp/5008.pid /tmp/8008.pid /tmp/5010.pid; do
             if [ -f "$pid" ]; then kill $(cat "$pid") 2>/dev/null || true; fi
           done
-          echo "All servers stopped."
+          echo "All 6 servers stopped."
