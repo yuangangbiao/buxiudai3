@@ -91,6 +91,7 @@ def check_full_test():
     print(f'\n{C.B}[4/4] 跑完整测试套件（48 用例）{C.E}')
     path = os.path.join(PROJECT_ROOT, 'ci', 'test_v3_6_full.py')
     ok, out = run_test(path)
+    print(f'[CP-4 DIAG] test_v3_6_full.py -> ok={ok}, out_len={len(out)}, out_snippet={repr(out[-200:])}')
     # 用返回码判断（更可靠，避免CI中ANSI色码/编码干扰字符串匹配）
     if ok:
         if '全部' in out and '个用例通过' in out:
