@@ -33,7 +33,6 @@ jobs:
           echo "data_packages 真实 SQL 引用数: $COUNT"
           if [ "$COUNT" -gt "0" ]; then
             echo "::error::发现 $COUNT 处 data_packages SQL 引用"
-            grep -rn "FROM data_packages\|INTO data_packages\|UPDATE data_packages" --include=*.py .
             exit 1
           fi
       - name: 扫描硬编码密码
@@ -49,7 +48,7 @@ jobs:
           cd mobile_api_ai
           flake8 --max-line-length=120 --ignore=E501,W503,E402 --exclude=archive,__pycache__,.git storage/ api/decorators.py utils/quantity_validator.py utils/log_sanitizer.py utils/dispatch_task.py utils/exception_handler.py 2>&1 | head -30 || true
 
-  # ───── Job 2-5: 共享 MySQL service ─────
+  # ───── Job 2: 初始化数据库（被 cp1-cp4 依赖）─────
   setup_db:
     name: 初始化数据库
     runs-on: ubuntu-latest
@@ -81,9 +80,10 @@ jobs:
         env:
           DB_HOST: 127.0.0.1
         run: |
+          cd $GITHUB_WORKSPACE
           python ci/run_stage_1_ddl.py 2>&1 || echo "（部分表已存在，已忽略）"
 
-  # ───── CP-1 ─────
+  # ───── CP-1 基础设施 ─────
   cp1:
     name: 2. CP-1 基础设施
     needs: [setup_db]
@@ -113,10 +113,11 @@ jobs:
         env:
           DB_HOST: 127.0.0.1
         run: |
+          cd $GITHUB_WORKSPACE
           python ci/run_stage_1_ddl.py
           python ci/check_stage_1.py
 
-  # ───── CP-2 ─────
+  # ───── CP-2 核心路由+鉴权 ─────
   cp2:
     name: 3. CP-2 核心路由+鉴权
     needs: [setup_db]
@@ -145,9 +146,12 @@ jobs:
       - name: 跑 CP-2
         env:
           DB_HOST: 127.0.0.1
-        run: python ci/check_stage_2.py
+        run: |
+          cd $GITHUB_WORKSPACE
+          python ci/run_stage_1_ddl.py
+          python ci/check_stage_2.py
 
-  # ───── CP-3 ─────
+  # ───── CP-3 清理+合规 ─────
   cp3:
     name: 4. CP-3 清理+合规
     needs: [setup_db]
@@ -176,7 +180,10 @@ jobs:
       - name: 跑 CP-3
         env:
           DB_HOST: 127.0.0.1
-        run: python ci/check_stage_3.py
+        run: |
+          cd $GITHUB_WORKSPACE
+          python ci/run_stage_1_ddl.py
+          python ci/check_stage_3.py
 
   # ───── 48 测试用例 ─────
   test48:
@@ -207,7 +214,10 @@ jobs:
       - name: 跑 48 测试用例
         env:
           DB_HOST: 127.0.0.1
-        run: python ci/test_v3_6_full.py
+        run: |
+          cd $GITHUB_WORKSPACE
+          python ci/run_stage_1_ddl.py
+          python ci/test_v3_6_full.py
 
   # ───── CP-4 最终验收 ─────
   cp4:
@@ -239,5 +249,6 @@ jobs:
         env:
           DB_HOST: 127.0.0.1
         run: |
+          cd $GITHUB_WORKSPACE
           python ci/run_stage_1_ddl.py
           python ci/check_stage_4.py
