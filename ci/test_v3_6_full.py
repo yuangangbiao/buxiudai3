@@ -16,7 +16,10 @@ os.environ['JWT_SECRET_KEY'] = 'x' * 64  # DEV 测试 secret
 PROJECT_ROOT = os.getenv('GITHUB_WORKSPACE', os.getcwd())
 sys.path.insert(0, os.path.join(PROJECT_ROOT, 'mobile_api_ai'))
 sys.path.insert(0, PROJECT_ROOT)  # 确保项目根目录可导入（core, utils 等）
-sys.stdout.reconfigure(line_buffering=True)  # 确保输出实时刷新
+try:
+    sys.stdout.reconfigure(line_buffering=True)  # 确保输出实时刷新
+except Exception:
+    pass  # 某些环境 sys.stdout 不支持 reconfigure
 
 import pymysql
 from pymysql.cursors import DictCursor
@@ -606,4 +609,12 @@ def main():
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except SystemExit:
+        raise
+    except Exception as e:
+        import traceback
+        print(f'\n[DIAG] UNHANDLED EXCEPTION: {type(e).__name__}: {e}')
+        traceback.print_exc()
+        sys.exit(1)
