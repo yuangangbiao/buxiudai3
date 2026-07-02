@@ -1,5 +1,4 @@
-﻿name: v3.6 CI 流水线
-
+name: v3.6 CI 娴佹按绾?
 on:
   push:
     branches: [master, main, develop]
@@ -16,7 +15,7 @@ env:
 
 jobs:
   ci:
-    name: v3.6 全量验证
+    name: v3.6 鍏ㄩ噺楠岃瘉
     runs-on: ubuntu-latest
 
     services:
@@ -36,12 +35,12 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: 安装依赖
+      - name: 瀹夎渚濊禆
         run: pip install --upgrade pip && pip install flake8 pymysql pyjwt flask
 
-      - name: 等待 MySQL 就绪
+      - name: 绛夊緟 MySQL 灏辩华
         run: |
-          for i in $(seq 1 60); do
+          for i in ; do
             python -c "
 import pymysql, sys
 try:
@@ -56,65 +55,60 @@ except Exception:
             sleep 2
           done
 
-      - name: 初始化数据库 schema
+      - name: 鍒濆鍖栨暟鎹簱 schema
         run: |
-          python ci/run_stage_1_ddl.py 2>&1 || echo "部分对象已存在，忽略"
+          python ci/run_stage_1_ddl.py 2>&1 || echo "閮ㄥ垎瀵硅薄宸插瓨鍦紝蹇界暐"
 
-      - name: LINT-1 扫描 data_packages SQL 残留
+      - name: LINT-1 鎵弿 data_packages SQL 娈嬬暀
         run: |
           cd mobile_api_ai
           COUNT=$(grep -rEn "FROM data_packages|INTO data_packages|UPDATE data_packages" --include="*.py" . 2>/dev/null | grep -v "data_packages_deprecated" | wc -l)
-          echo "data_packages SQL 引用数: $COUNT"
+          echo "data_packages SQL 寮曠敤鏁? $COUNT"
           if [ "$COUNT" -gt "0" ]; then
             grep -rEn "FROM data_packages|INTO data_packages|UPDATE data_packages" --include="*.py" . 2>/dev/null | grep -v "data_packages_deprecated"
-            echo "::error::发现 $COUNT 处 data_packages SQL 残留"
+            echo "::error::鍙戠幇 $COUNT 澶?data_packages SQL 娈嬬暀"
             exit 1
           fi
-          echo "LINT-1 通过: 0 处残留"
+          echo "LINT-1 閫氳繃: 0 澶勬畫鐣?
 
-      - name: LINT-2 扫描硬编码密码
-        run: |
+      - name: LINT-2 鎵弿纭紪鐮佸瘑鐮?        run: |
           cd mobile_api_ai
           COUNT=$(grep -rn "88888888" --include="*.py" . 2>/dev/null | wc -l || echo 0)
-          echo "硬编码密码扫描: $COUNT 处"
-          echo "LINT-2 通过（CI 测试密码不计入）"
+          echo "纭紪鐮佸瘑鐮佹壂鎻? $COUNT 澶?
+          echo "LINT-2 閫氳繃锛圕I 娴嬭瘯瀵嗙爜涓嶈鍏ワ級"
 
-      - name: CP-1 基础设施检查
-        run: |
-          echo "=== CP-1 开始 ==="
+      - name: CP-1 鍩虹璁炬柦妫€鏌?        run: |
+          echo "=== CP-1 寮€濮?==="
           python ci/check_stage_1.py 2>&1
           CODE=$?
-          echo "=== CP-1 结束 exit=$CODE ==="
+          echo "=== CP-1 缁撴潫 exit=$CODE ==="
           exit $CODE
 
-      - name: CP-2 核心路由+鉴权检查
-        run: |
-          echo "=== CP-2 开始 ==="
+      - name: CP-2 鏍稿績璺敱+閴存潈妫€鏌?        run: |
+          echo "=== CP-2 寮€濮?==="
           python ci/check_stage_2.py 2>&1
           CODE=$?
-          echo "=== CP-2 结束 exit=$CODE ==="
+          echo "=== CP-2 缁撴潫 exit=$CODE ==="
           exit $CODE
 
-      - name: CP-3 清理+合规检查
-        run: |
-          echo "=== CP-3 开始 ==="
+      - name: CP-3 娓呯悊+鍚堣妫€鏌?        run: |
+          echo "=== CP-3 寮€濮?==="
           python ci/check_stage_3.py 2>&1
           CODE=$?
-          echo "=== CP-3 结束 exit=$CODE ==="
+          echo "=== CP-3 缁撴潫 exit=$CODE ==="
           exit $CODE
 
-      - name: 48 测试用例
+      - name: 48 娴嬭瘯鐢ㄤ緥
         run: |
-          echo "=== 48 测试开始 ==="
+          echo "=== 48 娴嬭瘯寮€濮?==="
           python ci/test_v3_6_full.py 2>&1
           CODE=$?
-          echo "=== 48 测试结束 exit=$CODE ==="
+          echo "=== 48 娴嬭瘯缁撴潫 exit=$CODE ==="
           exit $CODE
 
-      - name: CP-4 最终验收
-        run: |
-          echo "=== CP-4 开始 ==="
+      - name: CP-4 鏈€缁堥獙鏀?        run: |
+          echo "=== CP-4 寮€濮?==="
           python ci/check_stage_4.py 2>&1
           CODE=$?
-          echo "=== CP-4 结束 exit=$CODE ==="
+          echo "=== CP-4 缁撴潫 exit=$CODE ==="
           exit $CODE
