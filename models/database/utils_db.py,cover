@@ -1,0 +1,62 @@
+  # -*- coding: utf-8 -*-
+> """数据库工具函数——SQL验证、编号生成、状态日志"""
+> import re
+> import logging
+> from datetime import datetime
+> from models.database.connection_pool import get_connection
+  
+- logger = logging.getLogger(__name__)
+  
+> def _validate_sql_identifier(identifier):
+>     """验证SQL标识符（表名、列名等），防止SQL注入"""
+!     if not identifier:
+!         return False
+!     return bool(re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', identifier))
+  
+> def _safe_table_name(table):
+>     """安全的表名（仅限ASCII字母、数字和下划线）"""
+!     if not _validate_sql_identifier(table):
+!         raise ValueError(f"无效的表名: {table}")
+!     return table
+  
+> def generate_order_no():
+>     """生成订单号"""
+>     conn = get_connection()
+>     try:
+>         c = conn.cursor()
+>         today = datetime.now().strftime('%Y%m%d')
+>         c.execute("SELECT COUNT(*) as cnt FROM orders WHERE order_no LIKE %s", (f"ORD-{today}-%",))
+>         row = c.fetchone()
+>         seq = row['cnt'] + 1 if row else 1
+>         return f"ORD-{today}-{seq:04d}"
+>     finally:
+>         conn.close()
+  
+> def generate_shipment_no():
+>     """生成发货单号"""
+>     conn = get_connection()
+>     try:
+>         c = conn.cursor()
+>         today = datetime.now().strftime('%Y%m%d')
+>         c.execute("SELECT COUNT(*) as cnt FROM shipments WHERE shipment_no LIKE %s", (f"SH-{today}-%",))
+>         row = c.fetchone()
+>         seq = row['cnt'] + 1 if row else 1
+>         return f"SH-{today}-{seq:04d}"
+>     finally:
+>         conn.close()
+  
+> def log_status_change(table, record_id, old_status, new_status, operator=None):
+>     """记录状态变更日志"""
+>     conn = get_connection()
+>     try:
+>         c = conn.cursor()
+>         c.execute(
+>             "INSERT INTO status_change_logs (table_name, record_id, old_status, new_status, operator, created_at) "
+>             "VALUES (%s, %s, %s, %s, %s, %s)",
+>             (table, record_id, old_status or '', new_status or '', operator or 'system', datetime.now())
+>         )
+>         conn.commit()
+!     except Exception as e:
+-         logger.error(f"状态变更日志记录失败: {e}", exc_info=True)
+!     finally:
+>         conn.close()

@@ -1,0 +1,183 @@
+  # -*- coding: utf-8 -*-
+> """MySQL 连接池管理"""
+> import os
+> import atexit
+> import threading
+> import logging
+> from contextlib import contextmanager
+  
+- logger = logging.getLogger(__name__)
+  
+> try:
+>     import pymysql
+! except ImportError:
+!     pymysql = None
+  
+> from models.database.config import _get_db_config, MYSQL_CONFIG
+  
+> class MySQLConnectionPool:
+>     """简单的MySQL连接池"""
+>     _instance = None
+>     _lock = threading.Lock()
+  
+>     def __new__(cls):
+>         if cls._instance is None:
+>             with cls._lock:
+>                 if cls._instance is None:
+>                     cls._instance = super().__new__(cls)
+>                     cls._instance._pool = []
+>                     pool_size = int(os.getenv('MYSQL_POOL_SIZE', 20))
+>                     if pool_size < 5:
+!                         pool_size = 5
+>                     elif pool_size > 100:
+!                         pool_size = 100
+>                     cls._instance._max_connections = pool_size
+>                     cls._instance._config = None
+>         return cls._instance
+  
+>     def init(self, config):
+>         """初始化连接池"""
+>         self._config = config.copy()
+>         self._config["cursorclass"] = pymysql.cursors.DictCursor
+  
+>     def get_connection(self, is_new=False):
+>         """获取一个连接"""
+!         if not self._config:
+!             return None
+!         if self._pool:
+!             try:
+!                 conn = self._pool.pop()
+!                 conn.ping(reconnect=True)
+!                 return conn
+!             except Exception as e:
+-                 logger.warning(f"[DB] 获取连接失败: {e}")
+!         config = self._config.copy()
+!         conn = pymysql.connect(**config)
+!         if is_new:
+!             logger.info("[DB] MySQL连接成功")
+!         return conn
+  
+>     def get_pooled_connection(self):
+>         """获取一个连接，返回是否是新创建的"""
+>         if not self._config:
+!             return None, False
+>         if self._pool:
+>             try:
+>                 conn = self._pool.pop()
+>                 conn.ping(reconnect=True)
+>                 return conn, False
+!             except Exception as e:
+-                 logger.warning(f"[DB] 获取池化连接失败: {e}")
+>         config = self._config.copy()
+>         conn = pymysql.connect(**config)
+>         return conn, True
+  
+>     def return_connection(self, conn):
+>         """归还一个连接"""
+>         if conn is None:
+!             return
+>         if len(self._pool) < self._max_connections:
+>             try:
+>                 conn.ping(reconnect=True)
+>                 self._pool.append(conn)
+>                 return
+!             except Exception as e:
+-                 logger.warning(f"[DB] 归还连接失败: {e}")
+!         try:
+!             conn.close()
+!         except Exception as e:
+-             logger.warning(f"[DB] 关闭连接失败: {e}")
+  
+>     def close_all(self):
+>         """关闭所有连接"""
+!         for conn in self._pool:
+!             try:
+!                 conn.close()
+!             except Exception as e:
+-                 logger.warning(f"[DB] 关闭连接失败: {e}")
+!         self._pool.clear()
+  
+> class PooledConnection:
+>     """包装MySQL连接，使其close()时归还到池中"""
+>     def __init__(self, pool, conn):
+>         self._pool = pool
+>         self._conn = conn
+  
+>     def __getattr__(self, name):
+!         return getattr(self._conn, name)
+  
+>     def close(self):
+>         """关闭连接，归还到池中"""
+>         self._pool.return_connection(self._conn)
+  
+>     def cursor(self, **kwargs):
+>         """创建游标"""
+>         return self._conn.cursor(**kwargs)
+  
+>     def commit(self):
+>         """提交事务"""
+>         return self._conn.commit()
+  
+>     def rollback(self):
+>         """回滚事务"""
+>         return self._conn.rollback()
+  
+> _mysql_pool = None
+  
+> def _get_mysql_pool():
+>     """获取MySQL连接池"""
+>     global _mysql_pool
+>     if _mysql_pool is None:
+>         _mysql_pool = MySQLConnectionPool()
+>         if pymysql:
+>             config = MYSQL_CONFIG.copy()
+>             config["cursorclass"] = pymysql.cursors.DictCursor
+>             _mysql_pool.init(config)
+>     return _mysql_pool
+  
+> def _cleanup_mysql_pool():
+>     """清理MySQL连接池"""
+>     global _mysql_pool
+!     if _mysql_pool:
+!         _mysql_pool.close_all()
+!         _mysql_pool = None
+  
+> atexit.register(_cleanup_mysql_pool)
+  
+> def _create_connection():
+>     """创建MySQL数据库连接"""
+>     if not pymysql:
+!         raise Exception("[DB] pymysql模块未安装，请安装pymysql")
+>     pool = _get_mysql_pool()
+>     conn, is_new = pool.get_pooled_connection()
+>     if conn:
+>         if is_new:
+>             logger.info("[DB] MySQL连接成功")
+>         return PooledConnection(pool, conn)
+!     raise Exception("[DB] 连接池返回空连接")
+  
+> def get_connection():
+>     """获取数据库连接"""
+>     return _create_connection()
+  
+> @contextmanager
+> def get_connection_context():
+>     """获取数据库连接的上下文管理器"""
+>     conn = get_connection()
+>     try:
+>         yield conn
+>     finally:
+>         conn.close()
+  
+> def reload_db_config():
+>     """重新加载数据库配置（用于动态重载）"""
+>     global MYSQL_CONFIG, _mysql_pool
+!     MYSQL_CONFIG = _get_db_config()
+!     if _mysql_pool:
+!         _mysql_pool.close_all()
+!     _mysql_pool = MySQLConnectionPool()
+!     if pymysql:
+!         config = MYSQL_CONFIG.copy()
+!         config["cursorclass"] = pymysql.cursors.DictCursor
+!         _mysql_pool.init(config)
+!     logger.info("[DB] 数据库配置已重新加载")

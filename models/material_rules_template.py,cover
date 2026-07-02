@@ -1,0 +1,179 @@
+  # -*- coding: utf-8 -*-
+> """
+> 物料计算规则模板管理 - 数据库版
+> 支持模板的保存、加载、删除和重命名
+> """
+> import json
+> from datetime import datetime
+  
+  
+> def _get_db():
+!     from models.database import get_connection
+!     return get_connection()
+  
+  
+> def get_all_templates() -> list:
+>     """获取所有模板列表"""
+>     conn = _get_db()
+>     try:
+>         cursor = conn.cursor()
+>         cursor.execute("SELECT name, description, rules_json, created_at, updated_at FROM material_rules_templates ORDER BY name")
+>         rows = cursor.fetchall()
+>         cursor.close()
+>         templates = []
+>         for row in rows:
+>             rules = json.loads(row[2]) if row[2] else []
+>             templates.append({
+>                 "name": row[0],
+>                 "description": row[1] or "",
+>                 "rules": rules,
+>                 "created_at": row[3],
+>                 "updated_at": row[4]
+>             })
+>         return templates
+>     finally:
+>         conn.close()
+  
+  
+> def get_template(name: str) -> dict:
+>     """获取指定模板"""
+>     conn = _get_db()
+>     try:
+>         cursor = conn.cursor()
+>         cursor.execute("SELECT name, description, rules_json, created_at, updated_at FROM material_rules_templates WHERE name = %s", (name,))
+>         row = cursor.fetchone()
+>         cursor.close()
+>         if not row:
+>             return None
+>         rules = json.loads(row[2]) if row[2] else []
+>         return {
+>             "name": row[0],
+>             "description": row[1] or "",
+>             "rules": rules,
+>             "created_at": row[3],
+>             "updated_at": row[4]
+>         }
+>     finally:
+>         conn.close()
+  
+  
+> def save_template(name: str, rules: list, description: str = "") -> tuple:
+>     """
+>     保存物料规则模板
+  
+>     Args:
+>         name: 模板名称
+>         rules: 规则列表
+>         description: 模板描述
+  
+>     Returns:
+>         tuple: (成功标志, 消息)
+>     """
+>     if not name.strip():
+>         return False, "模板名称不能为空"
+>     conn = _get_db()
+  
+>     def clean_for_json(obj):
+!         if isinstance(obj, datetime):
+!             return obj.strftime("%Y-%m-%d %H:%M:%S")
+!         return obj
+  
+>     rules_json = json.dumps(rules, ensure_ascii=False, default=clean_for_json)
+>     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+>     try:
+>         cursor = conn.cursor()
+>         cursor.execute("""
+>             INSERT INTO material_rules_templates (name, description, rules_json, created_at, updated_at)
+>             VALUES (%s, %s, %s, %s, %s)
+>         """, (name.strip(), description, rules_json, now, now))
+>         conn.commit()
+>         cursor.close()
+>         return True, f"模板「{name}」已保存"
+>     except Exception as e:
+>         return False, f"模板「{name}」已存在，请使用其他名称"
+>     finally:
+>         conn.close()
+  
+  
+> def update_template(name: str, new_rules: list, description: str = "") -> tuple:
+>     """
+>     更新模板规则
+  
+>     Args:
+>         name: 模板名称
+>         new_rules: 新的规则列表
+>         description: 新的描述
+  
+>     Returns:
+>         tuple: (成功标志, 消息)
+>     """
+>     conn = _get_db()
+  
+>     def clean_for_json(obj):
+!         if isinstance(obj, datetime):
+!             return obj.strftime("%Y-%m-%d %H:%M:%S")
+!         return obj
+  
+>     rules_json = json.dumps(new_rules, ensure_ascii=False, default=clean_for_json)
+>     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+>     try:
+>         cursor = conn.cursor()
+>         cursor.execute("UPDATE material_rules_templates SET rules_json = %s, description = %s, updated_at = %s WHERE name = %s",
+>                      (rules_json, description, now, name))
+>         conn.commit()
+>         if cursor.rowcount > 0:
+>             cursor.close()
+>             return True, f"模板「{name}」已更新"
+>         cursor.close()
+>         return False, f"模板「{name}」不存在"
+>     finally:
+>         conn.close()
+  
+  
+> def delete_template(name: str) -> tuple:
+>     """删除指定模板"""
+>     conn = _get_db()
+>     try:
+>         cursor = conn.cursor()
+>         cursor.execute("DELETE FROM material_rules_templates WHERE name = %s", (name,))
+>         conn.commit()
+>         if cursor.rowcount > 0:
+>             cursor.close()
+>             return True, f"模板「{name}」已删除"
+>         cursor.close()
+>         return False, f"模板「{name}」不存在"
+>     finally:
+>         conn.close()
+  
+  
+> def rename_template(old_name: str, new_name: str) -> tuple:
+>     """重命名模板"""
+>     if not new_name.strip():
+>         return False, "新名称不能为空"
+>     conn = _get_db()
+>     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+>     try:
+>         cursor = conn.cursor()
+>         cursor.execute("UPDATE material_rules_templates SET name = %s, updated_at = %s WHERE name = %s",
+>                      (new_name.strip(), now, old_name))
+>         conn.commit()
+>         if cursor.rowcount > 0:
+>             cursor.close()
+>             return True, f"已重命名为「{new_name}」"
+>         cursor.close()
+>         return False, f"模板「{old_name}」不存在"
+>     finally:
+>         conn.close()
+  
+  
+> def get_template_names() -> list:
+>     """获取所有模板名称列表"""
+>     conn = _get_db()
+>     try:
+>         cursor = conn.cursor()
+>         cursor.execute("SELECT name FROM material_rules_templates ORDER BY name")
+>         rows = cursor.fetchall()
+>         cursor.close()
+>         return [row[0] for row in rows]
+>     finally:
+>         conn.close()

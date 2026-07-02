@@ -1,0 +1,19 @@
+  # -*- coding: utf-8 -*-
+> """
+> 数据库模块 — 向后兼容的过渡包
+> 原 database.py 72KB → _database_legacy.py
+> 新增拆分子模块：config / connection_pool / utils
+> """
+  # 从原 database.py（已移入 _database_legacy）导入全部公开符号
+> from ._database_legacy import *
+  
+> from .config import _get_db_config, MYSQL_CONFIG
+> from .connection_pool import (
+>     MySQLConnectionPool, PooledConnection,
+>     get_connection, get_connection_context, reload_db_config,
+> )
+> from .utils_db import (
+>     _validate_sql_identifier, _safe_table_name,
+>     generate_order_no, generate_order_no, generate_shipment_no,
+>     log_status_change,
+> )

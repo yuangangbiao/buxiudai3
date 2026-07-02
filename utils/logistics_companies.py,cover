@@ -1,0 +1,95 @@
+  # -*- coding: utf-8 -*-
+> """
+> 物流公司管理工具
+> """
+> import json
+> import os
+> import sys
+  
+  # 默认物流公司列表
+> DEFAULT_LOGISTICS = [
+>     "顺丰速运",
+>     "德邦物流",
+>     "货拉拉",
+>     "中通快递",
+>     "圆通速递",
+>     "韵达快递",
+>     "安能物流",
+>     "申通快递",
+>     "极兔速递",
+>     "京东物流",
+>     "邮政EMS",
+>     "天地华宇",
+>     "佳吉快运",
+>     "其他"
+> ]
+  
+  # 兼容打包模式：用户数据放在 exe 同目录（pathlib 规范化中文路径）
+> if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+!     BASE_DIR = str(__import__('pathlib').Path(sys.executable).parent)
+> else:
+>     BASE_DIR = str(__import__('pathlib').Path(os.path.abspath(__file__)).parent.parent)
+  
+> DATA_FILE = str(__import__('pathlib').Path(BASE_DIR) / "logistics_companies.json")
+  
+  
+> def _load_custom():
+>     """加载自定义物流公司"""
+>     if os.path.exists(DATA_FILE):
+>         try:
+>             with open(DATA_FILE, "r", encoding="utf-8") as f:
+>                 data = json.load(f)
+>                 return data.get("custom_companies", [])
+>         except Exception:
+>             pass
+>     return []
+  
+  
+> def _save_custom(custom_list):
+>     """保存自定义物流公司"""
+>     with open(DATA_FILE, "w", encoding="utf-8") as f:
+>         json.dump({"custom_companies": custom_list}, f, ensure_ascii=False, indent=2)
+  
+  
+> def get_all_companies():
+>     """获取所有物流公司列表"""
+>     custom = _load_custom()
+>     return DEFAULT_LOGISTICS + custom
+  
+  
+> def add_company(name):
+>     """添加新的物流公司"""
+>     if not name or not name.strip():
+>         return False, "名称不能为空"
+  
+>     name = name.strip()
+  
+      # 检查是否已存在
+>     all_companies = get_all_companies()
+>     if name in all_companies:
+>         return False, f"「{name}」已存在"
+  
+      # 添加到自定义列表
+>     custom = _load_custom()
+>     custom.append(name)
+>     _save_custom(custom)
+>     return True, f"「{name}」添加成功"
+  
+  
+> def remove_company(name):
+>     """删除自定义物流公司（默认列表不可删除）"""
+>     if name in DEFAULT_LOGISTICS:
+>         return False, "默认物流公司不可删除"
+  
+>     custom = _load_custom()
+>     if name not in custom:
+>         return False, "该物流公司不存在"
+  
+>     custom.remove(name)
+>     _save_custom(custom)
+>     return True, f"「{name}」已删除"
+  
+  
+> def get_custom_companies():
+>     """获取自定义物流公司列表"""
+>     return _load_custom()

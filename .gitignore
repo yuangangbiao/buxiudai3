@@ -78,6 +78,10 @@ coverage.xml
 
 # ───── 项目特殊（v3.6 新增）─────
 .workbuddy/  # AI 助手工作区
+build/  # PyInstaller 构建
 generate_summary_docx.js
 "docs/6月30日-7月2日任务总结.docx"
 !docs/CHANGELOG.md  # 但保留 CHANGELOG
+**/__pycache__/
+*.pyc
+*.pyo

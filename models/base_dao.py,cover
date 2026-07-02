@@ -1,0 +1,287 @@
+  # -*- coding: utf-8 -*-
+> """
+> DAO基类 - 提供通用数据库操作方法
+  
+> 所有DAO类应继承此类，以获得统一的数据库操作接口。
+  
+> 使用方式：
+>     class OrderDAO(BaseDAO):
+>         def __init__(self):
+>             super().__init__('orders')
+  
+>         def get_by_customer(self, customer_id):
+>             return self.get_all(filters={'customer_id': customer_id})
+> """
+> import logging
+> from typing import List, Dict, Any, Optional
+> from models.database import get_connection
+> from utils.auto_schema import auto_ensure_schema
+  
+  
+- logger = logging.getLogger(__name__)
+  
+  
+> class BaseDAO:
+>     """DAO基类 - 提供通用CRUD操作"""
+  
+>     def __init__(self, table_name: str):
+>         self.table_name = table_name
+>         self._table_lock = None
+  
+>     def get_by_id(self, id: int) -> Optional[Dict]:
+>         """根据ID获取单条记录"""
+>         conn = get_connection()
+>         try:
+>             with conn.cursor() as cursor:
+>                 cursor.execute(
+>                     f"SELECT * FROM {self.table_name} WHERE id=%s AND is_deleted=0 LIMIT 1",
+>                     (id,)
+>                 )
+>                 result = cursor.fetchone()
+>                 return dict(result) if result else None
+>         finally:
+>             conn.close()
+  
+>     def get_all(self, filters: Dict = None, order_by: str = 'id DESC',
+>                 limit: int = None, offset: int = None) -> List[Dict]:
+>         """
+>         获取所有记录
+  
+>         Args:
+>             filters: 筛选条件，如 {'status': '进行中', 'customer_id': 1}
+>             order_by: 排序，如 'created_at DESC'
+>             limit: 返回数量限制
+>             offset: 偏移量（分页用）
+>         """
+>         conn = get_connection()
+>         try:
+>             sql = f"SELECT * FROM {self.table_name} WHERE is_deleted=0"
+>             params = []
+  
+>             if filters:
+>                 for key, value in filters.items():
+>                     if value is not None:
+>                         sql += f" AND {key}=%s"
+>                         params.append(value)
+  
+>             sql += f" ORDER BY {order_by}"
+  
+>             if limit:
+>                 sql += f" LIMIT {limit}"
+>                 if offset:
+>                     sql += f" OFFSET {offset}"
+  
+>             with conn.cursor() as cursor:
+>                 cursor.execute(sql, params)
+>                 return [dict(row) for row in cursor.fetchall()]
+>         finally:
+>             conn.close()
+  
+>     def create(self, data: Dict) -> int:
+>         """
+>         创建记录
+  
+>         Args:
+>             data: 要创建的字段数据
+  
+>         Returns:
+>             新记录的ID
+>         """
+>         if not data:
+>             raise ValueError("创建数据不能为空")
+  
+>         fields = [k for k in data.keys() if k not in ('id', 'created_at', 'updated_at')]
+>         if not fields:
+>             raise ValueError("没有有效的字段可创建")
+  
+>         conn = get_connection()
+>         try:
+>             auto_ensure_schema(conn, self.table_name, data)
+  
+>             placeholders = ', '.join(['%s'] * len(fields))
+>             sql = f"INSERT INTO {self.table_name} ({', '.join(fields)}) VALUES ({placeholders})"
+  
+>             with conn.cursor() as cursor:
+>                 cursor.execute(sql, tuple(data[f] for f in fields))
+>                 conn.commit()
+>                 return cursor.lastrowid
+>         finally:
+>             conn.close()
+  
+>     def update(self, id: int, data: Dict) -> bool:
+>         """
+>         更新记录
+  
+>         Args:
+>             id: 记录ID
+>             data: 要更新的字段数据
+  
+>         Returns:
+>             是否更新成功
+>         """
+>         if not data:
+>             return False
+  
+>         fields = [k for k in data.keys() if k not in ('id', 'created_at')]
+>         if not fields:
+>             return False
+  
+>         conn = get_connection()
+>         try:
+>             auto_ensure_schema(conn, self.table_name, data)
+  
+>             set_clause = ', '.join([f"{f}=%s" for f in fields])
+>             sql = f"UPDATE {self.table_name} SET {set_clause}, updated_at=NOW() WHERE id=%s AND is_deleted=0"
+  
+>             with conn.cursor() as cursor:
+>                 cursor.execute(sql, tuple(data[f] for f in fields) + (id,))
+>                 conn.commit()
+>                 return cursor.rowcount > 0
+>         finally:
+>             conn.close()
+  
+>     def delete(self, id: int, hard: bool = False) -> bool:
+>         """
+>         删除记录（软删除或硬删除）
+  
+>         Args:
+>             id: 记录ID
+>             hard: True=硬删除，False=软删除
+  
+>         Returns:
+>             是否删除成功
+>         """
+>         conn = get_connection()
+>         try:
+>             with conn.cursor() as cursor:
+>                 if hard:
+>                     sql = f"DELETE FROM {self.table_name} WHERE id=%s"
+>                     cursor.execute(sql, (id,))
+>                 else:
+>                     sql = f"UPDATE {self.table_name} SET is_deleted=1, deleted_at=NOW() WHERE id=%s"
+>                     cursor.execute(sql, (id,))
+>                 conn.commit()
+>                 return cursor.rowcount > 0
+>         finally:
+>             conn.close()
+  
+>     def count(self, filters: Dict = None) -> int:
+>         """统计记录数量"""
+>         conn = get_connection()
+>         try:
+>             sql = f"SELECT COUNT(*) as cnt FROM {self.table_name} WHERE is_deleted=0"
+>             params = []
+  
+>             if filters:
+>                 for key, value in filters.items():
+>                     if value is not None:
+>                         sql += f" AND {key}=%s"
+>                         params.append(value)
+  
+>             with conn.cursor() as cursor:
+>                 cursor.execute(sql, params)
+>                 return cursor.fetchone()['cnt']
+>         finally:
+>             conn.close()
+  
+>     def exists(self, id: int) -> bool:
+>         """检查记录是否存在"""
+>         conn = get_connection()
+>         try:
+>             with conn.cursor() as cursor:
+>                 cursor.execute(
+>                     f"SELECT 1 FROM {self.table_name} WHERE id=%s AND is_deleted=0 LIMIT 1",
+>                     (id,)
+>                 )
+>                 return cursor.fetchone() is not None
+>         finally:
+>             conn.close()
+  
+>     def get_paginated(self, page: int = 1, page_size: int = 20,
+>                       filters: Dict = None, order_by: str = 'id DESC') -> Dict:
+>         """
+>         分页查询
+  
+>         Args:
+>             page: 页码（从1开始）
+>             page_size: 每页数量
+>             filters: 筛选条件
+>             order_by: 排序
+  
+>         Returns:
+>             {'items': [], 'total': 0, 'page': 1, 'page_size': 20, 'total_pages': 0}
+>         """
+>         page = max(1, page)
+>         page_size = min(max(1, page_size), 100)
+>         offset = (page - 1) * page_size
+  
+>         total = self.count(filters)
+>         items = self.get_all(filters=filters, order_by=order_by, limit=page_size, offset=offset)
+  
+>         return {
+>             'items': items,
+>             'total': total,
+>             'page': page,
+>             'page_size': page_size,
+>             'total_pages': (total + page_size - 1) // page_size if page_size > 0 else 0
+>         }
+  
+>     def bulk_create(self, items: List[Dict]) -> int:
+>         """
+>         批量创建
+  
+>         Args:
+>             items: 要创建的记录列表
+  
+>         Returns:
+>             成功创建的数量
+>         """
+>         if not items:
+>             return 0
+  
+>         fields = [k for k in items[0].keys() if k not in ('id', 'created_at', 'updated_at')]
+>         if not fields:
+>             return 0
+  
+>         conn = get_connection()
+>         try:
+>             placeholders = ', '.join(['%s'] * len(fields))
+>             sql = f"INSERT INTO {self.table_name} ({', '.join(fields)}) VALUES ({placeholders})"
+  
+>             with conn.cursor() as cursor:
+>                 for item in items:
+>                     cursor.execute(sql, tuple(item.get(f) for f in fields))
+>                 conn.commit()
+>                 return len(items)
+>         finally:
+>             conn.close()
+  
+>     def bulk_update(self, ids: List[int], data: Dict) -> int:
+>         """
+>         批量更新
+  
+>         Args:
+>             ids: 要更新的记录ID列表
+>             data: 要更新的字段数据
+  
+>         Returns:
+>             成功更新的数量
+>         """
+>         if not ids or not data:
+>             return 0
+  
+>         fields = [k for k in data.keys() if k not in ('id', 'created_at')]
+>         if not fields:
+>             return 0
+  
+>         conn = get_connection()
+>         try:
+>             set_clause = ', '.join([f"{f}=%s" for f in fields])
+>             sql = f"UPDATE {self.table_name} SET {set_clause}, updated_at=NOW() WHERE id IN ({', '.join(['%s'] * len(ids))})"
+  
+>             with conn.cursor() as cursor:
+>                 cursor.execute(sql, tuple(data[f] for f in fields) + tuple(ids))
+>                 conn.commit()
+>                 return cursor.rowcount
+>         finally:
+>             conn.close()

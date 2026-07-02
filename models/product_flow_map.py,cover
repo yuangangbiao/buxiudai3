@@ -1,0 +1,18 @@
+  # -*- coding: utf-8 -*-
+> from models.database import get_connection
+  
+> class ProductFlowMapDAO:
+>     @staticmethod
+>     def get_flow_type(product_type_id):
+>         conn = get_connection()
+>         try:
+>             cursor = conn.cursor()
+>             cursor.execute("SELECT flow_type FROM product_flow_map WHERE product_type_id=%s", (product_type_id,))
+>             row = cursor.fetchone()
+>             if not row:
+>                 return "production"
+>             if isinstance(row, dict):
+>                 return row.get('flow_type', 'production')
+>             return row[0]
+>         finally:
+>             conn.close()

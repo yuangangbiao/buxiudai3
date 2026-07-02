@@ -1,0 +1,713 @@
+  # -*- coding: utf-8 -*-
+> """
+> 微信报工服务 - 发布报工任务到企业微信并处理回调
+  
+> 功能：
+> 1. publish_task_to_operator - 发布报工任务到操作员（写入本地队列，异步转发到容器中心）
+> 2. process_callback - 处理企业微信回调（更新工序记录）
+> 3. sync_report_status - 查询订单报工状态
+> 4. batch_update_status - 批量更新报工状态
+> 5. update_operator - 更新工序操作员信息
+> """
+  
+> import json
+> import logging
+> import os
+> import threading
+> import time
+> from datetime import datetime
+> from typing import Any, Dict, List, Optional
+  
+> import requests
+  
+> from models.database import get_connection
+> from utils.op_logger import log_ui
+  
+- logger = logging.getLogger(__name__)
+  
+  
+> class WeChatReportService:
+>     """微信报工服务"""
+  
+>     _queue_processor_started = False
+>     _POLL_INTERVAL = 3
+>     _BATCH_SIZE = 5
+>     _MAX_RETRIES = 3
+  
+      # ------------------------------------------------------------------ #
+      #  表结构自检/初始化
+      # ------------------------------------------------------------------ #
+>     @classmethod
+>     def _ensure_tables(cls):
+>         """确保 wechat_tasks 表已存在（幂等）"""
+>         conn = get_connection()
+>         cursor = conn.cursor()
+>         try:
+>             cursor.execute("SHOW TABLES LIKE 'wechat_tasks'")
+>             if not cursor.fetchone():
+>                 cursor.execute("""
+>                     CREATE TABLE wechat_tasks (
+>                         id INT PRIMARY KEY AUTO_INCREMENT,
+>                         task_type VARCHAR(50) NOT NULL COMMENT '任务类型: publish/update',
+>                         order_no VARCHAR(100) COMMENT '订单号',
+>                         order_no VARCHAR(100) COMMENT '订单号',
+>                         process_name VARCHAR(100) COMMENT '工序名称',
+>                         operator_id VARCHAR(50) COMMENT '目标操作员',
+>                         task_data TEXT COMMENT '任务数据JSON',
+>                         status VARCHAR(20) DEFAULT 'pending' COMMENT 'pending/sending/success/failed',
+>                         retry_count INT DEFAULT 0 COMMENT '已重试次数',
+>                         last_error TEXT COMMENT '最后一次错误信息',
+>                         last_retry_at DATETIME DEFAULT NULL COMMENT '最后一次重试时间',
+>                         result_data TEXT COMMENT '回调结果JSON',
+>                         created_at DATETIME DEFAULT NOW(),
+>                         updated_at DATETIME DEFAULT NOW(),
+>                         INDEX idx_order_no (order_no),
+>                         INDEX idx_status (status),
+>                         INDEX idx_operator_id (operator_id),
+>                         INDEX idx_created_at (created_at),
+>                         UNIQUE KEY uk_order_process (order_no, process_name)
+>                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='微信报工任务发送队列'
+>                 """)
+>                 conn.commit()
+>                 logger.info("[WeChatReport] 表 wechat_tasks 已创建")
+>             else:
+>                 cursor.execute("SHOW COLUMNS FROM wechat_tasks LIKE 'last_retry_at'")
+>                 if not cursor.fetchone():
+>                     cursor.execute("ALTER TABLE wechat_tasks ADD COLUMN last_retry_at DATETIME DEFAULT NULL COMMENT '最后一次重试时间' AFTER last_error")
+>                     conn.commit()
+>                     logger.info("[WeChatReport] 表 wechat_tasks 已增加 last_retry_at 列")
+>                 cursor.execute("SHOW KEYS FROM wechat_tasks WHERE Key_name = 'uk_order_process'")
+>                 if not cursor.fetchone():
+>                     cursor.execute("ALTER TABLE wechat_tasks ADD UNIQUE KEY uk_order_process (order_no, process_name)")
+>                     conn.commit()
+>                     logger.info("[WeChatReport] 表 wechat_tasks 已增加唯一索引 uk_order_process")
+>         except Exception as e:
+-             logger.error("[WeChatReport] 建表失败: %s", e)
+>             conn.rollback()
+>         finally:
+>             cursor.close()
+>             conn.close()
+  
+      # ------------------------------------------------------------------ #
+      #  容器中心地址
+      # ------------------------------------------------------------------ #
+>     @classmethod
+>     def _get_container_url(cls) -> str:
+>         return os.getenv('CONTAINER_URL', 'http://localhost:5002')
+  
+      # ------------------------------------------------------------------ #
+      #  发布任务
+      # ------------------------------------------------------------------ #
+>     @classmethod
+>     def publish_task_to_operator(cls, task_data: dict, operator_id: str) -> dict:
+>         """
+>         发布报工任务到指定操作员（写入本地队列，异步转发）
+  
+>         Args:
+>             task_data: 任务数据，包含 order_no, process_name, quantity 等
+>             operator_id: 目标操作员ID
+  
+>         Returns:
+>             {"success": True/False, "message": "..."}
+>         """
+>         cls._ensure_tables()
+  
+>         order_no = task_data.get('order_no', '')
+>         process_name = task_data.get('process_name', '')
+  
+>         conn = get_connection()
+>         cursor = conn.cursor()
+>         try:
+>             cursor.execute(
+>                 """INSERT INTO wechat_tasks
+>                    (task_type, order_no, process_name, operator_id, task_data, status)
+>                    SELECT %s, %s, %s, %s, %s, %s
+>                    FROM DUAL
+>                    WHERE NOT EXISTS (
+>                        SELECT 1 FROM wechat_tasks
+>                        WHERE order_no = %s AND process_name = %s
+>                    )""",
+>                 ('publish', order_no, process_name, operator_id,
+>                  json.dumps(task_data, ensure_ascii=False, default=str), 'pending',
+>                  order_no, process_name)
+>             )
+>             conn.commit()
+  
+>             if cursor.rowcount > 0:
+>                 task_id = cursor.lastrowid
+>                 log_ui("微信报工", "任务入队",
+>                        f"工号:{order_no} 工序:{process_name} -> {operator_id} (ID:{task_id})")
+>                 cls._start_queue_processor()
+>                 return {"success": True, "message": "任务已加入发送队列", "task_id": task_id}
+>             else:
+>                 cursor.execute(
+>                     "SELECT id, status FROM wechat_tasks WHERE order_no=%s AND process_name=%s LIMIT 1",
+>                     (order_no, process_name)
+>                 )
+>                 existing = cursor.fetchone()
+>                 task_id = existing['id'] if existing else 0
+>                 if existing and existing['status'] in ('pending', 'sending'):
+>                     msg = "该工序任务已在发送队列中"
+>                 else:
+>                     msg = "该工序任务已存在（无需重复入队）"
+>                 logger.info(f"[WeChatReport] {msg}: order={order_no} process={process_name}")
+>                 return {"success": True, "message": msg, "task_id": task_id}
+>         except Exception as e:
+>             conn.rollback()
+-             logger.error(
+>                 "[WeChatReport] 发布任务失败: %s", e,
+>                 extra={"order_no": order_no, "process_name": process_name,
+>                        "operator_id": operator_id, "entity_type": "wechat_task"}
+>             )
+>             return {"success": False, "message": f"发布失败: {str(e)}"}
+>         finally:
+>             cursor.close()
+>             conn.close()
+  
+      # ------------------------------------------------------------------ #
+      #  队列处理器（后台线程）
+      # ------------------------------------------------------------------ #
+>     @classmethod
+>     def _start_queue_processor(cls):
+>         """启动后台队列处理线程（全局只启动一次）"""
+>         if cls._queue_processor_started:
+>             return
+>         cls._queue_processor_started = True
+>         t = threading.Thread(target=cls._process_queue, daemon=True,
+>                              name="wechat-queue-processor")
+>         t.start()
+>         logger.info("[WeChatReport] 队列处理器已启动")
+  
+>     @classmethod
+>     def _process_queue(cls):
+>         """后台轮询队列，将待发送任务转发到容器中心"""
+>         while True:
+>             try:
+>                 cls._ensure_tables()
+>                 conn = get_connection()
+>                 cursor = conn.cursor()
+>                 try:
+>                     cursor.execute(
+>                         """SELECT id, task_data, operator_id, retry_count
+>                            FROM wechat_tasks
+>                            WHERE status = 'pending' AND retry_count < %s
+>                              AND (last_retry_at IS NULL
+>                                   OR last_retry_at < NOW() - INTERVAL 30 SECOND)
+>                            ORDER BY id ASC LIMIT %s""",
+>                         (cls._MAX_RETRIES, cls._BATCH_SIZE)
+>                     )
+>                     tasks = cursor.fetchall()
+  
+>                     for task in tasks:
+>                         cls._send_task(conn, task['id'],
+>                                        json.loads(task['task_data']),
+>                                        task['operator_id'])
+>                 finally:
+>                     cursor.close()
+>                     conn.close()
+>             except Exception as e:
+-                 logger.error("[WeChatReport] 队列处理异常: %s", e)
+  
+>             time.sleep(cls._POLL_INTERVAL)
+  
+>     @classmethod
+>     def _send_task(cls, conn, task_id: int, task_data: dict, operator_id: str):
+>         """向容器中心发送单个任务"""
+>         cursor = conn.cursor()
+>         try:
+>             cursor.execute(
+>                 "UPDATE wechat_tasks SET status = 'sending', updated_at = NOW() WHERE id = %s",
+>                 (task_id,)
+>             )
+>             conn.commit()
+  
+>             container_url = cls._get_container_url()
+>             payload = {
+>                 'type': 'wechat_task',
+>                 'operator_id': operator_id,
+>                 'task_data': task_data,
+>                 'timestamp': datetime.now().isoformat()
+>             }
+  
+>             resp = requests.post(
+>                 f"{container_url}/api/wechat/dispatch",
+>                 json=payload,
+>                 timeout=10
+>             )
+>             resp_data = resp.json()
+  
+>             if resp_data.get('code') == 0:
+>                 cursor.execute(
+>                     "UPDATE wechat_tasks SET status = 'success', updated_at = NOW() WHERE id = %s",
+>                     (task_id,)
+>                 )
+>                 log_ui("微信报工", "发送成功",
+>                        f"任务ID:{task_id} -> {operator_id}")
+>             else:
+>                 raise Exception(resp_data.get('message', '转发失败'))
+  
+>         except Exception as e:
+>             cursor.execute(
+>                 "SELECT retry_count FROM wechat_tasks WHERE id = %s FOR UPDATE",
+>                 (task_id,)
+>             )
+>             row = cursor.fetchone()
+>             current_retry = row['retry_count'] + 1 if row else 0
+>             if current_retry >= cls._MAX_RETRIES:
+>                 status = 'dead_letter'
+>                 log_ui("微信报工", "死信告警",
+>                        f"任务ID:{task_id} 已重试{current_retry}次，转入死信队列，请人工处理")
+>             else:
+>                 status = 'pending'
+>             cursor.execute(
+>                 """UPDATE wechat_tasks
+>                    SET status = %s, retry_count = %s,
+>                        last_error = %s, last_retry_at = NOW(), updated_at = NOW()
+>                    WHERE id = %s""",
+>                 (status, current_retry, str(e), task_id)
+>             )
+-             logger.warning(
+>                 "[WeChatReport] 任务 %s 发送失败(重试 %s/%s): %s",
+>                 task_id, current_retry, cls._MAX_RETRIES, e,
+>                 extra={
+>                     "entity_type": "wechat_task", "entity_id": str(task_id),
+>                     "order_no": task_data.get("order_no", ""),
+>                     "process_name": task_data.get("process_name", ""),
+>                     "operator_id": operator_id
+>                 }
+>             )
+>         finally:
+>             conn.commit()
+>             cursor.close()
+  
+      # ------------------------------------------------------------------ #
+      #  处理微信回调
+      # ------------------------------------------------------------------ #
+>     @classmethod
+>     def process_callback(cls, data: dict) -> dict:
+>         """
+>         处理企业微信报工回调
+  
+>         参数格式 (由容器中心/企微回调传入):
+>         {
+>             "order_no": "ORD-xxx",
+>             "process_name": "冲压",
+>             "operator_id": "OP001",
+>             "worker_name": "张三",
+>             "completed_qty": 100,
+>             "qualified_qty": 98,
+>             "work_hours": 4.5,
+>             "status": "进行中" | "已完成",
+>             "remark": ""
+>         }
+  
+>         Returns:
+>             {"success": True/False, "message": "..."}
+>         """
+>         order_no = data.get('order_no', '')
+>         process_name = data.get('process_name', '')
+>         operator_id = data.get('operator_id', '')
+>         completed_qty = int(data.get('completed_qty', 0))
+>         qualified_qty = int(data.get('qualified_qty', 0))
+>         work_hours = float(data.get('work_hours', 0))
+>         report_status = data.get('status', '进行中')
+>         remark = data.get('remark', '')
+  
+>         if not order_no or not process_name:
+>             return {"success": False, "message": "缺少 order_no 或 process_name"}
+  
+>         conn = get_connection()
+>         cursor = conn.cursor()
+>         try:
+>             cursor.execute("""
+>                 SELECT pr.id, pr.status, po.id as prod_id, po.order_id
+>                 FROM process_records pr
+>                 JOIN production_orders po ON pr.production_id = po.id
+>                 JOIN orders o ON pr.order_id = o.id
+>                 WHERE o.order_no = %s AND pr.process_name = %s
+>                 ORDER BY pr.id DESC LIMIT 1
+>             """, (order_no, process_name))
+>             record = cursor.fetchone()
+  
+>             if not record:
+>                 return {"success": False, "message": f"未找到工序记录: {order_no}/{process_name}"}
+  
+>             record_id = record['id']
+>             old_status = record['status']
+>             production_id = record['prod_id']
+>             order_id = record['order_id']
+  
+>             report_type = 'PROGRESS'
+>             if old_status in (None, '待开始') and report_status == '进行中':
+>                 report_type = 'START'
+>             elif report_status == '已完成':
+>                 report_type = 'COMPLETE'
+  
+>             update_fields = [
+>                 "completed_qty = %s",
+>                 "qualified_qty = %s",
+>                 "worker = %s",
+>                 "work_hours = %s",
+>                 "status = %s",
+>                 "remark = %s",
+>                 "record_date = NOW()"
+>             ]
+>             update_values = [completed_qty, qualified_qty, operator_id,
+>                              work_hours, report_status, remark]
+  
+>             if old_status in (None, '待开始') and report_status == '进行中':
+>                 update_fields.append("start_time = NOW()")
+>             if report_status == '已完成' and old_status != '已完成':
+>                 update_fields.append("end_time = NOW()")
+  
+>             update_sql = f"UPDATE process_records SET {','.join(update_fields)} WHERE id = %s"
+>             update_values.append(record_id)
+>             cursor.execute(update_sql, tuple(update_values))
+  
+>             cursor.execute("""
+>                 INSERT INTO workreport_records
+>                 (process_record_id, worker_id, report_type, completed_qty, qualified_qty, work_hours, remark, report_time)
+>                 VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
+>             """, (record_id, operator_id, report_type, completed_qty, qualified_qty, work_hours, remark))
+  
+>             if report_status == '已完成':
+>                 cursor.execute("""
+>                     SELECT id, process_name, process_seq, status
+>                     FROM process_records
+>                     WHERE production_id = %s AND process_seq = (
+>                         SELECT process_seq + 1 FROM process_records WHERE id = %s
+>                     )
+>                 """, (production_id, record_id))
+>                 next_proc = cursor.fetchone()
+  
+>                 if not next_proc:
+>                     cursor.execute(
+>                         "UPDATE production_orders SET status = '已完成', actual_end = NOW() WHERE id = %s",
+>                         (production_id,)
+>                     )
+>                     cursor.execute(
+>                         "UPDATE orders SET status = '质检中', updated_at = NOW() WHERE id = %s",
+>                         (order_id,)
+>                     )
+  
+>                 cursor.execute(
+>                     "UPDATE production_orders SET status = '生产中', actual_start = COALESCE(actual_start, NOW()) WHERE id = %s AND status = '待开始'",
+>                     (production_id,)
+>                 )
+>                 if old_status in (None, '待开始'):
+>                     cursor.execute(
+>                         "UPDATE orders SET status = '生产中', updated_at = NOW() WHERE id = %s AND status = '已排产'",
+>                         (order_id,)
+>                     )
+  
+              # 更新 wechat_tasks 回调结果
+>             cursor.execute(
+>                 "UPDATE wechat_tasks SET result_data = %s, updated_at = NOW() WHERE order_no = %s AND process_name = %s AND status IN ('success', 'sending') ORDER BY id DESC LIMIT 1",
+>                 (json.dumps(data, ensure_ascii=False, default=str), order_no, process_name)
+>             )
+  
+>             conn.commit()
+>             log_ui("微信报工", "回调处理成功",
+>                    f"订单:{order_no} 工序:{process_name} 完成数:{completed_qty}")
+>             return {"success": True, "message": "回调处理成功"}
+  
+>         except Exception as e:
+>             conn.rollback()
+-             logger.error(
+>                 "[WeChatReport] 回调处理失败: %s", e,
+>                 extra={"order_no": order_no, "process_name": process_name,
+>                        "operator_id": operator_id, "entity_type": "process_record"}
+>             )
+>             return {"success": False, "message": f"回调处理失败: {str(e)}"}
+>         finally:
+>             cursor.close()
+>             conn.close()
+  
+      # ------------------------------------------------------------------ #
+      #  同步报工状态
+      # ------------------------------------------------------------------ #
+>     @classmethod
+>     def sync_report_status(cls, order_no: str) -> dict:
+>         """
+>         查询订单下所有工序的报工状态
+  
+>         Returns:
+>             {"success": True/False, "data": [...], "message": "..."}
+>         """
+>         conn = get_connection()
+>         cursor = conn.cursor()
+>         try:
+>             cursor.execute("""
+>                 SELECT pr.id, pr.process_name, pr.process_seq,
+>                        pr.completed_qty, pr.qualified_qty,
+>                        pr.worker, pr.status, pr.work_hours,
+>                        pr.start_time, pr.end_time, pr.record_date,
+>                        wt.status as publish_status
+>                 FROM process_records pr
+>                 JOIN orders o ON pr.order_id = o.id
+>                 LEFT JOIN (
+>                     SELECT order_no, process_name, status
+>                     FROM wechat_tasks
+>                     WHERE task_type = 'publish' AND id IN (
+>                         SELECT MAX(id) FROM wechat_tasks GROUP BY order_no, process_name
+>                     )
+>                 ) wt ON o.order_no = wt.order_no AND pr.process_name = wt.process_name
+>                 WHERE o.order_no = %s
+>                 ORDER BY pr.process_seq
+>             """, (order_no,))
+>             records = cursor.fetchall()
+  
+>             return {
+>                 "success": True,
+>                 "data": [{
+>                     "id": r['id'],
+>                     "process_name": r['process_name'],
+>                     "process_seq": r['process_seq'],
+>                     "completed_qty": r['completed_qty'],
+>                     "qualified_qty": r['qualified_qty'],
+>                     "worker": r['worker'],
+>                     "status": r['status'],
+>                     "work_hours": r['work_hours'],
+>                     "start_time": str(r['start_time']) if r['start_time'] else None,
+>                     "end_time": str(r['end_time']) if r['end_time'] else None,
+>                     "record_date": str(r['record_date']) if r['record_date'] else None,
+>                     "publish_status": r.get('publish_status', 'none')
+>                 } for r in records],
+>                 "message": "查询成功"
+>             }
+>         except Exception as e:
+-             logger.error(
+>                 "[WeChatReport] 状态查询失败: %s", e,
+>                 extra={"order_no": order_no, "entity_type": "ORDER"}
+>             )
+>             return {"success": False, "data": [], "message": f"查询失败: {str(e)}"}
+>         finally:
+>             cursor.close()
+>             conn.close()
+  
+      # ------------------------------------------------------------------ #
+      #  批量更新报工状态
+      # ------------------------------------------------------------------ #
+>     @classmethod
+>     def batch_update_status(cls, data: List[dict]) -> dict:
+>         """
+>         批量更新报工状态
+  
+>         data: [{"record_id": 1, "status": "已完成", "completed_qty": 100, ...}, ...]
+  
+>         Returns:
+>             {"success": True/False, "message": "...", "updated": int, "failed": int}
+>         """
+>         if not isinstance(data, list):
+>             return {"success": False, "message": "数据格式错误，需要数组", "updated": 0, "failed": 0}
+  
+>         updated = 0
+>         failed = 0
+  
+>         for item in data:
+>             try:
+>                 result = cls.process_callback(item)
+>                 if result.get('success'):
+>                     updated += 1
+>                 else:
+>                     failed += 1
+>             except Exception as e:
+>                 failed += 1
+-                 logger.error("[WeChatReport] 批量更新单条失败: %s", e)
+  
+>         return {
+>             "success": True,
+>             "message": f"批量更新完成: 成功{updated}, 失败{failed}",
+>             "updated": updated,
+>             "failed": failed
+>         }
+  
+      # ------------------------------------------------------------------ #
+      #  更新操作员信息
+      # ------------------------------------------------------------------ #
+>     @classmethod
+>     def update_operator(cls, order_no: str, process_name: str, operator: str) -> dict:
+>         """
+>         更新工序的操作员
+  
+>         Args:
+>             order_no: 订单号
+>             process_name: 工序名称
+>             operator: 操作员ID或姓名
+  
+>         Returns:
+>             {"success": True/False, "message": "..."}
+>         """
+>         conn = get_connection()
+>         cursor = conn.cursor()
+>         try:
+>             cursor.execute("""
+>                 UPDATE process_records pr
+>                 JOIN orders o ON pr.order_id = o.id
+>                 SET pr.worker = %s, pr.record_date = NOW()
+>                 WHERE o.order_no = %s AND pr.process_name = %s
+>             """, (operator, order_no, process_name))
+>             affected = cursor.rowcount
+>             conn.commit()
+  
+>             if affected > 0:
+>                 log_ui("微信报工", "更新操作员",
+>                        f"订单:{order_no} 工序:{process_name} -> {operator}")
+>                 return {"success": True, "message": "操作员更新成功"}
+>             else:
+>                 return {"success": False, "message": f"未找到匹配的工序记录: {order_no}/{process_name}"}
+>         except Exception as e:
+>             conn.rollback()
+-             logger.error(
+>                 "[WeChatReport] 更新操作员失败: %s", e,
+>                 extra={"order_no": order_no, "process_name": process_name,
+>                        "operator": operator, "entity_type": "process_record"}
+>             )
+>             return {"success": False, "message": f"更新操作员失败: {str(e)}"}
+>         finally:
+>             cursor.close()
+>             conn.close()
+  
+      # ═══════════════════════════════════════════════════════════
+      # 死信管理
+      # ═══════════════════════════════════════════════════════════
+  
+>     @classmethod
+>     def get_dead_tasks(cls) -> list:
+>         """获取死信任务列表 (status='dead_letter')"""
+>         conn = get_connection()
+>         try:
+>             cursor = conn.cursor()
+>             cursor.execute("""
+>                 SELECT id, order_no, process_name, task_data, retry_count,
+>                        last_error, last_retry_at, created_at, updated_at
+>                 FROM wechat_tasks
+>                 WHERE status = 'dead_letter'
+>                 ORDER BY id DESC
+>                 LIMIT 50
+>             """)
+>             rows = cursor.fetchall()
+>             cursor.close()
+>             result = [dict(r) for r in rows]
+>             if len(result) >= 10:
+-                 logger.warning('[死信告警] wechat_tasks 死信已达 %d 条，请及时处理', len(result))
+>             return result
+>         finally:
+>             conn.close()
+  
+>     @classmethod
+>     def retry_dead_task(cls, task_id: int) -> dict:
+>         """重发死信任务 — 原子重置并立即发送到容器中心
+  
+>         Returns: {"success": bool, "message": str, "skipped": bool}
+>         """
+>         conn = get_connection()
+>         try:
+>             cursor = conn.cursor()
+              # 原子抢占：仅当条目仍是 dead_letter 时才重置
+>             cursor.execute(
+>                 "UPDATE wechat_tasks SET status='sending', retry_count=0, "
+>                 "last_error=NULL, last_retry_at=NULL, updated_at=NOW() "
+>                 "WHERE id=%s AND status='dead_letter'",
+>                 (task_id,)
+>             )
+>             if cursor.rowcount == 0:
+>                 conn.commit()
+>                 cursor.close()
+>                 return {'success': True, 'message': '已被其他进程处理，跳过', 'skipped': True}
+  
+              # 读取任务数据
+>             cursor.execute(
+>                 "SELECT task_data, operator_id FROM wechat_tasks WHERE id=%s",
+>                 (task_id,)
+>             )
+>             row = cursor.fetchone()
+>             if not row or not row['task_data']:
+>                 conn.rollback()
+>                 cursor.close()
+>                 return {'success': False, 'message': '死信任务数据缺失'}
+  
+>             try:
+>                 task_data = json.loads(row['task_data'])
+>             except json.JSONDecodeError:
+>                 conn.rollback()
+>                 cursor.close()
+>                 return {'success': False, 'message': '死信任务JSON解析失败'}
+  
+>             operator_id = row.get('operator_id', '')
+>             conn.commit()
+>             cursor.close()
+  
+              # 立即发送到容器中心
+>             container_url = cls._get_container_url()
+>             payload = {
+>                 'type': 'wechat_task',
+>                 'operator_id': operator_id,
+>                 'task_data': task_data,
+>                 'timestamp': datetime.now().isoformat()
+>             }
+  
+>             try:
+>                 resp = requests.post(
+>                     f"{container_url}/api/wechat/dispatch",
+>                     json=payload,
+>                     timeout=10
+>                 )
+>                 resp_data = resp.json()
+>             except requests.ConnectionError:
+>                 _conn = get_connection()
+>                 _c = _conn.cursor()
+>                 _c.execute(
+>                     "UPDATE wechat_tasks SET status='dead_letter', retry_count=0, "
+>                     "last_error=%s, updated_at=NOW() WHERE id=%s",
+>                     (f"容器中心连接失败 ({container_url})", task_id)
+>                 )
+>                 _conn.commit()
+>                 _c.close()
+>                 _conn.close()
+>                 return {'success': False, 'message': f'容器中心连接失败，任务保留在死信列表'}
+>             except Exception as e:
+>                 _conn = get_connection()
+>                 _c = _conn.cursor()
+>                 _c.execute(
+>                     "UPDATE wechat_tasks SET status='dead_letter', retry_count=0, "
+>                     "last_error=%s, updated_at=NOW() WHERE id=%s",
+>                     (str(e)[:500], task_id)
+>                 )
+>                 _conn.commit()
+>                 _c.close()
+>                 _conn.close()
+>                 return {'success': False, 'message': f'发送异常: {str(e)}，任务保留在死信列表'}
+  
+>             _conn = get_connection()
+>             _c = _conn.cursor()
+>             if resp_data.get('code') == 0:
+>                 ack_id = resp_data.get('data', {}).get('ack_id', '')
+>                 _c.execute(
+>                     "UPDATE wechat_tasks SET status='success', "
+>                     "result_data=%s, updated_at=NOW() WHERE id=%s",
+>                     (json.dumps(resp_data, ensure_ascii=False), task_id)
+>                 )
+>                 _conn.commit()
+>                 _c.close()
+>                 _conn.close()
+>                 log_ui("微信报工", "死信重发成功", f"任务ID:{task_id}")
+>                 return {'success': True, 'message': '已成功发送到容器中心'}
+>             else:
+>                 _c.execute(
+>                     "UPDATE wechat_tasks SET status='dead_letter', "
+>                     "retry_count=0, last_error=%s, "
+>                     "updated_at=NOW() WHERE id=%s",
+>                     (resp_data.get('message', '容器中心返回失败')[:500], task_id)
+>                 )
+>                 _conn.commit()
+>                 _c.close()
+>                 _conn.close()
+>                 log_ui("微信报工", "死信重发失败", f"任务ID:{task_id}, {resp_data.get('message')}")
+>                 return {'success': False, 'message': f'容器中心返回: {resp_data.get("message", "失败")}，任务保留在死信列表'}
+  
+>         except Exception as e:
+-             logger.error(f"[WeChatReport] 死信重发异常: {e}", exc_info=True)
+>             return {'success': False, 'message': f'重发异常: {str(e)}'}
+>         finally:
+>             conn.close()

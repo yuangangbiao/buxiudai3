@@ -1,0 +1,223 @@
+  # -*- coding: utf-8 -*-
+> """
+> 可复制文本组件 - 支持选中和复制文字的Label组件
+> """
+> import tkinter as tk
+> from tkinter import ttk
+  
+  
+> class CopyableLabel(tk.Frame):
+>     """
+>     可复制的文本组件，外观类似Label但支持：
+>     - 鼠标选中文字
+>     - Ctrl+C 复制
+>     - 右键菜单复制
+>     """
+  
+>     def __init__(self, parent, text="", **kwargs):
+>         """
+>         创建可复制文本组件
+  
+>         参数:
+>             parent: 父容器
+>             text: 显示的文本
+>             **kwargs: 支持以下参数:
+>                 - font: 字体
+>                 - bg: 背景色
+>                 - fg: 文字颜色
+>                 - relief: 边框样式 (默认 SUNKEN)
+>                 - padx: 水平内边距 (默认 8)
+>                 - pady: 垂直内边距 (默认 2)
+>                 - width: 宽度（字符数）
+>                 - anchor: 对齐方式 (默认 w)
+>         """
+>         self._font = kwargs.pop("font", None)
+>         self._bg = kwargs.pop("bg", "white")
+>         self._fg = kwargs.pop("fg", "black")
+>         self._relief = kwargs.pop("relief", tk.SUNKEN)
+>         self._padx = kwargs.pop("padx", 8)
+>         self._pady = kwargs.pop("pady", 2)
+>         self._width = kwargs.pop("width", None)
+>         self._anchor = kwargs.pop("anchor", "w")
+  
+>         super().__init__(parent, bg=self._bg, **kwargs)
+  
+>         self._text_var = tk.StringVar(value=text)
+>         self._original_text = text
+  
+>         self._create_widgets()
+  
+>     def _create_widgets(self):
+>         """创建内部组件"""
+>         self.text = tk.Text(
+>             self,
+>             font=self._font,
+>             bg=self._bg,
+>             fg=self._fg,
+>             relief=self._relief,
+>             bd=1,
+>             padx=self._padx,
+>             pady=self._pady,
+>             highlightthickness=0,
+>             insertwidth=0,
+>             cursor="arrow"
+>         )
+  
+>         if self._width:
+>             self.text.config(width=self._width)
+  
+>         self._set_text(self._original_text)
+  
+>         anchor_map = {"w": "left", "center": "center", "e": "right"}
+>         self.text.tag_configure("left", justify=anchor_map.get(self._anchor, "left"))
+>         self.text.tag_add("left", "1.0", "end")
+  
+>         self.text.pack(fill=tk.BOTH, expand=True)
+  
+>         self._setup_interactions()
+  
+>     def _set_text(self, text):
+>         """设置文本内容"""
+>         self.text.delete("1.0", tk.END)
+>         self.text.insert("1.0", text)
+>         self.text.tag_add("left", "1.0", "end")
+>         self._text_var.set(text)
+  
+>     def _setup_interactions(self):
+>         """设置交互事件"""
+>         self.text.bind("<Control-c>", self._copy)
+>         self.text.bind("<Control-C>", self._copy)
+>         self.text.bind("<Button-3>", self._show_context_menu)
+>         self.text.bind("<FocusOut>", lambda e: self.config(cursor="arrow"))
+  
+>     def _copy(self, event=None):
+>         """复制选中文本到剪贴板"""
+>         try:
+>             selection = self.text.tag_ranges(tk.SEL)
+>             if selection:
+>                 text = self.text.get(*selection)
+>                 self.clipboard_clear()
+>                 self.clipboard_append(text)
+>         except tk.TclError:
+>             pass
+>         return "break"
+  
+>     def _show_context_menu(self, event):
+>         """显示右键菜单"""
+>         menu = tk.Menu(self, tearoff=0)
+>         selection = None
+>         try:
+>             selection = self.text.tag_ranges(tk.SEL)
+>         except tk.TclError:
+>             pass
+  
+>         if selection:
+>             menu.add_command(label="复制", command=self._copy)
+>             menu.add_separator()
+  
+>         menu.add_command(label="复制全部", command=lambda: self._copy_all())
+>         menu.post(event.x_root, event.y_root)
+  
+>     def _copy_all(self):
+>         """复制全部文本"""
+>         self.clipboard_clear()
+>         self.clipboard_append(self._original_text)
+  
+>     def config(self, **kwargs):
+>         """配置组件属性"""
+>         if "text" in kwargs:
+>             self.set_text(kwargs.pop("text"))
+>         if "cursor" in kwargs:
+>             self.text.config(cursor=kwargs.pop("cursor"))
+>         super().config(**kwargs)
+  
+>     def configure(self, **kwargs):
+>         """配置组件属性（config的别名）"""
+>         self.config(**kwargs)
+  
+>     def set_text(self, text):
+>         """设置文本内容"""
+>         self._original_text = text
+>         self._set_text(text)
+  
+>     def get_text(self):
+>         """获取当前文本"""
+>         return self._original_text
+  
+>     @property
+>     def text_widget(self):
+>         """获取内部Text组件（用于高级用法）"""
+>         return self.text
+  
+  
+> class ReadonlyEntry(tk.Frame):
+>     """
+>     只读输入框组件，外观类似Entry但可复制
+>     """
+  
+>     def __init__(self, parent, text="", **kwargs):
+>         """
+>         创建只读输入框组件
+  
+>         参数:
+>             parent: 父容器
+>             text: 显示的文本
+>             **kwargs: 支持的参数同CopyableLabel
+>         """
+>         self._font = kwargs.pop("font", None)
+>         self._bg = kwargs.pop("bg", "white")
+>         self._fg = kwargs.pop("fg", "black")
+>         self._relief = kwargs.pop("relief", tk.SUNKEN)
+>         self._padx = kwargs.pop("padx", 8)
+>         self._pady = kwargs.pop("pady", 2)
+>         self._width = kwargs.pop("width", None)
+>         self._anchor = kwargs.pop("anchor", "w")
+  
+>         super().__init__(parent, bg=self._bg, **kwargs)
+  
+>         self._original_text = text
+>         self._create_widgets()
+  
+>     def _create_widgets(self):
+>         """创建内部组件"""
+>         anchor_to_justify = {"w": "left", "center": "center", "e": "right"}
+>         justify_value = anchor_to_justify.get(self._anchor, "left")
+  
+>         self.entry = tk.Entry(
+>             self,
+>             font=self._font,
+>             bg=self._bg,
+>             fg=self._fg,
+>             relief=self._relief,
+>             bd=1,
+>             readonlybackground=self._bg,
+>             justify=justify_value
+>         )
+  
+>         if self._width:
+>             self.entry.config(width=self._width)
+  
+>         self.entry.pack(fill=tk.BOTH, expand=True)
+>         text_to_insert = str(self._original_text) if self._original_text is not None else ""
+>         self.entry.insert(0, text_to_insert)
+>         self.entry.config(state="readonly")
+  
+>         self._setup_interactions()
+  
+>     def _setup_interactions(self):
+>         """设置交互事件"""
+>         self.entry.bind("<Button-3>", self._show_context_menu)
+>         self.entry.bind("<Control-c>", self._copy)
+>         self.entry.bind("<Control-C>", self._copy)
+  
+>     def _copy(self, event=None):
+>         """复制文本到剪贴板"""
+>         self.clipboard_clear()
+>         self.clipboard_append(self.entry.get())
+>         return "break"
+  
+>     def _show_context_menu(self, event):
+>         """显示右键菜单"""
+>         menu = tk.Menu(self, tearoff=0)
+>         menu.add_command(label="复制", command=self._copy)
+>         menu.post(event.x_root, event.y_root)

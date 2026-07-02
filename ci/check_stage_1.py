@@ -17,7 +17,7 @@ class C:
     E = '\033[0m'
 
 DB_CONFIG = {
-    'host': 'localhost',
+    'host': os.getenv('DB_HOST', 'localhost'),
     'port': 3306,
     'user': 'root',
     'password': '88888888',
