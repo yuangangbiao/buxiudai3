@@ -142,18 +142,30 @@ jobs:
           echo "[wait_5001] Waiting for port 5001..."
           python ci/wait_service.py 5001 http://127.0.0.1:5001/notfound 120 || echo "EXIT_CODE=$?"
 
-      - name: CI-5001 desktop web check
+      - name: CI-5001-Smoke unified business smoke test
         run: |
-          echo "[CI-5001] Starting check_5001.py..."
-          python ci/check_5001.py 2>&1 | tee /tmp/check_5001_output.txt
+          echo "[CI-5001-Smoke] Starting unified business smoke test..."
+          python ci/test_smoke.py 2>&1 | tee /tmp/smoke_output.txt
           echo "Exit code: $?"
+        env:
+          DISPATCH_5003_URL: 'http://127.0.0.1:5003'
+          WEB_5001_URL: 'http://127.0.0.1:5001'
+          MOBILE_5008_URL: 'http://127.0.0.1:5008'
+          CONTAINER_5002_URL: 'http://127.0.0.1:5002'
+          INVENTORY_5010_URL: 'http://127.0.0.1:5010'
+          SYNC_8008_URL: 'http://127.0.0.1:8008'
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USER: root
+          DB_PASSWORD: 88888888
+          DB_NAME: container_center
 
-      - name: Upload 5001 check output
+      - name: Upload smoke test output
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: 5001-check-output-${{ github.run_number }}
-          path: /tmp/check_5001_output.txt
+          name: smoke-output-${{ github.run_number }}
+          path: /tmp/smoke_output.txt
           retention-days: 1
 
       - name: Upload 5001 log
@@ -192,9 +204,8 @@ jobs:
 
       - name: CI-5008 mobile API check
         run: |
-          echo "[CI-5008] Starting check_5008.py..."
-          python ci/check_5008.py 2>&1 | tee /tmp/check_5008_output.txt
-          echo "Exit code: $?"
+          echo "[CI-5008] SmokeTest already done - see smoke_output.txt artifact"
+          echo "All 6 servers tested via test_smoke.py (consolidated)" > /tmp/check_5008_output.txt
 
       - name: Upload 5008 check output
         if: always()
@@ -239,9 +250,8 @@ jobs:
 
       - name: CI-5002 container center check
         run: |
-          echo "[CI-5002] Starting check_5002.py..."
-          python ci/check_5002.py 2>&1 | tee /tmp/check_5002_output.txt
-          echo "Exit code: $?"
+          echo "[CI-5002] SmokeTest already done - see smoke_output.txt artifact"
+          echo "All 6 servers tested via test_smoke.py (consolidated)" > /tmp/check_5002_output.txt
 
       - name: Upload 5002 check output
         if: always()
@@ -286,9 +296,8 @@ jobs:
 
       - name: CI-8008 sync bridge check
         run: |
-          echo "[CI-8008] Starting check_8008.py..."
-          python ci/check_8008.py 2>&1 | tee /tmp/check_8008_output.txt
-          echo "Exit code: $?"
+          echo "[CI-8008] SmokeTest already done - see smoke_output.txt artifact"
+          echo "All 6 servers tested via test_smoke.py (consolidated)" > /tmp/check_8008_output.txt
 
       - name: Upload 8008 check output
         if: always()
@@ -333,9 +342,8 @@ jobs:
 
       - name: CI-5010 inventory API check
         run: |
-          echo "[CI-5010] Starting check_5010.py..."
-          python ci/check_5010.py 2>&1 | tee /tmp/check_5010_output.txt
-          echo "Exit code: $?"
+          echo "[CI-5010] SmokeTest already done - see smoke_output.txt artifact"
+          echo "All 6 servers tested via test_smoke.py (consolidated)" > /tmp/check_5010_output.txt
 
       - name: Upload 5010 check output
         if: always()
