@@ -37,7 +37,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install --upgrade pip && pip install flake8 pymysql pyjwt flask flask-cors requests
+        run: pip install --upgrade pip && pip install flake8 pymysql pyjwt flask flask-cors requests python-dotenv
 
       - name: Wait for MySQL
         run: python ci/wait_mysql.py
@@ -88,7 +88,20 @@ jobs:
           JWT_SECRET_KEY: ci_test_secret_64_bytes_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
       - name: Wait for 5003 to be ready
-        run: python ci/wait_service.py 5003 http://127.0.0.1:5003/health 30
+        run: |
+          echo "[wait_5003] Starting wait..."
+          python ci/wait_service.py 5003 http://127.0.0.1:5003/health 60
+          echo "[wait_5003] Exit code: $?"
+          echo "[wait_5003] 5003 log tail:"
+          tail -50 /tmp/5003.log 2>/dev/null || echo "No log available"
+
+      - name: Upload 5003 log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: 5003-log-${{ github.run_number }}
+          path: /tmp/5003.log
+          retention-days: 1
 
       - name: Start 5001 desktop web
         run: |
