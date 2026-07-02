@@ -187,7 +187,7 @@ def _register_global_error_handlers(app):
 
 # 可选依赖：desktop_callback 不存在时降级为空管理器
 try:
-    from integration.desktop_callback import desktop_callback_manager
+    from container_center.desktop_callback import desktop_callback_manager
 except ImportError:
     desktop_callback_manager = None
 

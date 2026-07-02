@@ -65,7 +65,8 @@ DISPATCH_REASON_DEFAULT = os.getenv('DISPATCH_REASON_DEFAULT', '直接指定操�
 PURCHASE_OPERATORS = os.getenv('PURCHASE_OPERATORS', '').split(',') if os.getenv('PURCHASE_OPERATORS') else []
 
 try:
-    from integration import wechat_notifier, desktop_callback_manager
+    from services.notifier import wechat_notifier
+    from container_center.desktop_callback import desktop_callback_manager
     WECHAT_NOTIFIER_AVAILABLE = True
     DESKTOP_CALLBACK_AVAILABLE = True
 except ImportError:

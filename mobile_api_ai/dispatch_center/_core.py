@@ -1254,7 +1254,7 @@ def _send_to_department_members(department: str, content: str, msg_type: str = '
 
 def _send_desktop_callback(event_type: str, data: Dict):
     try:
-        from integration.desktop_callback import desktop_callback_manager
+        from container_center.desktop_callback import desktop_callback_manager
         if hasattr(desktop_callback_manager, 'enqueue_callback'):
             desktop_callback_manager.enqueue_callback(event_type, data)
             return True
