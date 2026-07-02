@@ -37,7 +37,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install --upgrade pip && pip install flake8 pymysql pyjwt flask
+        run: pip install --upgrade pip && pip install flake8 pymysql pyjwt flask flask-cors requests
 
       - name: Wait for MySQL
         run: python ci/wait_mysql.py
@@ -71,6 +71,52 @@ jobs:
           path: test_output.txt
           retention-days: 1
 
+      - name: Start 5003 dispatch center
+        run: |
+          echo "Starting 5003 dispatch center..."
+          nohup python mobile_api_ai/standalone_dispatch_server.py > /tmp/5003.log 2>&1 &
+          echo $! > /tmp/5003.pid
+          echo "5003 PID: $(cat /tmp/5003.pid)"
+        env:
+          DISPATCH_PORT: '5003'
+          DISPATCH_HOST: '127.0.0.1'
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USER: root
+          DB_PASSWORD: 88888888
+          DB_NAME: container_center
+          JWT_SECRET_KEY: ci_test_secret_64_bytes_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+      - name: Wait for 5003 to be ready
+        run: python ci/wait_service.py 5003 http://127.0.0.1:5003/health 30
+
+      - name: Start 5001 desktop web
+        run: |
+          echo "Starting 5001 desktop web..."
+          nohup python desktop_web/server.py > /tmp/5001.log 2>&1 &
+          echo $! > /tmp/5001.pid
+          echo "5001 PID: $(cat /tmp/5001.pid)"
+        env:
+          DESKTOP_WEB_PORT: '5001'
+          DISPATCH_BASE: 'http://127.0.0.1:5003'
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USER: root
+          DB_PASSWORD: 88888888
+          DB_NAME: container_center
+          JWT_SECRET_KEY: ci_test_secret_64_bytes_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+      - name: CI-5001 desktop web check
+        run: python ci/check_5001.py
+
+      - name: Upload 5001 log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: 5001-log-${{ github.run_number }}
+          path: /tmp/5001.log
+          retention-days: 1
+
       - name: CP-4 final acceptance
         run: python ci/check_stage_4.py 2>&1 | tee cp4_output.txt
 
@@ -81,3 +127,9 @@ jobs:
           name: cp4-output-${{ github.run_number }}
           path: cp4_output.txt
           retention-days: 1
+
+      - name: Cleanup servers
+        if: always()
+        run: |
+          if [ -f /tmp/5001.pid ]; then kill $(cat /tmp/5001.pid) 2>/dev/null || true; fi
+          if [ -f /tmp/5003.pid ]; then kill $(cat /tmp/5003.pid) 2>/dev/null || true; fi
