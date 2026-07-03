@@ -1,6 +1,7 @@
 name: v3.6 CI
 
 on:
+  workflow_dispatch:
   push:
     branches: [master, main, develop]
   pull_request:
